@@ -1,0 +1,72 @@
+# OS / Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Env
+.env
+.env.*
+.envrc
+
+# Python (api-gala)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.coverage*
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node (web-gala)
+web-gala/node_modules/
+web-gala/.pnpm-store/
+web-gala/dist/
+web-gala/.vite/
+web-gala/.eslintcache
+web-gala/.yarn/
+web-gala/.yarn/cache
+web-gala/.yarn/unplugged
+web-gala/.yarn/build-state.yml
+web-gala/.yarn/install-state.gz
+web-gala/.pnp.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker/local data
+volumes/
+docker-data/
+
+# JWT keys (keep private key secret)
+dev-keys/jwt.key
+*.key
+!*.key.pub
+
+# Personal photos and sensitive data
+# TODO: These should be moved to external storage (e.g., Cloudflare R2)
+# For now, exclude category photos which contain personal images
+web-gala/public/categories/
+
+# Generated files
+web-gala/openapi.json
+web-gala/src/client/
+api-gala/emails-src/out/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
