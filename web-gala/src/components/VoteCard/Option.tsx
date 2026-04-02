@@ -1,17 +1,22 @@
 import classNames from "classnames";
 import { useFormContext, useWatch } from "react-hook-form";
-import data from "./data.ts";
 import config from "@/config";
 
-type OptionProps = {
+type OptionProps = Readonly<{
   name: string;
+  photo_path: string;
   disabled?: boolean;
   optionIdx?: number;
   catId?: number;
-};
+}>;
 
-console.log(data);
-export default function Option({ name, optionIdx, disabled, catId }: OptionProps) {
+export default function Option({
+  name,
+  photo_path,
+  optionIdx,
+  disabled,
+  catId,
+}: OptionProps) {
   const { setValue } = useFormContext();
   const currentSelected = useWatch({
     name: `votes.${catId}.option`,
@@ -24,8 +29,9 @@ export default function Option({ name, optionIdx, disabled, catId }: OptionProps
       className={classNames(
         "flex flex-row items-center gap-2 rounded-full border p-2 transition-colors duration-300 ease-in-out",
         {
-          "bg-gradient-to-r from-[#F7BBAC] to-[#C58676] border-transparent": currentSelected === optionIdx, // Selected state
-          "bg-black/20 border-dark-gold": currentSelected !== optionIdx, // Default state
+          "border-transparent bg-gradient-to-r from-[#F7BBAC] to-[#C58676]":
+            currentSelected === optionIdx, // Selected state
+          "border-dark-gold bg-black/20": currentSelected !== optionIdx, // Default state
         },
       )}
       onClick={() => {
@@ -34,19 +40,25 @@ export default function Option({ name, optionIdx, disabled, catId }: OptionProps
     >
       {catId && (
         <img
-          src={`${config.BASE_URL}/gala/categories/${data[`c${catId}`][name]}`}
+          src={
+            photo_path.startsWith("http")
+              ? photo_path
+              : `${config.BASE_URL}/gala/categories/${photo_path}`
+          }
           alt={name}
-          className="inline-block w-8 h-8 rounded-full object-cover object-center"
+          className="inline-block h-8 w-8 rounded-full object-cover object-center"
         />
       )}
       <span
         className={classNames(
-          "text-left font-gala font-semibold transition-all duration-300 ease-in-out bg-clip-text ",
+          "bg-clip-text text-left font-gala font-semibold transition-all duration-300 ease-in-out ",
           {
             "text-black": currentSelected === optionIdx, // Gradient text when selected
-            "text-transparent bg-gradient-to-r from-[#F7BBAC] to-[#C58676]": currentSelected !== optionIdx, // Default text color
+            "bg-gradient-to-r from-[#F7BBAC] to-[#C58676] text-transparent":
+              currentSelected !== optionIdx, // Default text color
           },
-        )}>
+        )}
+      >
         {name}
       </span>
     </button>

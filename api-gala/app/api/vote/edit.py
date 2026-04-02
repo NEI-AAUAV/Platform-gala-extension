@@ -22,9 +22,11 @@ class VoteCategoryEditForm(VoteCategoryCreateForm):
     "/{category_id}/edit",
     responses={
         **auth_responses,
+        404: {"description": "Vote not found"},
         409: {
             "description": "A vote category with the same (or similar) name already exists"
         },
+        500: {"description": "Something went wrong"},
     },
 )
 async def edit_category(

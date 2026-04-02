@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
 from app.core.db import DatabaseDep
-from app.core.db.counters import getNextVoteCategoryId
+from app.core.db.counters import get_next_vote_category_id
 from app.models.vote import VoteCategory
 
 router = APIRouter()
@@ -15,6 +15,7 @@ router = APIRouter()
 class VoteCategoryCreateForm(BaseModel):
     category: Annotated[str, Field(min_length=3)]
     options: Annotated[List[str], Field(min_items=2)]
+    photo_paths: Annotated[List[str], Field(min_items=2)]
 
 
 @router.post(
@@ -24,6 +25,7 @@ class VoteCategoryCreateForm(BaseModel):
         409: {
             "description": "A vote category with the same (or similar) name already exists"
         },
+        500: {"description": "Something went wrong"},
     },
 )
 async def create_category(
@@ -33,9 +35,13 @@ async def create_category(
     _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
-    id = await getNextVoteCategoryId(db)
+    category_id = await get_next_vote_category_id(db)
     category = VoteCategory(
-        _id=id, category=form_data.category, options=form_data.options, votes=[]
+        _id=category_id,
+        category=form_data.category,
+        options=form_data.options,
+        photo_paths=form_data.photo_paths,
+        votes=[],
     )
 
     try:

@@ -290,7 +290,7 @@ async def test_new_category_same_name(
     [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
     indirect=["client"],
 )
-async def test_new_category_ICU_equality(
+async def test_new_category_icu_equality(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))

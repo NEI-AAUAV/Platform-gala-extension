@@ -69,4 +69,5 @@ api-gala/emails-src/out/
 *.tmp
 *.temp
 .cache/
+package-lock.json
 

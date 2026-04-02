@@ -12,6 +12,7 @@ class VoteCategory(BaseDocument):
     id: int = Field(alias="_id")
     category: str
     options: List[str]
+    photo_paths: List[str]
     votes: List[Vote]
 
 
@@ -19,5 +20,6 @@ class VoteListing(BaseDocument):
     id: int = Field(alias="_id")
     category: str
     options: List[str]
+    photo_paths: List[str]
     scores: List[int]
     already_voted: Optional[int]
