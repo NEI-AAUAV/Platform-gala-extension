@@ -55,6 +55,13 @@ class Settings(BaseSettings):
 
     ALLOW_TIME_SLOTS_PAST: bool = os.getenv("ALLOW_TIME_SLOTS_PAST", "False") == "True"
 
+    # R2 Storage settings (Cloudflare)
+    R2_ENDPOINT_URL: Optional[str] = os.getenv("R2_ENDPOINT_URL")
+    R2_ACCESS_KEY_ID: Optional[str] = os.getenv("R2_ACCESS_KEY_ID")
+    R2_SECRET_ACCESS_KEY: Optional[str] = os.getenv("R2_SECRET_ACCESS_KEY")
+    R2_BUCKET: Optional[str] = os.getenv("R2_BUCKET")
+    R2_PUBLIC_BASE_URL: Optional[str] = os.getenv("R2_PUBLIC_BASE_URL")
+
     class Config:
         frozen = True
         case_sensitive = True

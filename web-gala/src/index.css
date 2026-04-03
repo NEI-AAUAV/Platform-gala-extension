@@ -38,3 +38,49 @@ select {
 }
 
 /* CSS reset end */
+
+/* Triangle background animations */
+@keyframes triangle-float {
+  0% {
+    transform: translateY(110vh) rotate(0deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: var(--tri-opacity);
+  }
+  95% {
+    opacity: var(--tri-opacity);
+  }
+  100% {
+    transform: translateY(-60px) rotate(var(--tri-rotate));
+    opacity: 0;
+  }
+}
+
+.triangle {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  animation: triangle-float var(--tri-duration) var(--tri-delay) linear infinite;
+}
+
+/* Gradient blur circles for background */
+@keyframes gradient-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.gala-blur {
+  --size: 350px;
+  --speed: 55s;
+  width: var(--size);
+  height: var(--size);
+  filter: blur(calc(var(--size) / 4));
+  animation: gradient-spin var(--speed) cubic-bezier(0.8, 0.2, 0.2, 0.8) alternate infinite;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+}
+
+@media (min-width: 1024px) {
+  .gala-blur { --size: 600px; }
+}

@@ -4,13 +4,13 @@ import Table from "@/components/Table";
 import useTables from "@/hooks/tableHooks/useTables";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useLoginLink from "@/hooks/useLoginLink";
-import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import useTime from "@/hooks/timeHooks/useTime";
 
 export default function Reserve() {
   const { tableId } = useParams();
   const { tables } = useTables();
   const { state } = useSessionUser();
-  const { time } = useTime();
+  useTime();
 
   const loginLink = useLoginLink();
 
@@ -32,27 +32,20 @@ export default function Reserve() {
 
   return (
     <>
-      {time?.tablesStatus === TimeStatus.OPEN ? (
-        <h2 className="m-20 text-center text-2xl font-bold">
-          <span className="block">{header[state].text}</span>
-          {header[state].link && (
-            <Link
-              className="btn-md btn mb-8 mt-4 rounded-full bg-black/70 font-bold normal-case text-white backdrop-blur sm:text-[1.25rem]"
-              to={header[state].link || ""}
-            >
-              {header[state].label}
-            </Link>
-          )}
-        </h2>
-      ) : (
-        <h2 className="m-20 text-center text-2xl font-bold">
-          Reserva de mesas fechada.
-        </h2>
-      )}
+      <div className="mt-28 text-center px-4">
+        <p className="block text-2xl font-bold text-white/80">{header[state].text}</p>
+        {header[state].link && (
+          <Link
+            className="mt-4 inline-block border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+            to={header[state].link || ""}
+          >
+            {header[state].label}
+          </Link>
+        )}
+      </div>
       <div className="m-10 grid grid-cols-[repeat(auto-fit,_minmax(13.25rem,_1fr))] gap-14">
         {tables?.map((table) => {
           const location = `/reserve/${table._id}`;
-
           return (
             <Link key={table._id} to={location}>
               <Table table={table} />
