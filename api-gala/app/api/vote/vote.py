@@ -25,6 +25,7 @@ class VoteForm(BaseModel):
         **auth_responses,
         400: {"description": "A user must be created first or the option is not valid"},
         409: {"description": "Already cast a vote in this category"},
+        500: {"description": "Something went wrong"},
     },
 )
 async def cast_vote(
@@ -42,9 +43,16 @@ async def cast_vote(
 
     vote = Vote(uid=auth.sub, option=form_data.option)
 
+    ERR_ALREADY_VOTED = "Already cast a vote in this category"
+    ERR_SOMETHING_WENT_WRONG = "Something went wrong"
+
+    category = await fetch_category(category_id, db)
+    if form_data.option >= len(category.options):
+        raise HTTPException(status_code=400, detail="Not a valid option")
+
     try:
         res = await VoteCategory.get_collection(db).find_one_and_update(
-            {"_id": category_id},
+            {"_id": category_id, "votes.uid": {"$ne": auth.sub}},
             {"$push": {"votes": vote.dict()}},
             return_document=ReturnDocument.AFTER,
         )
@@ -52,18 +60,13 @@ async def cast_vote(
         if res is None:
             raise NotFoundReCheck
     except (OperationFailure, NotFoundReCheck) as e:
-        category = await fetch_category(category_id, db)
-
         if any(vote.uid == auth.sub for vote in category.votes):
             raise HTTPException(
-                status_code=409, detail="Already voted in this category"
+                status_code=409, detail=ERR_ALREADY_VOTED
             )
-
-        if vote.option >= len(category.options):
-            raise HTTPException(status_code=400, detail="Not a valid option")
 
         logger.error(e)
 
-        raise HTTPException(status_code=500, detail="Something went wrong")
+        raise HTTPException(status_code=500, detail=ERR_SOMETHING_WENT_WRONG)
 
     return anonymize_category(VoteCategory(**res), auth)

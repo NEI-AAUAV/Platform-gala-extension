@@ -43,9 +43,10 @@ export type EditLimits = Partial<Limits>;
 type VoteCategoryCreate = {
   category: string;
   options: string[];
+  photo_paths: string[];
 };
 
-export type VoteCategoryEdit = Partial<VoteCategoryCreate>;
+export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
 
 type VoteCategoryCast = {
   option: number;
@@ -150,16 +151,42 @@ const GalaService = {
       const response: Vote = await client.get(`/votes/${id}`);
       return response;
     },
-    // createVote: async (request: VoteCategoryCreate) => {
-    //   const response: Vote = await client.post("/votes/new");
-    //   return response;
-    // },
+    createCategory: async (request: VoteCategoryCreate) => {
+      const response: Vote = await client.post("/votes/new", request);
+      return response;
+    },
     editVote: async (id: string | number, request: VoteCategoryEdit) => {
       const response: Vote = await client.put(`/votes/${id}/edit`, request);
       return response;
     },
     castVote: async (id: string | number, request: VoteCategoryCast) => {
       const response: Vote = await client.put(`/votes/${id}/cast`, request);
+      return response;
+    },
+    uploadOptionPhoto: async (
+      categoryId: string | number,
+      optionIndex: number,
+      file: File,
+    ) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      const response: Vote = await client.put(
+        `/votes/${categoryId}/options/${optionIndex}/photo`,
+        formData,
+      );
+      return response;
+    },
+    deleteCategory: async (id: string | number) => {
+      const response = await client.delete(`/votes/${id}`);
+      return response;
+    },
+    deleteOptionPhoto: async (
+      categoryId: string | number,
+      optionIndex: number,
+    ) => {
+      const response = await client.delete(
+        `/votes/${categoryId}/options/${optionIndex}/photo`,
+      );
       return response;
     },
   },

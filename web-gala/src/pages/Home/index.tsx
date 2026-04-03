@@ -3,9 +3,9 @@ import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useLoginLink from "@/hooks/useLoginLink";
 import Input from "@/components/Input";
 import { useForm, FormProvider, SubmitHandler } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Button from "@/components/Button";
-import useUserCreate from "@/hooks/userHooks/useUserCreate";
+import GalaService from "@/services/GalaService";
 
 type FormValues = {
   matriculation: number | null;
@@ -18,7 +18,7 @@ export default function Home() {
 
   const loginLink = useLoginLink();
   const { state, sessionUser, isLoading, mutate: galaUserRefetch } = useSessionUser();
-  const [_, setError] = useState<boolean>(false);
+
 
   useEffect(() => {
     if (!isLoading) galaUserRefetch();
@@ -27,14 +27,13 @@ export default function Home() {
 
   const formSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const user = await useUserCreate({
+      const user = await GalaService.user.createUser({
         nmec: data.nmec,
         matriculation: data.matriculation,
       });
       galaUserRefetch(user);
-    } catch (error) {
-      setError(true);
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       return;
     }
     navigate("/vote");
@@ -79,7 +78,6 @@ export default function Home() {
         </Link>
         )}
         {(state === State.AUTHENTICATED) && (
-          <>
           <FormProvider {...methods}>
             <form
               className="flex flex-col items-center justify-center gap-4"
@@ -94,7 +92,7 @@ export default function Home() {
                     {...methods.register("nmec", {
                       required: "Este campo é obrigatório",
                       pattern: {
-                        value: /^[0-9]+$/,
+                        value: /^\d+$/,
                         message: "O número mecanográfico deve conter apenas números",
                       },
                     })}
@@ -109,7 +107,6 @@ export default function Home() {
                 <Button submit className="font-gala"> Votar nos Nomeados</Button>
               </form>
             </FormProvider>
-          </>
         )}
       </div>
     </div>

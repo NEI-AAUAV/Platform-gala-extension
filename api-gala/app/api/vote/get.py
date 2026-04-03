@@ -5,27 +5,9 @@ from app.api.auth import AuthData, ScopeEnum, api_nei_auth, auth_responses
 from app.core.db import DatabaseDep
 from app.models.vote import Vote, VoteCategory, VoteListing
 
-from ._utils import fetch_category
+from ._utils import fetch_category, anonymize_category
 
 router = APIRouter()
-
-
-def anonymize_category(category: VoteCategory, auth: AuthData) -> VoteListing:
-    already_voted = None
-    scores = [0] * len(category.options)
-
-    for vote in category.votes:
-        scores[vote.option] += 1
-        if vote.uid == auth.sub:
-            already_voted = vote.option
-
-    return VoteListing(
-        _id=category.id,
-        category=category.category,
-        options=category.options,
-        scores=scores,
-        already_voted=already_voted,
-    )
 
 
 @router.get(

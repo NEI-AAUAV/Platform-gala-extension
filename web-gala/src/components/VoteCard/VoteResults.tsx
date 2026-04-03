@@ -1,5 +1,5 @@
-import GalaService from "@/services/GalaService";
 import React, { useEffect } from "react";
+import GalaService from "@/services/GalaService";
 
 function VoteResults() {
   const [data, setData] = React.useState<Vote[]>([]);
@@ -28,9 +28,9 @@ function VoteResults() {
   }, []);
 
   return (
-    <div className="py-20 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mb-4 text-dark-gold">Vote Results</h1>
-      <table className="w-full my-20 text-light-gold text-center  rounded-lg overflow-hidden">
+    <div className="flex flex-col items-center py-20">
+      <h1 className="mb-4 text-3xl font-bold text-dark-gold">Vote Results</h1>
+      <table className="my-20 w-full overflow-hidden rounded-lg  text-center text-light-gold">
         <thead className="bg-dark-gold text-black">
           <tr>
             <th className="p-2">Category</th>
@@ -40,19 +40,26 @@ function VoteResults() {
         </thead>
         <tbody>
           {data.map((item) => (
-            <tr key={item._id} className="odd:bg-black/20 even:bg-black/10 border-b border-dark-gold">
-              <td className="p-2 border-r border-dark-gold">{item.category}</td>
-              <td className="p-2 border-r border-dark-gold">
+            <tr
+              key={item._id}
+              className="border-b border-dark-gold odd:bg-black/20 even:bg-black/10"
+            >
+              <td className="border-r border-dark-gold p-2">{item.category}</td>
+              <td className="border-r border-dark-gold p-2">
                 <ul className="divide-y divide-dark-gold">
                   {item.options.map((option, index) => (
-                    <li key={index} className="py-1">{option}</li>
+                    <li key={`${item._id}-option-${index}`} className="py-1">
+                      {option}
+                    </li>
                   ))}
                 </ul>
               </td>
               <td className="p-2">
                 <ul className="divide-y divide-dark-gold">
                   {item.scores.map((score, index) => (
-                    <li key={index} className="py-1">{score}</li>
+                    <li key={`${item._id}-score-${index}`} className="py-1">
+                      {score}
+                    </li>
                   ))}
                 </ul>
               </td>

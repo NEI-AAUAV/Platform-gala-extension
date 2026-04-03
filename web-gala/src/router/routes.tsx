@@ -10,12 +10,14 @@ function ProtectedRoute({
   children,
   loggedIn = true,
   redirect = "/auth/login",
-}: {
+}: Readonly<{
   children: React.ReactNode;
   loggedIn?: boolean;
   redirect?: string;
-}) {
-  const { sessionLoading, token, scopes } = useUserStore((state: UserState) => state);
+}>) {
+  const { sessionLoading, token, scopes } = useUserStore(
+    (state: UserState) => state,
+  );
 
   if (sessionLoading) return null;
   console.log(scopes);
@@ -24,12 +26,11 @@ function ProtectedRoute({
     if (loggedIn && scopes && !scopes.includes("admin")) {
       return <Navigate to="/" />;
     }
-    return children;
-  } else {
-    return <Navigate to={redirect} />;
+    // eslint-disable-next-line react/jsx-no-useless-fragment
+    return <>{children}</>;
   }
+  return <Navigate to={redirect} />;
 }
-
 
 const routes = [
   {
@@ -64,7 +65,13 @@ const routes = [
         path: "/vote",
         async lazy() {
           const { default: Vote } = await import("@/pages/Vote");
-          return { Component: Vote };
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Vote />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
