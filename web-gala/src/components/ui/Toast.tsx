@@ -1,6 +1,4 @@
 // ui/Toast.tsx
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, {
   createContext,
@@ -116,7 +114,16 @@ function ToastComponent({
 }>) {
   const { type, message } = toast;
 
-  const config = {
+  const config: Record<
+    ToastType,
+    {
+      bg: string;
+      border: string;
+      icon: typeof faCheckCircle;
+      iconColor: string;
+      accent: string;
+    }
+  > = {
     success: {
       bg: "bg-green-500/20",
       border: "border-green-500/50",

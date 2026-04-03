@@ -115,6 +115,18 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
   ]);
   const [status, setStatus] = useState<UploadStatus>("idle");
 
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  useEffect(() => {
+    return () => {
+      // NOTE: use ref to access latest state in cleanup
+      optionsRef.current.forEach((opt) => {
+        if (opt.previewUrl) URL.revokeObjectURL(opt.previewUrl);
+      });
+    };
+  }, []);
+
   const handleOptionChange = (
     index: number,
     field: keyof OptionState,
@@ -123,6 +135,9 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
     setOptions((prev) => {
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
+        if (updated[index].previewUrl) {
+          URL.revokeObjectURL(updated[index].previewUrl);
+        }
         updated[index] = {
           ...updated[index],
           photo: value,
@@ -140,7 +155,12 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
   };
 
   const handleRemoveOption = (index: number) => {
-    setOptions((prev) => prev.filter((_, i) => i !== index));
+    setOptions((prev) => {
+      if (prev[index].previewUrl) {
+        URL.revokeObjectURL(prev[index].previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
