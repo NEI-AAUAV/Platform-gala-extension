@@ -8,6 +8,10 @@ const NEIService = {
     const response: NEIUser = await client.get(`/user/${id}`);
     return response;
   },
+
+  logout: async (): Promise<{ end_session_url: string | null }> => {
+    return client.post("/auth/logout");
+  },
 };
 
 export default NEIService;

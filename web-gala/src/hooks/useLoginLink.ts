@@ -3,7 +3,7 @@ import { useHref } from "react-router-dom";
 
 export default function useLoginLink() {
   const homePathname = useHref("");
-  const loginURL = new URL("/auth/login", config.BASE_URL);
+  const loginURL = new URL("/api/nei/v1/auth/oidc/login", config.BASE_URL);
   const redirectUrl = new URL(homePathname, config.BASE_URL);
 
   loginURL.searchParams.set("redirect_to", redirectUrl.toString());
