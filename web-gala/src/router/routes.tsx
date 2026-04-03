@@ -6,30 +6,28 @@ import ErrorBoundary from "@/pages/ErrorBoundary";
 
 import { useUserStore, UserState } from "@/stores/useUserStore";
 
+const ADMIN_SCOPES = new Set(["admin", "manager-jantar-gala"]);
+
 function ProtectedRoute({
   children,
-  loggedIn = true,
-  redirect = "/auth/login",
+  adminOnly = false,
 }: Readonly<{
   children: React.ReactNode;
-  loggedIn?: boolean;
-  redirect?: string;
+  adminOnly?: boolean;
 }>) {
   const { sessionLoading, token, scopes } = useUserStore(
     (state: UserState) => state,
   );
 
   if (sessionLoading) return null;
-  console.log(scopes);
-  if (!!token === loggedIn) {
-    // Optional: Check for specific scopes if needed
-    if (loggedIn && scopes && !scopes.includes("admin")) {
-      return <Navigate to="/" />;
-    }
-    // eslint-disable-next-line react/jsx-no-useless-fragment
-    return <>{children}</>;
+
+  if (!token) return <Navigate to="/" />;
+
+  if (adminOnly && !scopes?.some((s) => ADMIN_SCOPES.has(s))) {
+    return <Navigate to="/" />;
   }
-  return <Navigate to={redirect} />;
+
+  return <>{children}</>;
 }
 
 const routes = [
@@ -80,7 +78,7 @@ const routes = [
           const { default: Admin } = await import("@/pages/Admin");
           return {
             Component: () => (
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <Admin />
               </ProtectedRoute>
             ),
