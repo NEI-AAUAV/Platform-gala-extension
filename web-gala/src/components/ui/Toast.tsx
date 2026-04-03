@@ -62,8 +62,7 @@ export function ToastProvider({
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", duration: number = 5000) => {
-      const id =
-        Date.now().toString() + Math.random().toString(36).substring(2, 9);
+      const id = crypto.randomUUID();
       const newToast: Toast = { id, message, type, duration };
 
       setToasts((prev) => [...prev, newToast]);
