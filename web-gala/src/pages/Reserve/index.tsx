@@ -32,7 +32,7 @@ export default function Reserve() {
 
   return (
     <>
-      <div className="mt-28 text-center px-4">
+      <div className="m-20 text-center">
         <p className="block text-2xl font-bold text-white/80">{header[state].text}</p>
         {header[state].link && (
           <Link

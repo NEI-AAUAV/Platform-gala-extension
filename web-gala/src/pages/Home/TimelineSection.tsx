@@ -9,7 +9,7 @@ export default function TimelineSection() {
   const currentPhaseData = phases.find((p) => p.id === selectedPhase);
 
   return (
-    <section id="timeline" className="relative z-10 flex flex-col items-center justify-center bg-black/80 px-4 py-32 backdrop-blur-md">
+    <section id="timeline" className="relative flex flex-col items-center justify-center px-4 py-32 backdrop-blur-md">
       <div className="mx-auto w-full max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -14,7 +14,7 @@ export default function EventInfoSection() {
   ];
 
   return (
-    <section id="evento" className="relative z-10 flex flex-col items-center justify-center bg-black/70 px-4 py-20 backdrop-blur-md">
+    <section id="evento" className="relative flex flex-col items-center justify-center px-4 py-20 backdrop-blur-md">
       <div className="mx-auto w-full max-w-5xl text-center">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}

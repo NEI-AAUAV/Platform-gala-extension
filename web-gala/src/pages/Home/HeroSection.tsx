@@ -182,7 +182,7 @@ export default function HeroSection() {
   }, [isLoading, galaUserRefetch]);
 
   return (
-    <section className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pt-20">
+    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-20">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}

@@ -6,7 +6,7 @@ export default function AboutSection() {
   const { title, description, callToAction } = galaContent.about;
 
   return (
-    <section id="sobre" className="relative z-10 flex min-h-screen items-center justify-center bg-black/60 px-4 py-20 backdrop-blur-sm">
+    <section id="sobre" className="relative flex min-h-screen items-center justify-center px-4 py-20 backdrop-blur-sm">
       <div className="mx-auto max-w-4xl text-center">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}

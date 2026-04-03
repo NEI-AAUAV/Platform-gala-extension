@@ -37,5 +37,16 @@ export const galaContent = {
     time: "20:00 - 02:00",
     location: "A anunciar, Aveiro",
     dressCode: "Formal / Black Tie Opcional",
-  }
+  },
+  gallery: {
+    title: "Momentos Inesquecíveis",
+    images: [
+      "/gala/1.jpg",
+      "/gala/2.jpg",
+      "/gala/3.jpg",
+      "/gala/1.jpg",
+      "/gala/2.jpg",
+      "/gala/3.jpg",
+    ],
+  },
 };

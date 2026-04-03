@@ -5,7 +5,7 @@ export default function GallerySection() {
   const { title, images } = galaContent.gallery;
 
   return (
-    <section id="galeria" className="relative z-10 min-h-screen bg-black/80 px-4 py-20">
+    <section id="galeria" className="relative min-h-screen px-4 py-20">
       <div className="mx-auto max-w-screen-xl text-center">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -18,7 +18,7 @@ export default function GallerySection() {
         </motion.h2>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {images.map((imgSrc, idx) => (
+          {images.map((imgSrc: string, idx: number) => (
             <motion.div
               key={imgSrc}
               initial={{ opacity: 0, scale: 0.9 }}
