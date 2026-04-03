@@ -16,6 +16,7 @@ import { useAppToast } from "@/components/ui/Toast";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type OptionState = {
+  id: string;
   name: string;
   photo?: File;
   previewUrl?: string;
@@ -31,7 +32,7 @@ function OptionInput({
   onChange,
   onRemove,
   canRemove,
-}: {
+}: Readonly<{
   option: OptionState;
   index: number;
   onChange: (
@@ -41,7 +42,7 @@ function OptionInput({
   ) => void;
   onRemove: (index: number) => void;
   canRemove: boolean;
-}) {
+}>) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,14 +106,26 @@ function OptionInput({
 
 // ─── Create Category Form ────────────────────────────────────────────────────
 
-function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
+function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) {
   const toast = useAppToast();
   const [categoryName, setCategoryName] = useState("");
   const [options, setOptions] = useState<OptionState[]>([
-    { name: "" },
-    { name: "" },
+    { id: crypto.randomUUID(), name: "" },
+    { id: crypto.randomUUID(), name: "" },
   ]);
   const [status, setStatus] = useState<UploadStatus>("idle");
+
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  useEffect(() => {
+    return () => {
+      // NOTE: use ref to access latest state in cleanup
+      optionsRef.current.forEach((opt) => {
+        if (opt.previewUrl) URL.revokeObjectURL(opt.previewUrl);
+      });
+    };
+  }, []);
 
   const handleOptionChange = (
     index: number,
@@ -122,6 +135,9 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
     setOptions((prev) => {
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
+        if (updated[index].previewUrl) {
+          URL.revokeObjectURL(updated[index].previewUrl);
+        }
         updated[index] = {
           ...updated[index],
           photo: value,
@@ -135,11 +151,16 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
   };
 
   const handleAddOption = () => {
-    setOptions((prev) => [...prev, { name: "" }]);
+    setOptions((prev) => [...prev, { id: crypto.randomUUID(), name: "" }]);
   };
 
   const handleRemoveOption = (index: number) => {
-    setOptions((prev) => prev.filter((_, i) => i !== index));
+    setOptions((prev) => {
+      if (prev[index].previewUrl) {
+        URL.revokeObjectURL(prev[index].previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -183,7 +204,10 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
       setStatus("success");
       toast.success("Categoria criada com sucesso! 🎉");
       setCategoryName("");
-      setOptions([{ name: "" }, { name: "" }]);
+      setOptions([
+        { id: crypto.randomUUID(), name: "" },
+        { id: crypto.randomUUID(), name: "" },
+      ]);
       onSuccess();
 
       setTimeout(() => setStatus("idle"), 2000);
@@ -201,6 +225,12 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
     }
   };
 
+  const buttonText = (() => {
+    if (status === "uploading") return "A criar...";
+    if (status === "success") return "Criado!";
+    return "Criar Categoria";
+  })();
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -212,28 +242,30 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Category name */}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-semibold uppercase tracking-widest text-white/50">
-          Nome da Categoria
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            Nome da Categoria
+          </span>
+          <input
+            type="text"
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.target.value)}
+            placeholder="Ex: O mais simpático(a)"
+            className="rounded-lg border border-white/10 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
+          />
         </label>
-        <input
-          type="text"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          placeholder="Ex: O mais simpático(a)"
-          className="rounded-lg border border-white/10 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
-        />
       </div>
 
       {/* Options */}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-semibold uppercase tracking-widest text-white/50">
+        <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
           Opções (mín. 2)
-        </label>
-        {options.map((opt, i) => (
+        </span>
+        {options.map((opt) => (
           <OptionInput
-            key={i}
+            key={opt.id}
             option={opt}
-            index={i}
+            index={options.indexOf(opt)}
             onChange={handleOptionChange}
             onRemove={handleRemoveOption}
             canRemove={options.length > 2}
@@ -259,11 +291,7 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
           <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
         )}
         {status === "success" && <FontAwesomeIcon icon={faCheck} />}
-        {status === "uploading"
-          ? "A criar..."
-          : status === "success"
-          ? "Criado!"
-          : "Criar Categoria"}
+        {buttonText}
       </button>
     </form>
   );
@@ -271,7 +299,7 @@ function CreateCategoryForm({ onSuccess }: { onSuccess: () => void }) {
 
 // ─── Existing Category Row ────────────────────────────────────────────────────
 
-function CategoryRow({ vote, refresh }: { vote: Vote; refresh: () => void }) {
+function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => void }>) {
   const toast = useAppToast();
 
   // Edit state
@@ -464,7 +492,7 @@ function CategoryRow({ vote, refresh }: { vote: Vote; refresh: () => void }) {
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
-            key={i}
+            key={option + String(i)}
             className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
           >
             {/* Current photo preview (not editable directly in edit mode string array, but stays visible) */}
@@ -477,8 +505,9 @@ function CategoryRow({ vote, refresh }: { vote: Vote; refresh: () => void }) {
                     className="h-full w-full object-cover"
                   />
                   {!isEditing && (
-                    <div
-                      className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100"
+                    <button
+                      type="button"
+                      className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100"
                       onClick={() => handlePhotoRemove(i)}
                       title="Remover foto"
                     >
@@ -486,7 +515,7 @@ function CategoryRow({ vote, refresh }: { vote: Vote; refresh: () => void }) {
                         icon={faTrash}
                         className="text-red-400"
                       />
-                    </div>
+                    </button>
                   )}
                 </>
               ) : (
@@ -600,25 +629,33 @@ export default function VoteCategories() {
         <h2 className="border-b border-dark-gold/20 pb-2 font-gala text-2xl font-semibold text-white/90">
           Categorias Existentes
         </h2>
-        {loading ? (
-          <div className="flex items-center gap-3 p-4 text-white/50">
-            <FontAwesomeIcon
-              icon={faSpinner}
-              className="animate-spin text-dark-gold"
-            />
-            A carregar categorias...
-          </div>
-        ) : categories.length === 0 ? (
-          <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-center text-sm text-white/40">
-            Ainda não há categorias criadas.
-          </p>
-        ) : (
-          <div className="grid gap-6">
-            {categories.map((vote) => (
-              <CategoryRow key={vote._id} vote={vote} refresh={refresh} />
-            ))}
-          </div>
-        )}
+        {(() => {
+          if (loading) {
+            return (
+              <div className="flex items-center gap-3 p-4 text-white/50">
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  className="animate-spin text-dark-gold"
+                />
+                A carregar categorias...
+              </div>
+            );
+          }
+          if (categories.length === 0) {
+            return (
+              <p className="rounded-xl border border-white/5 bg-black/20 p-4 text-center text-sm text-white/40">
+                Ainda não há categorias criadas.
+              </p>
+            );
+          }
+          return (
+            <div className="grid gap-6">
+              {categories.map((vote) => (
+                <CategoryRow key={vote._id} vote={vote} refresh={refresh} />
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
