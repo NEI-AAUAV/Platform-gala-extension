@@ -37,6 +37,62 @@ async def edit_time_slots(
 
     now = datetime.now(tz=timezone.utc)
 
+    registrationStart = form_data.registrationStart or initial.registrationStart
+    if registrationStart.tzinfo is None:
+        registrationStart = registrationStart.replace(tzinfo=timezone.utc)
+
+    if not settings.ALLOW_TIME_SLOTS_PAST and now > registrationStart:
+        raise HTTPException(
+            status_code=400,
+            detail="Registration start date cannot be before the current time",
+        )
+
+    registrationEnd = form_data.registrationEnd or initial.registrationEnd
+    if registrationEnd.tzinfo is None:
+        registrationEnd = registrationEnd.replace(tzinfo=timezone.utc)
+
+    if registrationStart > registrationEnd:
+        raise HTTPException(
+            status_code=400, detail="Registration start date cannot be after end date"
+        )
+
+    nominationsStart = form_data.nominationsStart or initial.nominationsStart
+    if nominationsStart.tzinfo is None:
+        nominationsStart = nominationsStart.replace(tzinfo=timezone.utc)
+
+    if not settings.ALLOW_TIME_SLOTS_PAST and now > nominationsStart:
+        raise HTTPException(
+            status_code=400,
+            detail="Nominations start date cannot be before the current time",
+        )
+
+    nominationsEnd = form_data.nominationsEnd or initial.nominationsEnd
+    if nominationsEnd.tzinfo is None:
+        nominationsEnd = nominationsEnd.replace(tzinfo=timezone.utc)
+
+    if nominationsStart > nominationsEnd:
+        raise HTTPException(
+            status_code=400, detail="Nominations start date cannot be after end date"
+        )
+
+    votesStart = form_data.votesStart or initial.votesStart
+    if votesStart.tzinfo is None:
+        votesStart = votesStart.replace(tzinfo=timezone.utc)
+
+    if not settings.ALLOW_TIME_SLOTS_PAST and now > votesStart:
+        raise HTTPException(
+            status_code=400, detail="Votes start date cannot be before the current time"
+        )
+
+    votesEnd = form_data.votesEnd or initial.votesEnd
+    if votesEnd.tzinfo is None:
+        votesEnd = votesEnd.replace(tzinfo=timezone.utc)
+
+    if votesStart > votesEnd:
+        raise HTTPException(
+            status_code=400, detail="Votes start date cannot be after end date"
+        )
+
     tablesStart = form_data.tablesStart or initial.tablesStart
     if tablesStart.tzinfo is None:
         tablesStart = tablesStart.replace(tzinfo=timezone.utc)
@@ -56,22 +112,14 @@ async def edit_time_slots(
             status_code=400, detail="Tables start date cannot be after end date"
         )
 
-    votesStart = form_data.votesStart or initial.votesStart
-    if votesStart.tzinfo is None:
-        votesStart = votesStart.replace(tzinfo=timezone.utc)
+    galaStart = form_data.galaStart or initial.galaStart
+    if galaStart.tzinfo is None:
+        galaStart = galaStart.replace(tzinfo=timezone.utc)
 
-    if not settings.ALLOW_TIME_SLOTS_PAST and now > votesStart:
+    if not settings.ALLOW_TIME_SLOTS_PAST and now > galaStart:
         raise HTTPException(
-            status_code=400, detail="Votes start date cannot be before the current time"
-        )
-
-    votesEnd = form_data.votesEnd or initial.votesEnd
-    if votesEnd.tzinfo is None:
-        votesEnd = votesEnd.replace(tzinfo=timezone.utc)
-
-    if votesStart > votesEnd:
-        raise HTTPException(
-            status_code=400, detail="Votes start date cannot be after end date"
+            status_code=400,
+            detail="Gala start date cannot be before the current time",
         )
 
     res = await TimeSlots.get_collection(db).find_one_and_update(

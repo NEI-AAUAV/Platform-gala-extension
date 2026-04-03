@@ -28,14 +28,21 @@ type CreateUser = {
 };
 
 type EditTimeSlots = {
+  registrationStart?: string;
+  registrationEnd?: string;
+  nominationsStart?: string;
+  nominationsEnd?: string;
   votesStart?: string;
   votesEnd?: string;
   tablesStart?: string;
   tablesEnd?: string;
+  galaStart?: string;
 };
 
 export type Limits = {
   maxRegistrations: number;
+  maxBusSeats: number;
+  maxTablesCount: number;
 };
 
 export type EditLimits = Partial<Limits>;

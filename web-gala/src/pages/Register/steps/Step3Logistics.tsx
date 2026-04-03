@@ -98,7 +98,7 @@ export default function Step3Logistics({ config, data, onUpdate, onNext, onBack 
           disabled={!data.meal}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Continuar → Confirmação
+          Continuar → Pagamento
         </button>
       </div>
     </motion.div>

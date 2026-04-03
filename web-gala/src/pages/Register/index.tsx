@@ -8,7 +8,9 @@ import StepIndicator from "./StepIndicator";
 import Step1EventInfo from "./steps/Step1EventInfo";
 import Step2PersonalData from "./steps/Step2PersonalData";
 import Step3Logistics from "./steps/Step3Logistics";
-import Step4Confirm from "./steps/Step4Confirm";
+import Step4Payment from "./steps/Step4Payment";
+import Step5Table from "./steps/Step5Table";
+import Step6Confirm from "./steps/Step6Confirm";
 
 export default function Register() {
   const { sessionLoading, sub } = useUserStore();
@@ -24,7 +26,7 @@ export default function Register() {
   const maxReached = data.currentStep;
 
   const goTo = (step: number) => update({ currentStep: step });
-  const next = () => update({ currentStep: Math.min(currentStep + 1, 4) });
+  const next = () => update({ currentStep: Math.min(currentStep + 1, 6) });
   const back = () => update({ currentStep: Math.max(currentStep - 1, 1) });
 
   const handleFinish = () => {
@@ -70,14 +72,20 @@ export default function Register() {
                 <Step3Logistics config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
               )}
               {currentStep === 4 && (
-                <Step4Confirm config={config} data={data} onBack={back} onFinish={handleFinish} />
+                <Step4Payment config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+              )}
+              {currentStep === 5 && (
+                <Step5Table config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+              )}
+              {currentStep === 6 && (
+                <Step6Confirm config={config} data={data} onBack={back} onFinish={handleFinish} />
               )}
             </div>
           </AnimatePresence>
         </div>
 
         <p className="mt-4 text-center text-[0.6rem] uppercase tracking-widest text-white/20">
-          Passo {currentStep} de 4
+          Passo {currentStep} de 6
         </p>
       </div>
     </div>
@@ -88,7 +96,9 @@ const STEP_TITLES: Record<number, { title: string; sub: string }> = {
   1: { title: "Informações do Evento", sub: "Conhece todos os detalhes antes de te inscreveres." },
   2: { title: "Dados Pessoais & Acompanhantes", sub: "Confirma os teus dados e adiciona quem te acompanha." },
   3: { title: "Logística", sub: "Transporte e preferências de refeição." },
-  4: { title: "Confirmação Final", sub: "Revê os teus dados e conclui a inscrição." },
+  4: { title: "Pagamento", sub: "Instruções de pagamento e envio de comprovativos." },
+  5: { title: "Escolha de Mesa", sub: "Reserva o teu lugar ou cria uma nova mesa para os teus amigos." },
+  6: { title: "Confirmação Final", sub: "Revê os teus dados e conclui a inscrição." },
 };
 
 function StepTitle({ step }: { step: number }) {

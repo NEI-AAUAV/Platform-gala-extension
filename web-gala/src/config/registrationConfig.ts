@@ -34,6 +34,11 @@ export interface RegistrationConfig {
   paymentContacts: PaymentContact[];
   paymentEmail: string;
   paymentDescription: string;
+  phasedPaymentEnabled: boolean;
+  phase1Price: number;
+  phase2Price: number;
+  phase1Deadline: string;
+  phase2Deadline: string;
 }
 
 export const defaultConfig: RegistrationConfig = {
@@ -79,4 +84,9 @@ export const defaultConfig: RegistrationConfig = {
   ],
   paymentEmail: "galacomissao.nei@gmail.com",
   paymentDescription: "Pagamento Jantar de Gala de <Nome> - <Nmec>",
+  phasedPaymentEnabled: true,
+  phase1Price: 20,
+  phase2Price: 18,
+  phase1Deadline: "A anunciar",
+  phase2Deadline: "A anunciar",
 };

@@ -5,12 +5,13 @@ import Input from "@/components/Input";
 import { useForm, FormProvider, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
-import useUserCreate from "@/hooks/userHooks/useUserCreate";
+import GalaService from "@/services/GalaService";
 import { motion } from "framer-motion";
 import { galaContent } from "@/config/galaContent";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDay, faLocationDot, faClock } from "@fortawesome/free-solid-svg-icons";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import Countdown from "@/components/Countdown";
 
 
 type FormValues = {
@@ -30,7 +31,7 @@ function EventPill({ icon, text }: { icon: typeof faCalendarDay; text: string })
 
 function RegisterForm({ sessionUser, galaUserRefetch }: { sessionUser: any; galaUserRefetch: (u?: any) => void }) {
   const navigate = useNavigate();
-  const [, setError] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
   const inGala = !!sessionUser?.nmec;
 
   const methods = useForm<FormValues>({
@@ -49,7 +50,7 @@ function RegisterForm({ sessionUser, galaUserRefetch }: { sessionUser: any; gala
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      const user = await useUserCreate({ nmec: data.nmec, matriculation: data.matriculation });
+      const user = await GalaService.user.createUser({ nmec: data.nmec, matriculation: data.matriculation });
       galaUserRefetch(user);
     } catch {
       setError(true);
@@ -93,6 +94,11 @@ function RegisterForm({ sessionUser, galaUserRefetch }: { sessionUser: any; gala
           </Button>
         </form>
       </FormProvider>
+      {error && (
+        <p className="mt-2 text-center text-xs text-red-500 font-gala">
+          Ocorreu um erro ao processar o seu registo.
+        </p>
+      )}
     </motion.div>
   );
 }
@@ -114,7 +120,7 @@ function HeroContent({ state, loginLink, sessionUser, galaUserRefetch }: {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="mt-10 flex flex-wrap items-center justify-center gap-4"
+        className="mt-10 flex flex-col items-center justify-center gap-6"
       >
         <a
           href={loginLink}
@@ -122,50 +128,97 @@ function HeroContent({ state, loginLink, sessionUser, galaUserRefetch }: {
         >
           Entrar e Inscrever
         </a>
+        {time?.galaStatus === TimeStatus.OPENING && (
+          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+        )}
       </motion.div>
     );
   }
 
   // If user is logged in but not registered in the gala yet
   if (state === State.AUTHENTICATED) {
-    return <RegisterForm sessionUser={sessionUser} galaUserRefetch={galaUserRefetch} />;
+    return (
+      <div className="flex flex-col items-center gap-8">
+        <RegisterForm sessionUser={sessionUser} galaUserRefetch={galaUserRefetch} />
+        {time?.galaStatus === TimeStatus.OPENING && (
+          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+        )}
+      </div>
+    );
   }
 
-  // If registered, show phase-specific buttons
-  const isRegistrationOpen = time?.tablesStatus === TimeStatus.OPEN;
-  const isNomineesOpen = time?.votesStatus !== TimeStatus.CLOSED; // OPENING or OPEN
-  const isGalaVotingOpen = true; // For now always show as per request or refine based on date
+  // If registered, show phase-specific buttons or countdowns
+  const isRegistrationOpen = time?.registrationStatus === TimeStatus.OPEN;
+  const isRegistrationOpening = time?.registrationStatus === TimeStatus.OPENING;
+
+  const isNominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;
+  const isNominationsOpening = time?.nominationsStatus === TimeStatus.OPENING;
+
+  const isVotingOpen = time?.votesStatus === TimeStatus.OPEN;
+  const isVotingOpening = time?.votesStatus === TimeStatus.OPENING;
+
+  const isTablesOpen = time?.tablesStatus === TimeStatus.OPEN;
+  const isTablesOpening = time?.tablesStatus === TimeStatus.OPENING;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.5 }}
-      className="mt-10 flex flex-wrap gap-4"
+      className="mt-10 flex flex-col items-center gap-10"
     >
-      {isRegistrationOpen && (
-        <Link
-          to="/reserve"
-          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
-        >
-          Inscrever no Jantar
-        </Link>
-      )}
-      {isNomineesOpen && (
-        <Link
-          to="/vote"
-          className="border border-white/20 px-8 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white"
-        >
-          Dizer Nomeados
-        </Link>
-      )}
-      {isGalaVotingOpen && (
-        <Link
-          to="/vote"
-          className="bg-light-gold px-8 py-3 font-gala text-sm font-bold text-black transition-all hover:bg-white"
-        >
-          Votar no dia da Gala
-        </Link>
+      <div className="flex flex-wrap justify-center gap-4">
+        {isRegistrationOpen && (
+          <Link
+            to="/register"
+            className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+          >
+            Inscrever no Jantar
+          </Link>
+        )}
+        {isRegistrationOpening && (
+          <Countdown targetDate={time.registrationStart} label="Inscrição Abre Em" />
+        )}
+
+        {isTablesOpen && (
+          <Link
+            to="/reserve"
+            className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+          >
+            Escolher Mesa
+          </Link>
+        )}
+        {isTablesOpening && (
+          <Countdown targetDate={time.tablesStart} label="Mesas Abrem Em" />
+        )}
+
+        {isNominationsOpen && (
+          <Link
+            to="/vote"
+            className="border border-white/20 px-8 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white"
+          >
+            Dizer Nomeados
+          </Link>
+        )}
+        {isNominationsOpening && (
+          <Countdown targetDate={time.nominationsStart} label="Nomeações Abrem Em" />
+        )}
+
+        {isVotingOpen && (
+          <Link
+            to="/vote"
+            className="bg-light-gold px-8 py-3 font-gala text-sm font-bold text-black transition-all hover:bg-white"
+          >
+            Votar nos Prémios
+          </Link>
+        )}
+        {isVotingOpening && (
+          <Countdown targetDate={time.votesStart} label="Votação Abre Em" />
+        )}
+      </div>
+
+      {time?.galaStatus === TimeStatus.OPENING && (
+        <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" className="mt-4" />
       )}
     </motion.div>
   );

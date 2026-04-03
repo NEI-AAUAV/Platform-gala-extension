@@ -6,7 +6,7 @@ export interface Companion {
   allergies: string;
 }
 
-export type BusOption = "round_trip" | "none";
+export type BusOption = "round_trip" | "one_way" | "none";
 
 export interface WizardData {
   nmec: string;
@@ -15,6 +15,10 @@ export interface WizardData {
   meal: string;
   allergies: string;
   companions: Companion[];
+  paymentProofPhase1: string | null;
+  paymentProofPhase2: string | null;
+  tableId: string | null;
+  tableRole: "owner" | "member" | null;
   currentStep: number;
 }
 
@@ -27,6 +31,10 @@ const defaultData: WizardData = {
   meal: "",
   allergies: "",
   companions: [],
+  paymentProofPhase1: null,
+  paymentProofPhase2: null,
+  tableId: null,
+  tableRole: null,
   currentStep: 1,
 };
 

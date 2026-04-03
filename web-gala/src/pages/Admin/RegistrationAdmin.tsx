@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faTrash, faRotateLeft, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { MealOption, PaymentContact, PaymentMethod } from "@/config/registrationConfig";
+import useTime from "@/hooks/timeHooks/useTime";
+import GalaService from "@/services/GalaService";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -135,9 +137,33 @@ const PAYMENT_METHOD_OPTIONS: { value: PaymentMethod; label: string }[] = [
   { value: "both", label: "Ambos" },
 ];
 
+function ExportButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/70 transition hover:border-light-gold/40 hover:text-light-gold"
+    >
+      <FontAwesomeIcon icon={faChevronDown} className="-rotate-90 text-[0.6rem]" />
+      {label}
+    </button>
+  );
+}
+
 export default function RegistrationAdmin() {
   const { config, updateConfig, resetConfig } = useRegistrationConfig();
+  const { time } = useTime();
   const [saved, setSaved] = useState(false);
+
+  const saveTime = async (updates: any) => {
+    try {
+      await GalaService.time.editTimeSlots(updates);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const save = (updates: Parameters<typeof updateConfig>[0]) => {
     updateConfig(updates);
@@ -157,7 +183,75 @@ export default function RegistrationAdmin() {
         </div>
       </div>
 
-      <Section title="1. Informações do Evento" defaultOpen>
+      <Section title="0. Datas e Fases" defaultOpen>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Início das Inscrições">
+            <TextInput 
+              value={time?.registrationStart?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ registrationStart: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Fim das Inscrições">
+            <TextInput 
+              value={time?.registrationEnd?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ registrationEnd: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Início das Mesas">
+            <TextInput 
+              value={time?.tablesStart?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ tablesStart: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Fim das Mesas">
+            <TextInput 
+              value={time?.tablesEnd?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ tablesEnd: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Início das Nomeações">
+            <TextInput 
+              value={time?.nominationsStart?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ nominationsStart: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Fim das Nomeações">
+            <TextInput 
+              value={time?.nominationsEnd?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ nominationsEnd: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Início das Votações">
+            <TextInput 
+              value={time?.votesStart?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ votesStart: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Fim das Votações">
+            <TextInput 
+              value={time?.votesEnd?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ votesEnd: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+          <Field label="Início do Jantar de Gala">
+            <TextInput 
+              value={time?.galaStart?.slice(0, 16) || ""} 
+              onChange={(v) => saveTime({ galaStart: v })} 
+              placeholder="YYYY-MM-DDTHH:MM" 
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="1. Informações do Evento">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Data"><TextInput value={config.eventDate} onChange={(v) => save({ eventDate: v })} placeholder="Ex: 14 de junho de 2025" /></Field>
           <Field label="Horário"><TextInput value={config.eventTime} onChange={(v) => save({ eventTime: v })} placeholder="Ex: 20:00 – 02:00" /></Field>
@@ -239,6 +333,54 @@ export default function RegistrationAdmin() {
             <PaymentContactsEditor contacts={config.paymentContacts} onChange={(v) => save({ paymentContacts: v })} />
           </Field>
         )}
+      </Section>
+
+      <Section title="7. Pagamento Faseado (Dual-Proof)">
+        <Toggle 
+          enabled={config.phasedPaymentEnabled} 
+          onChange={(v) => save({ phasedPaymentEnabled: v })} 
+          label="Ativar Pagamento em 2 Fases" 
+        />
+        {config.phasedPaymentEnabled && (
+          <div className="grid grid-cols-1 gap-4 mt-2 sm:grid-cols-2">
+            <div className="flex flex-col gap-4 rounded-xl bg-white/5 p-4">
+              <h4 className="text-[0.6rem] font-bold uppercase tracking-widest text-light-gold/60">Fase 1</h4>
+              <Field label="Preço Fase 1 (€)"><NumberInput value={config.phase1Price} onChange={(v) => save({ phase1Price: v })} /></Field>
+              <Field label="Deadline Fase 1"><TextInput value={config.phase1Deadline} onChange={(v) => save({ phase1Deadline: v })} /></Field>
+            </div>
+            <div className="flex flex-col gap-4 rounded-xl bg-white/5 p-4">
+              <h4 className="text-[0.6rem] font-bold uppercase tracking-widest text-light-gold/60">Fase 2</h4>
+              <Field label="Preço Fase 2 (€)"><NumberInput value={config.phase2Price} onChange={(v) => save({ phase2Price: v })} /></Field>
+              <Field label="Deadline Fase 2"><TextInput value={config.phase2Deadline} onChange={(v) => save({ phase2Deadline: v })} /></Field>
+            </div>
+          </div>
+        )}
+      </Section>
+
+      <Section title="8. Ferramentas de Exportação">
+        <p className="text-xs text-white/40 mb-2">Exporta os dados em formato CSV para gestão externa.</p>
+        <div className="flex flex-wrap gap-3">
+          <ExportButton 
+            label="Exportar Inscrições" 
+            onClick={() => window.open("/api/gala/v1/export/registrations", "_blank")} 
+          />
+          <ExportButton 
+            label="Exportar Pagamentos" 
+            onClick={() => window.open("/api/gala/v1/export/payments", "_blank")} 
+          />
+        </div>
+      </Section>
+
+      <Section title="9. Segurança & Regras de Upload">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Tamanho Max. Comprovativo (MB)">
+            <NumberInput value={5} onChange={() => {}} min={1} />
+          </Field>
+          <Field label="Formatos Aceites">
+            <TextInput value=".pdf, .jpg, .png" onChange={() => {}} />
+          </Field>
+        </div>
+        <p className="text-[0.6rem] text-white/20 italic">Nota: Estas regras são aplicadas no frontend para validação imediata.</p>
       </Section>
     </div>
   );
