@@ -24,7 +24,7 @@ async def edit_limits(
     form_data: LimitsEditForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> Limits:
     """Edits the limits"""
     res = await Limits.get_collection(db).find_one_and_update(

@@ -31,7 +31,7 @@ async def upload_option_photo(
     *,
     db: DatabaseDep,
     image: Annotated[UploadFile, File(...)],
-    _: Annotated[AuthData, Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    _: Annotated[AuthData, Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA])],
 ) -> VoteCategory:
     """Upload a photo for a specific option in a vote category. Stores it in Cloudflare R2."""
     if not storage_client.enabled:
@@ -91,6 +91,47 @@ async def upload_option_photo(
     while len(photo_paths) <= option_index:
         photo_paths.append("")
     photo_paths[option_index] = url
+
+    res = await VoteCategory.get_collection(db).find_one_and_update(
+        {"_id": category_id},
+        {"$set": {"photo_paths": photo_paths}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if res is None:
+        raise HTTPException(status_code=404, detail="Vote category not found")
+
+    return VoteCategory(**res)
+
+
+@router.delete(
+    "/{category_id}/options/{option_index}/photo",
+    responses={
+        **auth_responses,
+        400: {"description": "Invalid option index"},
+        404: {"description": "Vote category not found"},
+    },
+)
+async def delete_option_photo(
+    category_id: int,
+    option_index: int,
+    *,
+    db: DatabaseDep,
+    _: Annotated[AuthData, Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA])],
+) -> VoteCategory:
+    """Removes the photo for a specific option in a vote category."""
+    category = await fetch_category(category_id, db)
+
+    if option_index < 0 or option_index >= len(category.options):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Option index {option_index} out of range.",
+        )
+
+    photo_paths = list(category.photo_paths)
+    if option_index < len(photo_paths) and photo_paths[option_index]:
+        if storage_client.enabled:
+            storage_client.delete_image(photo_paths[option_index])
+        photo_paths[option_index] = ""
 
     res = await VoteCategory.get_collection(db).find_one_and_update(
         {"_id": category_id},

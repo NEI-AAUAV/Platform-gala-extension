@@ -23,7 +23,7 @@ async def create_table(
     form_data: TableCreateForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> Table:
     """Creates a new table"""
     id = await getNextTableId(db)

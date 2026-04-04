@@ -93,7 +93,7 @@ async def test_edit_time_slots_unauthorized(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_time_slots(
@@ -132,7 +132,7 @@ async def test_edit_time_slots(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_time_slots_end_before_start(

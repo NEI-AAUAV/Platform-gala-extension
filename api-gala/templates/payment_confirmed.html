@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aceite na mesa — Jantar de Gala</title>
+  <title>Pagamento confirmado — Jantar de Gala</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
@@ -12,9 +12,9 @@
     .hdr{padding-bottom:24px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:32px;display:flex;align-items:center;gap:12px}
     .hdr img{height:32px;width:auto}
     .hdr-txt{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.55)}
-    .band{background:linear-gradient(135deg,rgba(197,134,118,.14) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.18);border-left:3px solid #F7BBAC;padding:20px 24px;margin-bottom:28px}
-    .band-label{font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:8px}
-    .band-title{font-size:22px;font-weight:700;color:#F7BBAC;line-height:1.25}
+    .band{background:linear-gradient(135deg,rgba(52,211,153,.12) 0%,rgba(16,185,129,.06) 100%);border:1px solid rgba(52,211,153,.2);border-left:3px solid #34d399;padding:20px 24px;margin-bottom:28px}
+    .band-label{font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(52,211,153,.6);margin-bottom:8px}
+    .band-title{font-size:22px;font-weight:700;color:#34d399;line-height:1.25}
     .band-sub{margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
     .sec{margin-bottom:22px}
     .sec-label{font-size:8px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:10px}
@@ -23,8 +23,8 @@
     .row:last-child{border-bottom:none}
     .rl{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap}
     .rv{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);text-align:right}
-    .rv.g{color:#F7BBAC}
     .rv.green{color:#34d399}
+    .rv.g{color:#F7BBAC}
     hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:28px 0}
     .notice{font-size:11px;color:rgba(255,255,255,.3);line-height:1.7;font-style:italic;padding:0 4px}
     .ftr{margin-top:36px;padding-top:24px;border-top:1px solid rgba(247,187,172,.1)}
@@ -46,24 +46,26 @@
     <span class="hdr-txt">Jantar de Gala</span>
   </div>
 
-  <!-- Hero -->
+  <!-- Hero (verde — sucesso) -->
   <div class="band">
-    <p class="band-label">Aceite na Mesa</p>
+    <p class="band-label">Pagamento Confirmado</p>
     <p class="band-title">Olá, {{name}}!</p>
-    <p class="band-sub">O responsável da mesa confirmou a tua participação. O teu lugar está reservado!</p>
+    <p class="band-sub">O teu pagamento foi verificado e a tua inscrição está agora completa. Até breve no Jantar de Gala!</p>
   </div>
 
   <!-- Detalhes -->
   <div class="sec">
-    <p class="sec-label">Detalhes da Mesa</p>
+    <p class="sec-label">Detalhes da Inscrição</p>
     <div class="card">
-      <div class="row"><span class="rl">Mesa</span><span class="rv g">{{table}}</span></div>
-      <div class="row"><span class="rl">Estado</span><span class="rv green">&#10003; Confirmado</span></div>
+      <div class="row"><span class="rl">Nome</span><span class="rv">{{name}}</span></div>
+      <div class="row"><span class="rl">Nº Mecanográfico</span><span class="rv">{{nmec}}</span></div>
+      <div class="row"><span class="rl">Modalidade de Pagamento</span><span class="rv g">{% if phased_payment %}Faseado{% else %}Integral{% endif %}</span></div>
+      <div class="row"><span class="rl">Estado do Pagamento</span><span class="rv green">&#10003; Confirmado</span></div>
     </div>
   </div>
 
   <hr/>
-  <p class="notice">Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
+  <p class="notice">A tua inscrição está concluída. Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
 
   <!-- Footer -->
   <div class="ftr">

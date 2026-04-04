@@ -32,7 +32,7 @@ async def create_category(
     form_data: VoteCategoryCreateForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
     category_id = await getNextVoteCategoryId(db)

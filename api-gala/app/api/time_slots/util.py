@@ -18,7 +18,7 @@ async def check_tables_open(
 ) -> TimeSlots:
     time_slots = await fetch_time_slots(db)
 
-    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes:
+    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes:
         return time_slots
 
     now = datetime.now()
@@ -34,7 +34,7 @@ async def check_votes_open(
 ) -> TimeSlots:
     time_slots = await fetch_time_slots(db)
 
-    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes:
+    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes:
         return time_slots
 
     now = datetime.now()

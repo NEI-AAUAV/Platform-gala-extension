@@ -23,7 +23,7 @@ class ScopeEnum(str, Enum):
     MANAGER_NEI = "manager-nei"
     MANAGER_TACAUA = "manager-tacaua"
     MANAGER_FAMILY = "manager-family"
-    MANAGER_JANTAR_GALA = "manager-jantar-gala"
+    MANAGER_GALA = "manager-gala"
     DEFAULT = "default"
 
 
@@ -34,7 +34,7 @@ oauth2_scheme = OAuth2PasswordBearer(
         ScopeEnum.MANAGER_FAMILY: "Edit faina family.",
         ScopeEnum.MANAGER_TACAUA: "Edit data related to tacaua.",
         ScopeEnum.MANAGER_NEI: "Edit data related to nei.",
-        ScopeEnum.MANAGER_JANTAR_GALA: "Edit data related to jantar de gala.",
+        ScopeEnum.MANAGER_GALA: "Edit data related to gala.",
     },
 )
 
@@ -96,3 +96,12 @@ auth_responses: Dict[Union[int, str], Dict[str, Any]] = {
     401: {"description": "Not authenticated"},
     403: {"description": "Not enough permissions"},
 }
+
+
+def get_current_user(
+    auth_data: Annotated[AuthData, Depends(api_nei_auth)],
+) -> Dict[str, Any]:
+    """Provides compatibility with legacy registration logic by returning a dict with an 'id' (from 'sub')."""
+    user_dict = auth_data.dict()
+    user_dict["id"] = auth_data.sub
+    return user_dict

@@ -10,6 +10,7 @@ class DishType(str, Enum):
 
 
 class Companion(BaseModel):
+    name: str
     dish: DishType
     allergies: str = ""
 
@@ -24,10 +25,16 @@ class TablePerson(BaseModel):
 
 class Table(BaseDocument):
     id: int = Field(alias="_id")
-    name: Optional[str]
-    head: Optional[int]
-    seats: PositiveInt
-    persons: List[TablePerson]
+    name: str = "Table Name"
+    photo_url: Optional[str] = None
+    invite_token: Optional[str] = None
+    head: Optional[int] = None
+    seats: PositiveInt = 10
+    persons: List[TablePerson] = []
+
+    @classmethod
+    def collection(cls) -> str:
+        return "table"
 
     def confirmed_seats(self) -> int:
         return sum(

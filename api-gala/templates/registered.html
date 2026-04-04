@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aceite na mesa — Jantar de Gala</title>
+  <title>Inscrição confirmada — Jantar de Gala</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
@@ -12,7 +12,7 @@
     .hdr{padding-bottom:24px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:32px;display:flex;align-items:center;gap:12px}
     .hdr img{height:32px;width:auto}
     .hdr-txt{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.55)}
-    .band{background:linear-gradient(135deg,rgba(197,134,118,.14) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.18);border-left:3px solid #F7BBAC;padding:20px 24px;margin-bottom:28px}
+    .band{background:linear-gradient(135deg,rgba(197,134,118,.14) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.18);border-left:3px solid #C58676;padding:20px 24px;margin-bottom:28px}
     .band-label{font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:8px}
     .band-title{font-size:22px;font-weight:700;color:#F7BBAC;line-height:1.25}
     .band-sub{margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
@@ -24,7 +24,9 @@
     .rl{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap}
     .rv{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);text-align:right}
     .rv.g{color:#F7BBAC}
-    .rv.green{color:#34d399}
+    .comp-card{border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);padding:12px 16px;margin-bottom:8px}
+    .comp-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:3px}
+    .comp-meta{font-size:10px;color:rgba(255,255,255,.35)}
     hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:28px 0}
     .notice{font-size:11px;color:rgba(255,255,255,.3);line-height:1.7;font-style:italic;padding:0 4px}
     .ftr{margin-top:36px;padding-top:24px;border-top:1px solid rgba(247,187,172,.1)}
@@ -48,22 +50,59 @@
 
   <!-- Hero -->
   <div class="band">
-    <p class="band-label">Aceite na Mesa</p>
+    <p class="band-label">Inscrição Confirmada</p>
     <p class="band-title">Olá, {{name}}!</p>
-    <p class="band-sub">O responsável da mesa confirmou a tua participação. O teu lugar está reservado!</p>
+    <p class="band-sub">A tua inscrição no Jantar de Gala foi concluída com sucesso. Aguarda a confirmação do pagamento pela comissão organizadora.</p>
   </div>
 
-  <!-- Detalhes -->
+  <!-- Dados Pessoais -->
   <div class="sec">
-    <p class="sec-label">Detalhes da Mesa</p>
+    <p class="sec-label">Dados Pessoais</p>
     <div class="card">
-      <div class="row"><span class="rl">Mesa</span><span class="rv g">{{table}}</span></div>
-      <div class="row"><span class="rl">Estado</span><span class="rv green">&#10003; Confirmado</span></div>
+      <div class="row"><span class="rl">Nome</span><span class="rv">{{name}}</span></div>
+      <div class="row"><span class="rl">Nº Mecanográfico</span><span class="rv">{{nmec}}</span></div>
+      <div class="row"><span class="rl">Ano</span><span class="rv">{{year}}</span></div>
     </div>
   </div>
 
+  <!-- Logística -->
+  <div class="sec">
+    <p class="sec-label">Logística</p>
+    <div class="card">
+      <div class="row"><span class="rl">Transporte</span><span class="rv">{{bus}}</span></div>
+      <div class="row"><span class="rl">Prato</span><span class="rv">{{meal}}</span></div>
+      <div class="row"><span class="rl">Alergias</span><span class="rv">{{allergies}}</span></div>
+    </div>
+  </div>
+
+  <!-- Pagamento -->
+  <div class="sec">
+    <p class="sec-label">Pagamento</p>
+    <div class="card">
+      {% if phased_payment %}
+      <div class="row"><span class="rl">Modalidade</span><span class="rv g">Pagamento Faseado</span></div>
+      {% else %}
+      <div class="row"><span class="rl">Modalidade</span><span class="rv">Pagamento Integral</span></div>
+      {% endif %}
+      <div class="row"><span class="rl">Estado</span><span class="rv" style="color:rgba(252,165,0,.85)">Aguarda confirmação</span></div>
+    </div>
+  </div>
+
+  {% if companions %}
+  <!-- Acompanhantes -->
+  <div class="sec">
+    <p class="sec-label">Acompanhantes ({{companions|length}})</p>
+    {% for c in companions %}
+    <div class="comp-card">
+      <p class="comp-name">{{c.name}}</p>
+      {% if c.allergies %}<p class="comp-meta">Alergias: {{c.allergies}}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <hr/>
-  <p class="notice">Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
+  <p class="notice">Receberás um novo email quando o teu pagamento for confirmado. Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
 
   <!-- Footer -->
   <div class="ftr">

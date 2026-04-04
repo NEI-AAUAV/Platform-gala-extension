@@ -22,7 +22,7 @@ async def delete_category(
     category_id: int,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> dict:
     """Deletes an existing vote category and its options' photos from storage."""
     # Fetch category first to get photo paths
