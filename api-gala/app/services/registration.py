@@ -29,15 +29,22 @@ class RegistrationService:
         if step == 2:
             # Personal data
             update_data["matriculation"] = data.get("matriculation")
+            update_data["phone"] = data.get("phone")
             # nmec should be fixed, but if user can edit it:
             if "nmec" in data:
                 update_data["nmec"] = data["nmec"]
+            
+            if "companions" in data:
+                update_data["companions"] = data["companions"]
 
         elif step == 3:
             # Logistics
             update_data["bus_option"] = BusOption(data.get("bus_option", "NONE"))
             update_data["meal_option"] = data.get("meal_option")
             update_data["food_allergies"] = data.get("food_allergies")
+            
+            if "companions" in data:
+                update_data["companions"] = data["companions"]
 
         elif step == 4:
             # Payment - proof upload is usually a separate call, but if sent here:

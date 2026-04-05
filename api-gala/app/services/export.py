@@ -15,7 +15,7 @@ class ExportService:
         
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=[
-            "id", "nmec", "name", "email", "matriculation", "bus_option", 
+            "id", "nmec", "name", "email", "phone", "matriculation", "bus_option", 
             "meal_option", "food_allergies", "phased_payment", "has_payed", "table_id"
         ])
         writer.writeheader()
@@ -27,6 +27,7 @@ class ExportService:
                 "nmec": user.nmec,
                 "name": user.name,
                 "email": user.email,
+                "phone": user.phone,
                 "matriculation": user.matriculation.__root__ if user.matriculation else None,
                 "bus_option": user.bus_option,
                 "meal_option": user.meal_option,

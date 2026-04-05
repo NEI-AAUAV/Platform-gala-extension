@@ -27,6 +27,7 @@ class User(BaseDocument):
     is_registered: bool = False
     
     # Logistics
+    phone: Optional[str] = None
     bus_option: BusOption = BusOption.NONE
     meal_option: Optional[str] = None
     food_allergies: Optional[str] = None
