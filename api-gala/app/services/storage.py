@@ -1,5 +1,7 @@
 from typing import Optional
 
+import boto3
+from botocore.config import Config
 from loguru import logger
 
 from app.core.config import get_settings
@@ -17,46 +19,38 @@ class StorageClient:
         ])
         if self.enabled:
             try:
-                import boto3
-                from botocore.config import Config
-            except Exception as e:
-                logger.error(
-                    "R2 storage enabled but boto3/botocore not installed: %s",
-                    e,
+                self.client = boto3.client(
+                    "s3",
+                    endpoint_url=settings.R2_ENDPOINT_URL,
+                    aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+                    config=Config(
+                        signature_version="s3v4",
+                        connect_timeout=10,
+                        read_timeout=30,
+                    ),
                 )
-                # disable storage to avoid crashing import-time
+                self.bucket = settings.R2_BUCKET
+                self.public_base_url = settings.R2_PUBLIC_BASE_URL
+            except Exception as e:
+                logger.error("Failed to initialize R2 storage client: %s", e)
                 self.enabled = False
                 self.client = None
                 self.bucket = None
                 self.public_base_url = None
-                return
-
-            self.client = boto3.client(
-                "s3",
-                endpoint_url=settings.R2_ENDPOINT_URL,
-                aws_access_key_id=settings.R2_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
-                config=Config(
-                    signature_version="s3v4",
-                    connect_timeout=10,
-                    read_timeout=30,
-                ),
-            )
-            self.bucket = settings.R2_BUCKET
-            self.public_base_url = settings.R2_PUBLIC_BASE_URL
         else:
             self.client = None
             self.bucket = None
             self.public_base_url = None
 
     def upload_image(self, key: str, data: bytes, content_type: str) -> Optional[str]:
-        """Upload image bytes to R2. Returns public URL or None if disabled."""
+        """Upload bytes to R2. Returns public URL or None if disabled."""
         if not self.enabled:
             logger.warning("R2 storage not configured; skipping upload")
             return None
 
         try:
-            logger.info(f"Uploading image to R2: {key} ({len(data)} bytes)")
+            logger.info(f"Uploading to R2: {key} ({len(data)} bytes)")
             self.client.put_object(
                 Bucket=self.bucket,
                 Key=key,
@@ -78,16 +72,12 @@ class StorageClient:
 
         r2_base = self.public_base_url.rstrip("/")
         if not image_url.startswith(r2_base):
-            # Not an R2 URL (might be a legacy local path), nothing to delete
             return True
 
         try:
-            key = image_url[len(r2_base) + 1:]  # +1 for the leading slash
+            key = image_url[len(r2_base) + 1:]
             logger.info(f"Deleting image from R2: {key}")
-            self.client.delete_object(
-                Bucket=self.bucket,
-                Key=key,
-            )
+            self.client.delete_object(Bucket=self.bucket, Key=key)
             logger.info(f"Successfully deleted from R2: {key}")
             return True
         except Exception as e:

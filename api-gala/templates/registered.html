@@ -61,6 +61,7 @@
     <div class="card">
       <div class="row"><span class="rl">Nome</span><span class="rv">{{name}}</span></div>
       <div class="row"><span class="rl">Nº Mecanográfico</span><span class="rv">{{nmec}}</span></div>
+      <div class="row"><span class="rl">Telemóvel</span><span class="rv">{{phone}}</span></div>
       <div class="row"><span class="rl">Ano</span><span class="rv">{{year}}</span></div>
     </div>
   </div>
@@ -95,6 +96,7 @@
     {% for c in companions %}
     <div class="comp-card">
       <p class="comp-name">{{c.name}}</p>
+      <p class="comp-meta">Prato: {{c.dish}}</p>
       {% if c.allergies %}<p class="comp-meta">Alergias: {{c.allergies}}</p>{% endif %}
     </div>
     {% endfor %}

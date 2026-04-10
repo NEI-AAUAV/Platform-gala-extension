@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, File, HTTPException, status
 from typing import Dict, Any, Annotated
 from app.api.auth import api_nei_auth, AuthData, auth_responses
 from app.core.db import get_db
@@ -8,6 +8,7 @@ from app.core.email import send_email
 from app.models.user import User
 from app.services.registration import RegistrationService
 
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
 
@@ -20,7 +21,6 @@ async def get_registration_status(
     """Returns the current registration status and wizard progress for the authenticated user."""
     user = await RegistrationService.get_user_registration(db, auth.sub)
     if not user:
-        # Create user record if not exists (first time accessing registration)
         user_coll = User.get_collection(db)
         user = User(
             id=auth.sub,
@@ -44,7 +44,6 @@ async def initialize_registration(
     auth: Annotated[AuthData, Depends(api_nei_auth)],
 ):
     """Initializes or updates basic registration info (NMEC and Matriculation/Year)."""
-    # Map frontend 'year' to 'matriculation' if needed
     if "year" in data and "matriculation" not in data:
         data["matriculation"] = data["year"]
 
@@ -88,6 +87,7 @@ async def update_registration_step(
             bus=bus_labels.get(user.bus_option.value, "—"),
             meal=user.meal_option or "—",
             allergies=user.food_allergies or "Nenhuma",
+            phone=user.phone or "—",
             phased_payment=user.phased_payment,
             companions=user.companions,
         )
@@ -96,22 +96,30 @@ async def update_registration_step(
 
 
 @router.post(
-    "/payment-proof", 
-    response_model=Dict[str, str], 
-    responses={**auth_responses, 400: {"description": "Invalid file type"}}
+    "/payment-proof",
+    response_model=Dict[str, str],
+    responses={**auth_responses, 400: {"description": "Invalid file type or size"}}
 )
 async def upload_payment_proof(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
-    file: Annotated[UploadFile, File(...)]
+    file: Annotated[UploadFile, File(...)],
+    phase: int = Query(default=1, ge=1, le=2),
 ):
-    """Uploads a payment proof file to R2 storage."""
+    """Uploads a payment proof file to R2 storage. Use phase=1 or phase=2."""
     if not file.content_type.startswith("image/") and file.content_type != "application/pdf":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid file type. Only images and PDFs are allowed."
         )
-        
+
     file_data = await file.read()
-    url = await RegistrationService.upload_payment_proof(db, auth.sub, file_data, file.content_type)
+
+    if len(file_data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Maximum size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB."
+        )
+
+    url = await RegistrationService.upload_payment_proof(db, auth.sub, file_data, file.content_type, phase)
     return {"url": url}

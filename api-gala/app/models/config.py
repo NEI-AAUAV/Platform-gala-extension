@@ -33,7 +33,7 @@ class PriceConfig(BaseModel):
     phase1_deadline: Optional[str] = None
     phase2_amount: Optional[float] = None
     phase2_deadline: Optional[str] = None
-    
+
     iban: str = ""
     holder: str = ""
     description_template: str = "Gala - <Nome> (<Nmec>)"
@@ -41,21 +41,17 @@ class PriceConfig(BaseModel):
 
 
 class EventDates(BaseModel):
-    # Registration
     registration_start: str = ""
     registration_end: str = ""
-    
-    # Table selection
+
     tables_start: str = ""
     tables_end: str = ""
-    
-    # Voting system
+
     nominations_start: str = ""
     nominations_end: str = ""
     voting_start: str = ""
     voting_end: str = ""
-    
-    # The event itself
+
     event_time: str = ""
     event_date: str = ""
 
@@ -67,15 +63,21 @@ class GlobalConfig(BaseDocument):
     event_description: str = ""
     rules: List[str] = []
     items_included: List[str] = []
-    
+
     dates: EventDates = Field(default_factory=EventDates)
     prices: PriceConfig
     bus: BusConfig
     meals: List[MealOption] = []
-    
+
     max_registrations: int = 200
     max_table_size: int = 10
-    
+
+    allergies_required: bool = False
+    payment_method: str = "both"
+    payment_deadline_hours: int = 48
+    payment_deadline_date: str = ""
+    payment_email: str = ""
+
     @classmethod
     def collection(cls) -> str:
         return "config"

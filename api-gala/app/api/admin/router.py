@@ -21,12 +21,15 @@ router = APIRouter()
 ERROR_FORBIDDEN = "Not enough permissions"
 
 
-@router.get("/config", response_model=GlobalConfig, responses={**auth_responses})
+@router.get("/config", response_model=GlobalConfig, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}})
 async def get_config(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Retrieves the global event configuration."""
+    """Retrieves the global event configuration (Admin/Manager only)."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+
     return await ConfigService.get_config(db)
 
 
@@ -273,12 +276,15 @@ async def admin_toggle_vote_category(
     return {"status": "success"}
 
 
-@router.get("/time", response_model=TimeSlots, responses={**auth_responses, 404: {"description": "Time slots not found"}})
+@router.get("/time", response_model=TimeSlots, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}})
 async def get_time_slots(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Retrieves the event time slots."""
+    """Retrieves the event time slots (Admin/Manager only)."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+
     collection = TimeSlots.get_collection(db)
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
     if not result:

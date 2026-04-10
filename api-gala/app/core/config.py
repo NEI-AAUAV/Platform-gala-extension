@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     R2_BUCKET: Optional[str] = os.getenv("R2_BUCKET")
     R2_PUBLIC_BASE_URL: Optional[str] = os.getenv("R2_PUBLIC_BASE_URL")
 
+
     class Config:
         frozen = True
         case_sensitive = True

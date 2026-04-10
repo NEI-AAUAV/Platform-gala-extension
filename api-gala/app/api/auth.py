@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from pydantic import BaseModel
 from typing import Annotated, Any, Union, Dict, List, Optional, no_type_check
+import anyio
 from jose import JWTError, jwt
 
 from app.core.config import SettingsDep
@@ -12,8 +13,7 @@ from app.core.config import SettingsDep
 @cached()
 @no_type_check
 async def get_public_key(settings: SettingsDep) -> str:
-    with open(settings.JWT_PUBLIC_KEY_PATH, "r") as file:
-        return file.read()
+    return await anyio.Path(settings.JWT_PUBLIC_KEY_PATH).read_text()
 
 
 class ScopeEnum(str, Enum):
@@ -28,7 +28,7 @@ class ScopeEnum(str, Enum):
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="http://localhost:8000/api/nei/v1/auth/login",
+    tokenUrl="/api/nei/v1/auth/login",
     scopes={
         ScopeEnum.ADMIN: "Full access to everything.",
         ScopeEnum.MANAGER_FAMILY: "Edit faina family.",
@@ -41,14 +41,14 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 class AuthData(BaseModel):
     sub: int
-    nmec: Optional[int]
+    nmec: Optional[int] = None
     name: str
     email: str
     surname: str
     scopes: List[str]
 
 
-async def api_nei_auth(
+def api_nei_auth(
     settings: SettingsDep,
     public_key: Annotated[str, Depends(get_public_key)],
     security_scopes: SecurityScopes,
@@ -72,7 +72,7 @@ async def api_nei_auth(
             public_key,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        auth_data = AuthData.parse_obj(payload)
+        auth_data = AuthData(**payload)
     except JWTError:
         raise credentials_exception
 

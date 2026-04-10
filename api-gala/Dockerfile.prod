@@ -5,23 +5,22 @@ WORKDIR /tmp
 
 COPY ./emails-src ./
 
-RUN npm install -g pnpm@8
-RUN pnpm install --prod
-RUN pnpm run export
-RUN pnpm run export --plainText
+RUN npm install -g pnpm@8 --ignore-scripts && \
+    pnpm install --prod --ignore-scripts && \
+    pnpm run export && \
+    pnpm run export --plainText
 
-FROM python:3.10-slim as requirements-stage
+FROM python:3.10-slim AS requirements-stage
 
 WORKDIR /tmp
 
-RUN pip install --upgrade pip &&\
-    pip install --upgrade poetry
+RUN pip install --no-cache-dir --upgrade pip &&\
+    pip install --no-cache-dir --upgrade poetry
 
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+COPY ./pyproject.toml ./poetry.lock /tmp/
 
-RUN poetry self add poetry-plugin-export
-
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --without test,dev
+RUN poetry self add poetry-plugin-export && \
+    poetry export -f requirements.txt --output requirements.txt --without-hashes --without test,dev
 
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10-slim
 
@@ -33,17 +32,21 @@ WORKDIR /api_gala
 COPY --from=requirements-stage /tmp/requirements.txt requirements.txt
 
 RUN apt-get update \
-    && apt-get -y install libpq-dev gcc libmagic1
-
-RUN pip install --upgrade pip \
+    && apt-get -y install --no-install-recommends gcc libmagic1 libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./app ./app
 # Copy the email templates that were built
 COPY --from=email-builder /tmp/out ./templates
 
-RUN mkdir static
-RUN mkdir jwt-keys
+RUN useradd -ms /bin/sh appuser && chown -R appuser /api_gala && \
+    mkdir static && \
+    mkdir jwt-keys && \
+    chown -R appuser static jwt-keys /tmp
+
+USER appuser
 
 EXPOSE 8004
-CMD gunicorn app.main:app --bind 0.0.0.0:8004 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips="*"
+CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8004", "-k", "uvicorn.workers.UvicornWorker", "--forwarded-allow-ips=*"]

@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
 from app.core.db import DatabaseDep
-from app.core.db.counters import getNextVoteCategoryId
+from app.core.db.counters import get_next_vote_category_id
 from app.models.vote import VoteCategory
 
 router = APIRouter()
@@ -36,6 +36,8 @@ async def create_category(
 ) -> VoteCategory:
     """Creates a new vote category"""
     category_id = await getNextVoteCategoryId(db)
+    category_id = await get_next_vote_category_id(db)
+    category_id = await get_next_vote_category_id(db)
     category = VoteCategory(
         _id=category_id,
         category=form_data.category,

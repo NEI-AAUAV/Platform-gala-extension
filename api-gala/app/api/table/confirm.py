@@ -36,6 +36,8 @@ class TableApprovalForm(BaseModel):
             "description": "The status of the table head cannot be changed or the person doesn't belong to the table"
         },
         404: {"description": "Table not found"},
+        409: {"description": "Table is full"},
+        500: {"description": "Something went wrong"},
     },
 )
 async def person_confirm_table(

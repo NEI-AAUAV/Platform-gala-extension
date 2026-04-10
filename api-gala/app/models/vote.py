@@ -33,6 +33,9 @@ class VoteCategory(BaseDocument):
     options: List[str] = []
     photo_paths: List[str] = []
     votes: List[Vote] = []
+    options: List[str]
+    photo_paths: List[str]
+    votes: List[Vote]
 
 
 class VoteListing(BaseDocument):

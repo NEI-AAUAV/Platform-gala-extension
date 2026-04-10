@@ -82,17 +82,16 @@ class RegistrationService:
         return User.parse_obj(updated_dict)
 
     @staticmethod
-    async def upload_payment_proof(db: DBType, user_id: int, file_data: bytes, content_type: str) -> str:
-        # 1. Upload to R2
-        key = f"proofs/{user_id}_payment_proof"
+    async def upload_payment_proof(db: DBType, user_id: int, file_data: bytes, content_type: str, phase: int = 1) -> str:
+        key = f"proofs/{user_id}_payment_proof_phase{phase}"
         url = storage_client.upload_image(key, file_data, content_type)
         if not url:
             raise RuntimeError("Failed to upload payment proof to storage.")
 
-        # 2. Update user record
+        field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
         collection = User.get_collection(db)
         await collection.update_one(
-            {"_id": user_id}, 
-            {"$set": {"payment_proof_url": url, "registration_step": 5}}
+            {"_id": user_id},
+            {"$set": {field: url}}
         )
         return url

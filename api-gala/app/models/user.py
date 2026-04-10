@@ -36,6 +36,7 @@ class User(BaseDocument):
     has_payed: bool = False
     phased_payment: bool = False
     payment_proof_url: Optional[str] = None
+    payment_proof_url_phase2: Optional[str] = None
     
     # Table
     table_id: Optional[int] = None

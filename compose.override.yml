@@ -11,6 +11,11 @@ services:
       MONGO_PASSWORD: mongo
       JWT_PUBLIC_KEY_PATH: /jwt.key.pub
       ALLOW_TIME_SLOTS_PAST: 'True'
+      R2_ENDPOINT_URL: ${R2_ENDPOINT_URL}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET: ${R2_BUCKET}
+      R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL}
     ports:
       - 8004:8004
     volumes:
@@ -44,6 +49,9 @@ services:
     depends_on:
       - api_gala
       - web_gala
+    networks:
+      - backend
+      - frontend
 
 volumes:
   gala_modules:
