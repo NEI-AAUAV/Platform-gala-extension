@@ -71,3 +71,5 @@ api-gala/emails-src/out/
 .cache/
 package-lock.json
 
+package-lock.json
+yarn.lock

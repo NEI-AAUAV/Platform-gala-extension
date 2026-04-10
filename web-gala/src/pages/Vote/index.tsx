@@ -141,7 +141,7 @@ export default function Vote() {
                   "h-14 w-full text-lg shadow-[0_0_20px_rgba(255,193,7,0.3)]",
                 )}
                 submit
-                loading={isSubmitting}
+                disabled={isSubmitting}
               >
                 {!isSubmitting && <FontAwesomeIcon icon={faPaperPlane} />}
                 {isSubmitting ? "A enviar..." : "Enviar votações"}

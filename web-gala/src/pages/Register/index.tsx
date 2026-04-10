@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUserStore } from "@/stores/useUserStore";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
-import { useWizardState } from "@/hooks/useWizardState";
+import { useWizardState, BusOption } from "@/hooks/useWizardState";
+import GalaService from "@/services/GalaService";
 import StepIndicator from "./StepIndicator";
 import Step1EventInfo from "./steps/Step1EventInfo";
 import Step2PersonalData from "./steps/Step2PersonalData";
@@ -12,11 +14,44 @@ import Step4Payment from "./steps/Step4Payment";
 import Step5Table from "./steps/Step5Table";
 import Step6Confirm from "./steps/Step6Confirm";
 
+const BUS_OPTION_MAP: Record<string, BusOption> = {
+  ROUND_TRIP: "round_trip",
+  ONE_WAY: "one_way",
+  NONE: "none",
+};
+
+const BUS_OPTION_REVERSE: Record<BusOption, string> = {
+  round_trip: "ROUND_TRIP",
+  one_way: "ONE_WAY",
+  none: "NONE",
+};
+
 export default function Register() {
   const { sessionLoading, sub } = useUserStore();
   const loginLink = useLoginLink();
   const { config } = useRegistrationConfig();
   const { data, update, reset } = useWizardState();
+  const [syncing, setSyncing] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (sub === undefined) return;
+    GalaService.registration.getStatus()
+      .then((status) => {
+        if (status.registration_step && status.registration_step > 1) {
+          update({
+            nmec: String(status.nmec || ""),
+            year: (status as unknown as Record<string, unknown>).matriculation as number | null ?? null,
+            bus: BUS_OPTION_MAP[(status as unknown as Record<string, unknown>).bus_option as string ?? "NONE"] ?? "none",
+            meal: (status as unknown as Record<string, unknown>).meal_option as string || "",
+            allergies: (status as unknown as Record<string, unknown>).food_allergies as string || "",
+            companions: (status as unknown as Record<string, unknown>).companions as [] || [],
+            currentStep: Math.max(status.registration_step, data.currentStep),
+          });
+        }
+      })
+      .catch(() => {});
+  }, [sub]);
 
   if (!sessionLoading && sub === undefined) {
     return <Navigate to={loginLink} />;
@@ -26,12 +61,59 @@ export default function Register() {
   const maxReached = data.currentStep;
 
   const goTo = (step: number) => update({ currentStep: step });
-  const next = () => update({ currentStep: Math.min(currentStep + 1, 6) });
   const back = () => update({ currentStep: Math.max(currentStep - 1, 1) });
 
-  const handleFinish = () => {
-    reset();
-    window.location.href = "/profile";
+  const syncCurrentStep = async () => {
+    if (currentStep === 2) {
+      await GalaService.registration.updateStep(2, {
+        nmec: Number(data.nmec),
+        matriculation: data.year,
+        companions: data.companions,
+      });
+    } else if (currentStep === 3) {
+      await GalaService.registration.updateStep(3, {
+        bus_option: BUS_OPTION_REVERSE[data.bus] ?? "NONE",
+        meal_option: data.meal,
+        food_allergies: data.allergies || "",
+        companions: data.companions,
+      });
+    } else if (currentStep === 4) {
+      await GalaService.registration.updateStep(4, {
+        phased_payment: config.phasedPaymentEnabled,
+      });
+    } else if (currentStep === 5) {
+      await GalaService.registration.updateStep(5, {
+        table_id: data.tableId,
+      });
+    }
+  };
+
+  const next = async () => {
+    setStepError(null);
+    setSyncing(true);
+    try {
+      await syncCurrentStep();
+      update({ currentStep: Math.min(currentStep + 1, 6) });
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setStepError(detail || "Erro ao guardar dados. Tenta novamente.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    setStepError(null);
+    setSyncing(true);
+    try {
+      await GalaService.registration.updateStep(6, {});
+      reset();
+      window.location.href = "/profile";
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setStepError(detail || "Erro ao concluir inscrição. Tenta novamente.");
+      setSyncing(false);
+    }
   };
 
   return (
@@ -62,11 +144,17 @@ export default function Register() {
         <div className="rounded-2xl border border-white/8 bg-white/3 p-6 backdrop-blur-sm sm:p-8">
           <StepTitle step={currentStep} />
 
+          {stepError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {stepError}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             <div key={currentStep}>
               {currentStep === 1 && <Step1EventInfo config={config} onNext={next} />}
               {currentStep === 2 && (
-                <Step2PersonalData config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+                <Step2PersonalData config={config} data={data} onUpdate={update} onNext={next} onBack={back} syncing={syncing} />
               )}
               {currentStep === 3 && (
                 <Step3Logistics config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
@@ -78,7 +166,7 @@ export default function Register() {
                 <Step5Table config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
               )}
               {currentStep === 6 && (
-                <Step6Confirm config={config} data={data} onBack={back} onFinish={handleFinish} />
+                <Step6Confirm config={config} data={data} onBack={back} onFinish={handleFinish} syncing={syncing} />
               )}
             </div>
           </AnimatePresence>

@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faEnvelope, faIdCard, faSpinner, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useUserStore } from "@/stores/useUserStore";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
-import useUserCreate from "@/hooks/userHooks/useUserCreate";
 import { WizardData } from "@/hooks/useWizardState";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import Step2CompanionEditor from "./Step2CompanionEditor";
@@ -24,12 +23,12 @@ interface Props {
   onUpdate: (updates: Partial<WizardData>) => void;
   onNext: () => void;
   onBack: () => void;
+  syncing?: boolean;
 }
 
-export default function Step2PersonalData({ config, data, onUpdate, onNext, onBack }: Props) {
+export default function Step2PersonalData({ config, data, onUpdate, onNext, onBack, syncing = false }: Props) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isAlreadyRegistered = !!sessionUser?.nmec;
@@ -51,18 +50,6 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
     if (invalidCompanion) {
       setError("Cada acompanhante precisa de nome e prato principal.");
       return;
-    }
-
-    if (!isAlreadyRegistered) {
-      setLoading(true);
-      try {
-        await useUserCreate({ nmec: Number(data.nmec), matriculation: data.year });
-      } catch {
-        setError("Erro ao registar. As inscrições podem estar encerradas ou já te inscreveste.");
-        setLoading(false);
-        return;
-      }
-      setLoading(false);
     }
 
     onNext();
@@ -118,10 +105,10 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
         </button>
         <button
           onClick={handleNext}
-          disabled={loading}
+          disabled={syncing}
           className="flex items-center gap-2 border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:opacity-60"
         >
-          {loading && <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />}
+          {syncing && <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xs" />}
           {isAlreadyRegistered ? "Continuar →" : "Registar e Continuar →"}
         </button>
       </div>

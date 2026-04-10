@@ -19,12 +19,8 @@ type Confirmation = {
 
 type EditUser = {
   id: number;
-  has_payed: boolean;
-};
-
-type CreateUser = {
-  nmec: number | null;
-  matriculation: number | null;
+  has_payed?: boolean;
+  [key: string]: unknown;
 };
 
 type EditTimeSlots = {
@@ -82,24 +78,15 @@ const GalaService = {
       return response;
     },
     reserveTable: async (id: string | number, request: ReserveTable) => {
-      const response: Table = await client.post(
-        `/table/${id}/reserve`,
-        request,
-      );
+      const response: Table = await client.post(`/table/${id}/reserve`, request);
       return response;
     },
     confirmTable: async (id: string | number, request: Confirmation) => {
-      const response: Table = await client.patch(
-        `/table/${id}/confirm`,
-        request,
-      );
+      const response: Table = await client.patch(`/table/${id}/confirm`, request);
       return response;
     },
     tableTransfer: async (id: string | number, request: { uid: number }) => {
-      const response: Table = await client.patch(
-        `/table/${id}/transfer`,
-        request,
-      );
+      const response: Table = await client.patch(`/table/${id}/transfer`, request);
       return response;
     },
     tableLeave: async (id: string | number) => {
@@ -111,63 +98,67 @@ const GalaService = {
       return response;
     },
   },
+
   user: {
     listUsers: async () => {
-      const response: User[] = await client.get("/users");
+      const response: User[] = await client.get("/user/");
       return response;
     },
     editUser: async (request: EditUser) => {
-      const response: User = await client.put(`/users`, request);
-      return response;
-    },
-    createUser: async (request: CreateUser) => {
-      const response: User = await client.post(`/users`, request);
+      const { id, ...updates } = request;
+      const response: User = await client.put("/user/", { id, ...updates });
       return response;
     },
     getSessionUser: async () => {
-      const response: User = await client.get("/users/me");
+      const response: User = await client.get("/user/me");
       return response;
     },
+    getMyTable: async () => {
+      return client.get("/user/me/table");
+    },
   },
+
   time: {
     getTimeSlots: async () => {
-      const response: TimeSlots = await client.get(`/slots`);
+      const response: TimeSlots = await client.get("/time_slots/");
       return response;
     },
     editTimeSlots: async (request: EditTimeSlots) => {
-      const response: TimeSlots = await client.put(`/slots`, request);
+      const response: TimeSlots = await client.patch("/admin/time", request);
       return response;
     },
   },
+
   limits: {
     getLimits: async () => {
-      const response: Limits = await client.get(`/limits`);
+      const response: Limits = await client.get("/limits");
       return response;
     },
-    editTimeSlots: async (request: EditLimits) => {
-      const response: Limits = await client.put(`/limits`, request);
+    editLimits: async (request: EditLimits) => {
+      const response: Limits = await client.put("/limits", request);
       return response;
     },
   },
+
   vote: {
     listCategories: async () => {
-      const response: Vote[] = await client.get("/votes/list");
+      const response: Vote[] = await client.get("/voting/list");
       return response;
     },
     getCategory: async (id: string | number) => {
-      const response: Vote = await client.get(`/votes/${id}`);
+      const response: Vote = await client.get(`/voting/${id}`);
       return response;
     },
     createCategory: async (request: VoteCategoryCreate) => {
-      const response: Vote = await client.post("/votes/new", request);
+      const response: Vote = await client.post("/voting/new", request);
       return response;
     },
     editVote: async (id: string | number, request: VoteCategoryEdit) => {
-      const response: Vote = await client.put(`/votes/${id}/edit`, request);
+      const response: Vote = await client.put(`/voting/${id}/edit`, request);
       return response;
     },
     castVote: async (id: string | number, request: VoteCategoryCast) => {
-      const response: Vote = await client.put(`/votes/${id}/cast`, request);
+      const response: Vote = await client.put(`/voting/${id}/cast`, request);
       return response;
     },
     uploadOptionPhoto: async (
@@ -178,23 +169,42 @@ const GalaService = {
       const formData = new FormData();
       formData.append("image", file);
       const response: Vote = await client.put(
-        `/votes/${categoryId}/options/${optionIndex}/photo`,
+        `/voting/${categoryId}/options/${optionIndex}/photo`,
         formData,
       );
       return response;
     },
     deleteCategory: async (id: string | number) => {
-      const response = await client.delete(`/votes/${id}`);
-      return response;
+      return client.delete(`/voting/${id}`);
     },
     deleteOptionPhoto: async (
       categoryId: string | number,
       optionIndex: number,
     ) => {
-      const response = await client.delete(
-        `/votes/${categoryId}/options/${optionIndex}/photo`,
-      );
-      return response;
+      return client.delete(`/voting/${categoryId}/options/${optionIndex}/photo`);
+    },
+  },
+
+  registration: {
+    getStatus: async (): Promise<User> => {
+      return client.get("/registration/status");
+    },
+    updateStep: async (step: number, data: Record<string, unknown>): Promise<User> => {
+      return client.post(`/registration/step/${step}`, data);
+    },
+    uploadPaymentProof: async (file: File, phase: 1 | 2 = 1): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(`/registration/payment-proof?phase=${phase}`, formData);
+    },
+  },
+
+  config: {
+    getConfig: async (): Promise<Record<string, unknown>> => {
+      return client.get("/config");
+    },
+    updateConfig: async (data: Record<string, unknown>): Promise<Record<string, unknown>> => {
+      return client.put("/admin/config", data);
     },
   },
 };

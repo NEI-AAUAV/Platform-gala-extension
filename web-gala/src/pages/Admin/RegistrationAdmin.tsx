@@ -155,13 +155,13 @@ export default function RegistrationAdmin() {
   const { time } = useTime();
   const [saved, setSaved] = useState(false);
 
-  const saveTime = async (updates: any) => {
+  const saveTime = async (updates: Parameters<typeof GalaService.time.editTimeSlots>[0]) => {
     try {
       await GalaService.time.editTimeSlots(updates);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch {
+      // Time slots save failed silently — show toast in future
     }
   };
 
@@ -360,27 +360,21 @@ export default function RegistrationAdmin() {
       <Section title="8. Ferramentas de Exportação">
         <p className="text-xs text-white/40 mb-2">Exporta os dados em formato CSV para gestão externa.</p>
         <div className="flex flex-wrap gap-3">
-          <ExportButton 
-            label="Exportar Inscrições" 
-            onClick={() => window.open("/api/gala/v1/export/registrations", "_blank")} 
+          <ExportButton
+            label="Exportar Inscrições"
+            onClick={() => window.open("/api/gala/v1/admin/export/registrations", "_blank")}
           />
-          <ExportButton 
-            label="Exportar Pagamentos" 
-            onClick={() => window.open("/api/gala/v1/export/payments", "_blank")} 
+          <ExportButton
+            label="Exportar Mesas"
+            onClick={() => window.open("/api/gala/v1/admin/export/tables", "_blank")}
           />
         </div>
       </Section>
 
       <Section title="9. Segurança & Regras de Upload">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Tamanho Max. Comprovativo (MB)">
-            <NumberInput value={5} onChange={() => {}} min={1} />
-          </Field>
-          <Field label="Formatos Aceites">
-            <TextInput value=".pdf, .jpg, .png" onChange={() => {}} />
-          </Field>
-        </div>
-        <p className="text-[0.6rem] text-white/20 italic">Nota: Estas regras são aplicadas no frontend para validação imediata.</p>
+        <p className="text-xs text-white/40">
+          Tamanho máximo: <span className="text-white/60 font-semibold">10 MB</span> por comprovativo. Formatos aceites: <span className="text-white/60 font-semibold">imagens e PDF</span>. Validação aplicada no backend.
+        </p>
       </Section>
     </div>
   );

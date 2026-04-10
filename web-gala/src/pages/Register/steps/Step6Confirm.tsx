@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faUser, faCreditCard, faChair } from "@fortawesome/free-solid-svg-icons";
+import { faCircleCheck, faUser, faChair } from "@fortawesome/free-solid-svg-icons";
 import { WizardData } from "@/hooks/useWizardState";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { useUserStore } from "@/stores/useUserStore";
@@ -12,6 +12,7 @@ interface Props {
   readonly data: WizardData;
   readonly onBack: () => void;
   readonly onFinish: () => void;
+  readonly syncing?: boolean;
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
@@ -23,7 +24,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function Step6Confirm({ config, data, onBack, onFinish }: Props) {
+export default function Step6Confirm({ config, data, onBack, onFinish, syncing = false }: Props) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
   const { tables } = useTables();
@@ -178,9 +179,10 @@ export default function Step6Confirm({ config, data, onBack, onFinish }: Props) 
         </button>
         <button
           onClick={onFinish}
-          className="border border-light-gold/60 bg-gradient-to-r from-dark-gold/80 to-light-gold/80 px-10 py-3 font-gala text-sm font-bold text-black transition-all hover:from-dark-gold hover:to-light-gold"
+          disabled={syncing}
+          className="flex items-center gap-2 border border-light-gold/60 bg-gradient-to-r from-dark-gold/80 to-light-gold/80 px-10 py-3 font-gala text-sm font-bold text-black transition-all hover:from-dark-gold hover:to-light-gold disabled:opacity-60"
         >
-           ✓ Concluir Inscrição
+          {syncing ? "A guardar..." : "✓ Concluir Inscrição"}
         </button>
       </div>
     </motion.div>
