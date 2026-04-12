@@ -1,8 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, status
+import uuid
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, UploadFile, File, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import List, Annotated, Optional, Dict, Any, Union
 from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
+from app.services.storage import storage_client
 from app.core.config import SettingsDep
 from app.core.db import get_db
 from app.core.db.types import DBType
@@ -306,3 +308,170 @@ async def update_time_slots(
     await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
     return TimeSlots.parse_obj(result)
+
+
+class BusAssignBody(BaseModel):
+    bus_id: Optional[str] = None
+
+
+@router.patch(
+    "/registrations/{user_id}/bus",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+)
+async def assign_bus(
+    user_id: int,
+    body: BusAssignBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+):
+    """Assigns (or unassigns) a user to a specific bus (Admin only)."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+
+    user_coll = User.get_collection(db)
+    result = await user_coll.update_one({"_id": user_id}, {"$set": {"bus_assignment": body.bus_id}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"status": "success"}
+
+
+class AutoAssignBusBody(BaseModel):
+    strategy: str = "year"
+
+
+@router.post(
+    "/buses/auto-assign",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+)
+async def auto_assign_buses(
+    body: AutoAssignBusBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+):
+    """Auto-assigns registered users (with bus) to buses by year or registration order."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+
+    config = await ConfigService.get_config(db)
+    buses = config.homepage.bus_schedule.buses
+    if not buses:
+        raise HTTPException(status_code=400, detail="No buses configured")
+
+    user_coll = User.get_collection(db)
+    users = await user_coll.find({"is_registered": True, "bus_option": {"$ne": "NONE"}}).to_list(length=1000)
+
+    if body.strategy == "year":
+        users_sorted = sorted(users, key=lambda u: (u.get("matriculation") or 99))
+    else:
+        users_sorted = sorted(users, key=lambda u: u.get("_id", 0))
+
+    bus_capacities = {b.id: b.capacity for b in buses}
+    bus_counts: Dict[str, int] = {b.id: 0 for b in buses}
+
+    for user in users_sorted:
+        uid = user["_id"]
+        assigned = None
+        for bus in buses:
+            if bus_counts[bus.id] < bus_capacities[bus.id]:
+                assigned = bus.id
+                bus_counts[bus.id] += 1
+                break
+        await user_coll.update_one({"_id": uid}, {"$set": {"bus_assignment": assigned}})
+
+    return {"status": "success", "assigned": len(users_sorted)}
+
+
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+_MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+def _validate_image(image: UploadFile, data: bytes) -> str:
+    if image.content_type not in _ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Allowed: jpeg, png, webp")
+    if len(data) > _MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Max 10 MB.")
+    ext_map = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    return ext_map[image.content_type]
+
+
+@router.put(
+    "/homepage/dj/photo",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 503: {"description": "Storage not configured"}}
+)
+async def upload_dj_photo(
+    image: Annotated[UploadFile, File(...)],
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+):
+    """Uploads DJ photo to R2 and stores URL in config."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    if not storage_client.enabled:
+        raise HTTPException(status_code=503, detail="R2 storage not configured")
+
+    data = await image.read()
+    ext = _validate_image(image, data)
+    key = f"gala/homepage/dj_{uuid.uuid4().hex}.{ext}"
+    url = storage_client.upload_image(key, data, image.content_type)
+    if not url:
+        raise HTTPException(status_code=503, detail="Failed to upload image")
+
+    config = await ConfigService.get_config(db)
+    if config.homepage.dj.photo_url:
+        storage_client.delete_image(config.homepage.dj.photo_url)
+
+    config_coll = GlobalConfig.get_collection(db)
+    await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.dj.photo_url": url}})
+    return {"url": url}
+
+
+@router.delete(
+    "/homepage/dj/photo",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+)
+async def delete_dj_photo(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+):
+    """Removes DJ photo from R2 and config."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+
+    config = await ConfigService.get_config(db)
+    if config.homepage.dj.photo_url:
+        storage_client.delete_image(config.homepage.dj.photo_url)
+
+    config_coll = GlobalConfig.get_collection(db)
+    await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.dj.photo_url": None}})
+    return {"status": "success"}
+
+
+@router.put(
+    "/homepage/gallery/preview",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 503: {"description": "Storage not configured"}}
+)
+async def upload_gallery_preview(
+    image: Annotated[UploadFile, File(...)],
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+):
+    """Uploads gallery preview photo to R2."""
+    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    if not storage_client.enabled:
+        raise HTTPException(status_code=503, detail="R2 storage not configured")
+
+    data = await image.read()
+    ext = _validate_image(image, data)
+    key = f"gala/homepage/gallery_preview_{uuid.uuid4().hex}.{ext}"
+    url = storage_client.upload_image(key, data, image.content_type)
+    if not url:
+        raise HTTPException(status_code=503, detail="Failed to upload image")
+
+    config = await ConfigService.get_config(db)
+    if config.homepage.gallery.preview_photo_url:
+        storage_client.delete_image(config.homepage.gallery.preview_photo_url)
+
+    config_coll = GlobalConfig.get_collection(db)
+    await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.gallery.preview_photo_url": url}})
+    return {"url": url}

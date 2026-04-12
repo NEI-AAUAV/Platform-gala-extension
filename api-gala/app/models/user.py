@@ -40,6 +40,9 @@ class User(BaseDocument):
     
     # Table
     table_id: Optional[int] = None
-    
+
+    # Bus assignment (set by admin)
+    bus_assignment: Optional[str] = None
+
     # Companions
     companions: List[Companion] = []

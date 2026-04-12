@@ -13,6 +13,61 @@ class MealOption(BaseModel):
     is_active: bool = True
 
 
+class DJConfig(BaseModel):
+    visible: bool = False
+    name: str = ""
+    bio: str = ""
+    photo_url: Optional[str] = None
+    spotify_url: Optional[str] = None
+
+
+class BusVehicle(BaseModel):
+    id: str
+    name: str
+    capacity: int = 50
+
+
+class BusScheduleConfig(BaseModel):
+    visible: bool = False
+    departure_location: str = ""
+    departure_time: str = ""
+    return_time: str = ""
+    buses: List[BusVehicle] = []
+
+
+class AfterPartyConfig(BaseModel):
+    visible: bool = False
+    title: str = "After Party"
+    description: str = ""
+    drinks: List[str] = []
+
+
+class GalleryConfig(BaseModel):
+    visible: bool = False
+    title: str = "Galeria"
+    description: str = ""
+    drive_url: str = ""
+    preview_photo_url: Optional[str] = None
+
+
+class NominationsDisplayConfig(BaseModel):
+    visible: bool = False
+    show_nominees: bool = False
+
+
+class PaymentInfoConfig(BaseModel):
+    visible: bool = True
+
+
+class HomepageConfig(BaseModel):
+    dj: DJConfig = Field(default_factory=DJConfig)
+    bus_schedule: BusScheduleConfig = Field(default_factory=BusScheduleConfig)
+    after_party: AfterPartyConfig = Field(default_factory=AfterPartyConfig)
+    gallery: GalleryConfig = Field(default_factory=GalleryConfig)
+    nominations_display: NominationsDisplayConfig = Field(default_factory=NominationsDisplayConfig)
+    payment_info: PaymentInfoConfig = Field(default_factory=PaymentInfoConfig)
+
+
 class BusConfig(BaseModel):
     enabled: bool = True
     price_round_trip: float = 0.0
@@ -77,6 +132,8 @@ class GlobalConfig(BaseDocument):
     payment_deadline_hours: int = 48
     payment_deadline_date: str = ""
     payment_email: str = ""
+
+    homepage: HomepageConfig = Field(default_factory=HomepageConfig)
 
     @classmethod
     def collection(cls) -> str:
