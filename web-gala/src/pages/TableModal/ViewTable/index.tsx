@@ -8,9 +8,9 @@ import useTableLeave from "@/hooks/tableHooks/useTableLeave";
 import useNEIUser from "@/hooks/useNEIUser";
 
 type ViewTableProps = {
-  table: Table;
-  mutate: () => void;
-  inTable?: boolean;
+  readonly table: Table;
+  readonly mutate: () => void;
+  readonly inTable?: boolean;
 };
 
 export default function ViewTable({ table, inTable = false, mutate }: ViewTableProps) {

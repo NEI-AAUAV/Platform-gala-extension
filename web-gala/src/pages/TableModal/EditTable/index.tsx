@@ -10,8 +10,8 @@ import Avatar from "@/components/Avatar";
 import useTableLeave from "@/hooks/tableHooks/useTableLeave";
 
 type EditTableProps = {
-  table: Table;
-  mutate: () => void;
+  readonly table: Table;
+  readonly mutate: () => void;
 };
 
 export default function EditTable({ table, mutate }: EditTableProps) {
@@ -21,7 +21,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
   );
   const navigate = useNavigate();
 
-  const inviteUrl = `${window.location.origin}/gala/register?table=${table._id}`;
+  const inviteUrl = `${globalThis.location.origin}/gala/register?table=${table._id}`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
