@@ -9,7 +9,7 @@ import GalaService from "@/services/GalaService";
 const INPUT_CLS =
   "rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">{label}</label>
@@ -18,7 +18,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TextInput({ value, onChange, placeholder }: { readonly value: string; readonly onChange: (v: string) => void; readonly placeholder?: string }) {
   return (
     <input
       type="text"
@@ -30,7 +30,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
-function NumberInput({ value, onChange, min = 0 }: { value: number; onChange: (v: number) => void; min?: number }) {
+function NumberInput({ value, onChange, min = 0 }: { readonly value: number; readonly onChange: (v: number) => void; readonly min?: number }) {
   return (
     <input
       type="number"
@@ -42,7 +42,7 @@ function NumberInput({ value, onChange, min = 0 }: { value: number; onChange: (v
   );
 }
 
-function DateTimeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function DateTimeInput({ value, onChange }: { readonly value: string; readonly onChange: (v: string) => void }) {
   return (
     <input
       type="datetime-local"
@@ -53,7 +53,7 @@ function DateTimeInput({ value, onChange }: { value: string; onChange: (v: strin
   );
 }
 
-function Toggle({ enabled, onChange, label }: { enabled: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ enabled, onChange, label }: { readonly enabled: boolean; readonly onChange: (v: boolean) => void; readonly label: string }) {
   return (
     <button type="button" onClick={() => onChange(!enabled)} className="flex items-center gap-3">
       <div className={["relative h-5 w-9 rounded-full transition-colors", enabled ? "bg-dark-gold/70" : "bg-white/15"].join(" ")}>
@@ -64,7 +64,7 @@ function Toggle({ enabled, onChange, label }: { enabled: boolean; onChange: (v: 
   );
 }
 
-function Section({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Section({ title, children, defaultOpen = false }: { readonly title: string; readonly children: React.ReactNode; readonly defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-xl border border-white/8 bg-white/3">
@@ -77,11 +77,11 @@ function Section({ title, children, defaultOpen = false }: { title: string; chil
   );
 }
 
-function StringListEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+function StringListEditor({ items, onChange, placeholder }: { readonly items: string[]; readonly onChange: (v: string[]) => void; readonly placeholder?: string }) {
   return (
     <div className="flex flex-col gap-2">
       {items.map((item, i) => (
-        <div key={i} className="flex gap-2">
+        <div key={item + i} className="flex gap-2">
           <input
             type="text"
             value={item}
@@ -101,11 +101,11 @@ function StringListEditor({ items, onChange, placeholder }: { items: string[]; o
   );
 }
 
-function MealOptionsEditor({ options, onChange }: { options: MealOption[]; onChange: (v: MealOption[]) => void }) {
+function MealOptionsEditor({ options, onChange }: { readonly options: MealOption[]; readonly onChange: (v: MealOption[]) => void }) {
   return (
     <div className="flex flex-col gap-3">
       {options.map((opt, i) => (
-        <div key={i} className="grid grid-cols-[1fr_1.5fr_2.5rem] gap-2">
+        <div key={opt.id} className="grid grid-cols-[1fr_1.5fr_2.5rem] gap-2">
           <input type="text" value={opt.label} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, label: e.target.value } : o))} placeholder="Nome (ex: Carne)" className={INPUT_CLS} />
           <input type="text" value={opt.description} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, description: e.target.value } : o))} placeholder="Descrição" className={INPUT_CLS} />
           <button type="button" disabled={options.length <= 1} onClick={() => onChange(options.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-20">
@@ -120,7 +120,7 @@ function MealOptionsEditor({ options, onChange }: { options: MealOption[]; onCha
   );
 }
 
-function PaymentContactsEditor({ contacts, onChange }: { contacts: PaymentContact[]; onChange: (v: PaymentContact[]) => void }) {
+function PaymentContactsEditor({ contacts, onChange }: { readonly contacts: PaymentContact[]; readonly onChange: (v: PaymentContact[]) => void }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2 px-1">
@@ -128,16 +128,21 @@ function PaymentContactsEditor({ contacts, onChange }: { contacts: PaymentContac
           <span key={h} className="text-[0.55rem] uppercase tracking-widest text-white/25">{h}</span>
         ))}
       </div>
-      {contacts.map((c, i) => (
-        <div key={i} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
-          {(["year", "phone", "name"] as const).map((field) => (
-            <input key={field} type="text" value={c[field]} onChange={(e) => onChange(contacts.map((ct, idx) => idx === i ? { ...ct, [field]: e.target.value } : ct))} placeholder={field} className={INPUT_CLS} />
-          ))}
-          <button type="button" onClick={() => onChange(contacts.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400">
-            <FontAwesomeIcon icon={faTrash} className="text-xs" />
-          </button>
-        </div>
-      ))}
+      {contacts.map((c, i) => {
+        const updateField = (field: keyof PaymentContact, val: string) => {
+          onChange(contacts.map((ct, idx) => idx === i ? { ...ct, [field]: val } : ct));
+        };
+        return (
+          <div key={c.name + c.phone + i} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
+            {(["year", "phone", "name"] as const).map((field) => (
+              <input key={field} type="text" value={c[field]} onChange={(e) => updateField(field, e.target.value)} placeholder={field} className={INPUT_CLS} />
+            ))}
+            <button type="button" onClick={() => onChange(contacts.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400">
+              <FontAwesomeIcon icon={faTrash} className="text-xs" />
+            </button>
+          </div>
+        );
+      })}
       <button type="button" onClick={() => onChange([...contacts, { year: "", phone: "", name: "" }])} className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold">
         <FontAwesomeIcon icon={faPlus} /> Adicionar contacto
       </button>
@@ -151,7 +156,7 @@ const PAYMENT_METHOD_OPTIONS: { value: PaymentMethod; label: string }[] = [
   { value: "both", label: "Ambos" },
 ];
 
-function ExportButton({ label, onClick }: { label: string; onClick: () => void }) {
+function ExportButton({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
   return (
     <button
       type="button"
@@ -173,13 +178,14 @@ export default function RegistrationAdmin() {
   const getTimeValue = (field: keyof TimeSlots) =>
     timeEdits[field] ?? time?.[field]?.slice(0, 16) ?? "";
 
-  const saveTime = async (updates: Parameters<typeof GalaService.time.editTimeSlots>[0]) => {
+  const handleTimeChange = async (field: any, value: string) => {
+    setTimeEdits((prev) => ({ ...prev, [field]: value }));
     try {
       await GalaService.time.editTimeSlots({ [field]: value });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      // Time slots save failed silently — show toast in future
+      // Time slots save failed silently
     }
   };
 

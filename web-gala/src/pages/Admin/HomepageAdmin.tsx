@@ -7,7 +7,7 @@ import GalaService from "@/services/GalaService";
 const INPUT_CLS =
   "rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { readonly label: string; readonly children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">{label}</label>
@@ -16,7 +16,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TextInput({ value, onChange, placeholder }: { readonly value: string; readonly onChange: (v: string) => void; readonly placeholder?: string }) {
   return (
     <input
       type="text"
@@ -28,7 +28,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
-function TextArea({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TextArea({ value, onChange, placeholder }: { readonly value: string; readonly onChange: (v: string) => void; readonly placeholder?: string }) {
   return (
     <textarea
       value={value}
@@ -40,7 +40,7 @@ function TextArea({ value, onChange, placeholder }: { value: string; onChange: (
   );
 }
 
-function Toggle({ enabled, onChange, label }: { enabled: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({ enabled, onChange, label }: { readonly enabled: boolean; readonly onChange: (v: boolean) => void; readonly label: string }) {
   return (
     <button type="button" onClick={() => onChange(!enabled)} className="flex items-center gap-3">
       <div className={["relative h-5 w-9 rounded-full transition-colors", enabled ? "bg-dark-gold/70" : "bg-white/15"].join(" ")}>
@@ -51,7 +51,7 @@ function Toggle({ enabled, onChange, label }: { enabled: boolean; onChange: (v: 
   );
 }
 
-function Section({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Section({ title, children, defaultOpen = false }: { readonly title: string; readonly children: React.ReactNode; readonly defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-xl border border-white/8 bg-white/3">
@@ -64,11 +64,11 @@ function Section({ title, children, defaultOpen = false }: { title: string; chil
   );
 }
 
-function StringListEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+function StringListEditor({ items, onChange, placeholder }: { readonly items: string[]; readonly onChange: (v: string[]) => void; readonly placeholder?: string }) {
   return (
     <div className="flex flex-col gap-2">
       {items.map((item, i) => (
-        <div key={i} className="flex gap-2">
+        <div key={item + i} className="flex gap-2">
           <input
             type="text"
             value={item}
@@ -94,10 +94,10 @@ function ImageUploadField({
   onUpload,
   onDelete,
 }: {
-  label: string;
-  currentUrl: string | null;
-  onUpload: (file: File) => Promise<void>;
-  onDelete: () => Promise<void>;
+  readonly label: string;
+  readonly currentUrl: string | null;
+  readonly onUpload: (file: File) => Promise<void>;
+  readonly onDelete: () => Promise<void>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -136,7 +136,11 @@ function ImageUploadField({
           className="flex w-fit items-center gap-2 rounded-lg border border-dashed border-white/20 px-4 py-2 text-xs text-white/40 transition hover:border-white/40 hover:text-white/70 disabled:opacity-50"
         >
           <FontAwesomeIcon icon={faUpload} className="text-[0.6rem]" />
-          {uploading ? "A carregar..." : currentUrl ? "Substituir foto" : "Carregar foto"}
+          {(() => {
+            if (uploading) return "A carregar...";
+            if (currentUrl) return "Substituir foto";
+            return "Carregar foto";
+          })()}
         </button>
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
       </div>
@@ -144,7 +148,7 @@ function ImageUploadField({
   );
 }
 
-function BusesEditor({ buses, onChange }: { buses: BusVehicle[]; onChange: (v: BusVehicle[]) => void }) {
+function BusesEditor({ buses, onChange }: { readonly buses: BusVehicle[]; readonly onChange: (v: BusVehicle[]) => void }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-[1fr_6rem_2.5rem] gap-2 px-1">

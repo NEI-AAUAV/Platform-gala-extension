@@ -68,12 +68,12 @@ const defaults: HomepageConfig = {
 function extract(raw: Record<string, unknown>): HomepageConfig {
   const hp = (raw.homepage as Partial<HomepageConfig>) ?? {};
   return {
-    dj: { ...defaults.dj, ...(hp.dj ?? {}) },
-    bus_schedule: { ...defaults.bus_schedule, ...(hp.bus_schedule ?? {}) },
-    after_party: { ...defaults.after_party, ...(hp.after_party ?? {}) },
-    gallery: { ...defaults.gallery, ...(hp.gallery ?? {}) },
-    nominations_display: { ...defaults.nominations_display, ...(hp.nominations_display ?? {}) },
-    payment_info: { ...defaults.payment_info, ...(hp.payment_info ?? {}) },
+    dj: { ...defaults.dj, ...hp.dj },
+    bus_schedule: { ...defaults.bus_schedule, ...hp.bus_schedule },
+    after_party: { ...defaults.after_party, ...hp.after_party },
+    gallery: { ...defaults.gallery, ...hp.gallery },
+    nominations_display: { ...defaults.nominations_display, ...hp.nominations_display },
+    payment_info: { ...defaults.payment_info, ...hp.payment_info },
   };
 }
 

@@ -4,7 +4,7 @@ import useVotes from "@/hooks/voteHooks/useVotes";
 import type { NominationsDisplayConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  nominationsConfig: NominationsDisplayConfig;
+  readonly nominationsConfig: NominationsDisplayConfig;
 }
 
 export default function NominationsSection({ nominationsConfig }: Props) {
@@ -42,7 +42,7 @@ function SectionHeader() {
   );
 }
 
-function CategoriesCarousel({ votes }: { votes: Vote[] }) {
+function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
   const [active, setActive] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -86,7 +86,7 @@ function CategoriesCarousel({ votes }: { votes: Vote[] }) {
             <h3 className="font-gala text-[2rem] font-black text-white sm:text-[3rem] leading-tight">
               {votes[active].category}
             </h3>
-            {votes[active].options.length > 0 && (
+            {votes[active].options.length !== 0 && (
               <p className="mt-4 font-gala text-sm text-white/40">
                 {votes[active].options.length} nomeado{votes[active].options.length !== 1 ? "s" : ""}
               </p>
@@ -115,7 +115,7 @@ function CategoriesCarousel({ votes }: { votes: Vote[] }) {
   );
 }
 
-function NomineesGrid({ votes }: { votes: Vote[] }) {
+function NomineesGrid({ votes }: { readonly votes: Vote[] }) {
   return (
     <div className="mt-24 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {votes.map((vote, idx) => (
@@ -125,7 +125,7 @@ function NomineesGrid({ votes }: { votes: Vote[] }) {
   );
 }
 
-function CategoryNominees({ vote, index }: { vote: Vote; index: number }) {
+function CategoryNominees({ vote, index }: { readonly vote: Vote; readonly index: number }) {
   const nominees = vote.options.length > 0 ? vote.options : [];
   if (nominees.length === 0) return null;
 
@@ -144,7 +144,7 @@ function CategoryNominees({ vote, index }: { vote: Vote; index: number }) {
       <ul className="flex flex-col gap-2">
         {nominees.map((name, i) => (
           <li
-            key={i}
+            key={name + i}
             className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-4 py-2.5"
           >
             <span className="font-gala text-xs font-bold text-light-gold/40">

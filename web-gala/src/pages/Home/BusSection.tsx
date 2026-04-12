@@ -4,7 +4,7 @@ import { faBus, faClock, faLocationDot } from "@fortawesome/free-solid-svg-icons
 import type { BusScheduleConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  busConfig: BusScheduleConfig;
+  readonly busConfig: BusScheduleConfig;
 }
 
 export default function BusSection({ busConfig }: Props) {
@@ -37,7 +37,7 @@ export default function BusSection({ busConfig }: Props) {
   );
 }
 
-function ScheduleInfo({ busConfig }: { busConfig: BusScheduleConfig }) {
+function ScheduleInfo({ busConfig }: { readonly busConfig: BusScheduleConfig }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -75,7 +75,7 @@ function ScheduleInfo({ busConfig }: { busConfig: BusScheduleConfig }) {
   );
 }
 
-function ScheduleLine({ icon, label, value }: { icon: typeof faBus; label: string; value: string }) {
+function ScheduleLine({ icon, label, value }: { readonly icon: typeof faBus; readonly label: string; readonly value: string }) {
   return (
     <div className="flex items-start gap-3">
       <FontAwesomeIcon icon={icon} className="mt-0.5 w-3.5 flex-shrink-0 text-light-gold/40" />
@@ -87,7 +87,7 @@ function ScheduleLine({ icon, label, value }: { icon: typeof faBus; label: strin
   );
 }
 
-function BusList({ buses }: { buses: BusScheduleConfig["buses"] }) {
+function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
   if (buses.length === 0) return null;
 
   return (

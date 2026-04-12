@@ -38,8 +38,8 @@ export default function Admin() {
   const previewRoute = PREVIEW_ROUTES[activeTab] ?? "/";
 
   const reload = useCallback(() => {
-    if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.location.reload();
     }
   }, []);
 

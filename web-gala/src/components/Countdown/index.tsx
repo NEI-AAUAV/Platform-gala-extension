@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
 type CountdownProps = {
-  targetDate: string;
-  onComplete?: () => void;
-  className?: string;
-  label?: string;
+  readonly targetDate: string;
+  readonly onComplete?: () => void;
+  readonly className?: string;
+  readonly label?: string;
 };
 
 export default function Countdown({ targetDate, onComplete, className, label }: CountdownProps) {
@@ -17,7 +17,7 @@ export default function Countdown({ targetDate, onComplete, className, label }: 
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = +new Date(targetDate) - +new Date();
+      const difference = +new Date(targetDate) - Date.now();
       
       if (difference > 0) {
         setTimeLeft({

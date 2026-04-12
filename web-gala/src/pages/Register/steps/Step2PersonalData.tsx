@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faEnvelope, faIdCard, faSpinner, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useUserStore } from "@/stores/useUserStore";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
-import useUserCreate from "@/hooks/userHooks/useUserCreate";
+import GalaService from "@/services/GalaService";
 import { WizardData } from "@/hooks/useWizardState";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import Step2CompanionEditor from "./Step2CompanionEditor";
@@ -19,11 +19,11 @@ const YEAR_OPTIONS: [string, number | null][] = [
 ];
 
 interface Props {
-  config: RegistrationConfig;
-  data: WizardData;
-  onUpdate: (updates: Partial<WizardData>) => void;
-  onNext: () => void;
-  onBack: () => void;
+  readonly config: RegistrationConfig;
+  readonly data: WizardData;
+  readonly onUpdate: (updates: Partial<WizardData>) => void;
+  readonly onNext: () => void;
+  readonly onBack: () => void;
 }
 
 export default function Step2PersonalData({ config, data, onUpdate, onNext, onBack }: Props) {
@@ -56,7 +56,7 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
     if (!isAlreadyRegistered) {
       setLoading(true);
       try {
-        await useUserCreate({ nmec: Number(data.nmec), matriculation: data.year });
+        await GalaService.user.createUser({ nmec: Number(data.nmec), matriculation: data.year });
       } catch {
         setError("Erro ao registar. As inscrições podem estar encerradas ou já te inscreveste.");
         setLoading(false);

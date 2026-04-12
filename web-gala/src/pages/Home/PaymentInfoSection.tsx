@@ -5,8 +5,8 @@ import type { RegistrationConfig } from "@/config/registrationConfig";
 import type { PaymentInfoConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  paymentInfoConfig: PaymentInfoConfig;
-  registrationConfig: RegistrationConfig;
+  readonly paymentInfoConfig: PaymentInfoConfig;
+  readonly registrationConfig: RegistrationConfig;
 }
 
 export default function PaymentInfoSection({ paymentInfoConfig, registrationConfig }: Props) {
@@ -76,12 +76,12 @@ function PriceCard({
   deadline,
   highlight = false,
 }: {
-  index: number;
-  icon: typeof faCreditCard;
-  label: string;
-  amount: number;
-  deadline: string;
-  highlight?: boolean;
+  readonly index: number;
+  readonly icon: typeof faCreditCard;
+  readonly label: string;
+  readonly amount: number;
+  readonly deadline: string;
+  readonly highlight?: boolean;
 }) {
   return (
     <motion.div
@@ -111,7 +111,7 @@ function PriceCard({
   );
 }
 
-function DeadlineCard({ index, registrationConfig }: { index: number; registrationConfig: RegistrationConfig }) {
+function DeadlineCard({ index, registrationConfig }: { readonly index: number; readonly registrationConfig: RegistrationConfig }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -130,7 +130,7 @@ function DeadlineCard({ index, registrationConfig }: { index: number; registrati
   );
 }
 
-function InfoLine({ label, value }: { label: string; value: string }) {
+function InfoLine({ label, value }: { readonly label: string; readonly value: string }) {
   return (
     <div className="flex flex-col">
       <span className="font-gala text-[0.6rem] font-bold uppercase tracking-widest text-white/35">{label}</span>

@@ -97,7 +97,7 @@ function mapToBackendPatch(config: RegistrationConfig): Record<string, unknown> 
 }
 
 export function useRegistrationConfig() {
-  const { raw, loading, fetch, save } = useConfigStore();
+  const { raw, fetch, save } = useConfigStore();
 
   useEffect(() => {
     if (!raw) fetch();

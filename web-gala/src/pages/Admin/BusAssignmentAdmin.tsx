@@ -54,7 +54,7 @@ export default function BusAssignmentAdmin() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-white/40">
-          {registeredWithBus.length} pessoa{registeredWithBus.length !== 1 ? "s" : ""} com autocarro
+          {registeredWithBus.length} pessoa{registeredWithBus.length === 1 ? "" : "s"} com autocarro
         </p>
         {saved && <span className="text-xs font-semibold text-dark-gold/80">✓ Guardado</span>}
       </div>

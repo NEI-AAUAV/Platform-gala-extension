@@ -4,7 +4,7 @@ import { faMartiniGlass } from "@fortawesome/free-solid-svg-icons";
 import type { AfterPartyConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  afterPartyConfig: AfterPartyConfig;
+  readonly afterPartyConfig: AfterPartyConfig;
 }
 
 export default function AfterPartySection({ afterPartyConfig }: Props) {
@@ -41,7 +41,7 @@ export default function AfterPartySection({ afterPartyConfig }: Props) {
   );
 }
 
-function DrinksList({ drinks }: { drinks: string[] }) {
+function DrinksList({ drinks }: { readonly drinks: string[] }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,7 +55,7 @@ function DrinksList({ drinks }: { drinks: string[] }) {
       <div className="flex flex-wrap justify-center gap-3">
         {drinks.map((drink, i) => (
           <motion.div
-            key={i}
+            key={drink + i}
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}

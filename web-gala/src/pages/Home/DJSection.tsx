@@ -4,7 +4,7 @@ import { faMusic } from "@fortawesome/free-solid-svg-icons";
 import type { DJConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  djConfig: DJConfig;
+  readonly djConfig: DJConfig;
 }
 
 export default function DJSection({ djConfig }: Props) {
@@ -37,7 +37,7 @@ export default function DJSection({ djConfig }: Props) {
   );
 }
 
-function DJPhoto({ photoUrl, name }: { photoUrl: string | null; name: string }) {
+function DJPhoto({ photoUrl, name }: { readonly photoUrl: string | null; readonly name: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -30 }}
@@ -62,7 +62,7 @@ function DJPhoto({ photoUrl, name }: { photoUrl: string | null; name: string }) 
   );
 }
 
-function DJInfo({ djConfig }: { djConfig: DJConfig }) {
+function DJInfo({ djConfig }: { readonly djConfig: DJConfig }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }}

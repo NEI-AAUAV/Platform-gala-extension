@@ -4,7 +4,7 @@ import { faImages, faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-
 import type { GalleryConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
-  galleryConfig: GalleryConfig;
+  readonly galleryConfig: GalleryConfig;
 }
 
 export default function PhotoGallerySection({ galleryConfig }: Props) {

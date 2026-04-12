@@ -9,7 +9,7 @@ import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 
-function EventPill({ icon, text }: { icon: typeof faCalendarDay; text: string }) {
+function EventPill({ icon, text }: { readonly icon: typeof faCalendarDay; readonly text: string }) {
   return (
     <span className="flex items-center gap-2 text-sm text-white/50">
       <FontAwesomeIcon icon={icon} className="text-xs text-light-gold/60" />
@@ -20,7 +20,7 @@ function EventPill({ icon, text }: { icon: typeof faCalendarDay; text: string })
 
 type StateValue = (typeof State)[keyof typeof State];
 
-function HeroContent({ state, loginLink }: { state: StateValue; loginLink: string }) {
+function HeroContent({ state, loginLink }: { readonly state: StateValue; readonly loginLink: string }) {
   const { time } = useTime();
 
   if (state === State.NONE) {
