@@ -7,13 +7,13 @@ import GuestList from "@/components/TableModal/GuestList";
 import useTableLeave from "@/hooks/tableHooks/useTableLeave";
 import useNEIUser from "@/hooks/useNEIUser";
 
-type ViewTableProps = {
-  table: Table;
-  mutate: () => void;
-  inTable?: boolean;
-};
+interface ViewTableProps {
+  readonly table: Table;
+  readonly mutate: () => void;
+  readonly inTable?: boolean;
+}
 
-export default function ViewTable({ table, inTable = false, mutate }: ViewTableProps) {
+export default function ViewTable({ table, inTable = false, mutate }: Readonly<ViewTableProps>) {
   const { neiUser } = useNEIUser(table.head ?? null);
   const navigate = useNavigate();
 

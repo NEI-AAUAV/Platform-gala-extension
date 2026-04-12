@@ -92,52 +92,12 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       <div className="grid max-h-[400px] grid-cols-1 gap-4 overflow-y-auto pr-2 sm:grid-cols-2 lg:grid-cols-3 custom-scrollbar">
         {isLoading ? (
           <div className="col-span-full py-12 text-center text-white/20">A carregar mesas...</div>
-        ) : filteredTables.length === 0 ? (
-          <div className="col-span-full py-12 text-center text-white/20 italic">Nenhuma mesa encontrada.</div>
         ) : (
-          filteredTables.map((table) => {
-            const isSelected = data.tableId === String(table._id);
-            const occupancy = table.persons?.length ?? 0;
-            const max = 10; // Default limit
-            const isFull = occupancy >= max;
-
-            return (
-              <button
-                key={table._id}
-                onClick={() => !isFull && handleSelectTable(table._id)}
-                disabled={isFull && !isSelected}
-                className={[
-                  "group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all",
-                  isSelected 
-                    ? "border-light-gold bg-light-gold/10 ring-1 ring-light-gold" 
-                    : isFull 
-                      ? "border-white/5 bg-white/2 opacity-50 cursor-not-allowed" 
-                      : "border-white/10 bg-white/5 hover:border-white/30"
-                ].join(" ")}
-              >
-                <div className="flex w-full items-center justify-between">
-                  <span className="text-[0.6rem] font-bold text-white/30 uppercase">Mesa #{table._id}</span>
-                  {isSelected && <FontAwesomeIcon icon={faCheck} className="text-light-gold text-xs" />}
-                </div>
-                
-                <h4 className={["text-sm font-bold", isSelected ? "text-light-gold" : "text-white/80"].join(" ")}>
-                  {table.name || "Mesa sem nome"}
-                </h4>
-
-                <div className="scale-75 opacity-80">
-                  <VisualTable table={table} />
-                </div>
-
-                <div className="mt-2 flex w-full items-center justify-between text-[0.65rem]">
-                   <div className="flex items-center gap-1.5 text-white/40">
-                     <FontAwesomeIcon icon={faUsers} />
-                     <span>{occupancy}/{max}</span>
-                   </div>
-                   {isFull && !isSelected && <span className="text-red-400/80 font-bold uppercase">Cheia</span>}
-                </div>
-              </button>
-            );
-          })
+          <TableList
+            tables={filteredTables}
+            selectedId={data.tableId}
+            onSelect={handleSelectTable}
+          />
         )}
       </div>
 
@@ -166,5 +126,90 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
         </button>
       </div>
     </motion.div>
+  );
+}
+function TableList({
+  tables,
+  selectedId,
+  onSelect,
+}: Readonly<{
+  tables: any[];
+  selectedId: string | null;
+  onSelect: (id: number) => void;
+}>) {
+  if (tables.length === 0) {
+    return (
+      <div className="col-span-full py-12 text-center text-white/20 italic">
+        Nenhuma mesa encontrada.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {tables.map((table) => (
+        <TableCard
+          key={table._id}
+          table={table}
+          isSelected={selectedId === String(table._id)}
+          onSelect={() => onSelect(table._id)}
+        />
+      ))}
+    </>
+  );
+}
+
+function TableCard({
+  table,
+  isSelected,
+  onSelect,
+}: Readonly<{
+  table: any;
+  isSelected: boolean;
+  onSelect: () => void;
+}>) {
+  const occupancy = table.persons?.length ?? 0;
+  const max = 10;
+  const isFull = occupancy >= max;
+
+  let containerStyles = "border-white/10 bg-white/5 hover:border-white/30";
+  if (isSelected) {
+    containerStyles = "border-light-gold bg-light-gold/10 ring-1 ring-light-gold";
+  } else if (isFull) {
+    containerStyles = "border-white/5 bg-white/2 opacity-50 cursor-not-allowed";
+  }
+
+  return (
+    <button
+      onClick={() => !isFull && onSelect()}
+      disabled={isFull && !isSelected}
+      className={[
+        "group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all",
+        containerStyles,
+      ].join(" ")}
+    >
+      <div className="flex w-full items-center justify-between">
+        <span className="text-[0.6rem] font-bold uppercase text-white/30">Mesa #{table._id}</span>
+        {isSelected && <FontAwesomeIcon icon={faCheck} className="text-xs text-light-gold" />}
+      </div>
+
+      <h4 className={["text-sm font-bold", isSelected ? "text-light-gold" : "text-white/80"].join(" ")}>
+        {table.name || "Mesa sem nome"}
+      </h4>
+
+      <div className="scale-75 opacity-80">
+        <VisualTable table={table} />
+      </div>
+
+      <div className="mt-2 flex w-full items-center justify-between text-[0.65rem]">
+        <div className="flex items-center gap-1.5 text-white/40">
+          <FontAwesomeIcon icon={faUsers} />
+          <span>
+            {occupancy}/{max}
+          </span>
+        </div>
+        {isFull && !isSelected && <span className="font-bold uppercase text-red-400/80">Cheia</span>}
+      </div>
+    </button>
   );
 }

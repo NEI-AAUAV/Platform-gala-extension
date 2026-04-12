@@ -58,8 +58,8 @@ async def edit_time_slots(
     allow_past = settings.ALLOW_TIME_SLOTS_PAST
 
     _validate_period(
-        form_data.registrationStart or initial.registrationStart,
-        form_data.registrationEnd or initial.registrationEnd,
+        form_data.registration_start or initial.registration_start,
+        form_data.registration_end or initial.registration_end,
         "Registration start date cannot be before the current time",
         "Registration start date cannot be after end date",
         allow_past,
@@ -67,8 +67,8 @@ async def edit_time_slots(
     )
 
     _validate_period(
-        form_data.nominationsStart or initial.nominationsStart,
-        form_data.nominationsEnd or initial.nominationsEnd,
+        form_data.nominations_start or initial.nominations_start,
+        form_data.nominations_end or initial.nominations_end,
         "Nominations start date cannot be before the current time",
         "Nominations start date cannot be after end date",
         allow_past,
@@ -76,8 +76,8 @@ async def edit_time_slots(
     )
 
     _validate_period(
-        form_data.votesStart or initial.votesStart,
-        form_data.votesEnd or initial.votesEnd,
+        form_data.votes_start or initial.votes_start,
+        form_data.votes_end or initial.votes_end,
         "Votes start date cannot be before the current time",
         "Votes start date cannot be after end date",
         allow_past,
@@ -85,8 +85,8 @@ async def edit_time_slots(
     )
 
     _validate_period(
-        form_data.tablesStart or initial.tablesStart,
-        form_data.tablesEnd or initial.tablesEnd,
+        form_data.tables_start or initial.tables_start,
+        form_data.tables_end or initial.tables_end,
         "Tables start date cannot be before the current time",
         "Tables start date cannot be after end date",
         allow_past,
@@ -94,7 +94,7 @@ async def edit_time_slots(
     )
 
     _validate_start(
-        form_data.galaStart or initial.galaStart,
+        form_data.gala_start or initial.gala_start,
         "Gala start date cannot be before the current time",
         allow_past,
         now,

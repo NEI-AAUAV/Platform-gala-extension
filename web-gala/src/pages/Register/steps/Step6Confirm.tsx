@@ -29,21 +29,30 @@ export default function Step6Confirm({ config, data, onBack, onFinish }: Readonl
   const { tables } = useTables();
 
   const mealLabel = config.mealOptions.find((m) => m.id === data.meal)?.label ?? "—";
-  const yearLabel = sessionUser?.matriculation
-    ? `${sessionUser.matriculation}º Ano`
-    : data.year
-    ? `${data.year}º Ano`
-    : "Alumni / Outro";
-  
-  const busLabel = data.bus === "none" 
-    ? "Deslocação própria" 
-    : data.bus === "round_trip" 
-      ? "Autocarro (Ida e Volta)" 
-      : "Autocarro (Apenas Ida)";
 
-  const selectedTable = data.tableId === "new" 
-    ? "Nova Mesa (A criar)" 
-    : tables?.find(t => String(t._id) === data.tableId)?.name || `Mesa #${data.tableId}`;
+  let yearLabel = "Alumni / Outro";
+  if (sessionUser?.matriculation) {
+    yearLabel = `${sessionUser.matriculation}º Ano`;
+  } else if (data.year) {
+    yearLabel = `${data.year}º Ano`;
+  }
+
+  let busLabel = "Autocarro (Apenas Ida)";
+  if (data.bus === "none") {
+    busLabel = "Deslocação própria";
+  } else if (data.bus === "round_trip") {
+    busLabel = "Autocarro (Ida e Volta)";
+  }
+
+  let selectedTable = `Mesa #${data.tableId}`;
+  if (data.tableId === "new") {
+    selectedTable = "Nova Mesa (A criar)";
+  } else {
+    const tableObj = tables?.find((t) => String(t._id) === data.tableId);
+    if (tableObj?.name) {
+      selectedTable = tableObj.name;
+    }
+  }
 
   const totalPersons = 1 + data.companions.length;
   const totalPrice = totalPersons * (config.phase1Price + config.phase2Price);
