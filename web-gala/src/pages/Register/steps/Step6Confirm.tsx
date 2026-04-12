@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faUser, faCreditCard, faChair } from "@fortawesome/free-solid-svg-icons";
+import { faCircleCheck, faUser, faChair } from "@fortawesome/free-solid-svg-icons";
 import { WizardData } from "@/hooks/useWizardState";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { useUserStore } from "@/stores/useUserStore";
@@ -14,7 +14,7 @@ interface Props {
   readonly onFinish: () => void;
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-white/6 py-2.5 last:border-0">
       <span className="text-xs text-white/40">{label}</span>
@@ -23,7 +23,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function Step6Confirm({ config, data, onBack, onFinish }: Props) {
+export default function Step6Confirm({ config, data, onBack, onFinish }: Readonly<Props>) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
   const { tables } = useTables();
@@ -134,7 +134,7 @@ export default function Step6Confirm({ config, data, onBack, onFinish }: Props) 
             {data.companions.map((c, i) => {
               const meal = config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
               return (
-                <div key={i} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
+                <div key={`${c.name}-${i}`} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/6">
                     <FontAwesomeIcon icon={faUser} className="text-xs text-white/30" />
                   </div>

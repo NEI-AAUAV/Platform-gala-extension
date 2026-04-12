@@ -11,10 +11,10 @@ import useNEIUser from "@/hooks/useNEIUser";
 import { RegistrationConfig } from "@/config/registrationConfig";
 
 interface Props {
-  config: RegistrationConfig;
+  readonly config: RegistrationConfig;
 }
 
-export default function ProfileTableSection({ config }: Props) {
+export default function ProfileTableSection({ config }: Readonly<Props>) {
   const { tables } = useTables();
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -54,7 +54,7 @@ export default function ProfileTableSection({ config }: Props) {
   );
 }
 
-function TableDetail({ tableId, onClose }: { tableId: number; onClose: () => void }) {
+function TableDetail({ tableId, onClose }: Readonly<{ tableId: number; onClose: () => void }>) {
   const { table, isLoading } = useTable(tableId);
   const { neiUser } = useNEIUser(table?.head ?? null);
 

@@ -26,7 +26,7 @@ interface Props {
   readonly onBack: () => void;
 }
 
-export default function Step2PersonalData({ config, data, onUpdate, onNext, onBack }: Props) {
+export default function Step2PersonalData({ config, data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
   const [loading, setLoading] = useState(false);
@@ -133,11 +133,11 @@ function IdentitySection({
   fullName,
   email,
   isAlreadyRegistered,
-}: {
+}: Readonly<{
   fullName: string;
   email?: string;
   isAlreadyRegistered: boolean;
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -169,12 +169,12 @@ function FormSection({
   sessionUser,
   isAlreadyRegistered,
   onUpdate,
-}: {
+}: Readonly<{
   data: WizardData;
   sessionUser: ReturnType<typeof useSessionUser>["sessionUser"];
   isAlreadyRegistered: boolean;
   onUpdate: (updates: Partial<WizardData>) => void;
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -182,11 +182,15 @@ function FormSection({
       </h3>
       <div className="flex flex-col gap-5 rounded-xl border border-white/8 bg-white/4 p-5">
         <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50">
+          <label
+            htmlFor="nmec-input"
+            className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"
+          >
             <FontAwesomeIcon icon={faIdCard} className="text-[0.6rem] text-light-gold/40" />
             Número Mecanográfico
           </label>
           <input
+            id="nmec-input"
             type="text"
             inputMode="numeric"
             value={isAlreadyRegistered ? String(sessionUser?.nmec ?? "") : data.nmec}
@@ -198,9 +202,9 @@ function FormSection({
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/50">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/50">
             Ano / Situação
-          </label>
+          </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {YEAR_OPTIONS.map(([label, value]) => {
               const currentValue = isAlreadyRegistered
@@ -231,7 +235,15 @@ function FormSection({
   );
 }
 
-function IdentityRow({ icon, label, value }: { icon: typeof faUser; label: string; value: string }) {
+function IdentityRow({
+  icon,
+  label,
+  value,
+}: Readonly<{
+  icon: typeof faUser;
+  label: string;
+  value: string;
+}>) {
   return (
     <div className="flex items-center gap-3 rounded-lg border border-white/6 bg-white/3 px-4 py-3">
       <FontAwesomeIcon icon={icon} className="w-3 flex-shrink-0 text-[0.7rem] text-light-gold/40" />

@@ -137,10 +137,10 @@ export default function Profile() {
 function RegistrationTab({
   sessionUser,
   buses,
-}: {
+}: Readonly<{
   sessionUser: ReturnType<typeof useSessionUser>["sessionUser"];
   buses: import("@/hooks/useHomepageConfig").BusVehicle[];
-}) {
+}>) {
   const { name, surname, email } = useUserStore();
 
   const busName = sessionUser?.bus_assignment
@@ -176,7 +176,7 @@ function RegistrationTab({
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: typeof faUser; label: string; value: string }) {
+function InfoRow({ icon, label, value }: Readonly<{ icon: typeof faUser; label: string; value: string }>) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-4 py-3">
       <FontAwesomeIcon icon={icon} className="w-3 flex-shrink-0 text-light-gold/40" />

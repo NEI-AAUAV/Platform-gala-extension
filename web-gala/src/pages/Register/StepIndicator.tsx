@@ -8,12 +8,12 @@ const STEPS = [
 ];
 
 interface StepIndicatorProps {
-  current: number;
-  onStepClick: (step: number) => void;
-  maxReached: number;
+  readonly current: number;
+  readonly onStepClick: (step: number) => void;
+  readonly maxReached: number;
 }
 
-export default function StepIndicator({ current, onStepClick, maxReached }: StepIndicatorProps) {
+export default function StepIndicator({ current, onStepClick, maxReached }: Readonly<StepIndicatorProps>) {
   return (
     <nav className="relative flex items-center justify-center gap-0">
       {STEPS.map((step, i) => {
@@ -40,11 +40,11 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Step
                 <span
                   className={[
                     "relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors",
-                    isDone
-                      ? "bg-dark-gold/80 text-white/90"
-                      : isActive
-                      ? "text-light-gold"
-                      : "text-white/25",
+                    (() => {
+                      if (isDone) return "bg-dark-gold/80 text-white/90";
+                      if (isActive) return "text-light-gold";
+                      return "text-white/25";
+                    })(),
                   ].join(" ")}
                 >
                   {isDone ? "✓" : step.n}
@@ -53,7 +53,11 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Step
               <span
                 className={[
                   "hidden text-[0.6rem] font-semibold uppercase tracking-widest transition-colors sm:block",
-                  isActive ? "text-light-gold" : isDone ? "text-dark-gold/70" : "text-white/20",
+                  (() => {
+                    if (isActive) return "text-light-gold";
+                    if (isDone) return "text-dark-gold/70";
+                    return "text-white/20";
+                  })(),
                 ].join(" ")}
               >
                 {step.label}

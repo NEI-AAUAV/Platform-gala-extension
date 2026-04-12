@@ -13,7 +13,7 @@ interface Props {
   readonly onBack: () => void;
 }
 
-export default function Step4Payment({ config, data, onUpdate, onNext, onBack }: Props) {
+export default function Step4Payment({ config, data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const [uploading, setUploading] = useState<number | null>(null);
 
   const handleUpload = (phase: 1 | 2) => {
@@ -53,7 +53,7 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
 
         <div className="space-y-3">
           {config.paymentContacts.map((contact, idx) => (
-            <div key={idx} className="flex flex-col gap-1 rounded-xl bg-white/5 p-4 border border-white/5">
+            <div key={`${contact.phone}-${idx}`} className="flex flex-col gap-1 rounded-xl bg-white/5 p-4 border border-white/5">
               <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">{contact.name} ({contact.year})</span>
               <div className="flex items-center justify-between">
                 <span className="font-mono text-sm text-white/80">{contact.phone}</span>

@@ -86,9 +86,9 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
             <h3 className="font-gala text-[2rem] font-black text-white sm:text-[3rem] leading-tight">
               {votes[active].category}
             </h3>
-            {votes[active].options.length !== 0 && (
+            {votes[active].options.length > 0 && (
               <p className="mt-4 font-gala text-sm text-white/40">
-                {votes[active].options.length} nomeado{votes[active].options.length !== 1 ? "s" : ""}
+                {votes[active].options.length} nomeado{votes[active].options.length === 1 ? "" : "s"}
               </p>
             )}
           </motion.div>

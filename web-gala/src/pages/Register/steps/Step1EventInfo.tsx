@@ -13,11 +13,11 @@ import { motion } from "framer-motion";
 import { RegistrationConfig } from "@/config/registrationConfig";
 
 interface Props {
-  config: RegistrationConfig;
-  onNext: () => void;
+  readonly config: RegistrationConfig;
+  readonly onNext: () => void;
 }
 
-function InfoCard({ icon, label, value }: { icon: typeof faCalendarDay; label: string; value: string }) {
+function InfoCard({ icon, label, value }: Readonly<{ icon: typeof faCalendarDay; label: string; value: string }>) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-light-gold/10">
@@ -31,7 +31,7 @@ function InfoCard({ icon, label, value }: { icon: typeof faCalendarDay; label: s
   );
 }
 
-export default function Step1EventInfo({ config, onNext }: Props) {
+export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}

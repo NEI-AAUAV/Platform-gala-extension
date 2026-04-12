@@ -47,7 +47,11 @@ export default function TimelineSection() {
                     <span className={`font-gala text-[0.65rem] font-bold uppercase tracking-widest ${
                       selectedPhase === phase.id ? "text-light-gold/80" : "text-white/30"
                     }`}>
-                      {phase.id === 'registration' ? 'Inscrições' : phase.id === 'nominees' ? 'Nomeação' : 'Votação'}
+                      {(() => {
+                        if (phase.id === 'registration') return 'Inscrições';
+                        if (phase.id === 'nominees') return 'Nomeação';
+                        return 'Votação';
+                      })()}
                     </span>
                     <span className={`mt-1 font-gala text-lg font-bold transition-colors duration-500 ${
                       selectedPhase === phase.id ? "text-white" : "text-white/50"

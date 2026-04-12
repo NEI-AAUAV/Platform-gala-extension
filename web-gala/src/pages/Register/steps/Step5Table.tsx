@@ -16,7 +16,7 @@ interface Props {
   readonly onBack: () => void;
 }
 
-export default function Step5Table({ data, onUpdate, onNext, onBack }: Props) {
+export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const { tables, isLoading } = useTables();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchParams] = useSearchParams();
