@@ -1,6 +1,4 @@
 // ui/Toast.tsx
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import React, {
   createContext,
@@ -62,8 +60,7 @@ export function ToastProvider({
 
   const showToast = useCallback(
     (message: string, type: ToastType = "info", duration: number = 5000) => {
-      const id =
-        Date.now().toString() + Math.random().toString(36).substring(2, 9);
+      const id = crypto.randomUUID();
       const newToast: Toast = { id, message, type, duration };
 
       setToasts((prev) => [...prev, newToast]);
@@ -117,7 +114,16 @@ function ToastComponent({
 }>) {
   const { type, message } = toast;
 
-  const config = {
+  const config: Record<
+    ToastType,
+    {
+      bg: string;
+      border: string;
+      icon: typeof faCheckCircle;
+      iconColor: string;
+      accent: string;
+    }
+  > = {
     success: {
       bg: "bg-green-500/20",
       border: "border-green-500/50",

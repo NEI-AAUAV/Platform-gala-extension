@@ -207,6 +207,28 @@ const GalaService = {
       return client.put("/admin/config", data);
     },
   },
+
+  homepage: {
+    uploadDJPhoto: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/dj/photo", formData);
+    },
+    deleteDJPhoto: async (): Promise<void> => {
+      return client.delete("/admin/homepage/dj/photo");
+    },
+    uploadGalleryPreview: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/gallery/preview", formData);
+    },
+    assignBus: async (userId: number, busId: string | null): Promise<void> => {
+      return client.patch(`/admin/registrations/${userId}/bus`, { bus_id: busId });
+    },
+    autoAssignBuses: async (strategy: "year" | "order"): Promise<{ assigned: number }> => {
+      return client.post("/admin/buses/auto-assign", { strategy });
+    },
+  },
 };
 
 export default GalaService;

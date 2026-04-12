@@ -6,12 +6,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /api_gala
 
-RUN apt-get update && apt-get -y install --no-install-recommends \
-    libpq-dev gcc libmagic1 \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir "poetry>=1.8,<3"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    gcc \
+    libmagic1 \
+    && rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir --upgrade pip setuptools && \
+    pip install --no-cache-dir poetry
 
 COPY pyproject.toml poetry.lock* ./
 

@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GalaService from "@/services/GalaService";
 
 export default function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  useEffect(() => {
-    (async () => {
-      const response = await GalaService.user.listUsers();
-      setUsers(response);
-    })();
+
+  const fetch = useCallback(async () => {
+    const response = await GalaService.user.listUsers();
+    setUsers(response);
   }, []);
-  return { users };
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  return { users, mutate: fetch };
 }

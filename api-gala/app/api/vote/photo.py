@@ -338,3 +338,44 @@ async def upload_option_photo(
         raise HTTPException(status_code=404, detail="Vote category not found")
 
     return VoteCategory(**res)
+
+
+@router.delete(
+    "/{category_id}/options/{option_index}/photo",
+    responses={
+        **auth_responses,
+        400: {"description": "Invalid option index"},
+        404: {"description": "Vote category not found"},
+    },
+)
+async def delete_option_photo(
+    category_id: int,
+    option_index: int,
+    *,
+    db: DatabaseDep,
+    _: Annotated[AuthData, Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+) -> VoteCategory:
+    """Remove a photo for a specific option in a vote category."""
+    category = await fetch_category(category_id, db)
+
+    if option_index < 0 or option_index >= len(category.photo_paths):
+        raise HTTPException(status_code=400, detail="Invalid option index")
+
+    # Delete from R2
+    if category.photo_paths[option_index]:
+        storage_client.delete_image(category.photo_paths[option_index])
+
+    # Update database
+    photo_paths = list(category.photo_paths)
+    photo_paths[option_index] = ""
+
+    res = await VoteCategory.get_collection(db).find_one_and_update(
+        {"_id": category_id},
+        {"$set": {"photo_paths": photo_paths}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if res is None:
+        raise HTTPException(status_code=404, detail="Vote category not found")
+
+    return VoteCategory(**res)

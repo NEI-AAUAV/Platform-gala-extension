@@ -10,3 +10,4 @@ Gala is the NEI Platform's event management extension for the annual Gala dinner
 ## Status
 
 This extension is currently being migrated from the Platform monorepo to a standalone repository. The code will be added in a subsequent commit.
+

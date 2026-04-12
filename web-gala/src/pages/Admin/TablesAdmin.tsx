@@ -20,8 +20,8 @@ const green = { color: "#198754" };
 const red = { color: "#DC3545" };
 
 const iconMap = new Map([
-  ["NOR", <FrangoIcon style={orange} />],
-  ["VEG", <FontAwesomeIcon icon={faSeedling} style={green} />],
+  ["NOR", <FrangoIcon key="NOR" style={orange} />],
+  ["VEG", <FontAwesomeIcon key="VEG" icon={faSeedling} style={green} />],
 ]);
 
 type InfoProps = Readonly<{ title: string; values: number[] }>;

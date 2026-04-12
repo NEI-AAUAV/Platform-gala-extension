@@ -15,7 +15,7 @@ interface Props {
   readonly syncing?: boolean;
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-white/6 py-2.5 last:border-0">
       <span className="text-xs text-white/40">{label}</span>
@@ -30,21 +30,30 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
   const { tables } = useTables();
 
   const mealLabel = config.mealOptions.find((m) => m.id === data.meal)?.label ?? "—";
-  const yearLabel = sessionUser?.matriculation
-    ? `${sessionUser.matriculation}º Ano`
-    : data.year
-    ? `${data.year}º Ano`
-    : "Alumni / Outro";
-  
-  const busLabel = data.bus === "none" 
-    ? "Deslocação própria" 
-    : data.bus === "round_trip" 
-      ? "Autocarro (Ida e Volta)" 
-      : "Autocarro (Apenas Ida)";
 
-  const selectedTable = data.tableId === "new" 
-    ? "Nova Mesa (A criar)" 
-    : tables?.find(t => String(t._id) === data.tableId)?.name || `Mesa #${data.tableId}`;
+  let yearLabel = "Alumni / Outro";
+  if (sessionUser?.matriculation) {
+    yearLabel = `${sessionUser.matriculation}º Ano`;
+  } else if (data.year) {
+    yearLabel = `${data.year}º Ano`;
+  }
+
+  let busLabel = "Autocarro (Apenas Ida)";
+  if (data.bus === "none") {
+    busLabel = "Deslocação própria";
+  } else if (data.bus === "round_trip") {
+    busLabel = "Autocarro (Ida e Volta)";
+  }
+
+  let selectedTable = `Mesa #${data.tableId}`;
+  if (data.tableId === "new") {
+    selectedTable = "Nova Mesa (A criar)";
+  } else {
+    const tableObj = tables?.find((t) => String(t._id) === data.tableId);
+    if (tableObj?.name) {
+      selectedTable = tableObj.name;
+    }
+  }
 
   const totalPersons = 1 + data.companions.length;
   const totalPrice = totalPersons * (config.phase1Price + config.phase2Price);
@@ -135,7 +144,7 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
             {data.companions.map((c, i) => {
               const meal = config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
               return (
-                <div key={i} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
+                <div key={`${c.name}-${i}`} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/6">
                     <FontAwesomeIcon icon={faUser} className="text-xs text-white/30" />
                   </div>

@@ -131,8 +131,9 @@ export default function Vote() {
           </h2>
 
           <div className="mx-4 mt-10 grid gap-8">
-            {votes &&
-              votes.map((vote) => <VoteCard key={vote._id} vote={vote} />)}
+            {votes?.map((vote) => (
+              <VoteCard key={vote._id} vote={vote} />
+            ))}
           </div>
           {state === State.REGISTERED && (
             <div className="sticky bottom-0 z-10 mx-auto mt-5 max-w-md justify-center px-4 pb-10 pt-5 font-gala">

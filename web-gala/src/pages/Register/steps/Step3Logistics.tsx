@@ -5,11 +5,11 @@ import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData, BusOption } from "@/hooks/useWizardState";
 
 interface Props {
-  config: RegistrationConfig;
-  data: WizardData;
-  onUpdate: (updates: Partial<WizardData>) => void;
-  onNext: () => void;
-  onBack: () => void;
+  readonly config: RegistrationConfig;
+  readonly data: WizardData;
+  readonly onUpdate: (updates: Partial<WizardData>) => void;
+  readonly onNext: () => void;
+  readonly onBack: () => void;
 }
 
 const BUS_OPTIONS: { value: BusOption; label: string; sub: string; icon: typeof faBus }[] = [
@@ -17,7 +17,7 @@ const BUS_OPTIONS: { value: BusOption; label: string; sub: string; icon: typeof 
   { value: "none", label: "Deslocação própria", sub: "Sem autocarro", icon: faBan },
 ];
 
-export default function Step3Logistics({ config, data, onUpdate, onNext, onBack }: Props) {
+export default function Step3Logistics({ config, data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const handleNext = () => {
     if (!data.meal) return;
     onNext();
@@ -109,11 +109,11 @@ function MealSection({
   config,
   data,
   onUpdate,
-}: {
+}: Readonly<{
   config: RegistrationConfig;
   data: WizardData;
   onUpdate: (updates: Partial<WizardData>) => void;
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -171,11 +171,11 @@ function AllergiesSection({
   config,
   data,
   onUpdate,
-}: {
+}: Readonly<{
   config: RegistrationConfig;
   data: WizardData;
   onUpdate: (updates: Partial<WizardData>) => void;
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">

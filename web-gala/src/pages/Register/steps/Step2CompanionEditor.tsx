@@ -4,14 +4,14 @@ import { Companion } from "@/hooks/useWizardState";
 import { MealOption } from "@/config/registrationConfig";
 
 interface Props {
-  companions: Companion[];
-  mealOptions: MealOption[];
-  onChange: (companions: Companion[]) => void;
+  readonly companions: Companion[];
+  readonly mealOptions: MealOption[];
+  readonly onChange: (companions: Companion[]) => void;
 }
 
 const emptyCompanion = (): Companion => ({ name: "", meal: "", allergies: "" });
 
-export default function Step2CompanionEditor({ companions, mealOptions, onChange }: Props) {
+export default function Step2CompanionEditor({ companions, mealOptions, onChange }: Readonly<Props>) {
   const add = () => onChange([...companions, emptyCompanion()]);
   const remove = (i: number) => onChange(companions.filter((_, idx) => idx !== i));
   const update = (i: number, patch: Partial<Companion>) => {
@@ -23,7 +23,7 @@ export default function Step2CompanionEditor({ companions, mealOptions, onChange
     <div className="flex flex-col gap-4">
       {companions.map((c, i) => (
         <CompanionCard
-          key={i}
+          key={`companion-${i}-${c.name}`}
           index={i}
           companion={c}
           mealOptions={mealOptions}
@@ -45,14 +45,14 @@ export default function Step2CompanionEditor({ companions, mealOptions, onChange
 }
 
 interface CardProps {
-  index: number;
-  companion: Companion;
-  mealOptions: MealOption[];
-  onUpdate: (patch: Partial<Companion>) => void;
-  onRemove: () => void;
+  readonly index: number;
+  readonly companion: Companion;
+  readonly mealOptions: MealOption[];
+  readonly onUpdate: (patch: Partial<Companion>) => void;
+  readonly onRemove: () => void;
 }
 
-function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: CardProps) {
+function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Readonly<CardProps>) {
   return (
     <div className="rounded-xl border border-white/8 bg-white/3 p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -70,10 +70,14 @@ function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Ca
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+          <label
+            htmlFor={`companion-name-${index}`}
+            className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
+          >
             Nome completo
           </label>
           <input
+            id={`companion-name-${index}`}
             type="text"
             value={companion.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
@@ -83,9 +87,9 @@ function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Ca
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
             Prato principal
-          </label>
+          </p>
           <div className="flex flex-wrap gap-2">
             {mealOptions.map((meal) => {
               const isSelected = companion.meal === meal.id;
@@ -111,10 +115,14 @@ function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Ca
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+          <label
+            htmlFor={`companion-allergies-${index}`}
+            className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
+          >
             Alergias (opcional)
           </label>
           <input
+            id={`companion-allergies-${index}`}
             type="text"
             value={companion.allergies}
             onChange={(e) => onUpdate({ allergies: e.target.value })}

@@ -53,6 +53,10 @@ async def cast_vote(
     ERR_ALREADY_VOTED = "Already cast a vote in this category"
     ERR_SOMETHING_WENT_WRONG = "Something went wrong"
 
+    category = await fetch_category(category_id, db)
+    if form_data.option >= len(category.options):
+        raise HTTPException(status_code=400, detail="Not a valid option")
+
     try:
         await VoteService.vote(db, auth.sub, category_id, form_data.option)
     except ValueError as e:
@@ -76,15 +80,10 @@ async def cast_vote(
         if res is None:
             raise NotFoundReCheck
     except (OperationFailure, NotFoundReCheck) as e:
-        category = await fetch_category(category_id, db)
-
         if any(vote.uid == auth.sub for vote in category.votes):
             raise HTTPException(
                 status_code=409, detail=ERR_ALREADY_VOTED
             )
-
-        if vote.option >= len(category.options):
-            raise HTTPException(status_code=400, detail="Not a valid option")
 
         logger.error(e)
 

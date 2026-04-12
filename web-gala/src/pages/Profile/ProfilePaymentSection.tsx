@@ -9,16 +9,16 @@ import {
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
 
-const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+const ALLOWED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE_MB = 10;
 
 interface Props {
-  config: RegistrationConfig;
-  proofName: string | null;
-  onProofChange: (name: string) => void;
+  readonly config: RegistrationConfig;
+  readonly proofName: string | null;
+  readonly onProofChange: (name: string) => void;
 }
 
-export default function ProfilePaymentSection({ config, proofName, onProofChange }: Props) {
+export default function ProfilePaymentSection({ config, proofName, onProofChange }: Readonly<Props>) {
   const { sessionUser } = useSessionUser();
   const yearLabel = sessionUser?.matriculation ? String(sessionUser.matriculation) : null;
   const contact = config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ?? config.paymentContacts[0];
@@ -42,10 +42,10 @@ export default function ProfilePaymentSection({ config, proofName, onProofChange
 function MBWayCard({
   contact,
   config,
-}: {
+}: Readonly<{
   contact: { year: string; name: string; phone: string } | undefined;
   config: RegistrationConfig;
-}) {
+}>) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 p-5">
       <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ function MBWayCard({
   );
 }
 
-function IBANCard({ config }: { config: RegistrationConfig }) {
+function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -117,17 +117,17 @@ function ProofUpload({
   proofName,
   onProofChange,
   config,
-}: {
+}: Readonly<{
   proofName: string | null;
   onProofChange: (name: string) => void;
   config: RegistrationConfig;
-}) {
+}>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const validate = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) return "Formato inválido. Usa PDF, JPG, PNG ou WebP.";
+    if (!ALLOWED_TYPES.has(file.type)) return "Formato inválido. Usa PDF, JPG, PNG ou WebP.";
     if (file.size > MAX_SIZE_MB * 1024 * 1024) return `Ficheiro demasiado grande (máx. ${MAX_SIZE_MB}MB).`;
     return null;
   };

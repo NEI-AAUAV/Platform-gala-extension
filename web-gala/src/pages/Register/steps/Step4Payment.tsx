@@ -17,7 +17,7 @@ interface Props {
   readonly onBack: () => void;
 }
 
-export default function Step4Payment({ config, data, onUpdate, onNext, onBack }: Props) {
+export default function Step4Payment({ config, data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement>(null);
@@ -151,7 +151,9 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         </button>
         <div className="flex flex-col items-end gap-2">
           {!isComplete && (
-            <p className="text-[0.6rem] font-bold text-red-400/70 uppercase tracking-widest">Faltam comprovativos</p>
+            <p className="text-[0.6rem] font-bold text-red-400/70 uppercase tracking-widest">
+              Faltam comprovativos
+            </p>
           )}
           <button
             onClick={onNext}

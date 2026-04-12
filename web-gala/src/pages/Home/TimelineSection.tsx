@@ -8,6 +8,11 @@ export default function TimelineSection() {
 
   const currentPhaseData = phases.find((p) => p.id === selectedPhase);
 
+  const phaseLabels: Record<string, string> = {
+    registration: "Inscrições",
+    nominees: "Nomeação",
+  };
+
   return (
     <section id="timeline" className="relative flex flex-col items-center justify-center px-4 py-32 backdrop-blur-md">
       <div className="mx-auto w-full max-w-7xl">
@@ -47,7 +52,7 @@ export default function TimelineSection() {
                     <span className={`font-gala text-[0.65rem] font-bold uppercase tracking-widest ${
                       selectedPhase === phase.id ? "text-light-gold/80" : "text-white/30"
                     }`}>
-                      {phase.id === 'registration' ? 'Inscrições' : phase.id === 'nominees' ? 'Nomeação' : 'Votação'}
+                      {phaseLabels[phase.id] || "Votação"}
                     </span>
                     <span className={`mt-1 font-gala text-lg font-bold transition-colors duration-500 ${
                       selectedPhase === phase.id ? "text-white" : "text-white/50"

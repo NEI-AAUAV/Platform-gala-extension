@@ -189,7 +189,7 @@ const STEP_TITLES: Record<number, { title: string; sub: string }> = {
   6: { title: "Confirmação Final", sub: "Revê os teus dados e conclui a inscrição." },
 };
 
-function StepTitle({ step }: { step: number }) {
+function StepTitle({ step }: Readonly<{ step: number }>) {
   const { title, sub } = STEP_TITLES[step] ?? { title: "", sub: "" };
   return (
     <div className="mb-6 border-b border-white/8 pb-5">

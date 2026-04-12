@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { RegistrationConfig, defaultConfig, MealOption, PaymentContact } from "@/config/registrationConfig";
-import GalaService from "@/services/GalaService";
+import { useConfigStore } from "@/stores/useConfigStore";
 
 function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationConfig> {
   const dates = (backend.dates as Record<string, string>) ?? {};
@@ -47,7 +47,7 @@ function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationC
   };
 }
 
-function mapToBackend(config: RegistrationConfig): Record<string, unknown> {
+function mapToBackendPatch(config: RegistrationConfig): Record<string, unknown> {
   return {
     _id: "GLOBAL_CONFIG",
     event_name: "Gala Dinner",
@@ -97,29 +97,23 @@ function mapToBackend(config: RegistrationConfig): Record<string, unknown> {
 }
 
 export function useRegistrationConfig() {
-  const [config, setConfig] = useState<RegistrationConfig>(defaultConfig);
-  const [loading, setLoading] = useState(true);
+  const { raw, fetch, save } = useConfigStore();
 
   useEffect(() => {
-    GalaService.config.getConfig()
-      .then((backend) => {
-        setConfig({ ...defaultConfig, ...mapFromBackend(backend) });
-      })
-      .catch(() => {
-        // Backend unavailable — keep defaults
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    if (!raw) fetch();
+  }, [raw, fetch]);
+
+  const config: RegistrationConfig = raw
+    ? { ...defaultConfig, ...mapFromBackend(raw) }
+    : defaultConfig;
 
   const updateConfig = (updates: Partial<RegistrationConfig>) => {
     const next = { ...config, ...updates };
-    setConfig(next);
-    GalaService.config.updateConfig(mapToBackend(next)).catch(() => {});
+    save(mapToBackendPatch(next));
   };
 
   const resetConfig = () => {
-    setConfig(defaultConfig);
-    GalaService.config.updateConfig(mapToBackend(defaultConfig)).catch(() => {});
+    save(mapToBackendPatch(defaultConfig));
   };
 
   return { config, updateConfig, resetConfig, loading };
