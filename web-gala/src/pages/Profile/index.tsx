@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faEnvelope, faIdCard, faCircleDot } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faEnvelope, faIdCard, faCircleDot, faBus } from "@fortawesome/free-solid-svg-icons";
 import { useUserStore } from "@/stores/useUserStore";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
+import { useHomepageConfig } from "@/hooks/useHomepageConfig";
 import ProfilePaymentSection from "./ProfilePaymentSection";
 import ProfileTableSection from "./ProfileTableSection";
 
@@ -57,6 +58,7 @@ export default function Profile() {
   const { state, sessionUser } = useSessionUser();
   const loginLink = useLoginLink();
   const { config } = useRegistrationConfig();
+  const { config: homepage } = useHomepageConfig();
   const [activeTab, setActiveTab] = useState<Tab>("registration");
   const [status] = useState<RegistrationStatus>(loadStatus);
   const [proofName, setProofName] = useState<string | null>(loadProof);
@@ -115,7 +117,9 @@ export default function Profile() {
         </motion.div>
 
         <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8">
-          {activeTab === "registration" && <RegistrationTab sessionUser={sessionUser} />}
+          {activeTab === "registration" && (
+            <RegistrationTab sessionUser={sessionUser} buses={homepage.bus_schedule.buses} />
+          )}
           {activeTab === "payment" && (
             <ProfilePaymentSection
               config={config}
@@ -130,8 +134,19 @@ export default function Profile() {
   );
 }
 
-function RegistrationTab({ sessionUser }: { sessionUser: ReturnType<typeof useSessionUser>["sessionUser"] }) {
+function RegistrationTab({
+  sessionUser,
+  buses,
+}: {
+  sessionUser: ReturnType<typeof useSessionUser>["sessionUser"];
+  buses: import("@/hooks/useHomepageConfig").BusVehicle[];
+}) {
   const { name, surname, email } = useUserStore();
+
+  const busName = sessionUser?.bus_assignment
+    ? (buses.find((b) => b.id === sessionUser.bus_assignment)?.name ?? sessionUser.bus_assignment)
+    : null;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -143,6 +158,13 @@ function RegistrationTab({ sessionUser }: { sessionUser: ReturnType<typeof useSe
           label="Ano"
           value={sessionUser?.matriculation ? `${sessionUser.matriculation}º Ano` : "Alumni / Outro"}
         />
+        {sessionUser?.bus_option && sessionUser.bus_option !== "NONE" && (
+          <InfoRow
+            icon={faBus}
+            label="Autocarro atribuído"
+            value={busName ?? "Ainda não atribuído"}
+          />
+        )}
       </div>
       <div className="rounded-xl border border-white/6 bg-white/3 px-5 py-4">
         <p className="text-xs text-white/40">

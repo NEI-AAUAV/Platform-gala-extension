@@ -6,6 +6,9 @@ import { MealOption, PaymentContact, PaymentMethod } from "@/config/registration
 import useTime from "@/hooks/timeHooks/useTime";
 import GalaService from "@/services/GalaService";
 
+const INPUT_CLS =
+  "rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -22,7 +25,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
+      className={INPUT_CLS}
     />
   );
 }
@@ -34,7 +37,18 @@ function NumberInput({ value, onChange, min = 0 }: { value: number; onChange: (v
       min={min}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 outline-none transition focus:border-light-gold/40"
+      className={INPUT_CLS}
+    />
+  );
+}
+
+function DateTimeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <input
+      type="datetime-local"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${INPUT_CLS} [color-scheme:dark] w-full`}
     />
   );
 }
@@ -73,7 +87,7 @@ function StringListEditor({ items, onChange, placeholder }: { items: string[]; o
             value={item}
             onChange={(e) => { const next = [...items]; next[i] = e.target.value; onChange(next); }}
             placeholder={placeholder}
-            className="flex-1 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none focus:border-light-gold/40"
+            className={`flex-1 ${INPUT_CLS}`}
           />
           <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400">
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
@@ -92,8 +106,8 @@ function MealOptionsEditor({ options, onChange }: { options: MealOption[]; onCha
     <div className="flex flex-col gap-3">
       {options.map((opt, i) => (
         <div key={i} className="grid grid-cols-[1fr_1.5fr_2.5rem] gap-2">
-          <input type="text" value={opt.label} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, label: e.target.value } : o))} placeholder="Nome (ex: Carne)" className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none focus:border-light-gold/40" />
-          <input type="text" value={opt.description} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, description: e.target.value } : o))} placeholder="Descrição" className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none focus:border-light-gold/40" />
+          <input type="text" value={opt.label} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, label: e.target.value } : o))} placeholder="Nome (ex: Carne)" className={INPUT_CLS} />
+          <input type="text" value={opt.description} onChange={(e) => onChange(options.map((o, idx) => idx === i ? { ...o, description: e.target.value } : o))} placeholder="Descrição" className={INPUT_CLS} />
           <button type="button" disabled={options.length <= 1} onClick={() => onChange(options.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-20">
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           </button>
@@ -117,7 +131,7 @@ function PaymentContactsEditor({ contacts, onChange }: { contacts: PaymentContac
       {contacts.map((c, i) => (
         <div key={i} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
           {(["year", "phone", "name"] as const).map((field) => (
-            <input key={field} type="text" value={c[field]} onChange={(e) => onChange(contacts.map((ct, idx) => idx === i ? { ...ct, [field]: e.target.value } : ct))} placeholder={field} className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none focus:border-light-gold/40" />
+            <input key={field} type="text" value={c[field]} onChange={(e) => onChange(contacts.map((ct, idx) => idx === i ? { ...ct, [field]: e.target.value } : ct))} placeholder={field} className={INPUT_CLS} />
           ))}
           <button type="button" onClick={() => onChange(contacts.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400">
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
@@ -154,14 +168,18 @@ export default function RegistrationAdmin() {
   const { config, updateConfig, resetConfig } = useRegistrationConfig();
   const { time } = useTime();
   const [saved, setSaved] = useState(false);
+  const [timeEdits, setTimeEdits] = useState<Partial<Record<keyof TimeSlots, string>>>({});
 
-  const saveTime = async (updates: any) => {
+  const getTimeValue = (field: keyof TimeSlots) =>
+    timeEdits[field] ?? time?.[field]?.slice(0, 16) ?? "";
+
+  const saveTime = async (updates: Parameters<typeof GalaService.time.editTimeSlots>[0]) => {
     try {
-      await GalaService.time.editTimeSlots(updates);
+      await GalaService.time.editTimeSlots({ [field]: value });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch {
+      // Time slots save failed silently — show toast in future
     }
   };
 
@@ -185,69 +203,26 @@ export default function RegistrationAdmin() {
 
       <Section title="0. Datas e Fases" defaultOpen>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Início das Inscrições">
-            <TextInput 
-              value={time?.registrationStart?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ registrationStart: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Fim das Inscrições">
-            <TextInput 
-              value={time?.registrationEnd?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ registrationEnd: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Início das Mesas">
-            <TextInput 
-              value={time?.tablesStart?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ tablesStart: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Fim das Mesas">
-            <TextInput 
-              value={time?.tablesEnd?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ tablesEnd: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Início das Nomeações">
-            <TextInput 
-              value={time?.nominationsStart?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ nominationsStart: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Fim das Nomeações">
-            <TextInput 
-              value={time?.nominationsEnd?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ nominationsEnd: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Início das Votações">
-            <TextInput 
-              value={time?.votesStart?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ votesStart: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Fim das Votações">
-            <TextInput 
-              value={time?.votesEnd?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ votesEnd: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
-          <Field label="Início do Jantar de Gala">
-            <TextInput 
-              value={time?.galaStart?.slice(0, 16) || ""} 
-              onChange={(v) => saveTime({ galaStart: v })} 
-              placeholder="YYYY-MM-DDTHH:MM" 
-            />
-          </Field>
+          {(
+            [
+              ["registrationStart", "Início das Inscrições"],
+              ["registrationEnd", "Fim das Inscrições"],
+              ["tablesStart", "Início das Mesas"],
+              ["tablesEnd", "Fim das Mesas"],
+              ["nominationsStart", "Início das Nomeações"],
+              ["nominationsEnd", "Fim das Nomeações"],
+              ["votesStart", "Início das Votações"],
+              ["votesEnd", "Fim das Votações"],
+              ["galaStart", "Início do Jantar de Gala"],
+            ] as [keyof TimeSlots, string][]
+          ).map(([field, label]) => (
+            <Field key={field} label={label}>
+              <DateTimeInput
+                value={getTimeValue(field)}
+                onChange={(v) => handleTimeChange(field, v)}
+              />
+            </Field>
+          ))}
         </div>
       </Section>
 
@@ -336,10 +311,10 @@ export default function RegistrationAdmin() {
       </Section>
 
       <Section title="7. Pagamento Faseado (Dual-Proof)">
-        <Toggle 
-          enabled={config.phasedPaymentEnabled} 
-          onChange={(v) => save({ phasedPaymentEnabled: v })} 
-          label="Ativar Pagamento em 2 Fases" 
+        <Toggle
+          enabled={config.phasedPaymentEnabled}
+          onChange={(v) => save({ phasedPaymentEnabled: v })}
+          label="Ativar Pagamento em 2 Fases"
         />
         {config.phasedPaymentEnabled && (
           <div className="grid grid-cols-1 gap-4 mt-2 sm:grid-cols-2">
