@@ -100,20 +100,19 @@ export default function TableModal({ tableId }: TableModalProps) {
     <dialog
       ref={modalRef}
       className={classNames(
-        "relative m-0 grid h-screen max-h-none w-screen max-w-none items-center overflow-y-scroll bg-transparent p-0 text-base-content/70 backdrop:bg-black/50",
-        // !modalPage && "hidden",
+        "relative m-0 grid h-screen max-h-none w-screen max-w-none items-center overflow-y-scroll bg-transparent p-0 text-white/70 backdrop:bg-black/80",
       )}
     >
       <AnimatePresence>
         {!!modalPage && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 my-16 rounded-3xl bg-base-100 px-4 py-12 sm:px-12 md:mx-auto md:h-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative z-10 my-16 rounded-3xl border border-light-gold/20 bg-[#0a0a0a] px-4 py-12 shadow-2xl backdrop-blur-xl sm:px-12 md:mx-auto md:h-auto md:max-w-4xl"
           >
             <button
-              className="absolute right-4 top-4 leading-none"
+              className="absolute right-6 top-6 text-xl text-white/30 transition-colors hover:text-white/80"
               type="button"
               onClick={() => navigate("/reserve")}
             >

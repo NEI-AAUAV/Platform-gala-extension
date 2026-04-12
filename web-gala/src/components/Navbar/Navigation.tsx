@@ -1,13 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChair,
+  faTable,
   faCheckToSlot,
   faUsersGear,
+  faTicket,
+  faAward,
 } from "@fortawesome/free-solid-svg-icons";
 import classNames from "classnames";
 import { useUserStore, shallow } from "@/stores/useUserStore";
 import Avatar from "../Avatar";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 
 type NavigationProps = {
   className?: string;
@@ -16,59 +19,93 @@ type NavigationProps = {
 export default function Navigation({ className }: NavigationProps) {
   const location = useLocation().pathname;
   const { name, scopes } = useUserStore((state) => state, shallow);
+  const { time } = useTime();
+
+  const showRegistration = time?.registrationStatus !== TimeStatus.CLOSED;
+  const showTables = time?.tablesStatus !== TimeStatus.CLOSED;
+  const showNominations = time?.nominationsStatus !== TimeStatus.CLOSED;
+  const showVoting = time?.votesStatus !== TimeStatus.CLOSED;
 
   return (
     <nav className={className}>
-      <ul className="flex flex-col gap-4 md:flex-row md:gap-8">
-        <li>
-          <Link
-            className={`block rounded-3xl px-4 py-2 ${
-              location.startsWith("/reserve") &&
-              "bg-gradient-to-r from-light-gold to-dark-gold"
-            }`}
-            to="/reserve"
-          >
-            <FontAwesomeIcon icon={faChair} /> Reservar Lugar
-          </Link>
-        </li>
-        <li>
-          <Link
-            className={`block rounded-3xl px-4 py-2 ${
-              location.startsWith("/vote") &&
-              "bg-gradient-to-r from-light-gold to-dark-gold"
-            }`}
-            to="/vote"
-          >
-            <FontAwesomeIcon icon={faCheckToSlot} /> Votar
-          </Link>
-        </li>
+      <ul className="flex flex-col gap-4 font-gala text-[0.7rem] uppercase tracking-widest md:flex-row md:gap-4 lg:gap-8">
+        {showRegistration && (
+          <li>
+            <Link
+              className={classNames(
+                "block px-3 py-2 transition-colors hover:text-light-gold",
+                location === "/register" && "text-light-gold",
+              )}
+              to="/register"
+            >
+              <FontAwesomeIcon icon={faTicket} className="mr-2" /> Inscrição
+            </Link>
+          </li>
+        )}
+        {showTables && (
+          <li>
+            <Link
+              className={classNames(
+                "block px-3 py-2 transition-colors hover:text-light-gold",
+                location.startsWith("/reserve") && "text-light-gold",
+              )}
+              to="/reserve"
+            >
+              <FontAwesomeIcon icon={faTable} className="mr-2" /> Mesas
+            </Link>
+          </li>
+        )}
+        {showNominations && (
+          <li>
+            <Link
+              className={classNames(
+                "block px-3 py-2 transition-colors hover:text-light-gold",
+                location.startsWith("/vote") && "text-light-gold",
+              )}
+              to="/vote"
+            >
+              <FontAwesomeIcon icon={faAward} className="mr-2" /> Nomeações
+            </Link>
+          </li>
+        )}
+        {showVoting && (
+          <li>
+            <Link
+              className={classNames(
+                "block px-3 py-2 transition-colors hover:text-light-gold",
+                location.startsWith("/vote") && "text-light-gold",
+              )}
+              to="/vote"
+            >
+              <FontAwesomeIcon icon={faCheckToSlot} className="mr-2" /> Votações
+            </Link>
+          </li>
+        )}
         {(scopes?.includes("admin") ||
           scopes?.includes("manager-jantar-gala")) && (
           <li>
             <Link
-              className={`block rounded-3xl px-4 py-2 ${
-                location.startsWith("/admin") &&
-                "bg-gradient-to-r from-light-gold to-dark-gold"
-              }`}
+              className={classNames(
+                "block px-3 py-2 transition-colors hover:text-light-gold",
+                location.startsWith("/admin") && "text-light-gold",
+              )}
               to="/admin"
             >
-              <FontAwesomeIcon icon={faUsersGear} /> Admin
+              <FontAwesomeIcon icon={faUsersGear} className="mr-2" /> Admin
             </Link>
           </li>
         )}
         {name !== undefined && (
-          <li className="">
+          <li className="ml-2">
             <Link
               className={classNames(
-                "block rounded-3xl px-1 py-1",
-                location.startsWith("/register") &&
-                  "bg-gradient-to-r from-light-gold to-dark-gold",
+                "block rounded-full border border-light-gold/20 p-1 transition-all hover:border-light-gold/50",
+                location.startsWith("/profile") && "border-light-gold",
               )}
-              to="/register"
+              to="/profile"
               title={name}
             >
-              <Avatar alt="profile" className="my-auto w-5" />{" "}
-              <span className="my-auto sm:hidden">{name}</span>
+              <Avatar alt="profile" className="w-6" />
             </Link>
           </li>
         )}

@@ -8,8 +8,11 @@ export const TimeStatus = {
 };
 
 type TimeExtended = TimeSlots & {
-  tablesStatus: number;
+  registrationStatus: number;
+  nominationsStatus: number;
   votesStatus: number;
+  tablesStatus: number;
+  galaStatus: number;
 };
 
 const getTimeStatus = (startTime: string, endTime: string) => {
@@ -32,12 +35,31 @@ export default function useTime() {
   useEffect(() => {
     (async () => {
       const response = await GalaService.time.getTimeSlots();
+      const registrationStatus = getTimeStatus(
+        response.registrationStart,
+        response.registrationEnd,
+      );
+      const nominationsStatus = getTimeStatus(
+        response.nominationsStart,
+        response.nominationsEnd,
+      );
+      const votesStatus = getTimeStatus(response.votesStart, response.votesEnd);
       const tablesStatus = getTimeStatus(
         response.tablesStart,
         response.tablesEnd,
       );
-      const votesStatus = getTimeStatus(response.votesStart, response.votesEnd);
-      setTime({ ...response, tablesStatus, votesStatus });
+      const galaStatus = getTimeStatus(
+        response.galaStart,
+        "2099-12-31T23:59:59Z", // Gala doesn't "end" in terms of visibility usually
+      );
+      setTime({
+        ...response,
+        registrationStatus,
+        nominationsStatus,
+        votesStatus,
+        tablesStatus,
+        galaStatus,
+      });
     })();
   }, []);
 

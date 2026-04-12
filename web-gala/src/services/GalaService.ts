@@ -28,14 +28,21 @@ type CreateUser = {
 };
 
 type EditTimeSlots = {
+  registrationStart?: string;
+  registrationEnd?: string;
+  nominationsStart?: string;
+  nominationsEnd?: string;
   votesStart?: string;
   votesEnd?: string;
   tablesStart?: string;
   tablesEnd?: string;
+  galaStart?: string;
 };
 
 export type Limits = {
   maxRegistrations: number;
+  maxBusSeats: number;
+  maxTablesCount: number;
 };
 
 export type EditLimits = Partial<Limits>;
@@ -137,7 +144,7 @@ const GalaService = {
       const response: Limits = await client.get(`/limits`);
       return response;
     },
-    editTimeSlots: async (request: EditLimits) => {
+    editLimits: async (request: EditLimits) => {
       const response: Limits = await client.put(`/limits`, request);
       return response;
     },
@@ -188,6 +195,28 @@ const GalaService = {
         `/votes/${categoryId}/options/${optionIndex}/photo`,
       );
       return response;
+    },
+  },
+
+  homepage: {
+    uploadDJPhoto: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/dj/photo", formData);
+    },
+    deleteDJPhoto: async (): Promise<void> => {
+      return client.delete("/admin/homepage/dj/photo");
+    },
+    uploadGalleryPreview: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/gallery/preview", formData);
+    },
+    assignBus: async (userId: number, busId: string | null): Promise<void> => {
+      return client.patch(`/admin/registrations/${userId}/bus`, { bus_id: busId });
+    },
+    autoAssignBuses: async (strategy: "year" | "order"): Promise<{ assigned: number }> => {
+      return client.post("/admin/buses/auto-assign", { strategy });
     },
   },
 };

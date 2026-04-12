@@ -18,6 +18,25 @@ class TimeSlotsEditForm(TimeSlots):
     pass
 
 
+def _validate_period(start_val, end_val, start_msg, order_msg, allow_past, now):
+    if start_val.tzinfo is None:
+        start_val = start_val.replace(tzinfo=timezone.utc)
+    if not allow_past and now > start_val:
+        raise HTTPException(status_code=400, detail=start_msg)
+
+    if end_val.tzinfo is None:
+        end_val = end_val.replace(tzinfo=timezone.utc)
+    if start_val > end_val:
+        raise HTTPException(status_code=400, detail=order_msg)
+
+
+def _validate_start(start_val, start_msg, allow_past, now):
+    if start_val.tzinfo is None:
+        start_val = start_val.replace(tzinfo=timezone.utc)
+    if not allow_past and now > start_val:
+        raise HTTPException(status_code=400, detail=start_msg)
+
+
 @router.put(
     "/",
     responses={
@@ -36,43 +55,50 @@ async def edit_time_slots(
     initial = await fetch_time_slots(db)
 
     now = datetime.now(tz=timezone.utc)
+    allow_past = settings.ALLOW_TIME_SLOTS_PAST
 
-    tablesStart = form_data.tablesStart or initial.tablesStart
-    if tablesStart.tzinfo is None:
-        tablesStart = tablesStart.replace(tzinfo=timezone.utc)
+    _validate_period(
+        form_data.registration_start or initial.registration_start,
+        form_data.registration_end or initial.registration_end,
+        "Registration start date cannot be before the current time",
+        "Registration start date cannot be after end date",
+        allow_past,
+        now,
+    )
 
-    if not settings.ALLOW_TIME_SLOTS_PAST and now > tablesStart:
-        raise HTTPException(
-            status_code=400,
-            detail="Tables start date cannot be before the current time",
-        )
+    _validate_period(
+        form_data.nominations_start or initial.nominations_start,
+        form_data.nominations_end or initial.nominations_end,
+        "Nominations start date cannot be before the current time",
+        "Nominations start date cannot be after end date",
+        allow_past,
+        now,
+    )
 
-    tablesEnd = form_data.tablesEnd or initial.tablesEnd
-    if tablesEnd.tzinfo is None:
-        tablesEnd = tablesEnd.replace(tzinfo=timezone.utc)
+    _validate_period(
+        form_data.votes_start or initial.votes_start,
+        form_data.votes_end or initial.votes_end,
+        "Votes start date cannot be before the current time",
+        "Votes start date cannot be after end date",
+        allow_past,
+        now,
+    )
 
-    if tablesStart > tablesEnd:
-        raise HTTPException(
-            status_code=400, detail="Tables start date cannot be after end date"
-        )
+    _validate_period(
+        form_data.tables_start or initial.tables_start,
+        form_data.tables_end or initial.tables_end,
+        "Tables start date cannot be before the current time",
+        "Tables start date cannot be after end date",
+        allow_past,
+        now,
+    )
 
-    votesStart = form_data.votesStart or initial.votesStart
-    if votesStart.tzinfo is None:
-        votesStart = votesStart.replace(tzinfo=timezone.utc)
-
-    if not settings.ALLOW_TIME_SLOTS_PAST and now > votesStart:
-        raise HTTPException(
-            status_code=400, detail="Votes start date cannot be before the current time"
-        )
-
-    votesEnd = form_data.votesEnd or initial.votesEnd
-    if votesEnd.tzinfo is None:
-        votesEnd = votesEnd.replace(tzinfo=timezone.utc)
-
-    if votesStart > votesEnd:
-        raise HTTPException(
-            status_code=400, detail="Votes start date cannot be after end date"
-        )
+    _validate_start(
+        form_data.gala_start or initial.gala_start,
+        "Gala start date cannot be before the current time",
+        allow_past,
+        now,
+    )
 
     res = await TimeSlots.get_collection(db).find_one_and_update(
         {"_id": TIME_SLOTS_ID},

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import config from "@/config";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
@@ -210,6 +211,86 @@ function RegistrationLimit() {
   );
 }
 
+function BusLimit() {
+  const { limits, refresh } = useLimits();
+  const [maxBusSeats, setMaxBusSeats] = useState<number>(0);
+
+  useEffect(() => {
+    if (!limits) return;
+    setMaxBusSeats(limits.maxBusSeats || 0);
+  }, [limits]);
+
+  function update() {
+    if (limits?.maxBusSeats === maxBusSeats) return;
+    GalaService.limits.editTimeSlots({ maxBusSeats }).then(() => {
+      refresh();
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-dark-gold/20 bg-dark-gold/5 p-4 h-[126px]">
+      <Input
+        className="w-full bg-transparent px-3 py-1 text-dark-gold border border-dark-gold/20 placeholder:text-dark-gold/50"
+        type="number"
+        min={0}
+        placeholder="Lugares Autocarro"
+        onChange={(e) => {
+          const num = Number.parseInt(e.target.value, 10);
+          if (!Number.isNaN(num)) setMaxBusSeats(num);
+        }}
+        value={maxBusSeats || ""}
+      />
+      <button
+        className="shrink-0 rounded-full bg-dark-gold px-4 py-1 font-semibold text-black hover:bg-yellow-600"
+        type="button"
+        onClick={update}
+      >
+        Atualizar
+      </button>
+    </div>
+  );
+}
+
+function TablesCountLimit() {
+  const { limits, refresh } = useLimits();
+  const [maxTablesCount, setMaxTablesCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!limits) return;
+    setMaxTablesCount(limits.maxTablesCount || 0);
+  }, [limits]);
+
+  function update() {
+    if (limits?.maxTablesCount === maxTablesCount) return;
+    GalaService.limits.editTimeSlots({ maxTablesCount }).then(() => {
+      refresh();
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-dark-gold/20 bg-dark-gold/5 p-4 h-[126px]">
+      <Input
+        className="w-full bg-transparent px-3 py-1 text-dark-gold border border-dark-gold/20 placeholder:text-dark-gold/50"
+        type="number"
+        min={0}
+        placeholder="Limite de Mesas"
+        onChange={(e) => {
+          const num = Number.parseInt(e.target.value, 10);
+          if (!Number.isNaN(num)) setMaxTablesCount(num);
+        }}
+        value={maxTablesCount || ""}
+      />
+      <button
+        className="shrink-0 rounded-full bg-dark-gold px-4 py-1 font-semibold text-black hover:bg-yellow-600"
+        type="button"
+        onClick={update}
+      >
+        Atualizar
+      </button>
+    </div>
+  );
+}
+
 export default function TablesAdmin() {
   const [users, setUsers] = useState<User[]>([]);
   const confirmPaymentModalRef = useRef<HTMLDialogElement>(null);
@@ -295,6 +376,47 @@ export default function TablesAdmin() {
             Limite de Inscrições
           </h2>
           <RegistrationLimit />
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="font-gala text-xl font-bold text-dark-gold">
+            Limite Lugares Autocarro
+          </h2>
+          <BusLimit />
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="font-gala text-xl font-bold text-dark-gold">
+            Limite Total de Mesas
+          </h2>
+          <TablesCountLimit />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="font-gala text-xl font-bold text-dark-gold">
+            Ferramentas de Exportação
+          </h2>
+          <div className="flex flex-col gap-3 rounded-lg border border-dark-gold/20 bg-dark-gold/5 p-4">
+            <p className="text-xs text-dark-gold/60">Exportar dados em formato CSV para gestão externa.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.open(`${config.BASE_URL}/api/gala/v1/export/registrations`, '_blank')}
+                className="flex-1 rounded-full border border-dark-gold px-4 py-2 text-xs font-semibold text-dark-gold hover:bg-dark-gold hover:text-black transition-all"
+              >
+                Inscrições (.csv)
+              </button>
+              <button
+                onClick={() => window.open(`${config.BASE_URL}/api/gala/v1/export/payments`, '_blank')}
+                className="flex-1 rounded-full border border-dark-gold px-4 py-2 text-xs font-semibold text-dark-gold hover:bg-dark-gold hover:text-black transition-all"
+              >
+                Pagamentos (.csv)
+              </button>
+              <button
+                onClick={() => window.open(`${config.BASE_URL}/api/gala/v1/export/tables`, '_blank')}
+                className="flex-1 rounded-full border border-dark-gold px-4 py-2 text-xs font-semibold text-dark-gold hover:bg-dark-gold hover:text-black transition-all"
+              >
+                Mesas (.csv)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

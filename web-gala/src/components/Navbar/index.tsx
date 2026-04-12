@@ -1,99 +1,196 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import classNames from "classnames";
-import { Link } from "react-router-dom";
-import { LogoIcon, HamburgerIcon } from "@/assets/icons";
-import Navigation from "./Navigation";
-import useWindowScroll from "@/hooks/useWindowScroll";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import useLoginLink from "@/hooks/useLoginLink";
+import { useUserStore } from "@/stores/useUserStore";
+import NEIService from "@/services/NEIService";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars, faXmark, faUser, faUsersGear } from "@fortawesome/free-solid-svg-icons";
+
+
+
+
+async function handleLogout() {
+  const { end_session_url } = await NEIService.logout().catch(() => ({
+    end_session_url: null,
+  }));
+  useUserStore.getState().logout();
+  globalThis.location.replace(end_session_url ?? "/");
+}
+
+const navLinkClass =
+  "relative font-gala text-[0.8rem] font-semibold uppercase tracking-widest text-white/60 transition-colors duration-200 hover:text-light-gold after:absolute after:bottom-[-4px] after:left-0 after:h-[1px] after:w-0 after:bg-light-gold after:transition-all after:duration-300 hover:after:w-full";
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const background = "bg-base-100 shadow-xl";
-  const headerTransition = {
-    transition: `background-color 0.15s ease-in-out ${
-      isOpen ? 0 : 0.1
-    }s, box-shadow 0.15s ease-in-out ${isOpen ? 0.1 : 0}s`,
-  };
-  const [counter, setCounter] = useState(0);
-  const { y } = useWindowScroll();
+  const { token, sessionLoading, name, surname, scopes } = useUserStore();
+  const loginLink = useLoginLink();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    function handleResize() {
-      const md = 768;
-      if (window.innerWidth > md) {
-        setIsOpen(false);
-      }
-    }
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  return (
-    <>
-      <header
-        className={classNames(
-          "sticky top-0 z-40 p-5 text-base-content text-opacity-70 md:rounded-none",
-          {
-            [background]: isOpen,
-            "bg-white/40 shadow backdrop-blur":
-              !isOpen && y !== undefined && y > 0,
-          },
-        )}
-        style={headerTransition}
-      >
-        <div className="flex">
-          <button
-            type="button"
-            onClick={() => {
-              setCounter((prev) => prev + 1);
-              if (counter > 68) {
-                setCounter(() => 0);
-                window.location.href =
-                  "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
-              }
-            }}
-          >
-            <Link className="flex gap-3" to="/">
-              <LogoIcon className="" />
-              <span className="text-xl font-bold">Jantar de Gala</span>
-            </Link>
-          </button>
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname, location.hash]);
 
-          <div className="ml-auto hidden md:block">
-            <Navigation />
+  const closeMenu = () => setIsMobileMenuOpen(false);
+  const displayName = [name, surname].filter(Boolean).join(" ");
+  const isAdmin = scopes?.some((role) => ["admin", "manager-jantar-gala", "manager-gala"].includes(role));
+
+  return (
+    <header className="fixed top-0 z-50 w-full">
+      <nav
+        className={`w-full transition-all duration-300 ${
+          isScrolled
+            ? "border-b border-light-gold/15 bg-[#050505]/90 shadow-lg backdrop-blur-md"
+            : "bg-transparent"
+        }`}
+      >
+        <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3 md:px-8">
+          <Link to="/" onClick={closeMenu} className="flex items-center font-gala group">
+            <img src="/gala/logo.svg" alt="NEI Logo" className="h-12 w-auto transition-transform group-hover:scale-105" />
+          </Link>
+
+
+
+
+          <div className="hidden items-center gap-8 md:flex">
+            <a href="/#sobre" className={navLinkClass}>Sobre</a>
+            <a href="/#timeline" className={navLinkClass}>Fases</a>
+            <Link to="/vote" className={navLinkClass}>Nomeados</Link>
           </div>
+
+
+          <div className="hidden items-center gap-4 md:flex">
+            {!sessionLoading && !token && (
+              <>
+                <a href={loginLink} className="font-gala text-[0.8rem] font-semibold text-white/50 transition-colors hover:text-white/80">
+                  Entrar
+                </a>
+                <a href={loginLink} className="border border-light-gold/60 px-5 py-2 font-gala text-[0.8rem] font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black">
+                  Inscrever
+                </a>
+              </>
+            )}
+
+            {!sessionLoading && token && (
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
+                  >
+                    <FontAwesomeIcon icon={faUsersGear} className="text-[0.7rem] text-light-gold/50" />
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
+                >
+                  <FontAwesomeIcon icon={faUser} className="text-[0.7rem] text-light-gold/50" />
+                  {displayName || "Perfil"}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="font-gala text-[0.8rem] font-semibold text-white/40 transition-colors hover:text-red-400"
+                >
+                  Sair
+                </button>
+              </>
+            )}
+          </div>
+
           <button
-            className="ml-auto md:hidden"
-            onClick={() => setIsOpen((prev) => !prev)}
-            type="button"
+            className="flex h-9 w-9 items-center justify-center border border-light-gold/30 text-light-gold transition-colors hover:border-light-gold md:hidden"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            aria-label="Toggle menu"
           >
-            <HamburgerIcon />
+            <FontAwesomeIcon icon={isMobileMenuOpen ? faXmark : faBars} className="text-sm" />
           </button>
         </div>
-        <motion.div
-          animate={{ height: isOpen ? "auto" : 0 }}
-          transition={{ delay: isOpen ? 0.1 : 0, duration: 0.3 }}
-          className={classNames(
-            "absolute left-0 right-0 h-0 overflow-hidden rounded-b-xl bg-inherit px-3 md:hidden",
-          )}
-        >
-          <Navigation className="pb-3 pt-8" />
-        </motion.div>
-      </header>
-      <div
-        aria-hidden="true"
-        className={classNames(
-          "modal z-30 bg-opacity-70 transition-[visibility,opacity]",
-          {
-            "modal-open delay-100": isOpen,
-          },
+      </nav>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden border-b border-light-gold/15 bg-[#050505]/95 backdrop-blur-md md:hidden"
+          >
+            <div className="flex flex-col px-4 py-4">
+              {([
+                { href: "/#sobre", label: "Sobre" },
+                { href: "/#timeline", label: "Fases" },
+              ] as const).map(({ href, label }) => (
+
+                <a
+                  key={href}
+                  href={href}
+                  onClick={closeMenu}
+                  className="border-b border-white/5 py-3 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:text-light-gold"
+                >
+                  {label}
+                </a>
+              ))}
+              <Link
+                to="/vote"
+                onClick={closeMenu}
+                className="border-b border-white/5 py-3 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:text-light-gold"
+              >
+                Nomeados
+              </Link>
+
+              <div className="flex flex-col gap-3 pt-5">
+                {!sessionLoading && !token && (
+                  <a
+                    href={loginLink}
+                    onClick={closeMenu}
+                    className="border border-light-gold/60 px-5 py-3 text-center font-gala text-sm font-bold text-light-gold transition-all hover:bg-light-gold hover:text-black"
+                  >
+                    Inscrever
+                  </a>
+                )}
+                {!sessionLoading && token && (
+                  <>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={closeMenu}
+                        className="flex items-center justify-center gap-2 border border-white/20 px-5 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/40 hover:text-light-gold"
+                      >
+                        <FontAwesomeIcon icon={faUsersGear} className="text-[0.7rem]" />
+                        Admin
+                      </Link>
+                    )}
+                    <Link
+                      to="/profile"
+                      onClick={closeMenu}
+                      className="flex items-center justify-center gap-2 border border-white/20 px-5 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/40 hover:text-light-gold"
+                    >
+                      <FontAwesomeIcon icon={faUser} className="text-[0.7rem]" />
+                      {displayName || "Perfil"}
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="py-3 font-gala text-sm font-semibold text-white/40 transition-colors hover:text-red-400"
+                    >
+                      Sair
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
         )}
-        onClick={() => setIsOpen(false)}
-      />
-    </>
+      </AnimatePresence>
+    </header>
   );
 }

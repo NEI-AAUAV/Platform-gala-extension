@@ -1,7 +1,5 @@
 from typing import Optional
 
-import boto3
-from botocore.config import Config
 from loguru import logger
 
 from app.core.config import get_settings
@@ -18,6 +16,21 @@ class StorageClient:
             settings.R2_PUBLIC_BASE_URL,
         ])
         if self.enabled:
+            try:
+                import boto3
+                from botocore.config import Config
+            except Exception as e:
+                logger.error(
+                    "R2 storage enabled but boto3/botocore not installed: %s",
+                    e,
+                )
+                # disable storage to avoid crashing import-time
+                self.enabled = False
+                self.client = None
+                self.bucket = None
+                self.public_base_url = None
+                return
+
             self.client = boto3.client(
                 "s3",
                 endpoint_url=settings.R2_ENDPOINT_URL,
