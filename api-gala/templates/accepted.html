@@ -1,53 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="pt">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Aceite na mesa — Jantar de Gala</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background-color:#0a0a0a;font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#ffffff;padding:32px 16px}
-    .w{max-width:600px;margin:0 auto}
-    .hdr{padding-bottom:24px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:32px;display:flex;align-items:center;gap:12px}
-    .hdr img{height:32px;width:auto}
-    .hdr-txt{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.55)}
-    .band{background:linear-gradient(135deg,rgba(197,134,118,.14) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.18);border-left:3px solid #F7BBAC;padding:20px 24px;margin-bottom:28px}
-    .band-label{font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:8px}
-    .band-title{font-size:22px;font-weight:700;color:#F7BBAC;line-height:1.25}
-    .band-sub{margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
-    .sec{margin-bottom:22px}
-    .sec-label{font-size:8px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:10px}
-    .card{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)}
-    .row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);gap:16px}
-    .row:last-child{border-bottom:none}
-    .rl{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap}
-    .rv{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);text-align:right}
-    .rv.g{color:#F7BBAC}
-    .rv.green{color:#34d399}
-    hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:28px 0}
-    .notice{font-size:11px;color:rgba(255,255,255,.3);line-height:1.7;font-style:italic;padding:0 4px}
-    .ftr{margin-top:36px;padding-top:24px;border-top:1px solid rgba(247,187,172,.1)}
-    .ftr-grid{display:table;width:100%;margin-bottom:20px}
-    .ftr-col{display:table-cell;vertical-align:top;width:33.33%;padding-right:14px}
-    .ftr-col:last-child{padding-right:0}
-    .ftr-col-title{font-size:8px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.4);margin-bottom:10px}
-    .ftr-link{display:block;font-size:10px;color:rgba(255,255,255,.28);text-decoration:none;margin-bottom:6px}
-    .ftr-bottom{border-top:1px solid rgba(255,255,255,.05);padding-top:14px;display:flex;align-items:center;justify-content:space-between}
-    .ftr-copy{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18)}
-  </style>
-</head>
-<body>
-<div class="w">
+{% extends "base.html" %}
 
-  <!-- Header -->
-  <div class="hdr">
-    <img src="{{PUBLIC_URL}}/gala/nei-logo-horizontal.png" alt="NEI-AAUAv"/>
-    <span class="hdr-txt">Jantar de Gala</span>
-  </div>
+{% block title %}Aceite na mesa{% endblock %}
 
+{% block content %}
   <!-- Hero -->
-  <div class="band">
+  <div class="band accepted">
     <p class="band-label">Aceite na Mesa</p>
     <p class="band-title">Olá, {{name}}!</p>
     <p class="band-sub">O responsável da mesa confirmou a tua participação. O teu lugar está reservado!</p>
@@ -64,35 +21,4 @@
 
   <hr/>
   <p class="notice">Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
-
-  <!-- Footer -->
-  <div class="ftr">
-    <div class="ftr-grid">
-      <div class="ftr-col">
-        <p class="ftr-col-title">Navegação</p>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala">Início</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/register">Inscrição</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/reserve">Mesas</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/vote">Votar</a>
-      </div>
-      <div class="ftr-col">
-        <p class="ftr-col-title">Contacto</p>
-        <a class="ftr-link" href="mailto:nei@aauav.pt">nei@aauav.pt</a>
-        <a class="ftr-link" href="https://goo.gl/maps/JZY6mi3T9T6UxE3z6">Aveiro, Portugal</a>
-      </div>
-      <div class="ftr-col">
-        <p class="ftr-col-title">Redes Sociais</p>
-        <a class="ftr-link" href="https://www.instagram.com/nei.aauav/">Instagram</a>
-        <a class="ftr-link" href="https://www.linkedin.com/company/nei-aauav/">LinkedIn</a>
-        <a class="ftr-link" href="https://www.facebook.com/NEIAAUAv">Facebook</a>
-      </div>
-    </div>
-    <div class="ftr-bottom">
-      <span class="ftr-copy">&copy; 2026 NEI-AAUAv. Todos os direitos reservados.</span>
-      <span class="ftr-copy">A apoiar os estudantes desde 2013.</span>
-    </div>
-  </div>
-
-</div>
-</body>
-</html>
+{% endblock %}
