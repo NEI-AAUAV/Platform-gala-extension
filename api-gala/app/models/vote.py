@@ -12,14 +12,14 @@ class VoteCategory(BaseDocument):
     id: int = Field(alias="_id")
     category: str
     options: List[str]
-    photo_paths: List[str]
+    photo_paths: List[str] = Field(default_factory=list)
     votes: List[Vote]
 
 
-class VoteListing(BaseDocument):
+class VoteListing(BaseModel):
     id: int = Field(alias="_id")
     category: str
     options: List[str]
-    photo_paths: List[str]
+    photo_paths: List[str] = Field(default_factory=list)
     scores: List[int]
-    already_voted: Optional[int]
+    already_voted: Optional[int] = None

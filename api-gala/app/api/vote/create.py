@@ -1,7 +1,7 @@
-from typing import Annotated, List
+from typing import Annotated, List, Self
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
@@ -16,6 +16,12 @@ class VoteCategoryCreateForm(BaseModel):
     category: Annotated[str, Field(min_length=3)]
     options: Annotated[List[str], Field(min_items=2)]
     photo_paths: Annotated[List[str], Field(min_items=2)]
+
+    @model_validator(mode="after")
+    def validate_lengths(self) -> Self:
+        if len(self.options) != len(self.photo_paths):
+            raise ValueError("options and photo_paths must have the same length")
+        return self
 
 
 @router.post(
