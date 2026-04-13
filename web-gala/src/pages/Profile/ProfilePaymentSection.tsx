@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
+import GalaService from "@/services/GalaService";
 
 const ALLOWED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 const MAX_SIZE_MB = 10;
@@ -132,11 +133,16 @@ function ProofUpload({
     return null;
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     const err = validate(file);
     if (err) { setError(err); return; }
     setError(null);
-    onProofChange(file.name);
+    try {
+      await GalaService.registration.uploadPaymentProof(file, 1);
+      onProofChange(file.name);
+    } catch {
+      setError("Erro ao enviar comprovativo. Tenta novamente.");
+    }
   };
 
   const onDrop = (e: React.DragEvent) => {

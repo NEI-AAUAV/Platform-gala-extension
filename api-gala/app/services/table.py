@@ -66,7 +66,10 @@ class TableService:
             raise ValueError("You are already in a table.")
 
         query = {}
-        if table_id:
+        if table_id and token:
+            # Both provided: validate that the token matches the table
+            query = {"_id": table_id, "invite_token": token}
+        elif table_id:
             query = {"_id": table_id}
         elif token:
             query = {"invite_token": token}
@@ -75,7 +78,7 @@ class TableService:
 
         table_dict = await collection.find_one(query)
         if not table_dict:
-            raise ValueError("Table not found.")
+            raise ValueError("Table not found or invalid invite token.")
             
         table = Table.parse_obj(table_dict)
         if len(table.persons) >= table.seats:
@@ -135,12 +138,6 @@ class TableService:
 
     @staticmethod
     async def _get_next_id(db: DBType) -> int:
-        # Use a counters collection or just find max
-        collection = db["counters"]
-        result = await collection.find_one_and_update(
-            {"_id": "table_id"},
-            {"$inc": {"seq": 1}},
-            upsert=True,
-            return_document=True
-        )
-        return result["seq"]
+        from app.core.db.counters import get_next_table_id
+        return await get_next_table_id(db)
+

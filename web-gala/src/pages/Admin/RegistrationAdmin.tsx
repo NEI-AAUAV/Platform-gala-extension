@@ -91,9 +91,19 @@ export default function RegistrationAdmin() {
   const [saved, setSaved] = useState(false);
   const [timeEdits, setTimeEdits] = useState<Partial<Record<keyof TimeSlots, string>>>({});
 
+  const getTimeValue = (field: keyof TimeSlots): string => {
+    if (field in timeEdits) return timeEdits[field] ?? "";
+    return (time as unknown as Record<string, string>)?.[field] ?? "";
+  };
+
+  const handleTimeChange = (field: keyof TimeSlots, value: string) => {
+    setTimeEdits((prev) => ({ ...prev, [field]: value }));
+    saveTime({ [field]: value });
+  };
+
   const saveTime = async (updates: Parameters<typeof GalaService.time.editTimeSlots>[0]) => {
     try {
-      await GalaService.time.editTimeSlots({ [field]: value });
+      await GalaService.time.editTimeSlots(updates);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {

@@ -82,7 +82,7 @@ class PaymentContact(BaseModel):
 
 
 class PriceConfig(BaseModel):
-    total_price: float
+    total_price: float = 0.0
     phased_payment_enabled: bool = False
     phase1_amount: Optional[float] = None
     phase1_deadline: Optional[str] = None
@@ -120,8 +120,8 @@ class GlobalConfig(BaseDocument):
     items_included: List[str] = []
 
     dates: EventDates = Field(default_factory=EventDates)
-    prices: PriceConfig
-    bus: BusConfig
+    prices: PriceConfig = Field(default_factory=PriceConfig)
+    bus: BusConfig = Field(default_factory=BusConfig)
     meals: List[MealOption] = []
 
     max_registrations: int = 200
