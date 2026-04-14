@@ -49,7 +49,7 @@ async def edit_time_slots(
     *,
     db: DatabaseDep,
     settings: SettingsDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> TimeSlots:
     """Edits the time slots"""
     initial = await fetch_time_slots(db)

@@ -250,7 +250,7 @@ async def test_new_category_unauthorized(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_category(
@@ -277,7 +277,7 @@ async def test_new_category(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_category_same_name(
@@ -297,7 +297,7 @@ async def test_new_category_same_name(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_category_icu_equality(
@@ -351,7 +351,7 @@ async def test_edit_category_unauthorized(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category_not_found(settings: Settings, client: AsyncClient) -> None:
@@ -365,7 +365,7 @@ async def test_edit_category_not_found(settings: Settings, client: AsyncClient) 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category(
@@ -401,7 +401,7 @@ async def test_edit_category(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category_same_name(

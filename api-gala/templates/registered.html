@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Inscrição confirmada{% endblock %}
+
+{% block content %}
+  <!-- Hero -->
+  <div class="band">
+    <p class="band-label">Inscrição Confirmada</p>
+    <p class="band-title">Olá, {{name}}!</p>
+    <p class="band-sub">A tua inscrição no Jantar de Gala foi concluída com sucesso. Aguarda a confirmação do pagamento pela comissão organizadora.</p>
+  </div>
+
+  <!-- Dados Pessoais -->
+  <div class="sec">
+    <p class="sec-label">Dados Pessoais</p>
+    <div class="card">
+      <div class="row"><span class="rl">Nome</span><span class="rv">{{name}}</span></div>
+      <div class="row"><span class="rl">Nº Mecanográfico</span><span class="rv">{{nmec}}</span></div>
+      <div class="row"><span class="rl">Telemóvel</span><span class="rv">{{phone}}</span></div>
+      <div class="row"><span class="rl">Ano</span><span class="rv">{{year}}</span></div>
+    </div>
+  </div>
+
+  <!-- Logística -->
+  <div class="sec">
+    <p class="sec-label">Logística</p>
+    <div class="card">
+      <div class="row"><span class="rl">Transporte</span><span class="rv">{{bus}}</span></div>
+      <div class="row"><span class="rl">Prato</span><span class="rv">{{meal}}</span></div>
+      <div class="row"><span class="rl">Alergias</span><span class="rv">{{allergies}}</span></div>
+    </div>
+  </div>
+
+  <!-- Pagamento -->
+  <div class="sec">
+    <p class="sec-label">Pagamento</p>
+    <div class="card">
+      {% if phased_payment %}
+      <div class="row"><span class="rl">Modalidade</span><span class="rv g">Pagamento Faseado</span></div>
+      {% else %}
+      <div class="row"><span class="rl">Modalidade</span><span class="rv">Pagamento Integral</span></div>
+      {% endif %}
+      <div class="row"><span class="rl">Estado</span><span class="rv" style="color:rgba(252,165,0,.85)">Aguarda confirmação</span></div>
+    </div>
+  </div>
+
+  {% if companions %}
+  <!-- Acompanhantes -->
+  <div class="sec">
+    <p class="sec-label">Acompanhantes ({{companions|length}})</p>
+    {% for c in companions %}
+    <div class="comp-card">
+      <p class="comp-name">{{c.name}}</p>
+      <p class="comp-meta">Prato: {{c.dish}}</p>
+      {% if c.allergies %}<p class="comp-meta">Alergias: {{c.allergies}}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <hr/>
+  <p class="notice">Receberás um novo email quando o teu pagamento for confirmado. Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
+{% endblock %}

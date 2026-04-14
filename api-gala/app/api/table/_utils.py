@@ -8,7 +8,7 @@ from app.api.auth import AuthData, ScopeEnum
 
 def table_head_check_override(auth: AuthData) -> bool:
     return (
-        ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes
+        ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes
     )
 
 

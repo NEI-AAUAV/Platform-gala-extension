@@ -18,12 +18,20 @@ async def check_tables_open(
 ) -> TimeSlots:
     time_slots = await fetch_time_slots(db)
 
-    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes:
+    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes:
         return time_slots
 
     now = datetime.now()
     if now < time_slots.tablesStart or now > time_slots.tablesEnd:
         raise HTTPException(status_code=409, detail="Tables aren't open")
+    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
+        now = datetime.now()
+        if now < time_slots.tablesStart or now > time_slots.tablesEnd:
+            raise HTTPException(status_code=409, detail="Tables aren't open")
+    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
+        now = datetime.now()
+        if now < time_slots.tablesStart or now > time_slots.tablesEnd:
+            raise HTTPException(status_code=409, detail="Tables aren't open")
 
     return time_slots
 
@@ -34,11 +42,19 @@ async def check_votes_open(
 ) -> TimeSlots:
     time_slots = await fetch_time_slots(db)
 
-    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes:
+    if ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes:
         return time_slots
 
     now = datetime.now()
     if now < time_slots.votesStart or now > time_slots.votesEnd:
         raise HTTPException(status_code=409, detail="Votes aren't open")
+    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
+        now = datetime.now()
+        if now < time_slots.votesStart or now > time_slots.votesEnd:
+            raise HTTPException(status_code=409, detail="Votes aren't open")
+    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
+        now = datetime.now()
+        if now < time_slots.votesStart or now > time_slots.votesEnd:
+            raise HTTPException(status_code=409, detail="Votes aren't open")
 
     return time_slots

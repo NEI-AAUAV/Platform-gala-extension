@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/list",
+    "/categories",
     responses={
         **auth_responses,
     },
@@ -54,7 +54,7 @@ async def get_votes(
     category_id: int,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> List[Vote]:
     """Get a single vote category"""
     category = await fetch_category(category_id, db)

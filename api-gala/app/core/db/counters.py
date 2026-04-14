@@ -17,7 +17,7 @@ async def init_counters(db: DBType) -> None:
     )
 
 
-async def getNextTableId(db: DBType) -> int:
+async def get_next_table_id(db: DBType) -> int:
     res = await db.counters.find_one_and_update(
         {"_id": _TABLE_COUNTER},
         {"$inc": {"seq": 1}},
@@ -27,7 +27,7 @@ async def getNextTableId(db: DBType) -> int:
     return typing.cast(int, res["seq"])
 
 
-async def getNextVoteCategoryId(db: DBType) -> int:
+async def get_next_vote_category_id(db: DBType) -> int:
     res = await db.counters.find_one_and_update(
         {"_id": _VOTE_COUNTER},
         {"$inc": {"seq": 1}},

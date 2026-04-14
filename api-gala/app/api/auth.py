@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from pydantic import BaseModel
 from typing import Annotated, Any, Union, Dict, List, Optional, no_type_check
+import anyio
 from jose import JWTError, jwt
 
 from app.core.config import SettingsDep
@@ -12,8 +13,7 @@ from app.core.config import SettingsDep
 @cached()
 @no_type_check
 async def get_public_key(settings: SettingsDep) -> str:
-    with open(settings.JWT_PUBLIC_KEY_PATH, "r") as file:
-        return file.read()
+    return await anyio.Path(settings.JWT_PUBLIC_KEY_PATH).read_text()
 
 
 class ScopeEnum(str, Enum):
@@ -23,32 +23,32 @@ class ScopeEnum(str, Enum):
     MANAGER_NEI = "manager-nei"
     MANAGER_TACAUA = "manager-tacaua"
     MANAGER_FAMILY = "manager-family"
-    MANAGER_JANTAR_GALA = "manager-jantar-gala"
+    MANAGER_GALA = "manager-gala"
     DEFAULT = "default"
 
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="http://localhost:8000/api/nei/v1/auth/login",
+    tokenUrl="/api/nei/v1/auth/login",
     scopes={
         ScopeEnum.ADMIN: "Full access to everything.",
         ScopeEnum.MANAGER_FAMILY: "Edit faina family.",
         ScopeEnum.MANAGER_TACAUA: "Edit data related to tacaua.",
         ScopeEnum.MANAGER_NEI: "Edit data related to nei.",
-        ScopeEnum.MANAGER_JANTAR_GALA: "Edit data related to jantar de gala.",
+        ScopeEnum.MANAGER_GALA: "Edit data related to gala.",
     },
 )
 
 
 class AuthData(BaseModel):
     sub: int
-    nmec: Optional[int]
+    nmec: Optional[int] = None
     name: str
     email: str
     surname: str
-    scopes: List[ScopeEnum]
+    scopes: List[str]
 
 
-async def api_nei_auth(
+def api_nei_auth(
     settings: SettingsDep,
     public_key: Annotated[str, Depends(get_public_key)],
     security_scopes: SecurityScopes,
@@ -72,7 +72,7 @@ async def api_nei_auth(
             public_key,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        auth_data = AuthData.parse_obj(payload)
+        auth_data = AuthData(**payload)
     except JWTError:
         raise credentials_exception
 
@@ -82,7 +82,7 @@ async def api_nei_auth(
 
     # Verify that the token has all the necessary scopes
     for scope in security_scopes.scopes:
-        if scope not in auth_data.scopes:
+        if str(scope) not in auth_data.scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",
@@ -96,3 +96,12 @@ auth_responses: Dict[Union[int, str], Dict[str, Any]] = {
     401: {"description": "Not authenticated"},
     403: {"description": "Not enough permissions"},
 }
+
+
+def get_current_user(
+    auth_data: Annotated[AuthData, Depends(api_nei_auth)],
+) -> Dict[str, Any]:
+    """Provides compatibility with legacy registration logic by returning a dict with an 'id' (from 'sub')."""
+    user_dict = auth_data.dict()
+    user_dict["id"] = auth_data.sub
+    return user_dict

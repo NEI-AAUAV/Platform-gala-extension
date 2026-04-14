@@ -37,8 +37,8 @@ def pytest_runtest_makereport(item):
 @pytest.fixture(scope="function")
 def settings(request: pytest.FixtureRequest) -> Settings:
     name = request.node.name
-    hash = hashlib.sha256(name.encode("utf-8")).hexdigest()
-    truncated_name = request.node.name[:56] + hash[:8]
+    hash_val = hashlib.sha256(name.encode("utf-8")).hexdigest()
+    truncated_name = request.node.name[:56] + hash_val[:8]
     return Settings(MONGO_DB=f"{truncated_name}")
 
 
@@ -46,6 +46,7 @@ def settings(request: pytest.FixtureRequest) -> Settings:
 def db_client(settings: Settings) -> DatabaseClient:
     class MockClient(DatabaseClient):
         def close(self) -> None:
+            """Do nothing."""
             pass
 
     return MockClient(settings)
@@ -106,7 +107,7 @@ async def client(
 
     async with LifespanManager(app):
         async with AsyncClient(
-            app=app, base_url="http://test", follow_redirects=True
+            app=app, base_url="https://test", follow_redirects=True
         ) as client:
             yield client
 
