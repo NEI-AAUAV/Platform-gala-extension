@@ -1,4 +1,5 @@
-from typing import Annotated, List, Self
+from typing import Annotated, List
+from typing_extensions import Self
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
 from pydantic import BaseModel, Field, model_validator
@@ -41,8 +42,6 @@ async def create_category(
     _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
-    category_id = await getNextVoteCategoryId(db)
-    category_id = await get_next_vote_category_id(db)
     category_id = await get_next_vote_category_id(db)
     category = VoteCategory(
         _id=category_id,
