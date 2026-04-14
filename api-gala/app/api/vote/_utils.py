@@ -24,10 +24,6 @@ def anonymize_category(category: VoteCategory, auth: AuthData) -> VoteListing:
             already_voted = vote.option
 
     already_nominated = any(auth.sub in n.votes for n in category.nominations)
-        if vote.uid == auth.sub:
-            already_voted = vote.option
-        if vote.uid == auth.sub:
-            already_voted = vote.option
 
     return VoteListing(
         _id=category.id,
