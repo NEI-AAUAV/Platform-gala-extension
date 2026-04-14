@@ -1,13 +1,22 @@
 type User = {
   _id: number;
-  matriculation: number;
+  matriculation: number | null;
   nmec: number;
   email: string;
   name: string;
-  has_payed: boolean;
+  phone: string | null;
+  registration_step: number;
   is_registered: boolean;
   bus_option: "ROUND_TRIP" | "ONE_WAY" | "NONE";
   bus_assignment: string | null;
+  meal_option: string | null;
+  food_allergies: string | null;
+  has_payed: boolean;
+  phased_payment: boolean;
+  payment_proof_url: string | null;
+  payment_proof_url_phase2: string | null;
+  table_id: number | null;
+  companions: Companion[];
 };
 
 type UserExtended = User & Person;

@@ -8,6 +8,8 @@ import AcceptPending from "./AcceptPending";
 import useTableEdit from "@/hooks/tableHooks/useTableEdit";
 import Avatar from "@/components/Avatar";
 import useTableLeave from "@/hooks/tableHooks/useTableLeave";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
 
 type EditTableProps = {
   readonly table: Table;
@@ -20,6 +22,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
     {} as { name?: boolean; server?: boolean },
   );
   const navigate = useNavigate();
+  const toast = useAppToast();
 
   const inviteUrl = `${globalThis.location.origin}/gala/register?table=${table._id}`;
 
@@ -72,7 +75,9 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                 setError({ ...error, name: false });
                 if (val === table.name) return;
 
-                useTableEdit(table._id, { name: val }).then(mutate);
+                useTableEdit(table._id, { name: val })
+                  .then(() => { toast.success("Nome guardado."); mutate(); })
+                  .catch((e) => toast.error(extractApiError(e, "Erro ao guardar nome.")));
                 titleRef.current!.readOnly = true;
               }}
             />
@@ -143,14 +148,11 @@ export default function EditTable({ table, mutate }: EditTableProps) {
             onClick={async () => {
               try {
                 await useTableLeave(table._id);
-              } catch (e: any) {
-                if (e?.response?.status === 400) {
-                  setError({ ...error, server: true });
-                }
-                return;
+                mutate();
+                navigate("/reserve");
+              } catch (e) {
+                toast.error(extractApiError(e, "Não foi possível abandonar a mesa."));
               }
-              mutate();
-              navigate("/reserve");
             }}
           >
             Abandonar Mesa

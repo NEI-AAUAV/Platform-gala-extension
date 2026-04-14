@@ -492,7 +492,7 @@ function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => vo
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
-            key={option + String(i)}
+            key={i}
             className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
           >
             {/* Current photo preview (not editable directly in edit mode string array, but stays visible) */}

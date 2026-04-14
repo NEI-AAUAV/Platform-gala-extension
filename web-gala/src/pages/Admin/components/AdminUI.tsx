@@ -64,7 +64,7 @@ export function DateTimeInput({ value, onChange }: { readonly value: string; rea
 export function Toggle({ enabled, onChange, label }: { readonly enabled: boolean; readonly onChange: (v: boolean) => void; readonly label: string }) {
   return (
     <button type="button" onClick={() => onChange(!enabled)} className="flex items-center gap-3">
-      <div className={["relative h-5 w-9 rounded-full transition-colors", enabled ? "bg-dark-gold/70" : "bg-white/15"].join(" ")}>
+      <div className={["relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors", enabled ? "bg-dark-gold/70" : "bg-white/15"].join(" ")}>
         <span className={["absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform", enabled ? "translate-x-4" : "translate-x-0.5"].join(" ")} />
       </div>
       <span className="text-sm text-white/60">{label}</span>
@@ -89,7 +89,7 @@ export function StringListEditor({ items, onChange, placeholder }: { readonly it
   return (
     <div className="flex flex-col gap-2">
       {items.map((item, i) => (
-        <div key={item + i} className="flex gap-2">
+        <div key={i} className="flex gap-2">
           <input
             type="text"
             value={item}

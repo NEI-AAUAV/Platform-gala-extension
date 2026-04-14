@@ -30,12 +30,9 @@ class VoteCategory(BaseDocument):
     nominations: List[Nominee] = []
     
     # Voting (once top 4 are fixed)
-    options: List[str] = []
-    photo_paths: List[str] = []
-    votes: List[Vote] = []
-    options: List[str]
+    options: List[str] = Field(default_factory=list)
     photo_paths: List[str] = Field(default_factory=list)
-    votes: List[Vote]
+    votes: List[Vote] = Field(default_factory=list)
 
 
 class VoteListing(BaseModel):

@@ -13,8 +13,7 @@ function cssCalcCoords(
   gap: string,
   ref: React.RefObject<HTMLDivElement>,
 ) {
-  if (ref.current === null) throw new Error("Ref is null");
-  const halfParentSize = ref.current.clientWidth / 2;
+  const halfParentSize = (ref.current?.clientWidth ?? 0) / 2;
   const minRadius = `${halfParentSize}px + 1.25rem`;
   return `calc(${axis} * (${minRadius} + ${gap}))`;
 }

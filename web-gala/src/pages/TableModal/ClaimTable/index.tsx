@@ -11,6 +11,8 @@ import Button from "@/components/Button";
 import useTableReserve from "@/hooks/tableHooks/useTableReserve";
 import useTableEdit from "@/hooks/tableHooks/useTableEdit";
 import Avatar from "@/components/Avatar";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
 
 type ClaimTableProps = {
   table: Table;
@@ -41,6 +43,7 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
     },
   });
   const navigate = useNavigate();
+  const toast = useAppToast();
 
   const titleRef = useRef<HTMLInputElement | null>(null);
   const { ref, ...rest } = methods.register("title", {
@@ -60,21 +63,19 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
   }
 
   const formSubmit: SubmitHandler<FormValues> = async (data) => {
-    const reserveRequest = {
-      dish: data.dish,
-      allergies: data.allergies,
-      companions: data.companions,
-    };
-
-    const editRequest = {
-      name: data.title,
-    };
-    useTableReserve(table._id, reserveRequest)
-      .then(() => useTableEdit(table._id, editRequest))
-      .finally(() => {
-        mutate();
-        navigate("/reserve");
+    try {
+      await useTableReserve(table._id, {
+        dish: data.dish,
+        allergies: data.allergies,
+        companions: data.companions,
       });
+      await useTableEdit(table._id, { name: data.title });
+      toast.success("Mesa criada com sucesso!");
+      mutate();
+      navigate("/reserve");
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao criar mesa."));
+    }
   };
   return (
     <div className="md:grid md:h-[max(100%,auto)] md:grid-cols-[1fr_min-content] md:gap-8">

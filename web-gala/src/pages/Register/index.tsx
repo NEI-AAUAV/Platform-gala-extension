@@ -108,7 +108,7 @@ export default function Register() {
     try {
       await GalaService.registration.updateStep(6, {});
       reset();
-      window.location.href = "/profile";
+      window.location.href = "/gala/profile";
     } catch (e: unknown) {
       const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setStepError(detail || "Erro ao concluir inscrição. Tenta novamente.");

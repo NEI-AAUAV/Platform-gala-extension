@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import OnVisible from "react-on-visible";
 import Wave from "react-wavify";
 import Seat from "./Seat";
@@ -44,7 +44,11 @@ function generateSeats(
 }
 
 export default function VisualTable({ table, className, alwaysVisible = false }: VisualTableProps) {
-  const [visible, setVisible] = useState(alwaysVisible);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (alwaysVisible) setVisible(true);
+  }, [alwaysVisible]);
 
   const { seats, persons } = table;
   const occupiedSeats = calculateOccupiedSeats(persons);

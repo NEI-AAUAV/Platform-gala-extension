@@ -76,6 +76,7 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
           />
         </div>
         <button
+          type="button"
           onClick={handleCreateNew}
           className={[
             "flex items-center justify-center gap-2 rounded-xl border px-6 py-3 text-sm font-bold transition-all",
@@ -112,12 +113,14 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
 
       <div className="flex items-center justify-between mt-4">
         <button
+          type="button"
           onClick={onBack}
           className="border border-white/15 px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
         <button
+          type="button"
           onClick={onNext}
           disabled={!canContinue}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
@@ -197,7 +200,9 @@ function TableCard({
         {table.name || "Mesa sem nome"}
       </h4>
 
-      <VisualTable table={table} alwaysVisible className="p-8" />
+      <div className="pointer-events-none w-full flex justify-center">
+        <VisualTable table={table} alwaysVisible className="p-8" />
+      </div>
 
       <div className="mt-2 flex w-full items-center justify-between text-[0.65rem]">
         <div className="flex items-center gap-1.5 text-white/40">

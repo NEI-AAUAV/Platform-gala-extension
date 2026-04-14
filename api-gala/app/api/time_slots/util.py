@@ -9,6 +9,8 @@ from app.api.auth import AuthData, ScopeEnum, api_nei_auth
 
 async def fetch_time_slots(db: DBType) -> TimeSlots:
     res = await TimeSlots.get_collection(db).find_one({"_id": TIME_SLOTS_ID})
+    if res is None:
+        raise HTTPException(status_code=404, detail="Time slots not configured yet")
     return TimeSlots.parse_obj(res)
 
 
@@ -24,15 +26,6 @@ async def check_tables_open(
     now = datetime.now()
     if now < time_slots.tablesStart or now > time_slots.tablesEnd:
         raise HTTPException(status_code=409, detail="Tables aren't open")
-    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
-        now = datetime.now()
-        if now < time_slots.tablesStart or now > time_slots.tablesEnd:
-            raise HTTPException(status_code=409, detail="Tables aren't open")
-    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
-        now = datetime.now()
-        if now < time_slots.tablesStart or now > time_slots.tablesEnd:
-            raise HTTPException(status_code=409, detail="Tables aren't open")
-
     return time_slots
 
 
@@ -48,13 +41,4 @@ async def check_votes_open(
     now = datetime.now()
     if now < time_slots.votesStart or now > time_slots.votesEnd:
         raise HTTPException(status_code=409, detail="Votes aren't open")
-    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
-        now = datetime.now()
-        if now < time_slots.votesStart or now > time_slots.votesEnd:
-            raise HTTPException(status_code=409, detail="Votes aren't open")
-    if not (ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_JANTAR_GALA in auth.scopes):
-        now = datetime.now()
-        if now < time_slots.votesStart or now > time_slots.votesEnd:
-            raise HTTPException(status_code=409, detail="Votes aren't open")
-
     return time_slots

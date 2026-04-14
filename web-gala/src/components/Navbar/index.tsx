@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const closeMenu = () => setIsMobileMenuOpen(false);
   const displayName = [name, surname].filter(Boolean).join(" ");
-  const isAdmin = scopes?.some((role) => ["admin", "manager-jantar-gala", "manager-gala"].includes(role));
+  const isAdmin = scopes?.some((role) => ["admin", "manager-gala"].includes(role));
 
   return (
     <header className="fixed top-0 z-50 w-full">

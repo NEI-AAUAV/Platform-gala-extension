@@ -69,8 +69,8 @@ const GalaService = {
       const response: Table = await client.get(`/table/${id}`);
       return response;
     },
-    createTable: async (request: { seats: number }) => {
-      const response: Table = await client.post("/table/new", request);
+    createTable: async (request: { name: string; seats?: number }) => {
+      const response: Table = await client.post("/table/create", request);
       return response;
     },
     editTable: async (id: string | number, request: { name: string }) => {
@@ -118,6 +118,21 @@ const GalaService = {
     },
   },
 
+  admin: {
+    listRegistrations: async (): Promise<User[]> => {
+      return client.get("/admin/registrations");
+    },
+    getRegistration: async (userId: number): Promise<User> => {
+      return client.get(`/admin/registrations/${userId}`);
+    },
+    confirmPayment: async (userId: number): Promise<void> => {
+      return client.post(`/admin/registrations/${userId}/confirm_payment`, {});
+    },
+    updateRegistration: async (userId: number, updates: Partial<User>): Promise<void> => {
+      return client.patch(`/admin/registrations/${userId}`, updates);
+    },
+  },
+
   time: {
     getTimeSlots: async () => {
       const response: TimeSlots = await client.get("/time_slots/");
@@ -142,7 +157,7 @@ const GalaService = {
 
   vote: {
     listCategories: async () => {
-      const response: Vote[] = await client.get("/voting/list");
+      const response: Vote[] = await client.get("/voting/categories");
       return response;
     },
     getCategory: async (id: string | number) => {
@@ -158,7 +173,7 @@ const GalaService = {
       return response;
     },
     castVote: async (id: string | number, request: VoteCategoryCast) => {
-      const response: Vote = await client.put(`/voting/${id}/cast`, request);
+      const response: Vote = await client.post(`/voting/categories/${id}/vote`, request);
       return response;
     },
     uploadOptionPhoto: async (

@@ -70,6 +70,13 @@ api-gala/emails-src/out/
 *.temp
 .cache/
 package-lock.json
-
-package-lock.json
 yarn.lock
+
+# Test logs and reports
+*.md
+!README.md
+!CLAUDE.md
+playwright-report/
+test-results/
+.playwright/
+

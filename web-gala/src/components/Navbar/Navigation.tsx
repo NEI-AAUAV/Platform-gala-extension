@@ -82,7 +82,7 @@ export default function Navigation({ className }: NavigationProps) {
           </li>
         )}
         {(scopes?.includes("admin") ||
-          scopes?.includes("manager-jantar-gala")) && (
+          scopes?.includes("manager-gala")) && (
           <li>
             <Link
               className={classNames(
