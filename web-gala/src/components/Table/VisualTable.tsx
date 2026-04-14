@@ -6,6 +6,7 @@ import Seat from "./Seat";
 type VisualTableProps = {
   table: Table;
   className?: string;
+  alwaysVisible?: boolean;
 };
 
 function calculateOccupiedSeats(persons: Person[]) {
@@ -42,8 +43,8 @@ function generateSeats(
   });
 }
 
-export default function VisualTable({ table, className }: VisualTableProps) {
-  const [visible, setVisible] = useState(false);
+export default function VisualTable({ table, className, alwaysVisible = false }: VisualTableProps) {
+  const [visible, setVisible] = useState(alwaysVisible);
 
   const { seats, persons } = table;
   const occupiedSeats = calculateOccupiedSeats(persons);
@@ -117,7 +118,7 @@ export default function VisualTable({ table, className }: VisualTableProps) {
 
   return (
     <OnVisible
-      className={`aspect-square p-14 ${className}`}
+      className={`aspect-square ${className ?? "p-14"}`}
       onChange={() => setVisible(true)}
       percent={10}
     >
@@ -130,5 +131,5 @@ export default function VisualTable({ table, className }: VisualTableProps) {
 }
 
 VisualTable.defaultProps = {
-  className: "",
+  className: undefined,
 };

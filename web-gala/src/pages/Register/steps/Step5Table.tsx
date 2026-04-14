@@ -197,9 +197,7 @@ function TableCard({
         {table.name || "Mesa sem nome"}
       </h4>
 
-      <div className="scale-75 opacity-80">
-        <VisualTable table={table} />
-      </div>
+      <VisualTable table={table} alwaysVisible className="p-8" />
 
       <div className="mt-2 flex w-full items-center justify-between text-[0.65rem]">
         <div className="flex items-center gap-1.5 text-white/40">

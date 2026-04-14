@@ -89,7 +89,7 @@ function TableDetail({ tableId, onClose }: Readonly<{ tableId: number; onClose: 
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="flex items-center justify-center">
-          <VisualTable table={table} />
+          <VisualTable table={table} alwaysVisible />
         </div>
         <div className="flex flex-col gap-4">
           <GuestList persons={table.persons} />

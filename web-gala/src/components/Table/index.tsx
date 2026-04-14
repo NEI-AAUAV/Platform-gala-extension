@@ -19,7 +19,7 @@ export default function Table({ table, className }: TableProps) {
           ? "Sem nome"
           : `${neiUser.name} ${neiUser.surname}`}
       </h6>
-      <VisualTable table={table} />
+      <VisualTable table={table} alwaysVisible />
     </div>
   );
 }
