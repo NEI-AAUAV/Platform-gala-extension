@@ -1,38 +1,34 @@
 import { test, expect } from '@playwright/test';
-import { mockGlobalConfig, mockTimeSlots, createAuthState } from './helpers';
+import { mockGlobalConfig, mockTimeSlots, mockAuth, mockSessionUser } from './helpers';
 
 test.describe('Profile System', () => {
-  // Use registered user
-  test.use({ storageState: createAuthState('user', true) });
-
   test.beforeEach(async ({ page }) => {
+    await mockAuth(page, 'user');
+    await mockSessionUser(page, true);
     await mockGlobalConfig(page);
     await mockTimeSlots(page);
 
-    // Mock getting table group
-    await page.route('**/api/gala/v1/user/me/table', async route => {
+    await page.route('**/api/gala/v1/table/list', async route => {
       await route.fulfill({
-        json: {
-          _id: 1,
-          name: "Test Table Group",
-          users: [
-            { id: 1, name: "Test", surname: "User" }
-          ]
-        }
+        json: [
+          {
+            _id: 1,
+            name: 'Test Table Group',
+            head: 1,
+            seats: 8,
+            persons: [{ _id: 1, name: 'Test', surname: 'User', companions: [] }],
+          }
+        ]
       });
-    });
-    
-    // Mock user list for transfer
-    await page.route('**/api/gala/v1/user/', async route => {
-      await route.fulfill({ json: [] });
     });
   });
 
   test('should display table group in profile', async ({ page }) => {
-    await page.goto('/profile');
-    
-    // Dashboard should show "Bilhete" and "A minha mesa"
-    await expect(page.locator('text=A minha mesa').first()).toBeVisible();
+    await page.goto('./profile');
+
+    await expect(page.locator('text=Mesa').first()).toBeVisible();
+
+    await page.click('text=Mesa');
     await expect(page.locator('text=Test Table Group').first()).toBeVisible();
   });
 });

@@ -1,20 +1,91 @@
 import { Page } from '@playwright/test';
 
+function base64url(obj: object): string {
+  const json = JSON.stringify(obj);
+  const bytes = Array.from(json).map((c) => c.charCodeAt(0));
+  const binary = String.fromCharCode(...bytes);
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+function makeJwt(payload: object): string {
+  const header = base64url({ alg: 'HS256', typ: 'JWT' });
+  const body = base64url(payload);
+  return `${header}.${body}.fake-sig`;
+}
+
+const FAKE_USER_JWT = makeJwt({
+  sub: 'test-user-sub',
+  email: 'user@ua.pt',
+  name: 'Test',
+  surname: 'User',
+  scopes: ['default'],
+});
+
+const FAKE_ADMIN_JWT = makeJwt({
+  sub: 'admin-user-sub',
+  email: 'admin@ua.pt',
+  name: 'Admin',
+  surname: 'User',
+  scopes: ['admin'],
+});
+
+export async function mockAuth(page: Page, role: 'user' | 'admin') {
+  const token = role === 'admin' ? FAKE_ADMIN_JWT : FAKE_USER_JWT;
+  await page.route('**/api/nei/v1/auth/refresh/', async (route) => {
+    await route.fulfill({ json: { access_token: token } });
+  });
+}
+
+export async function mockSessionUser(page: Page, isRegistered: boolean) {
+  if (isRegistered) {
+    await page.route('**/api/gala/v1/user/me', async (route) => {
+      await route.fulfill({
+        json: {
+          _id: 1,
+          name: 'Test',
+          surname: 'User',
+          email: 'user@ua.pt',
+          nmec: 12345,
+          matriculation: 2,
+          bus_option: 'NONE',
+          meal_option: 'NOR',
+          food_allergies: '',
+          has_payed: false,
+          phased_payment: false,
+          payment_proof_url: null,
+          payment_proof_url_phase2: null,
+          companions: [],
+          bus_assignment: null,
+          registration_step: 6,
+          phone: null,
+        }
+      });
+    });
+  } else {
+    await page.route('**/api/gala/v1/user/me', async (route) => {
+      await route.fulfill({ status: 404, json: { detail: 'Not registered' } });
+    });
+  }
+}
+
 export async function mockGlobalConfig(page: Page) {
   await page.route('**/api/gala/v1/config', async (route) => {
     await route.fulfill({
       json: {
-        _id: "GLOBAL_CONFIG",
-        event_name: "Gala E2E",
+        _id: 'GLOBAL_CONFIG',
+        event_name: 'Gala E2E',
         dates: {
-          registration_start: "2020-01-01T00:00:00",
-          registration_end: "2030-01-01T00:00:00",
-          tables_start: "2020-01-01T00:00:00",
-          tables_end: "2030-01-01T00:00:00",
-          nominations_start: "2020-01-01T00:00:00",
-          nominations_end: "2030-01-01T00:00:00",
-          voting_start: "2020-01-01T00:00:00",
-          voting_end: "2030-01-01T00:00:00",
+          registration_start: '2020-01-01T00:00:00',
+          registration_end: '2030-01-01T00:00:00',
+          tables_start: '2020-01-01T00:00:00',
+          tables_end: '2030-01-01T00:00:00',
+          nominations_start: '2020-01-01T00:00:00',
+          nominations_end: '2030-01-01T00:00:00',
+          voting_start: '2020-01-01T00:00:00',
+          voting_end: '2030-01-01T00:00:00',
         },
         prices: { total_price: 35.0, phased_payment_enabled: false },
         bus: { enabled: true, price_round_trip: 5.0, price_one_way: 3.0, capacity: 50 },
@@ -22,7 +93,7 @@ export async function mockGlobalConfig(page: Page) {
           { id: '1', name: 'Carne', description: 'Bife', is_active: true },
           { id: '2', name: 'Veg', description: 'Tofu', is_active: true }
         ],
-        homepage: { 
+        homepage: {
           payment_info: { visible: true },
           bus_schedule: { buses: [] },
           dj: { visible: true },
@@ -39,48 +110,20 @@ export async function mockTimeSlots(page: Page) {
   await page.route('**/api/gala/v1/time_slots/', async (route) => {
     await route.fulfill({
       json: {
-        registrationStart: "2020-01-01T00:00:00",
-        registrationEnd: "2030-01-01T00:00:00",
-        votesStart: "2020-01-01T00:00:00",
-        votesEnd: "2030-01-01T00:00:00",
-        nominationsStart: "2020-01-01T00:00:00",
-        nominationsEnd: "2030-01-01T00:00:00",
-        tablesStart: "2020-01-01T00:00:00",
-        tablesEnd: "2030-01-01T00:00:00",
-        galaStart: "2030-12-31T00:00:00",
+        registrationStart: '2020-01-01T00:00:00',
+        registrationEnd: '2030-01-01T00:00:00',
+        votesStart: '2020-01-01T00:00:00',
+        votesEnd: '2030-01-01T00:00:00',
+        nominationsStart: '2020-01-01T00:00:00',
+        nominationsEnd: '2030-01-01T00:00:00',
+        tablesStart: '2020-01-01T00:00:00',
+        tablesEnd: '2030-01-01T00:00:00',
+        galaStart: '2030-12-31T00:00:00',
       }
     });
   });
 }
 
-export function createAuthState(role: 'unauth' | 'user' | 'admin' | 'manager-gala', isRegistered: boolean = false) {
-  if (role === 'unauth') return { cookies: [], origins: [] };
-  
-  return {
-    cookies: [],
-    origins: [
-      {
-        origin: "http://localhost:5173",
-        localStorage: [
-          {
-            name: "user-storage",
-            value: JSON.stringify({
-              state: {
-                token: "fake-jwt-token-for-" + role,
-                name: role === 'admin' ? 'Admin' : 'Test',
-                surname: 'User',
-                email: role + "@ua.pt",
-                scopes: role === 'user' ? ["default"] : [role],
-                id: 1,
-                nmec: 12345,
-                is_registered: isRegistered,
-                sessionLoading: false
-              },
-              version: 0
-            })
-          }
-        ]
-      }
-    ]
-  };
+export function createAuthState(_role: 'unauth' | 'user' | 'admin' | 'manager-gala', _isRegistered: boolean = false) {
+  return { cookies: [], origins: [] };
 }

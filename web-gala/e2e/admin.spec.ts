@@ -1,33 +1,28 @@
 import { test, expect } from '@playwright/test';
-import { mockGlobalConfig, mockTimeSlots, createAuthState } from './helpers';
+import { mockGlobalConfig, mockTimeSlots, mockAuth, mockSessionUser } from './helpers';
 
 test.describe('Admin Panel as Admin', () => {
-  // Use admin role
-  test.use({ storageState: createAuthState('admin', true) });
-
   test.beforeEach(async ({ page }) => {
+    await mockAuth(page, 'admin');
+    await mockSessionUser(page, true);
     await mockGlobalConfig(page);
     await mockTimeSlots(page);
     await page.route('**/api/gala/v1/admin/registrations', async route => {
       await route.fulfill({ json: [] });
     });
-    // For updates
-    await page.route('**/api/gala/v1/admin/config', async route => {
-      await route.fulfill({ json: { status: 'success' } });
+    await page.route('**/api/gala/v1/limits', async route => {
+      await route.fulfill({ json: { maxRegistrations: 100, maxBusSeats: 50, maxTablesCount: 20 } });
     });
   });
 
   test('should load admin dashboard and allow configuration navigation', async ({ page }) => {
-    await page.goto('/admin');
-    
-    // Admin navigation tabs
-    await expect(page.locator('text=Inscrições')).toBeVisible();
-    await expect(page.locator('text=Configurações')).toBeVisible();
-    await expect(page.locator('text=Votações')).toBeVisible();
-    
-    // Config should be pre-filled with the mock
-    await page.click('text=Configurações');
-    const inputName = page.locator('input[name="event_name"]');
-    await expect(inputName).toHaveValue('Gala E2E');
+    await page.goto('./admin');
+
+    await expect(page.locator('text=Inscrições').first()).toBeVisible();
+    await expect(page.locator('text=Mesas').first()).toBeVisible();
+    await expect(page.locator('text=Categorias').first()).toBeVisible();
+
+    await page.click('text=Categorias');
+    await expect(page.locator('text=Gestão de Categorias')).toBeVisible();
   });
 });
