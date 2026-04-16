@@ -17,7 +17,7 @@ function makeJwt(payload: object): string {
 }
 
 const FAKE_USER_JWT = makeJwt({
-  sub: 'test-user-sub',
+  sub: 1,
   email: 'user@ua.pt',
   name: 'Test',
   surname: 'User',
@@ -25,17 +25,49 @@ const FAKE_USER_JWT = makeJwt({
 });
 
 const FAKE_ADMIN_JWT = makeJwt({
-  sub: 'admin-user-sub',
+  sub: 99,
   email: 'admin@ua.pt',
   name: 'Admin',
   surname: 'User',
   scopes: ['admin'],
 });
 
-export async function mockAuth(page: Page, role: 'user' | 'admin') {
-  const token = role === 'admin' ? FAKE_ADMIN_JWT : FAKE_USER_JWT;
+const FAKE_MANAGER_JWT = makeJwt({
+  sub: 42,
+  email: 'manager@ua.pt',
+  name: 'Manager',
+  surname: 'Gala',
+  scopes: ['manager-gala'],
+});
+
+export async function mockAuth(page: Page, role: 'user' | 'admin' | 'manager-gala') {
+  const tokens: Record<typeof role, string> = {
+    user: FAKE_USER_JWT,
+    admin: FAKE_ADMIN_JWT,
+    'manager-gala': FAKE_MANAGER_JWT,
+  };
   await page.route('**/api/nei/v1/auth/refresh/', async (route) => {
-    await route.fulfill({ json: { access_token: token } });
+    await route.fulfill({ json: { access_token: tokens[role] } });
+  });
+}
+
+export async function mockManagerPermissions(
+  page: Page,
+  permissions: string[] = [],
+  isAdmin: boolean = false,
+) {
+  await page.route('**/api/gala/v1/admin/managers/me', async (route) => {
+    await route.fulfill({
+      json: { is_admin: isAdmin, permissions },
+    });
+  });
+}
+
+export async function mockManagerList(page: Page, managers: object[] = []) {
+  await page.route('**/api/gala/v1/admin/managers', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ json: managers });
+    }
   });
 }
 

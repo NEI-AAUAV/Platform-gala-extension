@@ -11,9 +11,11 @@ from app.core.db.types import DBType
 from app.core.email import send_email
 from app.models.config import GlobalConfig
 from app.models.user import User
+from app.models.manager_permissions import ManagerPermission
 from app.services.config import ConfigService
 from app.services.export import ExportService
 from app.services.vote import VoteService
+from app.services.manager_permissions import ManagerPermissionsService
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 
@@ -29,9 +31,7 @@ async def get_config(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Retrieves the global event configuration (Admin/Manager only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-
+    await ManagerPermissionsService.require_config_access(db, auth)
     return await ConfigService.get_config(db)
 
 
@@ -42,15 +42,13 @@ async def update_config(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Updates the global event configuration (Admin/Manager only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    await ManagerPermissionsService.require_config_access(db, auth)
     return await ConfigService.update_config(db, config)
 
 
 @router.get(
-    "/export/registrations", 
-    response_class=PlainTextResponse, 
+    "/export/registrations",
+    response_class=PlainTextResponse,
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
 )
 async def export_registrations(
@@ -58,9 +56,7 @@ async def export_registrations(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Exports all registered users to CSV."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     csv_data = await ExportService.export_registrations(db)
     return Response(
         content=csv_data,
@@ -70,8 +66,8 @@ async def export_registrations(
 
 
 @router.get(
-    "/export/tables", 
-    response_class=PlainTextResponse, 
+    "/export/tables",
+    response_class=PlainTextResponse,
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
 )
 async def export_tables(
@@ -79,9 +75,7 @@ async def export_tables(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Exports all tables to CSV."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
     csv_data = await ExportService.export_tables(db)
     return Response(
         content=csv_data,
@@ -102,8 +96,7 @@ async def confirm_payment(
     settings: SettingsDep,
 ):
     """Manually confirms payment for a user."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
 
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one_and_update(
@@ -130,7 +123,7 @@ async def confirm_payment(
 
 
 @router.get(
-    "/registrations/{user_id}", 
+    "/registrations/{user_id}",
     response_model=User,
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
 )
@@ -140,9 +133,7 @@ async def get_registration(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Retrieves registration data for a specific user."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
@@ -151,7 +142,7 @@ async def get_registration(
 
 
 @router.patch(
-    "/registrations/{user_id}", 
+    "/registrations/{user_id}",
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
 )
 async def update_registration_admin(
@@ -160,10 +151,8 @@ async def update_registration_admin(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Manually updates registration data for a specific user (Admin only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    """Manually updates registration data for a specific user."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": updates})
     if result.matched_count == 0:
@@ -172,8 +161,8 @@ async def update_registration_admin(
 
 
 @router.get(
-    "/registrations", 
-    response_model=List[User], 
+    "/registrations",
+    response_model=List[User],
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
 )
 async def list_registrations(
@@ -181,9 +170,7 @@ async def list_registrations(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Lists all successfully registered users."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     user_coll = User.get_collection(db)
     cursor = user_coll.find({"is_registered": True})
     users = await cursor.to_list(length=1000)
@@ -209,10 +196,8 @@ async def admin_merge_nominees(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Merges multiple nominee names into one target name (Admin only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-
+    """Merges multiple nominee names into one target name."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     success = await VoteService.merge_nominees(db, category_id, body.target_name, body.source_names)
     if not success:
         raise HTTPException(status_code=400, detail="Merge failed")
@@ -232,10 +217,8 @@ async def admin_finalize_nominations(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Finalizes nominations for a category, selecting the top 4 (Admin only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    """Finalizes nominations for a category, selecting the top 4."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     success = await VoteService.finalize_nominations(db, category_id)
     if not success:
         raise HTTPException(status_code=400, detail="Finalization failed")
@@ -258,9 +241,8 @@ async def admin_toggle_vote_category(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
 ):
-    """Toggles various phases of a vote category (Admin only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    """Toggles various phases of a vote category."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
 
     update_data = {}
     if body.nomination_open is not None:
@@ -278,15 +260,17 @@ async def admin_toggle_vote_category(
     return {"status": "success"}
 
 
-@router.get("/time", response_model=TimeSlots, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}})
+@router.get(
+    "/time",
+    response_model=TimeSlots,
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}}
+)
 async def get_time_slots(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Retrieves the event time slots (Admin/Manager only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-
+    """Retrieves the event time slots."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
     if not result:
@@ -294,16 +278,18 @@ async def get_time_slots(
     return TimeSlots.parse_obj(result)
 
 
-@router.patch("/time", response_model=TimeSlots, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}})
+@router.patch(
+    "/time",
+    response_model=TimeSlots,
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}}
+)
 async def update_time_slots(
     updates: Dict[str, Any],
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Updates the event time slots (Admin/Manager only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-        
+    """Updates the event time slots."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
     await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
@@ -324,10 +310,8 @@ async def assign_bus(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Assigns (or unassigns) a user to a specific bus (Admin only)."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-
+    """Assigns (or unassigns) a user to a specific bus."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.BUSES)
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": {"bus_assignment": body.bus_id}})
     if result.matched_count == 0:
@@ -349,8 +333,7 @@ async def auto_assign_buses(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Auto-assigns registered users (with bus) to buses by year or registration order."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.BUSES)
 
     config = await ConfigService.get_config(db)
     buses = config.homepage.bus_schedule.buses
@@ -404,8 +387,7 @@ async def upload_dj_photo(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Uploads DJ photo to R2 and stores URL in config."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.HOMEPAGE)
     if not storage_client.enabled:
         raise HTTPException(status_code=503, detail="R2 storage not configured")
 
@@ -434,8 +416,7 @@ async def delete_dj_photo(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Removes DJ photo from R2 and config."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.HOMEPAGE)
 
     config = await ConfigService.get_config(db)
     if config.homepage.dj.photo_url:
@@ -456,8 +437,7 @@ async def upload_gallery_preview(
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Uploads gallery preview photo to R2."""
-    if ScopeEnum.MANAGER_GALA not in auth.scopes and ScopeEnum.ADMIN not in auth.scopes:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.HOMEPAGE)
     if not storage_client.enabled:
         raise HTTPException(status_code=503, detail="R2 storage not configured")
 

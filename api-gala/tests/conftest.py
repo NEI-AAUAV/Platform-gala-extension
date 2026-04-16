@@ -1,79 +1,91 @@
 import pytest
 import asyncio
 from typing import AsyncGenerator
-import motor.motor_asyncio
+from unittest.mock import AsyncMock, MagicMock
 from httpx import AsyncClient
 from app.main import app
-from app.core.db import get_db, get_client, DBType
+from app.core.db import get_db, get_client
 from app.api.auth import api_nei_auth, AuthData
 
-TEST_DB_NAME = "gala_test_db"
-TEST_MONGO_URL = "mongodb://localhost:27017" # Adjust if necessary
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """Create an instance of the default event loop for each test case."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
 
-from unittest.mock import AsyncMock, MagicMock
+
+COLLECTIONS = [
+    "users",
+    "global_config",
+    "time_slots",
+    "vote_categories",
+    "vote_cast",
+    "table_groups",
+    "manager_permissions",
+]
+
 
 @pytest.fixture(scope="session")
 async def test_db():
-    # Use AsyncMock to mock the MongoDB interactions to avoid test hanging
-    # This acts as a completely mocked database
     db = MagicMock()
-    
-    # Example collections
-    db.users = AsyncMock()
-    db.global_config = AsyncMock()
-    db.time_slots = AsyncMock()
-    db.vote_categories = AsyncMock()
-    db.vote_cast = AsyncMock()
-    db.table_groups = AsyncMock()
-    
-    # Mock specific return values if needed in the tests, but default AsyncMock is fine for most
+    for name in COLLECTIONS:
+        setattr(db, name, AsyncMock())
+    # Route db["collection_name"] → db.collection_name so get_collection() works
+    db.__getitem__ = MagicMock(side_effect=lambda key: getattr(db, key))
     yield db
 
-@pytest.fixture
-def mock_auth_data():
-    return AuthData(
-        sub=1,
-        nmec=12345,
-        name="Test",
-        surname="User",
-        email="test.user@ua.pt",
-        scopes=["default"]
-    )
+
+def _make_client_overrides(auth_data: AuthData, test_db: MagicMock) -> None:
+    mock_client = MagicMock()
+    mock_client.close = MagicMock()
+    app.dependency_overrides[api_nei_auth] = lambda: auth_data
+    app.dependency_overrides[get_client] = lambda settings: mock_client
+    app.dependency_overrides[get_db] = lambda settings, client: test_db
+
+
+def _clear_client_overrides() -> None:
+    for key in (api_nei_auth, get_client, get_db):
+        app.dependency_overrides.pop(key, None)
+
 
 @pytest.fixture
-def override_auth(mock_auth_data: AuthData):
-    def _auth_override():
-        return mock_auth_data
-    app.dependency_overrides[api_nei_auth] = _auth_override
-    yield
-    app.dependency_overrides.pop(api_nei_auth, None)
+def mock_auth_data() -> AuthData:
+    return AuthData(sub=1, nmec=12345, name="Test", surname="User",
+                    email="test.user@ua.pt", scopes=["default"])
+
 
 @pytest.fixture
-async def async_client(test_db, override_auth) -> AsyncGenerator[AsyncClient, None]:
-    # Need to override get_client to prevent real connection in lifespan
-    from unittest.mock import MagicMock
-    mock_db_client = MagicMock()
-    mock_db_client.close = MagicMock()
-    mock_db_client.client = MagicMock()
-    
-    def override_get_client(settings):
-        return mock_db_client
-        
-    def override_get_db(settings, client):
-        return test_db
-    
-    app.dependency_overrides[get_client] = override_get_client
-    app.dependency_overrides[get_db] = override_get_db
-    
+def mock_admin_auth() -> AuthData:
+    return AuthData(sub=99, nmec=99999, name="Admin", surname="User",
+                    email="admin@ua.pt", scopes=["admin"])
+
+
+@pytest.fixture
+def mock_manager_auth() -> AuthData:
+    return AuthData(sub=42, nmec=42000, name="Manager", surname="Gala",
+                    email="manager@ua.pt", scopes=["manager-gala"])
+
+
+@pytest.fixture
+async def async_client(mock_auth_data: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
+    _make_client_overrides(mock_auth_data, test_db)
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-        
-    app.dependency_overrides.pop(get_client, None)
-    app.dependency_overrides.pop(get_db, None)
+    _clear_client_overrides()
+
+
+@pytest.fixture
+async def async_client_admin(mock_admin_auth: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
+    _make_client_overrides(mock_admin_auth, test_db)
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+    _clear_client_overrides()
+
+
+@pytest.fixture
+async def async_client_manager(mock_manager_auth: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
+    _make_client_overrides(mock_manager_auth, test_db)
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+    _clear_client_overrides()

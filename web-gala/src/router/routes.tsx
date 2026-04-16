@@ -6,7 +6,7 @@ import ErrorBoundary from "@/pages/ErrorBoundary";
 
 import { useUserStore, UserState } from "@/stores/useUserStore";
 
-const ADMIN_SCOPES = new Set(["admin", "manager-gala"]);
+const ADMIN_SCOPES = new Set(["admin", "manager-jantar-gala", "manager-gala"]);
 
 function ProtectedRoute({
   children,

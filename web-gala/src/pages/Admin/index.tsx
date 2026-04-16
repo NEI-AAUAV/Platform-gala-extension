@@ -8,17 +8,28 @@ import TablesAdmin from "./TablesAdmin";
 import RegistrationAdmin from "./RegistrationAdmin";
 import HomepageAdmin from "./HomepageAdmin";
 import BusAssignmentAdmin from "./BusAssignmentAdmin";
+import PermissoesAdmin from "./PermissoesAdmin";
 import { useConfigStore } from "@/stores/useConfigStore";
+import { useManagerPermissions } from "@/hooks/useManagerPermissions";
+import { ManagerPermissionKey } from "@/services/GalaService";
 
-type Tab = "registration" | "tables" | "categories" | "results" | "homepage" | "buses";
+type Tab = "registration" | "tables" | "categories" | "results" | "homepage" | "buses" | "permissoes";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "registration", label: "Inscrições" },
-  { id: "tables", label: "Mesas" },
-  { id: "categories", label: "Categorias" },
-  { id: "results", label: "Resultados" },
-  { id: "homepage", label: "Homepage" },
-  { id: "buses", label: "Autocarros" },
+type TabDefinition = {
+  id: Tab;
+  label: string;
+  permission?: ManagerPermissionKey;
+  adminOnly?: boolean;
+};
+
+const ALL_TABS: TabDefinition[] = [
+  { id: "registration", label: "Inscrições", permission: "registration" },
+  { id: "tables", label: "Mesas", permission: "tables" },
+  { id: "categories", label: "Categorias", permission: "categories" },
+  { id: "results", label: "Resultados", permission: "categories" },
+  { id: "homepage", label: "Homepage", permission: "homepage" },
+  { id: "buses", label: "Autocarros", permission: "buses" },
+  { id: "permissoes", label: "Permissões", adminOnly: true },
 ];
 
 const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
@@ -30,12 +41,24 @@ const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
 };
 
 export default function Admin() {
-  const [activeTab, setActiveTab] = useState<Tab>("registration");
+  const { isAdmin, permissions, loading, error } = useManagerPermissions();
+  const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { raw } = useConfigStore();
 
-  const previewRoute = PREVIEW_ROUTES[activeTab] ?? "/";
+  const visibleTabs = ALL_TABS.filter((tab) => {
+    if (tab.adminOnly) return isAdmin;
+    if (isAdmin) return true;
+    return tab.permission ? permissions.has(tab.permission) : false;
+  });
+
+  useEffect(() => {
+    if (loading || activeTab) return;
+    if (visibleTabs.length > 0) setActiveTab(visibleTabs[0].id);
+  }, [loading, visibleTabs, activeTab]);
+
+  const previewRoute = activeTab ? (PREVIEW_ROUTES[activeTab] ?? "/") : "/";
 
   const reload = useCallback(() => {
     if (iframeRef.current?.contentWindow) {
@@ -43,14 +66,33 @@ export default function Admin() {
     }
   }, []);
 
-  // Auto-reload preview 1.5s after config changes (debounced)
   useEffect(() => {
     if (!previewOpen) return;
     const timer = setTimeout(reload, 1500);
     return () => clearTimeout(timer);
   }, [raw, previewOpen, reload]);
 
-  const hasPreview = activeTab in PREVIEW_ROUTES;
+  const hasPreview = activeTab !== null && activeTab in PREVIEW_ROUTES;
+
+  if (loading) {
+    return <div className="min-h-screen pt-20 flex items-center justify-center text-white/30 text-sm">A carregar...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <p className="text-red-400/60 text-sm">Erro ao carregar permissões. Tenta recarregar a página.</p>
+      </div>
+    );
+  }
+
+  if (visibleTabs.length === 0) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <p className="text-white/40 text-sm">Sem permissões de acesso ao painel de administração.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-20">
@@ -71,7 +113,7 @@ export default function Admin() {
             {/* Tabs + preview toggle */}
             <div className="mb-8 flex w-full flex-wrap items-center justify-between gap-3 border-b border-dark-gold/20 pb-4">
               <div className="flex flex-wrap gap-2">
-                {TABS.map(({ id, label }) => (
+                {visibleTabs.map(({ id, label }) => (
                   <button
                     key={id}
                     onClick={() => setActiveTab(id)}
@@ -150,6 +192,14 @@ export default function Admin() {
                     Distribuição de Autocarros
                   </h1>
                   <BusAssignmentAdmin />
+                </section>
+              )}
+              {activeTab === "permissoes" && (
+                <section className="mx-auto max-w-3xl">
+                  <h1 className="mb-6 font-gala text-3xl font-bold text-dark-gold">
+                    Permissões de Managers
+                  </h1>
+                  <PermissoesAdmin />
                 </section>
               )}
             </div>

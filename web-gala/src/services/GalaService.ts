@@ -51,6 +51,20 @@ type VoteCategoryCreate = {
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
 
+export type ManagerPermissionKey = "registration" | "tables" | "categories" | "homepage" | "buses";
+
+export type ManagerPermissionsResponse = {
+  is_admin: boolean;
+  permissions: ManagerPermissionKey[];
+};
+
+export type Manager = {
+  _id: number;
+  name: string;
+  email: string;
+  permissions: ManagerPermissionKey[];
+};
+
 type VoteCategoryCast = {
   option: number;
 };
@@ -220,6 +234,18 @@ const GalaService = {
     },
     updateConfig: async (data: Record<string, unknown>): Promise<Record<string, unknown>> => {
       return client.put("/admin/config", data);
+    },
+  },
+
+  permissions: {
+    getMyPermissions: async (): Promise<ManagerPermissionsResponse> => {
+      return client.get("/admin/managers/me");
+    },
+    listManagers: async (): Promise<Manager[]> => {
+      return client.get("/admin/managers");
+    },
+    setManagerPermissions: async (managerId: number, permissions: ManagerPermissionKey[]): Promise<Manager> => {
+      return client.put(`/admin/managers/${managerId}/permissions`, { permissions });
     },
   },
 
