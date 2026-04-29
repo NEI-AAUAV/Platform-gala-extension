@@ -1,130 +1,114 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { useRef } from "react";
-import { faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate } from "react-router-dom";
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import Input from "@/components/Input";
+import { useState } from "react";
+import { faPlus, faChair } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VisualTable from "@/components/Table/VisualTable";
-import AddUserList from "@/components/TableModal/AddUserList";
-import Button from "@/components/Button";
-import useTableReserve from "@/hooks/tableHooks/useTableReserve";
-import useTableEdit from "@/hooks/tableHooks/useTableEdit";
 import Avatar from "@/components/Avatar";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
+import GalaService from "@/services/GalaService";
 
 type ClaimTableProps = {
   table: Table;
   mutate: () => void;
 };
 
-type FormValues = {
-  title: string;
-  dish: "NOR" | "VEG";
-  allergies: string;
-  companions: {
-    dish: "NOR" | "VEG";
-    allergies: string;
-  }[];
-};
-
-function calculateOccupiedSeats(persons: Person[]) {
-  return persons.reduce((acc, person) => acc + 1 + person.companions.length, 0);
-}
-
 export default function ClaimTable({ table, mutate }: ClaimTableProps) {
-  const methods = useForm<FormValues>({
-    defaultValues: {
-      title: "",
-      dish: "NOR",
-      allergies: "",
-      companions: [],
-    },
-  });
+  const [tableName, setTableName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const navigate = useNavigate();
   const toast = useAppToast();
 
-  const titleRef = useRef<HTMLInputElement | null>(null);
-  const { ref, ...rest } = methods.register("title", {
-    required: "O nome é obrigatório",
-    minLength: {
-      value: 3,
-      message: "O nome deve ter entre 3 a 20 caracteres",
-    },
-    maxLength: {
-      value: 20,
-      message: "O nome deve ter entre 3 a 20 caracteres",
-    },
-  });
-  function clearTitle() {
-    titleRef.current!.value = "";
-    titleRef.current?.focus();
-  }
-
-  const formSubmit: SubmitHandler<FormValues> = async (data) => {
+  const handleClaim = async () => {
+    const trimmed = tableName.trim();
+    if (trimmed.length < 3 || trimmed.length > 20) {
+      setNameError("O nome deve ter entre 3 e 20 caracteres.");
+      return;
+    }
+    setNameError(null);
+    setSubmitting(true);
     try {
-      await useTableReserve(table._id, {
-        dish: data.dish,
-        allergies: data.allergies,
-        companions: data.companions,
+      // Use the reserve endpoint to claim the empty table (first person becomes head automatically)
+      await GalaService.table.reserveTable(table._id, {
+        dish: "NOR",
+        allergies: "",
+        companions: [],
       });
-      await useTableEdit(table._id, { name: data.title });
+      // Now set the name
+      await GalaService.table.editTable(table._id, { name: trimmed });
       toast.success("Mesa criada com sucesso!");
       mutate();
       navigate("/reserve");
     } catch (e) {
       toast.error(extractApiError(e, "Erro ao criar mesa."));
+    } finally {
+      setSubmitting(false);
     }
   };
+
   return (
     <div className="md:grid md:h-[max(100%,auto)] md:grid-cols-[1fr_min-content] md:gap-8">
-      <FormProvider {...methods}>
-        <form
-          className="flex w-full flex-col gap-8"
-          noValidate
-          onSubmit={methods.handleSubmit(formSubmit)}
-        >
-          <div className="flex w-full flex-col items-center overflow-y-auto overflow-x-hidden md:items-start">
-            <div className="relative w-full md:w-full">
-              <Input
-                className="py-3 pl-4 pr-8"
-                placeholder="Título da Mesa"
-                {...rest}
-                ref={(e) => {
-                  ref(e);
-                  titleRef.current = e;
-                }}
-              />
-              {methods.formState.errors.title && (
-                <div className="text-xs text-red-500">
-                  {methods.formState.errors.title.message}
-                </div>
-              )}
-              <button
-                className="absolute right-0 top-4 px-4"
-                type="button"
-                onClick={clearTitle}
-              >
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            </div>
-            <h5 className="flex items-center gap-2">
-              <Avatar className="w-[18px]" /> Serás o dono da mesa
-            </h5>
-            <VisualTable className="md:hidden" table={table} />
-            <AddUserList
-              className="md:mt-10"
-              freeSeats={table.seats - calculateOccupiedSeats(table.persons)}
-            />
+      <div className="flex w-full flex-col gap-8">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-light-gold w-fit">
+            <FontAwesomeIcon icon={faChair} className="w-3" />
+            Mesa #{table._id}
           </div>
-          <Button className="mt-auto" submit>
-            <FontAwesomeIcon icon={faPlus} /> Criar mesa
-          </Button>
-        </form>
-      </FormProvider>
-      <div className="flex items-center justify-center">
-        <VisualTable className="hidden md:block" table={table} />
+          <div>
+            <p className="text-sm text-white/50">
+              Esta mesa está livre. Reserva-a e torna-te o seu responsável.
+            </p>
+          </div>
+        </div>
+
+        {/* Owner badge */}
+        <div className="flex items-center gap-3 rounded-xl border border-light-gold/20 bg-light-gold/5 px-4 py-3">
+          <Avatar className="w-8 rounded-full border border-white/10" />
+          <div>
+            <p className="text-xs font-bold text-light-gold">Serás o dono da mesa</p>
+            <p className="text-[0.6rem] text-white/30">Podes convidar outros inscritos depois de a criar.</p>
+          </div>
+        </div>
+
+        {/* Table name input */}
+        <div className="space-y-2">
+          <label className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+            Nome da Mesa
+          </label>
+          <input
+            type="text"
+            value={tableName}
+            onChange={(e) => setTableName(e.target.value)}
+            placeholder="Ex: Os Fixolas, Mesa A, ..."
+            maxLength={20}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:border-light-gold/40"
+          />
+          {nameError && (
+            <p className="text-xs text-red-400">{nameError}</p>
+          )}
+        </div>
+
+        {/* Visual table preview on mobile */}
+        <div className="flex justify-center md:hidden">
+          <VisualTable table={table} alwaysVisible />
+        </div>
+
+        {/* Submit */}
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={handleClaim}
+          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-light-gold/60 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <FontAwesomeIcon icon={faPlus} />
+          {submitting ? "A criar..." : "Criar Mesa"}
+        </button>
+      </div>
+
+      <div className="hidden items-center justify-center md:flex">
+        <VisualTable table={table} alwaysVisible />
       </div>
     </div>
   );

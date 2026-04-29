@@ -111,6 +111,21 @@ const GalaService = {
       const response: Table = await client.delete(`/table/${id}/remove/${uid}`);
       return response;
     },
+    inviteUser: async (tableId: number, userId: number) => {
+      const response: Table = await client.post(`/table/${tableId}/invite/${userId}`, {});
+      return response;
+    },
+    revokeInvite: async (tableId: number, userId: number) => {
+      const response: Table = await client.delete(`/table/${tableId}/invite/${userId}`);
+      return response;
+    },
+    getMyInvites: async (): Promise<Table[]> => {
+      return client.get("/table/my-invites");
+    },
+    acceptInvite: async (tableId: number, body: { dish?: string; allergies?: string }) => {
+      const response: Table = await client.post(`/table/${tableId}/invite/accept`, body);
+      return response;
+    },
   },
 
   user: {

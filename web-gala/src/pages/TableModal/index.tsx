@@ -8,7 +8,6 @@ import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import useTables from "@/hooks/tableHooks/useTables";
 import useTable from "@/hooks/tableHooks/useTable";
-import RequestJoinTable from "./RequestJoinTable";
 import EditTable from "./EditTable";
 import ViewTable from "./ViewTable";
 import ClaimTable from "./ClaimTable";
@@ -53,6 +52,9 @@ function useModalPage(tableId: number) {
   // Use _id (not sub) for the head comparison — sessionUser is a User object
   const isHead = sessionUser?._id != null && table.head === sessionUser._id;
 
+  // Check if the current user is invited to THIS specific table
+  const isInvited = sessionUser?._id != null && (table.invites ?? []).includes(sessionUser._id);
+
   if (state !== State.REGISTERED || time.tablesStatus !== TimeStatus.OPEN) {
     return <ViewTable table={table} inTable={false} mutate={mutate} />;
   }
@@ -62,11 +64,12 @@ function useModalPage(tableId: number) {
   if (isHead) {
     return <EditTable table={table} mutate={mutate} />;
   }
-  if (inAnyTable && occupied > 0) {
+  if (inTable || (inAnyTable && occupied > 0)) {
     return <ViewTable table={table} inTable={inTable} mutate={mutate} />;
   }
-  if (!isHead && !inAnyTable) {
-    return <RequestJoinTable table={table} mutate={mutate} />;
+  if (isInvited && !inAnyTable) {
+    // User has been invited to this table — show an accept/decline view
+    return <ViewTable table={table} inTable={false} mutate={mutate} isInvited />;
   }
   return <ViewTable table={table} inTable={false} mutate={mutate} />;
 }

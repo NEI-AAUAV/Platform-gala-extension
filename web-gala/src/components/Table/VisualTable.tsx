@@ -63,7 +63,7 @@ export default function VisualTable({ table, className, alwaysVisible = false }:
         <div
           className={`flex h-full w-full items-center justify-center overflow-hidden ${backgroundColor}`}
         >
-          <span className="text-2xl font-bold">Livre</span>
+          <span className="text-sm font-bold">Livre</span>
         </div>
       );
       break;
@@ -73,7 +73,7 @@ export default function VisualTable({ table, className, alwaysVisible = false }:
         <div
           className={`z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full ${backgroundColor}`}
         >
-          <span className="font-bold">Ocupada</span>
+          <span className="text-xs font-bold">Ocupada</span>
         </div>
       );
       break;
@@ -108,10 +108,10 @@ export default function VisualTable({ table, className, alwaysVisible = false }:
               </linearGradient>
             </defs>
           </Wave>
-          <h1 className="z-10 text-[2rem] font-bold leading-tight">
+          <h1 className="z-10 text-lg font-bold leading-tight">
             {freeSeats}
           </h1>
-          <h6 className="z-10 text-xl font-light leading-tight">
+          <h6 className="z-10 text-[0.6rem] font-light leading-tight">
             LIVRE{freeSeats > 1 && "S"}
           </h6>
         </div>
@@ -122,11 +122,14 @@ export default function VisualTable({ table, className, alwaysVisible = false }:
 
   return (
     <OnVisible
-      className={`aspect-square ${className ?? "p-14"}`}
+      className={`aspect-square ${className ?? "p-10"}`}
       onChange={() => setVisible(true)}
       percent={10}
     >
-      <div className="relative aspect-square w-[6.25rem] select-none">
+      {/* The inner div is the actual table circle + surrounding seats.
+          Size is fixed at 5rem (80px); seats use Seat's gap calculation.
+          The OnVisible wrapper provides extra padding so seats aren't clipped. */}
+      <div className="relative aspect-square w-20 select-none">
         {vacancyState}
         {generateSeats(seats, occupiedSeats, visible)}
       </div>

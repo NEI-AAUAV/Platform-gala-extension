@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faChevronRight, faBell, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import useTables from "@/hooks/tableHooks/useTables";
 import useTable from "@/hooks/tableHooks/useTable";
 import useLimits from "@/hooks/useLimits";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import useMyInvites from "@/hooks/tableHooks/useMyInvites";
 import Table from "@/components/Table";
 import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
 import useNEIUser from "@/hooks/useNEIUser";
 import { formatDateTimePT } from "@/utils/formatDate";
+import GalaService from "@/services/GalaService";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
 
 const DEFAULT_SEATS = 10;
 
@@ -23,16 +27,125 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   return slots;
 }
 
+// ---------------------------------------------------------------------------
+// Pending invites banner
+// ---------------------------------------------------------------------------
+
+function PendingInvitesBanner({ invites, onAccepted }: {
+  invites: Table[];
+  onAccepted: () => void;
+}) {
+  const toast = useAppToast();
+  const { mutate } = useMyInvites();
+  const { mutate: mutateAllTables } = useTables();
+
+  if (invites.length === 0) return null;
+
+  const accept = async (tableId: number) => {
+    try {
+      await GalaService.table.acceptInvite(tableId, {});
+      toast.success("Entraste na mesa!");
+      mutate();
+      mutateAllTables();
+      onAccepted();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao aceitar convite."));
+    }
+  };
+
+  const decline = async (tableId: number) => {
+    try {
+      // We need our own user ID — fetch via session user
+      const me = await GalaService.user.getSessionUser();
+      await GalaService.table.revokeInvite(tableId, me._id);
+      toast.success("Convite recusado.");
+      mutate();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao recusar convite."));
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-light-gold/25 bg-light-gold/5 p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <FontAwesomeIcon icon={faBell} className="text-light-gold" />
+        <p className="text-xs font-bold text-light-gold">
+          {invites.length === 1 ? "Tens 1 convite pendente" : `Tens ${invites.length} convites pendentes`}
+        </p>
+      </div>
+      <div className="space-y-2">
+        {invites.map((t) => (
+          <InviteRow key={t._id} table={t} onAccept={accept} onDecline={decline} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InviteRow({
+  table,
+  onAccept,
+  onDecline,
+}: {
+  table: Table;
+  onAccept: (id: number) => void;
+  onDecline: (id: number) => void;
+}) {
+  const { neiUser } = useNEIUser(table.head ?? null);
+  const occupied = table.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0);
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-4 py-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-white/85">
+          {table.name || `Mesa #${table._id}`}
+        </p>
+        <p className="text-[0.6rem] text-white/35">
+          {neiUser ? `Por ${neiUser.name} ${neiUser.surname}` : `Mesa #${table._id}`}
+          {" · "}{occupied}/{table.seats} lugares
+        </p>
+      </div>
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={() => onDecline(table._id)}
+          className="rounded-full border border-white/15 px-3 py-1.5 text-[0.65rem] font-bold text-white/40 transition hover:border-red-400/40 hover:text-red-400"
+        >
+          Recusar
+        </button>
+        <button
+          type="button"
+          onClick={() => onAccept(table._id)}
+          className="flex items-center gap-1.5 rounded-full border border-light-gold/50 bg-light-gold/10 px-3 py-1.5 text-[0.65rem] font-bold text-light-gold transition hover:bg-light-gold/20"
+        >
+          <FontAwesomeIcon icon={faCheck} className="text-[0.5rem]" />
+          Aceitar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export default function ProfileTableSection() {
-  const { tables } = useTables();
+  const { tables, mutate: mutateAllTables } = useTables();
   const { limits } = useLimits();
   const { time } = useTime();
+  const { invites, mutate: mutateInvites } = useMyInvites();
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = buildSlots(tables, maxCount);
   const tablePeriodClosed = time?.tablesStatus === TimeStatus.CLOSED;
   const tableDeadlineLabel = time ? formatDateTimePT(time.tablesEnd) : "A anunciar";
+
+  const handleAccepted = () => {
+    mutateAllTables();
+    mutateInvites();
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -50,6 +163,11 @@ export default function ProfileTableSection() {
             O período de escolha e alteração de mesa já terminou. Para resolver qualquer situação, contacta a organização.
           </p>
         </div>
+      )}
+
+      {/* Pending invites */}
+      {!tablePeriodClosed && (
+        <PendingInvitesBanner invites={invites} onAccepted={handleAccepted} />
       )}
 
       {selectedId !== null && (

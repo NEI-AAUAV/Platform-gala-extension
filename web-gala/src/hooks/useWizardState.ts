@@ -19,7 +19,7 @@ export interface WizardData {
   paymentProofPhase1: string | null;
   paymentProofPhase2: string | null;
   tableId: string | null;
-  tableRole: "owner" | "member" | null;
+  tableRole: "owner" | "member" | "invited" | null;
   tableName: string | undefined;
   currentStep: number;
 }

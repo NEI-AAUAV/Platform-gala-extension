@@ -23,7 +23,7 @@ export default function Seat({ angle, isTaken, isVisible, delay }: SeatProps) {
 
   const x = Math.cos(angle);
   const y = Math.sin(angle);
-  const gap = "1rem";
+  const gap = "0.6rem";
 
   const style = isVisible
     ? {
@@ -44,7 +44,7 @@ export default function Seat({ angle, isTaken, isVisible, delay }: SeatProps) {
       ref={parentRef}
     >
       <div
-        className={classNames("aspect-square w-10 rounded-full border-2", {
+        className={classNames("aspect-square w-4 rounded-full border-2", {
           "border-light-gold": !isTaken,
           "border-dark-gold bg-dark-gold": isTaken,
         })}

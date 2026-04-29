@@ -66,7 +66,12 @@ export default function PaymentInfoSection({ paymentInfoConfig, registrationConf
               highlight
             />
           )}
-          <DeadlineCard index={phasedPaymentEnabled ? 2 : 1} registrationConfig={registrationConfig} />
+          <DeadlineCard
+            index={phasedPaymentEnabled ? 2 : 1}
+            registrationConfig={registrationConfig}
+            registrationOpenDate={registrationOpenDate}
+            registrationCloseDate={registrationCloseDate}
+          />
         </div>
       </div>
     </section>
@@ -116,7 +121,12 @@ function PriceCard({
   );
 }
 
-function DeadlineCard({ index, registrationConfig }: { readonly index: number; readonly registrationConfig: RegistrationConfig }) {
+function DeadlineCard({ index, registrationConfig, registrationOpenDate, registrationCloseDate }: {
+  readonly index: number;
+  readonly registrationConfig: RegistrationConfig;
+  readonly registrationOpenDate: string;
+  readonly registrationCloseDate: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}

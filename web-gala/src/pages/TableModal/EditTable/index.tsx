@@ -1,6 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { faPen, faLink, faCamera, faCopy } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPen,
+  faCamera,
+  faUserPlus,
+  faXmark,
+  faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
@@ -10,11 +16,167 @@ import Avatar from "@/components/Avatar";
 import useTableLeave from "@/hooks/tableHooks/useTableLeave";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
+import GalaService from "@/services/GalaService";
+import useNEIUser from "@/hooks/useNEIUser";
 
 type EditTableProps = {
   readonly table: Table;
   readonly mutate: () => void;
 };
+
+type SearchResult = { id: number; name: string; email: string };
+
+function InvitePanel({ table, mutate }: { table: Table; mutate: () => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const toast = useAppToast();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const pending = table.invites ?? [];
+
+  const handleSearch = (q: string) => {
+    setQuery(q);
+    clearTimeout(debounceRef.current);
+    if (q.length < 2) { setResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const data = await GalaService.user.searchUsers(q);
+        // Filter out users already in the table or already invited
+        const tablePersonIds = new Set(table.persons.map((p) => p.id));
+        setResults(data.filter((u) => !tablePersonIds.has(u.id)));
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+  };
+
+  const invite = async (userId: number) => {
+    try {
+      await GalaService.table.inviteUser(table._id, userId);
+      toast.success("Convite enviado!");
+      setQuery("");
+      setResults([]);
+      mutate();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao enviar convite."));
+    }
+  };
+
+  const revoke = async (userId: number) => {
+    try {
+      await GalaService.table.revokeInvite(table._id, userId);
+      toast.success("Convite retirado.");
+      mutate();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao retirar convite."));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <h4 className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+        <FontAwesomeIcon icon={faUserPlus} /> Convidar para a Mesa
+      </h4>
+
+      {/* Search box */}
+      <div className="relative">
+        <FontAwesomeIcon
+          icon={faSearch}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 text-xs"
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleSearch(e.target.value)}
+          placeholder="Procurar por nome ou email..."
+          className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-light-gold/40"
+        />
+      </div>
+
+      {/* Search results */}
+      {results.length > 0 && (
+        <div className="rounded-xl border border-white/8 bg-[#111] divide-y divide-white/5 overflow-hidden">
+          {results.map((u) => {
+            const alreadyInvited = pending.includes(u.id);
+            return (
+              <div key={u.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-white/80">{u.name}</p>
+                  <p className="truncate text-[0.6rem] text-white/30">{u.email}</p>
+                </div>
+                {alreadyInvited ? (
+                  <span className="shrink-0 text-[0.6rem] font-bold uppercase text-light-gold/60">
+                    Convidado
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => invite(u.id)}
+                    className="shrink-0 rounded-full border border-light-gold/40 px-3 py-1 text-[0.6rem] font-bold text-light-gold hover:bg-light-gold/10 transition-all"
+                  >
+                    Convidar
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {searching && (
+        <p className="text-[0.65rem] text-white/30">A procurar...</p>
+      )}
+
+      {/* Pending invites */}
+      {pending.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/20">
+            Convites pendentes
+          </p>
+          {pending.map((uid) => (
+            <PendingInviteRow
+              key={uid}
+              userId={uid}
+              onRevoke={() => revoke(uid)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PendingInviteRow({
+  userId,
+  onRevoke,
+}: {
+  userId: number;
+  onRevoke: () => void;
+}) {
+  const { neiUser } = useNEIUser(userId);
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-3 py-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <Avatar id={userId} className="w-4 rounded-full" />
+        <span className="truncate text-xs text-white/60">
+          {neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${userId}`}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onRevoke}
+        title="Retirar convite"
+        className="shrink-0 rounded-full p-1 text-white/20 transition-colors hover:text-red-400"
+      >
+        <FontAwesomeIcon icon={faXmark} className="text-xs" />
+      </button>
+    </div>
+  );
+}
 
 export default function EditTable({ table, mutate }: EditTableProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
@@ -23,13 +185,6 @@ export default function EditTable({ table, mutate }: EditTableProps) {
   );
   const navigate = useNavigate();
   const toast = useAppToast();
-
-  const inviteUrl = `${globalThis.location.origin}/gala/register?table=${table._id}`;
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Link copiado!");
-  };
 
   useEffect(() => {
     if (titleRef.current?.value === undefined) return;
@@ -45,7 +200,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
 
   return (
     <div className="h-full md:grid md:grid-cols-[1fr_min-content] md:gap-12">
-      <div className="flex h-full flex-col gap-10">
+      <div className="flex h-full flex-col gap-8">
         {/* Header with Table Name & Owner Badge */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -97,22 +252,8 @@ export default function EditTable({ table, mutate }: EditTableProps) {
           )}
         </div>
 
-        {/* Invite Link Section */}
-        <div className="space-y-3">
-          <h4 className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
-            <FontAwesomeIcon icon={faLink} /> Link de Convite
-          </h4>
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/5 p-3 pr-4">
-            <span className="truncate text-xs font-mono text-white/50">{inviteUrl}</span>
-            <button 
-              onClick={() => copyToClipboard(inviteUrl)}
-              className="group flex flex-shrink-0 items-center justify-center gap-2 text-xs font-bold text-light-gold hover:text-white transition-all"
-            >
-              <FontAwesomeIcon icon={faCopy} className="text-light-gold/40 group-hover:text-light-gold" />
-              COPIAR
-            </button>
-          </div>
-        </div>
+        {/* Invite Section */}
+        <InvitePanel table={table} mutate={mutate} />
 
         {/* Guest List & Pending Requests */}
         <div className="space-y-6">

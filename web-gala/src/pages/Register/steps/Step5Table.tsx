@@ -1,16 +1,17 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch, faUsers, faPlus, faCheck, faInfoCircle,
-  faCopy, faCheckCircle,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
 import useTables from "@/hooks/tableHooks/useTables";
 import useLimits from "@/hooks/useLimits";
+import useMyInvites from "@/hooks/tableHooks/useMyInvites";
 import VisualTable from "@/components/Table/VisualTable";
+import useNEIUser from "@/hooks/useNEIUser";
 
 interface Props {
   readonly config: RegistrationConfig;
@@ -29,29 +30,66 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   return slots;
 }
 
+// ---------------------------------------------------------------------------
+// Pending invite row inside Step 5
+// ---------------------------------------------------------------------------
+
+function InviteCard({
+  table,
+  isSelected,
+  onSelect,
+}: {
+  table: Table;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const { neiUser } = useNEIUser(table.head ?? null);
+  const occupied = table.persons.reduce((a, p) => a + 1 + p.companions.length, 0);
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={[
+        "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+        isSelected
+          ? "border-light-gold bg-light-gold/10 ring-1 ring-light-gold"
+          : "border-light-gold/20 bg-light-gold/5 hover:border-light-gold/40",
+      ].join(" ")}
+    >
+      <div className="min-w-0">
+        <p className="flex items-center gap-2 text-sm font-bold text-light-gold">
+          <FontAwesomeIcon icon={faBell} className="text-xs" />
+          {table.name || `Mesa #${table._id}`}
+        </p>
+        <p className="mt-0.5 text-[0.6rem] text-white/40">
+          Convite de {neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${table.head}`}
+          {" · "}{occupied}/{table.seats} lugares ocupados
+        </p>
+      </div>
+      {isSelected && (
+        <FontAwesomeIcon icon={faCheck} className="shrink-0 text-light-gold" />
+      )}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Step5Table component
+// ---------------------------------------------------------------------------
+
 export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<Props>) {
   const { tables, isLoading } = useTables();
   const { limits } = useLimits();
+  const { invites } = useMyInvites();
   const [searchTerm, setSearchTerm] = useState("");
   const [newTableName, setNewTableName] = useState("");
-  const [copiedToken, setCopiedToken] = useState(false);
-  const [searchParams] = useSearchParams();
 
-  // Pre-fill table name from user name when switching to "new"
   useEffect(() => {
     if (data.tableId === "new" && !newTableName) {
       setNewTableName("");
     }
   }, [data.tableId]);
-
-  // Auto-select from URL param (invite link)
-  useEffect(() => {
-    const tableIdParam = searchParams.get("table");
-    if (tableIdParam && tables && !data.tableId) {
-      const tableExists = tables.find((t) => String(t._id) === tableIdParam);
-      if (tableExists) onUpdate({ tableId: tableIdParam, tableRole: "member" });
-    }
-  }, [searchParams, tables, data.tableId, onUpdate]);
 
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = useMemo(() => buildSlots(tables, maxCount), [tables, maxCount]);
@@ -71,15 +109,12 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
     ? tables.find((t) => String(t._id) === data.tableId) ?? null
     : null;
 
-  const copyInviteLink = (token: string, tableId: number) => {
-    const url = `${window.location.origin}/register?table=${tableId}&token=${token}`;
-    navigator.clipboard.writeText(url);
-    setCopiedToken(true);
-    setTimeout(() => setCopiedToken(false), 2000);
-  };
-
   const handleSelectTable = (id: number) => {
     onUpdate({ tableId: String(id), tableRole: "member" });
+  };
+
+  const handleSelectInvite = (id: number) => {
+    onUpdate({ tableId: String(id), tableRole: "invited" });
   };
 
   const handleCreateNew = () => {
@@ -90,7 +125,6 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
     onUpdate({ tableId: "none", tableRole: null });
   };
 
-  // Pass newTableName through so backend can use it when creating
   const handleNext = () => {
     if (data.tableId === "new") {
       onUpdate({ tableName: newTableName || undefined });
@@ -99,6 +133,9 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
   };
 
   const canContinue = data.tableId !== null;
+
+  // Filter invites so they don't also show in the main grid
+  const inviteTableIds = new Set(invites.map((t) => t._id));
 
   return (
     <motion.div
@@ -111,6 +148,31 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       <p className="text-sm text-white/50">
         Escolhe onde te queres sentar. Podes juntar-te a uma mesa existente, criar uma nova para o teu grupo, ou continuar sem mesa.
       </p>
+
+      {/* Pending invites section */}
+      {invites.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-2"
+        >
+          <p className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-light-gold/70">
+            <FontAwesomeIcon icon={faBell} />
+            {invites.length === 1 ? "Tens 1 convite pendente" : `Tens ${invites.length} convites pendentes`}
+          </p>
+          {invites.map((t) => (
+            <InviteCard
+              key={t._id}
+              table={t}
+              isSelected={data.tableId === String(t._id)}
+              onSelect={() => handleSelectInvite(t._id)}
+            />
+          ))}
+          <p className="text-[0.6rem] text-white/25">
+            Ao aceitares um convite és adicionado automaticamente à mesa.
+          </p>
+        </motion.div>
+      )}
 
       {/* Search + action bar */}
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -146,12 +208,12 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
           className="flex flex-col gap-3 rounded-xl border border-light-gold/30 bg-light-gold/5 p-5"
         >
           <p className="text-xs font-semibold text-light-gold/70">
-            Dá um nome à tua mesa. Poderás partilhar o link de convite depois de concluíres a inscrição.
+            Dá um nome à tua mesa. Poderás convidar amigos depois de concluíres a inscrição na secção de Mesas do teu perfil.
           </p>
           <input
             type="text"
             placeholder="Ex: Os Fixolas, Mesa A, ..."
-            maxLength={40}
+            maxLength={20}
             value={newTableName}
             onChange={(e) => setNewTableName(e.target.value)}
             className="rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-light-gold/50"
@@ -160,14 +222,14 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       )}
 
       {/* Selected existing table info */}
-      {selectedTable && (
+      {selectedTable && !inviteTableIds.has(selectedTable._id) && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between rounded-xl border border-light-gold/30 bg-light-gold/5 px-5 py-4"
         >
           <div className="flex items-center gap-3">
-            <FontAwesomeIcon icon={faCheckCircle} className="text-light-gold" />
+            <FontAwesomeIcon icon={faCheck} className="text-light-gold" />
             <div>
               <p className="text-sm font-bold text-light-gold">{selectedTable.name || `Mesa #${selectedTable._id}`}</p>
               <p className="text-xs text-white/40">
@@ -175,16 +237,6 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
               </p>
             </div>
           </div>
-          {selectedTable.invite_token && (
-            <button
-              type="button"
-              onClick={() => copyInviteLink(selectedTable.invite_token!, selectedTable._id)}
-              className="flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-xs text-white/50 transition hover:border-light-gold/40 hover:text-light-gold"
-            >
-              <FontAwesomeIcon icon={copiedToken ? faCheck : faCopy} className="text-[0.6rem]" />
-              {copiedToken ? "Copiado!" : "Copiar convite"}
-            </button>
-          )}
         </motion.div>
       )}
 
@@ -212,7 +264,7 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       <div className="flex gap-3 rounded-xl border border-white/5 bg-white/5 p-4">
         <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 shrink-0 text-light-gold/40" />
         <p className="text-xs text-white/40 leading-relaxed">
-          Ao criares uma mesa tornas-te o <span className="text-white/60">responsável</span> e recebes um link de convite para partilhar com amigos.
+          Ao criares uma mesa tornas-te o <span className="text-white/60">responsável</span> e podes convidar amigos pelo nome no teu perfil.
           Podes alterar a mesa mais tarde no teu perfil enquanto o período de mesas estiver aberto.{" "}
           <span className="text-white/60">A escolha de mesa é opcional — podes concluir a inscrição e escolher depois.</span>
         </p>

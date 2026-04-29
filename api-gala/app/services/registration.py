@@ -70,18 +70,48 @@ class RegistrationService:
                         raise ValueError("O prazo para escolha de mesa já passou.")
 
             table_id = data.get("table_id")
+            table_role = data.get("table_role")
             table_name = data.get("table_name") or f"Mesa de {user.name}"
             from app.services.table import TableService
+            from app.models.table import Table
 
             if table_id == "new":
                 if not user.table_id:
                     await TableService.create_table(db, user_id, table_name)
+            elif table_id == "invited":
+                # This shouldn't reach here; "invited" is handled client-side
+                # by the /invite/accept endpoint. Skip gracefully.
+                pass
             elif table_id and table_id not in ("none", "null"):
                 target_id = int(table_id)
                 if user.table_id != target_id:
                     if user.table_id:
                         await TableService.leave_table(db, user_id)
-                    await TableService.join_table(db, user_id, table_id=target_id)
+                    # If this table has the user in its invites, accept the invite properly
+                    table_doc = await Table.get_collection(db).find_one({"_id": target_id})
+                    if table_doc and user_id in (table_doc.get("invites") or []):
+                        # Accept via invite path (adds as confirmed, removes from invites)
+                        from app.models.table import TablePerson, DishType
+                        table_obj = Table.parse_obj(table_doc)
+                        person = TablePerson(
+                            id=user_id,
+                            allergies=user.food_allergies or "",
+                            dish=DishType.NORMAL,
+                            confirmed=True,
+                            companions=[],
+                        )
+                        await Table.get_collection(db).update_one(
+                            {"_id": target_id},
+                            {
+                                "$push": {"persons": person.dict()},
+                                "$pull": {"invites": user_id},
+                            },
+                        )
+                        await User.get_collection(db).update_one(
+                            {"_id": user_id}, {"$set": {"table_id": target_id}}
+                        )
+                    else:
+                        await TableService.join_table(db, user_id, table_id=target_id)
             else:
                 if user.table_id:
                     await TableService.leave_table(db, user_id)
