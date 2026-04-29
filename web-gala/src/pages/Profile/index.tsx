@@ -110,7 +110,7 @@ export default function Profile() {
               onProofChange={() => { /* proof updates are now reflected via SWR revalidation */ }}
             />
           )}
-          {activeTab === "table" && <ProfileTableSection config={config} />}
+          {activeTab === "table" && <ProfileTableSection />}
         </div>
       </div>
     </div>

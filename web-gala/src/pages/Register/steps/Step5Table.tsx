@@ -213,7 +213,8 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
         <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 shrink-0 text-light-gold/40" />
         <p className="text-xs text-white/40 leading-relaxed">
           Ao criares uma mesa tornas-te o <span className="text-white/60">responsável</span> e recebes um link de convite para partilhar com amigos.
-          Podes alterar a mesa mais tarde no teu perfil enquanto o período de mesas estiver aberto.
+          Podes alterar a mesa mais tarde no teu perfil enquanto o período de mesas estiver aberto.{" "}
+          <span className="text-white/60">A escolha de mesa é opcional — podes concluir a inscrição e escolher depois.</span>
         </p>
       </div>
 

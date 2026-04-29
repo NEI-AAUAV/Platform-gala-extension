@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Set, TypeVar, Callable, Type
 from pydantic import BaseModel
 
@@ -25,3 +26,12 @@ def optional(*, exclude: Set[str] = set()) -> Callable[[Type[_C]], Type[_C]]:
 
 class NotFoundReCheck(Exception):
     pass
+
+
+def is_deadline_passed(deadline_str: str) -> bool:
+    """Returns True if today is past the given ISO date string (YYYY-MM-DD)."""
+    try:
+        deadline = date.fromisoformat(deadline_str)
+        return date.today() > deadline
+    except (ValueError, TypeError):
+        return False

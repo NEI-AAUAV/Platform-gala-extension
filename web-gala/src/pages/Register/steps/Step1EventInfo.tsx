@@ -11,6 +11,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 import { RegistrationConfig } from "@/config/registrationConfig";
+import useTime from "@/hooks/timeHooks/useTime";
+import { formatDateTimePT } from "@/utils/formatDate";
 
 interface Props {
   readonly config: RegistrationConfig;
@@ -32,6 +34,10 @@ function InfoCard({ icon, label, value }: Readonly<{ icon: typeof faCalendarDay;
 }
 
 export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
+  const { time } = useTime();
+  const registrationOpen = time ? formatDateTimePT(time.registrationStart) : "A anunciar";
+  const registrationClose = time ? formatDateTimePT(time.registrationEnd) : "A anunciar";
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -103,14 +109,14 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
                   <FontAwesomeIcon icon={faCalendarPlus} className="text-[0.65rem] text-light-gold/50" />
                   <span className="text-[0.6rem] uppercase tracking-widest text-white/40">Abertura</span>
                 </div>
-                <span className="text-xs font-semibold text-white/70">{config.registrationOpenDate}</span>
+                <span className="text-xs font-semibold text-white/70">{registrationOpen}</span>
               </div>
               <div className="flex flex-col gap-1.5 rounded-xl border border-white/8 bg-white/4 p-3">
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCalendarXmark} className="text-[0.65rem] text-light-gold/50" />
                   <span className="text-[0.6rem] uppercase tracking-widest text-white/40">Fecho</span>
                 </div>
-                <span className="text-xs font-semibold text-white/70">{config.registrationCloseDate}</span>
+                <span className="text-xs font-semibold text-white/70">{registrationClose}</span>
               </div>
             </div>
           </div>

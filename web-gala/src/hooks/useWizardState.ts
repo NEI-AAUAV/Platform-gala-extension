@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export interface Companion {
   name: string;
@@ -24,7 +24,7 @@ export interface WizardData {
   currentStep: number;
 }
 
-const STORAGE_KEY = "gala-wizard-state";
+const STORAGE_KEY_PREFIX = "gala-wizard-state";
 
 const defaultData: WizardData = {
   nmec: "",
@@ -42,9 +42,13 @@ const defaultData: WizardData = {
   currentStep: 1,
 };
 
-function loadData(): WizardData {
+function storageKey(userId: string | undefined): string {
+  return userId ? `${STORAGE_KEY_PREFIX}:${userId}` : STORAGE_KEY_PREFIX;
+}
+
+function loadData(userId: string | undefined): WizardData {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(storageKey(userId));
     if (!stored) return defaultData;
     return { ...defaultData, ...JSON.parse(stored) };
   } catch {
@@ -52,19 +56,21 @@ function loadData(): WizardData {
   }
 }
 
-export function useWizardState() {
-  const [data, setData] = useState<WizardData>(loadData);
+export function useWizardState(userId: string | undefined) {
+  const [data, setData] = useState<WizardData>(() => loadData(userId));
 
-  const update = (updates: Partial<WizardData>) => {
-    const next = { ...data, ...updates };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setData(next);
-  };
+  const update = useCallback((updates: Partial<WizardData>) => {
+    setData((prev) => {
+      const next = { ...prev, ...updates };
+      localStorage.setItem(storageKey(userId), JSON.stringify(next));
+      return next;
+    });
+  }, [userId]);
 
-  const reset = () => {
-    localStorage.removeItem(STORAGE_KEY);
+  const reset = useCallback(() => {
+    localStorage.removeItem(storageKey(userId));
     setData(defaultData);
-  };
+  }, [userId]);
 
   return { data, update, reset };
 }

@@ -55,10 +55,9 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
     else fileInputRef2.current?.click();
   };
 
-  // Completion check: if user chose phased, need both proofs; otherwise just phase 1
-  const isComplete = userChosePhased
-    ? !!data.paymentProofPhase1 && !!data.paymentProofPhase2
-    : !!data.paymentProofPhase1;
+  const hasPhase1 = !!data.paymentProofPhase1;
+  const hasPhase2 = !!data.paymentProofPhase2;
+  const isComplete = userChosePhased ? hasPhase1 && hasPhase2 : hasPhase1;
 
   return (
     <motion.div
@@ -243,6 +242,14 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         )}
       </div>
 
+      {!isComplete && (
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3">
+          <p className="text-xs text-yellow-400/80">
+            Podes avançar sem enviar o comprovativo agora — poderás fazê-lo mais tarde no teu perfil, dentro do prazo indicado.
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between pt-4">
         <button
           onClick={onBack}
@@ -250,20 +257,12 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         >
           ← Voltar
         </button>
-        <div className="flex flex-col items-end gap-2">
-          {!isComplete && (
-            <p className="text-[0.6rem] font-bold text-red-400/70 uppercase tracking-widest">
-              {userChosePhased ? "Faltam comprovativos" : "Falta comprovativo"}
-            </p>
-          )}
-          <button
-            onClick={onNext}
-            disabled={!isComplete}
-            className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Continuar → Escolher Mesa
-          </button>
-        </div>
+        <button
+          onClick={onNext}
+          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+        >
+          {isComplete ? "Continuar → Escolher Mesa" : "Avançar sem comprovativo →"}
+        </button>
       </div>
     </motion.div>
   );

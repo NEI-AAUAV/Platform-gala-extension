@@ -95,31 +95,16 @@ class PriceConfig(BaseModel):
     contacts: List[PaymentContact] = []
 
 
-class EventDates(BaseModel):
-    registration_start: str = ""
-    registration_end: str = ""
-
-    tables_start: str = ""
-    tables_end: str = ""
-
-    nominations_start: str = ""
-    nominations_end: str = ""
-    voting_start: str = ""
-    voting_end: str = ""
-
-    event_time: str = ""
-    event_date: str = ""
-
-
 class GlobalConfig(BaseDocument):
     id: str = Field(default=CONFIG_ID, alias="_id")
     event_name: str = "Gala Dinner"
     event_location: str = ""
     event_description: str = ""
+    event_date: str = ""
+    event_time: str = ""
     rules: List[str] = []
     items_included: List[str] = []
 
-    dates: EventDates = Field(default_factory=EventDates)
     prices: PriceConfig = Field(default_factory=PriceConfig)
     bus: BusConfig = Field(default_factory=BusConfig)
     meals: List[MealOption] = []

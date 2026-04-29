@@ -5,6 +5,7 @@ import {
   faFileCircleCheck,
   faCreditCard,
   faBuilding,
+  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
@@ -19,10 +20,28 @@ interface Props {
   readonly onProofChange: (name: string) => void;
 }
 
+function isDeadlinePassed(dateStr: string): boolean {
+  if (!dateStr || dateStr === "A anunciar") return false;
+  try {
+    return new Date() > new Date(dateStr);
+  } catch {
+    return false;
+  }
+}
+
 export default function ProfilePaymentSection({ config, proofName, onProofChange }: Readonly<Props>) {
   const { sessionUser } = useSessionUser();
   const yearLabel = sessionUser?.matriculation ? String(sessionUser.matriculation) : null;
   const contact = config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ?? config.paymentContacts[0];
+
+  const userChosePhased = sessionUser?.phased_payment ?? false;
+  const phase2ProofName = sessionUser?.payment_proof_url_phase2 ?? null;
+
+  const phase1Deadline = userChosePhased && config.phase1Deadline ? config.phase1Deadline : config.paymentDeadlineDate;
+  const phase2Deadline = userChosePhased && config.phase2Deadline ? config.phase2Deadline : config.paymentDeadlineDate;
+
+  const phase1Passed = isDeadlinePassed(phase1Deadline);
+  const phase2Passed = isDeadlinePassed(phase2Deadline);
 
   return (
     <div className="flex flex-col gap-6">
@@ -35,7 +54,28 @@ export default function ProfilePaymentSection({ config, proofName, onProofChange
         )}
       </div>
 
-      <ProofUpload proofName={proofName} onProofChange={onProofChange} config={config} />
+      <div className={["grid grid-cols-1 gap-4", userChosePhased ? "md:grid-cols-2" : ""].join(" ")}>
+        <ProofUpload
+          phase={1}
+          label={userChosePhased ? "Comprovativo — Fase 1" : "Comprovativo de Pagamento"}
+          deadline={phase1Deadline}
+          deadlinePassed={phase1Passed}
+          proofName={proofName}
+          onProofChange={onProofChange}
+          config={config}
+        />
+        {userChosePhased && (
+          <ProofUpload
+            phase={2}
+            label="Comprovativo — Fase 2"
+            deadline={phase2Deadline}
+            deadlinePassed={phase2Passed}
+            proofName={phase2ProofName}
+            onProofChange={onProofChange}
+            config={config}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -115,10 +155,18 @@ function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
 }
 
 function ProofUpload({
+  phase,
+  label,
+  deadline,
+  deadlinePassed,
   proofName,
   onProofChange,
   config,
 }: Readonly<{
+  phase: 1 | 2;
+  label: string;
+  deadline: string;
+  deadlinePassed: boolean;
   proofName: string | null;
   onProofChange: (name: string) => void;
   config: RegistrationConfig;
@@ -139,8 +187,7 @@ function ProofUpload({
     if (err) { setError(err); return; }
     setError(null);
     try {
-      await GalaService.registration.uploadPaymentProof(file, 1);
-      // Revalidate SWR to get the updated payment_proof_url from the server
+      await GalaService.registration.uploadPaymentProof(file, phase);
       await mutate();
       onProofChange(file.name);
     } catch {
@@ -158,11 +205,11 @@ function ProofUpload({
   return (
     <div className="flex flex-col gap-3">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
-        Comprovativo de Pagamento
+        {label}
       </h3>
       <p className="text-xs text-white/40">
-        Prazo: <span className="font-semibold text-white/60">{config.paymentDeadlineDate}</span>
-        {" · "}Tens {config.paymentDeadlineHours}h após a inscrição.
+        Prazo: <span className={["font-semibold", deadlinePassed ? "text-red-400/80" : "text-white/60"].join(" ")}>{deadline}</span>
+        {deadlinePassed && <span className="ml-2 text-red-400/70">— Prazo expirado</span>}
       </p>
 
       {proofName ? (
@@ -174,13 +221,23 @@ function ProofUpload({
             </p>
             <p className="text-xs text-white/35">Comprovativo submetido</p>
           </div>
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="text-xs text-dark-gold/60 underline underline-offset-2 hover:text-dark-gold"
-          >
-            Substituir
-          </button>
+          {!deadlinePassed && (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="text-xs text-dark-gold/60 underline underline-offset-2 hover:text-dark-gold"
+            >
+              Substituir
+            </button>
+          )}
+        </div>
+      ) : deadlinePassed ? (
+        <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
+          <FontAwesomeIcon icon={faLock} className="text-xl text-red-400/40" />
+          <p className="text-sm font-semibold text-red-400/60">Prazo de envio encerrado</p>
+          <p className="text-xs text-white/30 text-center">
+            Para resolver a situação, contacta a organização por email.
+          </p>
         </div>
       ) : (
         <button
@@ -211,15 +268,17 @@ function ProofUpload({
         type="file"
         accept=".pdf,.jpg,.jpeg,.png,.webp"
         className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
       />
 
-      <p className="text-xs text-white/30">
-        Em alternativa, envia o comprovativo por email para{" "}
-        <a href={`mailto:${config.paymentEmail}`} className="text-light-gold/50 underline underline-offset-2 hover:text-light-gold">
-          {config.paymentEmail}
-        </a>
-      </p>
+      {!deadlinePassed && (
+        <p className="text-xs text-white/30">
+          Em alternativa, envia o comprovativo por email para{" "}
+          <a href={`mailto:${config.paymentEmail}`} className="text-light-gold/50 underline underline-offset-2 hover:text-light-gold">
+            {config.paymentEmail}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

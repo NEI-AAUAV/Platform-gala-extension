@@ -5,17 +5,14 @@ import { Link } from "react-router-dom";
 import useTables from "@/hooks/tableHooks/useTables";
 import useTable from "@/hooks/tableHooks/useTable";
 import useLimits from "@/hooks/useLimits";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import Table from "@/components/Table";
 import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
 import useNEIUser from "@/hooks/useNEIUser";
-import { RegistrationConfig } from "@/config/registrationConfig";
+import { formatDateTimePT } from "@/utils/formatDate";
 
 const DEFAULT_SEATS = 10;
-
-interface Props {
-  readonly config: RegistrationConfig;
-}
 
 function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   const sorted = [...tables].sort((a, b) => a._id - b._id);
@@ -26,20 +23,34 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   return slots;
 }
 
-export default function ProfileTableSection({ config }: Readonly<Props>) {
+export default function ProfileTableSection() {
   const { tables } = useTables();
   const { limits } = useLimits();
+  const { time } = useTime();
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = buildSlots(tables, maxCount);
+  const tablePeriodClosed = time?.tablesStatus === TimeStatus.CLOSED;
+  const tableDeadlineLabel = time ? formatDateTimePT(time.tablesEnd) : "A anunciar";
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-xs text-white/40">
         Prazo para escolha de mesa:{" "}
-        <span className="font-semibold text-white/60">{config.tableDeadlineDate}</span>
+        <span className={["font-semibold", tablePeriodClosed ? "text-red-400/80" : "text-white/60"].join(" ")}>
+          {tableDeadlineLabel}
+        </span>
+        {tablePeriodClosed && <span className="ml-2 text-red-400/70">— Período encerrado</span>}
       </p>
+
+      {tablePeriodClosed && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <p className="text-xs text-red-400/70">
+            O período de escolha e alteração de mesa já terminou. Para resolver qualquer situação, contacta a organização.
+          </p>
+        </div>
+      )}
 
       {selectedId !== null && (
         <TableDetail tableId={selectedId} onClose={() => setSelectedId(null)} />

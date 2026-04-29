@@ -54,7 +54,21 @@ class RegistrationService:
                 update_data["phased_payment"] = data["phased_payment"]
 
         elif step == 5:
-            # Table selection
+            # Table selection — validate deadline when user is already registered
+            if user.is_registered:
+                from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
+                from datetime import datetime, timezone
+                ts_coll = TimeSlots.get_collection(db)
+                ts_doc = await ts_coll.find_one({"_id": TIME_SLOTS_ID})
+                if ts_doc:
+                    ts = TimeSlots.parse_obj(ts_doc)
+                    now = datetime.now(tz=timezone.utc)
+                    tables_end = ts.tables_end
+                    if tables_end.tzinfo is None:
+                        tables_end = tables_end.replace(tzinfo=timezone.utc)
+                    if now > tables_end and tables_end.year > 1970:
+                        raise ValueError("O prazo para escolha de mesa já passou.")
+
             table_id = data.get("table_id")
             table_name = data.get("table_name") or f"Mesa de {user.name}"
             from app.services.table import TableService

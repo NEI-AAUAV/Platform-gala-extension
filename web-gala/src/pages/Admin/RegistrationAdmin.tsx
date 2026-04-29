@@ -281,7 +281,6 @@ export default function RegistrationAdmin() {
 
             <Field label="Prazo após inscrição (horas)"><NumberInput value={config.paymentDeadlineHours} onChange={(v) => save({ paymentDeadlineHours: v })} min={1} /></Field>
             <Field label="Data limite de pagamento (texto)"><TextInput value={config.paymentDeadlineDate} onChange={(v) => save({ paymentDeadlineDate: v })} placeholder="Ex: 16 de junho (15h)" /></Field>
-            <Field label="Data limite de escolha de mesa (texto)"><TextInput value={config.tableDeadlineDate} onChange={(v) => save({ tableDeadlineDate: v })} placeholder="Ex: 20 de junho" /></Field>
             <Field label="Email para comprovativo"><TextInput value={config.paymentEmail} onChange={(v) => save({ paymentEmail: v })} placeholder="galacomissao.nei@gmail.com" /></Field>
             <Field label="Descrição do pagamento"><TextInput value={config.paymentDescription} onChange={(v) => save({ paymentDescription: v })} /></Field>
 

@@ -3,22 +3,18 @@ import { RegistrationConfig, defaultConfig, MealOption, PaymentContact } from "@
 import { useConfigStore } from "@/stores/useConfigStore";
 
 function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationConfig> {
-  const dates = (backend.dates as Record<string, string>) ?? {};
   const prices = (backend.prices as Record<string, unknown>) ?? {};
   const bus = (backend.bus as Record<string, unknown>) ?? {};
   const meals = (backend.meals as Array<Record<string, string>>) ?? [];
   const contacts = (prices.contacts as Array<Record<string, string>>) ?? [];
 
   return {
-    eventDate: dates.event_date || "",
-    eventTime: dates.event_time || "",
+    eventDate: (backend.event_date as string) || "",
+    eventTime: (backend.event_time as string) || "",
     eventLocation: (backend.event_location as string) || "",
     eventPrice: (prices.total_price as number) || 0,
     eventIncludes: (backend.items_included as string[]) || [],
     eventRules: (backend.rules as string[]) || [],
-    registrationOpenDate: dates.registration_start || "",
-    registrationCloseDate: dates.registration_end || "",
-    tableDeadlineDate: dates.tables_end || "",
     busEnabled: (bus.enabled as boolean) ?? true,
     busRoundTripPrice: (bus.price_round_trip as number) || 0,
     mealOptions: meals.map((m): MealOption => ({
@@ -47,21 +43,14 @@ function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationC
   };
 }
 
-function mapToBackendPatch(config: RegistrationConfig): Record<string, unknown> {
+function mapToBackendPatch(config: RegistrationConfig, existing: Record<string, unknown>): Record<string, unknown> {
   return {
-    _id: "GLOBAL_CONFIG",
-    event_name: "Gala Dinner",
+    ...existing,
     event_location: config.eventLocation,
-    event_description: "",
+    event_date: config.eventDate,
+    event_time: config.eventTime,
     rules: config.eventRules,
     items_included: config.eventIncludes,
-    dates: {
-      event_date: config.eventDate,
-      event_time: config.eventTime,
-      registration_start: config.registrationOpenDate,
-      registration_end: config.registrationCloseDate,
-      tables_end: config.tableDeadlineDate,
-    },
     prices: {
       total_price: config.eventPrice,
       phased_payment_enabled: config.phasedPaymentEnabled,
@@ -75,10 +64,9 @@ function mapToBackendPatch(config: RegistrationConfig): Record<string, unknown> 
       contacts: config.paymentContacts,
     },
     bus: {
+      ...(existing.bus as Record<string, unknown> ?? {}),
       enabled: config.busEnabled,
       price_round_trip: config.busRoundTripPrice,
-      price_one_way: 0,
-      capacity: 50,
     },
     meals: config.mealOptions.map((m) => ({
       id: m.id,
@@ -86,8 +74,6 @@ function mapToBackendPatch(config: RegistrationConfig): Record<string, unknown> 
       description: m.description,
       is_active: true,
     })),
-    max_registrations: 200,
-    max_table_size: 10,
     allergies_required: config.allergiesRequired,
     payment_method: config.paymentMethod,
     payment_deadline_hours: config.paymentDeadlineHours,
@@ -109,11 +95,11 @@ export function useRegistrationConfig() {
 
   const updateConfig = (updates: Partial<RegistrationConfig>) => {
     const next = { ...config, ...updates };
-    save(mapToBackendPatch(next));
+    save(mapToBackendPatch(next, raw ?? {}));
   };
 
   const resetConfig = () => {
-    save(mapToBackendPatch(defaultConfig));
+    save(mapToBackendPatch(defaultConfig, raw ?? {}));
   };
 
   return { config, updateConfig, resetConfig, loading };

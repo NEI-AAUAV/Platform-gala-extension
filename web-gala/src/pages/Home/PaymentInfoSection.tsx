@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCreditCard, faCalendarCheck, faMoneyBillWave } from "@fortawesome/free-solid-svg-icons";
 import type { RegistrationConfig } from "@/config/registrationConfig";
 import type { PaymentInfoConfig } from "@/hooks/useHomepageConfig";
+import useTime from "@/hooks/timeHooks/useTime";
+import { formatDateTimePT } from "@/utils/formatDate";
 
 interface Props {
   readonly paymentInfoConfig: PaymentInfoConfig;
@@ -10,9 +12,12 @@ interface Props {
 }
 
 export default function PaymentInfoSection({ paymentInfoConfig, registrationConfig }: Props) {
+  const { time } = useTime();
   if (!paymentInfoConfig.visible) return null;
 
   const { phasedPaymentEnabled, phase1Price, phase1Deadline, phase2Price, phase2Deadline, eventPrice } = registrationConfig;
+  const registrationOpenDate = time ? formatDateTimePT(time.registrationStart) : "A anunciar";
+  const registrationCloseDate = time ? formatDateTimePT(time.registrationEnd) : "A anunciar";
 
   return (
     <section id="pagamento" className="relative px-4 py-28">
@@ -122,8 +127,8 @@ function DeadlineCard({ index, registrationConfig }: { readonly index: number; r
     >
       <FontAwesomeIcon icon={faCalendarCheck} className="text-2xl text-light-gold/50" />
       <div className="flex flex-col gap-3">
-        <InfoLine label="Inscrições abertas" value={registrationConfig.registrationOpenDate} />
-        <InfoLine label="Fecho das inscrições" value={registrationConfig.registrationCloseDate} />
+        <InfoLine label="Inscrições abertas" value={registrationOpenDate} />
+        <InfoLine label="Fecho das inscrições" value={registrationCloseDate} />
         <InfoLine label="Pagamento até" value={registrationConfig.paymentDeadlineDate} />
       </div>
     </motion.div>
