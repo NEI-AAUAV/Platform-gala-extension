@@ -21,19 +21,27 @@ function calculateOccupiedSeats(persons: Person[]) {
   return persons.reduce((acc, person) => acc + 1 + person.companions.length, 0);
 }
 
-function getModalPage(tableId: number) {
-  const { table, isLoading, mutate } = useTable(tableId);
-
-  useEffect(() => {
-    if (!isLoading) mutate();
-  }, []);
-
-  if (isLoading) return null;
-  if (table === undefined) return <Navigate to="/reserve" />;
-
+/**
+ * Determines which modal page to render based on user state, table state, and time constraints.
+ * All hooks are called unconditionally at the top to comply with React's Rules of Hooks.
+ */
+function useModalPage(tableId: number) {
+  const { table, isLoading: tableLoading, mutate } = useTable(tableId);
   const { tables } = useTables();
   const { sessionUser, state } = useSessionUser();
   const { time } = useTime();
+
+  useEffect(() => {
+    if (!tableLoading) mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Loading or missing data — render nothing
+  if (tableLoading || !time) return null;
+
+  // Table doesn't exist — redirect
+  if (table === undefined) return <Navigate to="/reserve" />;
+
   const occupied = calculateOccupiedSeats(table.persons);
 
   const inAnyTable = tables.some((t) =>
@@ -42,24 +50,24 @@ function getModalPage(tableId: number) {
 
   const inTable = table.persons.some((p) => p.id === sessionUser?._id);
 
-  if (!time) return null;
+  // Use _id (not sub) for the head comparison — sessionUser is a User object
+  const isHead = sessionUser?._id != null && table.head === sessionUser._id;
 
-  if (state !== State.REGISTERED || time?.tablesStatus !== TimeStatus.OPEN) {
+  if (state !== State.REGISTERED || time.tablesStatus !== TimeStatus.OPEN) {
     return <ViewTable table={table} inTable={false} mutate={mutate} />;
   }
   if (occupied === 0 && !inAnyTable) {
     return <ClaimTable table={table} mutate={mutate} />;
   }
-  if (String(table.head) === sessionUser.sub) {
+  if (isHead) {
     return <EditTable table={table} mutate={mutate} />;
   }
   if (inAnyTable && occupied > 0) {
     return <ViewTable table={table} inTable={inTable} mutate={mutate} />;
   }
-  if (String(table.head) !== sessionUser.sub && !inAnyTable) {
+  if (!isHead && !inAnyTable) {
     return <RequestJoinTable table={table} mutate={mutate} />;
   }
-  // wtf is this
   return <ViewTable table={table} inTable={false} mutate={mutate} />;
 }
 
@@ -83,7 +91,7 @@ function useModal() {
 export default function TableModal({ tableId }: TableModalProps) {
   const modalRef = useModal();
   const navigate = useNavigate();
-  const modalPage = getModalPage(tableId);
+  const modalPage = useModalPage(tableId);
 
   useEffect(() => {
     function cancelHandler(e: Event) {

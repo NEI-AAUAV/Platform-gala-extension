@@ -28,7 +28,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    // Could add a toast here
+    toast.success("Link copiado!");
   };
 
   useEffect(() => {

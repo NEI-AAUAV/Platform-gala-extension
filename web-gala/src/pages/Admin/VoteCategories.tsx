@@ -136,7 +136,7 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
         if (updated[index].previewUrl) {
-          URL.revokeObjectURL(updated[index].previewUrl);
+          URL.revokeObjectURL(updated[index].previewUrl!);
         }
         updated[index] = {
           ...updated[index],
@@ -157,7 +157,7 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
   const handleRemoveOption = (index: number) => {
     setOptions((prev) => {
       if (prev[index].previewUrl) {
-        URL.revokeObjectURL(prev[index].previewUrl);
+        URL.revokeObjectURL(prev[index].previewUrl!);
       }
       return prev.filter((_, i) => i !== index);
     });

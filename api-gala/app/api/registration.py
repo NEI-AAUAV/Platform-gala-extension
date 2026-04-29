@@ -67,6 +67,18 @@ async def update_registration_step(
     settings: SettingsDep,
 ):
     """Updates the user registration record for a specific wizard step."""
+    existing = await RegistrationService.get_user_registration(db, auth.sub)
+    if not existing:
+        user_coll = User.get_collection(db)
+        new_user = User(
+            id=auth.sub,
+            nmec=auth.nmec or 0,
+            email=auth.email,
+            name=f"{auth.name} {auth.surname}",
+            registration_step=1
+        )
+        await user_coll.insert_one(new_user.dict(by_alias=True))
+
     try:
         user = await RegistrationService.update_step(db, auth.sub, step, data)
     except ValueError as e:

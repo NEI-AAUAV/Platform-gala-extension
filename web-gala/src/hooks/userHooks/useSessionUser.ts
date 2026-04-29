@@ -26,7 +26,7 @@ export default function useSessionUser() {
   if (sub !== undefined) {
     state = State.AUTHENTICATED;
   }
-  if (data !== undefined) {
+  if (data?.is_registered === true) {
     state = State.REGISTERED;
   }
 

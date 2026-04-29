@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Security, HTTPException
-from typing import List
+from fastapi import APIRouter, Security, HTTPException, Query
+from typing import List, Optional
 
 from app.models.user import User
 from app.core.db import DatabaseDep
@@ -41,6 +41,30 @@ async def get_self(
         raise HTTPException(status_code=404, detail="User doesn't exist")
 
     return User.parse_obj(res)
+
+
+@router.get(
+    "/search",
+    responses={**auth_responses},
+)
+async def search_users(
+    q: str = Query(..., min_length=2),
+    *,
+    db: DatabaseDep,
+    auth: AuthData = Security(api_nei_auth),
+) -> List[dict]:
+    """Search registered users by email or name (for table invites)."""
+    pattern = {"$regex": q, "$options": "i"}
+    cursor = User.get_collection(db).find(
+        {
+            "is_registered": True,
+            "_id": {"$ne": auth.sub},
+            "$or": [{"email": pattern}, {"name": pattern}],
+        },
+        {"_id": 1, "name": 1, "email": 1},
+    ).limit(10)
+    results = await cursor.to_list(length=10)
+    return [{"id": r["_id"], "name": r["name"], "email": r["email"]} for r in results]
 
 
 @router.get(

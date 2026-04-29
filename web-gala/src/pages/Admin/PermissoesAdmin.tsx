@@ -58,7 +58,7 @@ function ManagerRow({ manager, onUpdated }: { readonly manager: Manager; readonl
   const save = async () => {
     setSaving(true);
     try {
-      const updated = await GalaService.permissions.setManagerPermissions(manager._id, [...perms]);
+      const updated = await GalaService.permissions.setManagerPermissions(manager._id, [...perms], manager.name, manager.email);
       onUpdated(updated);
       toast.success("Permissões guardadas.");
     } catch (e) {
@@ -131,7 +131,7 @@ export default function PermissoesAdmin() {
   if (managers.length === 0) {
     return (
       <p className="text-sm text-white/40">
-        Nenhum manager registado ainda. Os managers aparecem aqui após o primeiro login no painel de administração.
+        Nenhum utilizador com o role manager-gala encontrado.
       </p>
     );
   }

@@ -22,7 +22,7 @@ class RegistrationService:
         if not user:
             # This should have been created during first login, but if not, we fail here
             # as we need base data from Authentik.
-            raise ValueError("User not found in database. Please log in again.")
+            raise ValueError("Utilizador não encontrado. Por favor inicia sessão novamente.")
 
         update_data = {"registration_step": max(user.registration_step, step)}
         
@@ -56,18 +56,19 @@ class RegistrationService:
         elif step == 5:
             # Table selection
             table_id = data.get("table_id")
+            table_name = data.get("table_name") or f"Mesa de {user.name}"
             from app.services.table import TableService
-            
+
             if table_id == "new":
                 if not user.table_id:
-                    await TableService.create_table(db, user_id, f"Mesa de {user.name}")
-            elif table_id and table_id != "none":
+                    await TableService.create_table(db, user_id, table_name)
+            elif table_id and table_id not in ("none", "null"):
                 target_id = int(table_id)
                 if user.table_id != target_id:
                     if user.table_id:
                         await TableService.leave_table(db, user_id)
                     await TableService.join_table(db, user_id, table_id=target_id)
-            elif table_id is None or table_id == "none":
+            else:
                 if user.table_id:
                     await TableService.leave_table(db, user_id)
 

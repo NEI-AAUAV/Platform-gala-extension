@@ -19,32 +19,6 @@ const STATUS_LABEL: Record<RegistrationStatus, { label: string; color: string }>
   cancelled: { label: "Cancelada", color: "text-red-400/80 border-red-400/30 bg-red-400/8" },
 };
 
-const PROFILE_KEY = "gala-profile-state";
-
-function loadStatus(): RegistrationStatus {
-  try {
-    const stored = localStorage.getItem(PROFILE_KEY);
-    if (!stored) return "pending_payment";
-    return JSON.parse(stored).status ?? "pending_payment";
-  } catch {
-    return "pending_payment";
-  }
-}
-
-function loadProof(): string | null {
-  try {
-    const stored = localStorage.getItem(PROFILE_KEY);
-    if (!stored) return null;
-    return JSON.parse(stored).proofName ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function saveProfile(status: RegistrationStatus, proofName: string | null) {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify({ status, proofName }));
-}
-
 type Tab = "registration" | "payment" | "table";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -55,30 +29,39 @@ const TABS: { id: Tab; label: string }[] = [
 
 export default function Profile() {
   const { sessionLoading, token } = useUserStore();
-  const { state, sessionUser } = useSessionUser();
+  const { state, sessionUser, isLoading } = useSessionUser();
   const loginLink = useLoginLink();
   const { config } = useRegistrationConfig();
   const { config: homepage } = useHomepageConfig();
   const [activeTab, setActiveTab] = useState<Tab>("registration");
-  const [status] = useState<RegistrationStatus>(loadStatus);
-  const [proofName, setProofName] = useState<string | null>(loadProof);
 
   if (!sessionLoading && !token) return <Navigate to={loginLink} />;
 
-  const handleProofChange = (name: string) => {
-    setProofName(name);
-    saveProfile(status, name);
-  };
+  // While SWR is loading session user from backend, show skeleton to avoid
+  // flickering "not registered" for users who are actually registered.
+  if (state === State.AUTHENTICATED && isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-white/30 text-sm">A carregar perfil...</p>
+      </div>
+    );
+  }
 
   if (state === State.AUTHENTICATED) {
     return <NotRegisteredView />;
   }
 
-  const { label, color } = STATUS_LABEL[status];
+  // Derive registration status and proof from backend data (source of truth)
+  const registrationStatus: RegistrationStatus = sessionUser?.has_payed ? "confirmed" : "pending_payment";
+  const proofName = sessionUser?.payment_proof_url ?? null;
+
+  const { label, color } = STATUS_LABEL[registrationStatus];
+
+  const containerWidth = activeTab === "table" ? "max-w-7xl" : "max-w-3xl";
 
   return (
     <div className="min-h-screen pb-24 pt-28">
-      <div className="mx-auto max-w-4xl px-4">
+      <div className={`mx-auto px-4 ${containerWidth}`}>
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -124,7 +107,7 @@ export default function Profile() {
             <ProfilePaymentSection
               config={config}
               proofName={proofName}
-              onProofChange={handleProofChange}
+              onProofChange={() => { /* proof updates are now reflected via SWR revalidation */ }}
             />
           )}
           {activeTab === "table" && <ProfileTableSection config={config} />}

@@ -38,10 +38,10 @@ export default function ViewTable({ table, inTable = false, mutate }: ViewTableP
         </div>
 
         {/* Group Photo Section (if exists) */}
-        {table.photo_path && (
+        {table.photo_url && (
           <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
              <img 
-               src={table.photo_path} 
+               src={table.photo_url} 
                alt={table.name || "Mesa"} 
                className="h-full w-full object-cover"
              />

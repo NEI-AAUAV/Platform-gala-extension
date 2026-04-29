@@ -55,8 +55,14 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
     }
   }
 
+  // Use user's actual choice (data.phasedPayment), not admin config
+  const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;
+
   const totalPersons = 1 + data.companions.length;
-  const totalPrice = totalPersons * (config.phase1Price + config.phase2Price);
+  const pricePerPerson = userChosePhased
+    ? config.phase1Price + config.phase2Price
+    : config.eventPrice;
+  const totalPrice = totalPersons * pricePerPerson;
 
   return (
     <motion.div
@@ -99,21 +105,25 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
           </h3>
           <div className="rounded-xl border border-white/8 bg-white/4 px-5 py-2">
             <div className="flex items-center justify-between py-2.5 border-b border-white/6">
-              <span className="text-xs text-white/40">Fase 1 ({config.phase1Price}€)</span>
+              <span className="text-xs text-white/40">
+                {userChosePhased ? `Fase 1 (${config.phase1Price}€)` : `Pagamento (${config.eventPrice}€)`}
+              </span>
               {data.paymentProofPhase1 ? (
                 <span className="text-[0.6rem] font-bold text-green-400 uppercase tracking-tighter">✓ COMPROVATIVO</span>
               ) : (
                 <span className="text-xs text-red-400">Pendente</span>
               )}
             </div>
-            <div className="flex items-center justify-between py-2.5">
-              <span className="text-xs text-white/40">Fase 2 ({config.phase2Price}€)</span>
-              {data.paymentProofPhase2 ? (
-                 <span className="text-[0.6rem] font-bold text-green-400 uppercase tracking-tighter">✓ COMPROVATIVO</span>
-              ) : (
-                <span className="text-xs text-red-400">Pendente</span>
-              )}
-            </div>
+            {userChosePhased && (
+              <div className="flex items-center justify-between py-2.5">
+                <span className="text-xs text-white/40">Fase 2 ({config.phase2Price}€)</span>
+                {data.paymentProofPhase2 ? (
+                   <span className="text-[0.6rem] font-bold text-green-400 uppercase tracking-tighter">✓ COMPROVATIVO</span>
+                ) : (
+                  <span className="text-xs text-red-400">Pendente</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -168,7 +178,7 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
             <div>
               <p className="text-sm font-semibold text-light-gold/80">Total Pago</p>
               <p className="text-xs text-white/40">
-                {totalPersons} pessoa{totalPersons > 1 ? "s" : ""} × {(config.phase1Price + config.phase2Price)}€
+                {totalPersons} pessoa{totalPersons > 1 ? "s" : ""} × {pricePerPerson}€
               </p>
             </div>
           </div>

@@ -126,6 +126,7 @@ function ProofUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { mutate } = useSessionUser();
 
   const validate = (file: File): string | null => {
     if (!ALLOWED_TYPES.has(file.type)) return "Formato inválido. Usa PDF, JPG, PNG ou WebP.";
@@ -139,6 +140,8 @@ function ProofUpload({
     setError(null);
     try {
       await GalaService.registration.uploadPaymentProof(file, 1);
+      // Revalidate SWR to get the updated payment_proof_url from the server
+      await mutate();
       onProofChange(file.name);
     } catch {
       setError("Erro ao enviar comprovativo. Tenta novamente.");
@@ -166,7 +169,9 @@ function ProofUpload({
         <div className="flex items-center gap-4 rounded-xl border border-dark-gold/30 bg-dark-gold/8 px-5 py-4">
           <FontAwesomeIcon icon={faFileCircleCheck} className="text-dark-gold/70" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-white/80">{proofName}</p>
+            <p className="text-sm font-semibold text-white/80">
+              {proofName.split("/").pop() ?? proofName}
+            </p>
             <p className="text-xs text-white/35">Comprovativo submetido</p>
           </div>
           <button

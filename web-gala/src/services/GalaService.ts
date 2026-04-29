@@ -130,6 +130,9 @@ const GalaService = {
     getMyTable: async () => {
       return client.get("/user/me/table");
     },
+    searchUsers: async (q: string): Promise<{ id: number; name: string; email: string }[]> => {
+      return client.get(`/user/search?q=${encodeURIComponent(q)}`);
+    },
   },
 
   admin: {
@@ -244,8 +247,8 @@ const GalaService = {
     listManagers: async (): Promise<Manager[]> => {
       return client.get("/admin/managers");
     },
-    setManagerPermissions: async (managerId: number, permissions: ManagerPermissionKey[]): Promise<Manager> => {
-      return client.put(`/admin/managers/${managerId}/permissions`, { permissions });
+    setManagerPermissions: async (managerId: number, permissions: ManagerPermissionKey[], name: string, email: string): Promise<Manager> => {
+      return client.put(`/admin/managers/${managerId}/permissions`, { permissions, name, email });
     },
   },
 

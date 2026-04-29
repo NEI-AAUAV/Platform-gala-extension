@@ -15,10 +15,12 @@ export interface WizardData {
   meal: string;
   allergies: string;
   companions: Companion[];
+  phasedPayment: boolean;
   paymentProofPhase1: string | null;
   paymentProofPhase2: string | null;
   tableId: string | null;
   tableRole: "owner" | "member" | null;
+  tableName: string | undefined;
   currentStep: number;
 }
 
@@ -31,10 +33,12 @@ const defaultData: WizardData = {
   meal: "",
   allergies: "",
   companions: [],
+  phasedPayment: false,
   paymentProofPhase1: null,
   paymentProofPhase2: null,
   tableId: null,
   tableRole: null,
+  tableName: undefined,
   currentStep: 1,
 };
 

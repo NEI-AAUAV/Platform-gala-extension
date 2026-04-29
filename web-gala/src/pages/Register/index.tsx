@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUserStore } from "@/stores/useUserStore";
 import useLoginLink from "@/hooks/useLoginLink";
@@ -29,6 +29,7 @@ const BUS_OPTION_REVERSE: Record<BusOption, string> = {
 export default function Register() {
   const { sessionLoading, sub } = useUserStore();
   const loginLink = useLoginLink();
+  const navigate = useNavigate();
   const { config } = useRegistrationConfig();
   const { data, update, reset } = useWizardState();
   const [syncing, setSyncing] = useState(false);
@@ -79,11 +80,12 @@ export default function Register() {
       });
     } else if (currentStep === 4) {
       await GalaService.registration.updateStep(4, {
-        phased_payment: config.phasedPaymentEnabled,
+        phased_payment: data.phasedPayment,
       });
     } else if (currentStep === 5) {
       await GalaService.registration.updateStep(5, {
         table_id: data.tableId,
+        table_name: data.tableName,
       });
     }
   };
@@ -108,7 +110,7 @@ export default function Register() {
     try {
       await GalaService.registration.updateStep(6, {});
       reset();
-      window.location.href = "/gala/profile";
+      navigate("/profile");
     } catch (e: unknown) {
       const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setStepError(detail || "Erro ao concluir inscrição. Tenta novamente.");
@@ -116,9 +118,12 @@ export default function Register() {
     }
   };
 
+  const containerWidth =
+    currentStep === 5 ? "max-w-7xl" : currentStep === 1 ? "max-w-5xl" : "max-w-3xl";
+
   return (
     <div className="min-h-screen pb-24 pt-28">
-      <div className="mx-auto max-w-5xl px-4">
+      <div className={`mx-auto px-4 ${containerWidth}`}>
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}

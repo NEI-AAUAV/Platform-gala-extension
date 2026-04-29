@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCreditCard, faUpload, faCheckCircle, faCircleInfo, faReceipt } from "@fortawesome/free-solid-svg-icons";
+import { faCreditCard, faUpload, faCheckCircle, faCircleInfo, faReceipt, faMoneyBillWave, faCopy } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
@@ -22,6 +22,9 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement>(null);
   const fileInputRef2 = useRef<HTMLInputElement>(null);
+
+  // Determine if user CHOSE phased payment (only possible when admin enabled it)
+  const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;
 
   const handleUpload = async (phase: 1 | 2, file: File) => {
     setUploadError(null);
@@ -52,9 +55,10 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
     else fileInputRef2.current?.click();
   };
 
-  const isComplete = config.phasedPaymentEnabled
-    ? data.paymentProofPhase1 && data.paymentProofPhase2
-    : data.paymentProofPhase1;
+  // Completion check: if user chose phased, need both proofs; otherwise just phase 1
+  const isComplete = userChosePhased
+    ? !!data.paymentProofPhase1 && !!data.paymentProofPhase2
+    : !!data.paymentProofPhase1;
 
   return (
     <motion.div
@@ -79,6 +83,7 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(2, f); e.target.value = ""; }}
       />
 
+      {/* Payment details card */}
       <div className="rounded-2xl border border-light-gold/20 bg-light-gold/5 p-6 backdrop-blur-md">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-light-gold/10 text-light-gold">
@@ -91,20 +96,55 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         </div>
 
         <div className="space-y-3">
-          {config.paymentContacts.map((contact, idx) => (
-            <div key={idx} className="flex flex-col gap-1 rounded-xl bg-white/5 p-4 border border-white/5">
-              <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">{contact.name} ({contact.year})</span>
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-sm text-white/80">{contact.phone}</span>
-                <button
-                  onClick={() => navigator.clipboard.writeText(contact.phone)}
-                  className="text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
-                >
-                  COPIAR
-                </button>
+          {(config.paymentMethod === "mbway" || config.paymentMethod === "both") && config.paymentContacts.length > 0 && (
+            <>
+              <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">MB Way</p>
+              {config.paymentContacts.map((contact, idx) => (
+                <div key={idx} className="flex flex-col gap-1 rounded-xl bg-white/5 p-4 border border-white/5">
+                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">{contact.name} ({contact.year})</span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-white/80">{contact.phone}</span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(contact.phone)}
+                      className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+                    >
+                      <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" /> COPIAR
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {(config.paymentMethod === "iban" || config.paymentMethod === "both") && config.ibanNumber && (
+            <>
+              <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">Transferência Bancária (IBAN)</p>
+              <div className="flex flex-col gap-2 rounded-xl bg-white/5 p-4 border border-white/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">Titular</span>
+                  <span className="text-sm text-white/80">{config.ibanHolder}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">IBAN</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm text-white/80">{config.ibanNumber}</span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(config.ibanNumber)}
+                      className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+                    >
+                      <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" /> COPIAR
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">Montante</span>
+                  <span className="font-mono text-sm text-white/80">
+                    {config.phasedPaymentEnabled && data.phasedPayment ? `${config.phase1Price}€ (Fase 1)` : `${config.eventPrice}€`}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            </>
+          )}
 
           <div className="flex flex-col gap-1 rounded-xl bg-white/5 p-4 border border-white/5">
             <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">Assunto / Descritivo</span>
@@ -121,18 +161,79 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {/* Payment mode toggle — only when admin has enabled phased payments */}
+      {config.phasedPaymentEnabled && (
+        <div className="rounded-2xl border border-white/10 bg-white/3 p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <FontAwesomeIcon icon={faMoneyBillWave} className="text-light-gold/50" />
+            <h4 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
+              Modo de Pagamento
+            </h4>
+          </div>
+          <p className="mb-4 text-xs text-white/40">
+            Escolhe se preferes pagar o valor total de uma só vez ou dividir em duas fases.
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => onUpdate({ phasedPayment: false })}
+              className={[
+                "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                !data.phasedPayment
+                  ? "border-light-gold/60 bg-light-gold/8"
+                  : "border-white/8 bg-white/3 hover:border-white/20",
+              ].join(" ")}
+            >
+              <div className="flex items-center justify-between">
+                <span className={["text-sm font-bold", !data.phasedPayment ? "text-light-gold" : "text-white/60"].join(" ")}>
+                  Pagamento Total
+                </span>
+                {!data.phasedPayment && <span className="h-2 w-2 rounded-full bg-light-gold" />}
+              </div>
+              <p className="text-xs text-white/35">
+                Paga {config.eventPrice}€ de uma só vez e envia 1 comprovativo.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onUpdate({ phasedPayment: true })}
+              className={[
+                "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                data.phasedPayment
+                  ? "border-light-gold/60 bg-light-gold/8"
+                  : "border-white/8 bg-white/3 hover:border-white/20",
+              ].join(" ")}
+            >
+              <div className="flex items-center justify-between">
+                <span className={["text-sm font-bold", data.phasedPayment ? "text-light-gold" : "text-white/60"].join(" ")}>
+                  Pagamento em 2 Fases
+                </span>
+                {data.phasedPayment && <span className="h-2 w-2 rounded-full bg-light-gold" />}
+              </div>
+              <p className="text-xs text-white/35">
+                Fase 1: {config.phase1Price}€ até {config.phase1Deadline}
+                <br />
+                Fase 2: {config.phase2Price}€ até {config.phase2Deadline}
+              </p>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Upload cards */}
+      <div className={["grid grid-cols-1 gap-6", userChosePhased ? "md:grid-cols-2" : ""].join(" ")}>
         <PhaseCard
-          phase={1}
-          price={config.phase1Price}
-          deadline={config.phase1Deadline}
+          label={userChosePhased ? "Fase 1" : "Comprovativo de Pagamento"}
+          price={userChosePhased ? config.phase1Price : config.eventPrice}
+          deadline={userChosePhased ? config.phase1Deadline : config.paymentDeadlineDate}
           hasProof={!!data.paymentProofPhase1}
           uploading={uploading === 1}
           onUpload={() => triggerUpload(1)}
         />
-        {config.phasedPaymentEnabled && (
+        {userChosePhased && (
           <PhaseCard
-            phase={2}
+            label="Fase 2"
             price={config.phase2Price}
             deadline={config.phase2Deadline}
             hasProof={!!data.paymentProofPhase2}
@@ -152,7 +253,7 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
         <div className="flex flex-col items-end gap-2">
           {!isComplete && (
             <p className="text-[0.6rem] font-bold text-red-400/70 uppercase tracking-widest">
-              Faltam comprovativos
+              {userChosePhased ? "Faltam comprovativos" : "Falta comprovativo"}
             </p>
           )}
           <button
@@ -169,14 +270,14 @@ export default function Step4Payment({ config, data, onUpdate, onNext, onBack }:
 }
 
 function PhaseCard({
-  phase,
+  label,
   price,
   deadline,
   hasProof,
   uploading,
   onUpload,
 }: {
-  phase: number;
+  label: string;
   price: number;
   deadline: string;
   hasProof: boolean;
@@ -188,7 +289,7 @@ function PhaseCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FontAwesomeIcon icon={faReceipt} className="text-light-gold/50" />
-          <h4 className="font-bold text-white/80">Fase {phase}</h4>
+          <h4 className="font-bold text-white/80">{label}</h4>
         </div>
         <span className="text-xl font-bold text-light-gold">{price}€</span>
       </div>
@@ -204,7 +305,7 @@ function PhaseCard({
         ].join(" ")}
       >
         <FontAwesomeIcon icon={hasProof ? faCheckCircle : (uploading ? faCircleInfo : faUpload)} className={uploading ? "animate-spin" : ""} />
-        {hasProof ? "Comprovativo Enviado" : (uploading ? "A enviar..." : "Enviar Comprovativo")}
+        {hasProof ? "Comprovativo Enviado ✓" : (uploading ? "A enviar..." : "Enviar Comprovativo")}
       </button>
     </div>
   );

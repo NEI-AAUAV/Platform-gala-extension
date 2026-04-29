@@ -46,9 +46,9 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
       return;
     }
 
-    const invalidCompanion = data.companions.find((c) => !c.name.trim() || !c.meal);
+    const invalidCompanion = data.companions.find((c) => !c.name.trim());
     if (invalidCompanion) {
-      setError("Cada acompanhante precisa de nome e prato principal.");
+      setError("Cada acompanhante precisa de um nome.");
       return;
     }
 
@@ -85,7 +85,6 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
         </p>
         <Step2CompanionEditor
           companions={data.companions}
-          mealOptions={config.mealOptions}
           onChange={(companions) => onUpdate({ companions })}
         />
       </div>
