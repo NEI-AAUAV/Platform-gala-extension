@@ -19,6 +19,7 @@ import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
 import GalaService from "@/services/GalaService";
 import useNEIUser from "@/hooks/useNEIUser";
+import { useConfigStore } from "@/stores/useConfigStore";
 
 type EditTableProps = {
   readonly table: Table;
@@ -183,6 +184,8 @@ function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const toast = useAppToast();
+  const { raw } = useConfigStore();
+  const photoEnabled = (raw?.table_photo_enabled as boolean) ?? true;
 
   const handleFile = async (file: File) => {
     setUploading(true);
@@ -196,6 +199,8 @@ function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
       setUploading(false);
     }
   };
+
+  if (!photoEnabled && !table.photo_url) return null;
 
   return (
     <div className="flex items-center justify-between rounded-xl border border-dashed border-white/10 bg-white/2 p-4">
@@ -216,21 +221,25 @@ function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
           <p className="text-[0.6rem] text-white/40 uppercase tracking-tighter">Visível para todos na mesa</p>
         </div>
       </div>
-      <button
-        type="button"
-        disabled={uploading}
-        onClick={() => fileRef.current?.click()}
-        className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 hover:border-light-gold/40 hover:text-light-gold transition-all disabled:opacity-40"
-      >
-        {uploading ? <FontAwesomeIcon icon={faSpinner} spin /> : "ALTERAR"}
-      </button>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
-      />
+      {photoEnabled && (
+        <>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 hover:border-light-gold/40 hover:text-light-gold transition-all disabled:opacity-40"
+          >
+            {uploading ? <FontAwesomeIcon icon={faSpinner} spin /> : "ALTERAR"}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+          />
+        </>
+      )}
     </div>
   );
 }

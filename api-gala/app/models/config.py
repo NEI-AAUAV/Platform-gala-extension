@@ -111,6 +111,7 @@ class GlobalConfig(BaseDocument):
 
     max_registrations: int = 200
     max_table_size: int = 10
+    table_photo_enabled: bool = True
 
     allergies_required: bool = False
     payment_method: str = "both"

@@ -12,6 +12,7 @@ import VisualTable from "@/components/Table/VisualTable";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
 import useNEIUser from "@/hooks/useNEIUser";
+import { useConfigStore } from "@/stores/useConfigStore";
 import {
   Field, NumberInput, DateTimeInput, Section,
 } from "./components/AdminUI";
@@ -109,6 +110,64 @@ function MaxTablesEditor() {
         className="shrink-0 rounded-lg border border-dark-gold/40 px-4 py-2 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
       >
         Guardar
+      </button>
+    </div>
+  );
+}
+
+// ─── Table photo toggle ───────────────────────────────────────────────────────
+
+function TablePhotoToggle() {
+  const { raw, fetch, save } = useConfigStore();
+  const toast = useAppToast();
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!raw) fetch();
+  }, [raw, fetch]);
+
+  const enabled = (raw?.table_photo_enabled as boolean) ?? true;
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      await save({ table_photo_enabled: !enabled });
+      toast.success(enabled ? "Upload de foto desativado." : "Upload de foto ativado.");
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao guardar."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm text-white/70">
+          {enabled ? "Ativado" : "Desativado"}
+        </span>
+        <span className="text-[0.6rem] text-white/30">
+          {enabled
+            ? "Os donos de mesa podem fazer upload de uma foto de grupo."
+            : "Nenhum utilizador pode fazer upload de foto (admins continuam a poder)."}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={saving}
+        className={[
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 disabled:opacity-40",
+          enabled ? "bg-light-gold" : "bg-white/15",
+        ].join(" ")}
+        aria-label="Toggle table photo upload"
+      >
+        <span
+          className={[
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200",
+            enabled ? "translate-x-5" : "translate-x-0.5",
+          ].join(" ")}
+        />
       </button>
     </div>
   );
@@ -372,6 +431,12 @@ export default function TablesAdmin() {
       <Section title="Limite de mesas">
         <Field label="Número máximo de mesas que podem ser criadas">
           <MaxTablesEditor />
+        </Field>
+      </Section>
+
+      <Section title="Foto de mesa">
+        <Field label="Upload de foto de grupo pelos donos de mesa">
+          <TablePhotoToggle />
         </Field>
       </Section>
 
