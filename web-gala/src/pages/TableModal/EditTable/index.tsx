@@ -6,6 +6,7 @@ import {
   faUserPlus,
   faXmark,
   faSearch,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VisualTable from "@/components/Table/VisualTable";
@@ -178,6 +179,62 @@ function PendingInviteRow({
   );
 }
 
+function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const toast = useAppToast();
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    try {
+      await GalaService.table.uploadPhoto(table._id, file);
+      mutate();
+      toast.success("Foto atualizada.");
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao enviar foto."));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-dashed border-white/10 bg-white/2 p-4">
+      <div className="flex items-center gap-4">
+        {table.photo_url ? (
+          <img
+            src={table.photo_url}
+            alt="foto de grupo"
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-white/20"
+          />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/30">
+            <FontAwesomeIcon icon={faCamera} />
+          </div>
+        )}
+        <div>
+          <p className="text-xs font-bold text-white/80">Foto de Grupo</p>
+          <p className="text-[0.6rem] text-white/40 uppercase tracking-tighter">Visível para todos na mesa</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => fileRef.current?.click()}
+        className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 hover:border-light-gold/40 hover:text-light-gold transition-all disabled:opacity-40"
+      >
+        {uploading ? <FontAwesomeIcon icon={faSpinner} spin /> : "ALTERAR"}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+      />
+    </div>
+  );
+}
+
 export default function EditTable({ table, mutate }: EditTableProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState(
@@ -268,21 +325,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
 
         {/* Table Management Actions */}
         <div className="mt-auto space-y-4">
-           {/* Photo Upload (Mock UI) */}
-           <div className="flex items-center justify-between rounded-xl border border-dashed border-white/10 bg-white/2 p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/30">
-                  <FontAwesomeIcon icon={faCamera} />
-                </div>
-                <div>
-                   <p className="text-xs font-bold text-white/80">Foto de Grupo</p>
-                   <p className="text-[0.6rem] text-white/40 uppercase tracking-tighter">Visível para todos na mesa</p>
-                </div>
-              </div>
-              <button className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 hover:border-light-gold/40 hover:text-light-gold transition-all">
-                ALTERAR
-              </button>
-           </div>
+          <PhotoUpload table={table} mutate={mutate} />
 
           <button
             className="w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"

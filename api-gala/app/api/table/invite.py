@@ -2,10 +2,10 @@
 Table invite system — user-ID-based invitations (by Authentik sub/ID).
 
 Endpoints:
+  POST   /{table_id}/invite/accept      — accept an invite (joins table as confirmed)
   POST   /{table_id}/invite/{user_id}   — head sends invite to a registered user
   DELETE /{table_id}/invite/{user_id}   — head revokes invite OR invitee declines
   GET    /my-invites                    — returns tables where current user is invited
-  POST   /{table_id}/invite/accept      — accept an invite (joins table as confirmed)
 """
 from typing import Annotated, List
 
@@ -27,6 +27,88 @@ router = APIRouter(tags=["Table Invites"])
 
 def _is_head_or_admin(auth: AuthData, table: Table) -> bool:
     return table_head_permissions(auth, table)
+
+
+# ---------------------------------------------------------------------------
+# Invitee: accept an invite — declared FIRST so "accept" beats {user_id}
+# ---------------------------------------------------------------------------
+
+
+class AcceptInviteBody(BaseModel):
+    dish: DishType = DishType.NORMAL
+    allergies: str = ""
+
+
+@router.post(
+    "/{table_id}/invite/accept",
+    response_model=Table,
+    responses={
+        **auth_responses,
+        400: {"description": "Not invited or table full"},
+        404: {"description": "Table not found"},
+        409: {"description": "Already in a table"},
+    },
+)
+async def accept_invite(
+    table_id: int,
+    body: AcceptInviteBody,
+    background_tasks: BackgroundTasks,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+) -> Table:
+    """Accept a table invite — joins the table automatically as confirmed."""
+    table = await fetch_table(table_id, db)
+
+    if auth.sub not in (table.invites or []):
+        raise HTTPException(status_code=400, detail="You have not been invited to this table")
+
+    existing = await Table.get_collection(db).find_one({"persons.id": auth.sub})
+    if existing:
+        raise HTTPException(status_code=409, detail="Already in a table")
+
+    total_persons = sum(1 + len(p.companions) for p in table.persons)
+    if total_persons >= table.seats:
+        raise HTTPException(status_code=400, detail="Table is full")
+
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=400, detail="User not found")
+    user = User.parse_obj(user_dict)
+
+    person = TablePerson(
+        id=auth.sub,
+        allergies=user.food_allergies or body.allergies,
+        dish=body.dish,
+        confirmed=True,
+        companions=user.companions,
+    )
+
+    updated = await Table.get_collection(db).find_one_and_update(
+        {"_id": table_id},
+        {
+            "$push": {"persons": person.dict()},
+            "$pull": {"invites": auth.sub},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    await User.get_collection(db).update_one(
+        {"_id": auth.sub}, {"$set": {"table_id": table_id}}
+    )
+
+    table_name = table.name or f"Mesa {table.id}"
+    background_tasks.add_task(
+        send_email,
+        auth.email,
+        f"Entraste na mesa \"{table_name}\"",
+        settings=settings,
+        template="table_joined",
+        name=f"{auth.name} {auth.surname}",
+        table=table_name,
+    )
+
+    return Table.parse_obj(updated)
 
 
 # ---------------------------------------------------------------------------
@@ -58,21 +140,17 @@ async def invite_user(
     if user_id == auth.sub:
         raise HTTPException(status_code=400, detail="Cannot invite yourself")
 
-    # Prevent duplicate invites
     if user_id in (table.invites or []):
         raise HTTPException(status_code=409, detail="User already invited")
 
-    # Verify the invited user exists in our DB and is registered
     invited_user = await User.get_collection(db).find_one({"_id": user_id, "is_registered": True})
     if not invited_user:
         raise HTTPException(status_code=404, detail="User not found or not registered")
 
-    # Check they're not already in a table
     existing_in_table = await Table.get_collection(db).find_one({"persons.id": user_id})
     if existing_in_table:
         raise HTTPException(status_code=409, detail="User is already in a table")
 
-    # Check table isn't full
     total_persons = sum(1 + len(p.companions) for p in table.persons)
     if total_persons >= table.seats:
         raise HTTPException(status_code=409, detail="Table is full")
@@ -140,89 +218,3 @@ async def get_my_invites(
         {"invites": auth.sub}
     ).to_list(None)
     return [Table.parse_obj(t) for t in results]
-
-
-# ---------------------------------------------------------------------------
-# Invitee: accept an invite — joins as confirmed
-# ---------------------------------------------------------------------------
-
-
-class AcceptInviteBody(BaseModel):
-    dish: DishType = DishType.NORMAL
-    allergies: str = ""
-
-
-@router.post(
-    "/{table_id}/invite/accept",
-    response_model=Table,
-    responses={
-        **auth_responses,
-        400: {"description": "Not invited or table full"},
-        404: {"description": "Table not found"},
-        409: {"description": "Already in a table"},
-    },
-)
-async def accept_invite(
-    table_id: int,
-    body: AcceptInviteBody,
-    background_tasks: BackgroundTasks,
-    db: Annotated[DBType, Depends(get_db)],
-    auth: Annotated[AuthData, Depends(api_nei_auth)],
-    settings: SettingsDep,
-) -> Table:
-    """Accept a table invite — joins the table automatically as confirmed."""
-    table = await fetch_table(table_id, db)
-
-    if auth.sub not in (table.invites or []):
-        raise HTTPException(status_code=400, detail="You have not been invited to this table")
-
-    # Check already in a table
-    existing = await Table.get_collection(db).find_one({"persons.id": auth.sub})
-    if existing:
-        raise HTTPException(status_code=409, detail="Already in a table")
-
-    # Check capacity
-    total_persons = sum(1 + len(p.companions) for p in table.persons)
-    if total_persons >= table.seats:
-        raise HTTPException(status_code=400, detail="Table is full")
-
-    # Get user from DB for food preferences
-    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
-    if not user_dict:
-        raise HTTPException(status_code=400, detail="User not found")
-    user = User.parse_obj(user_dict)
-
-    person = TablePerson(
-        id=auth.sub,
-        allergies=user.food_allergies or body.allergies,
-        dish=body.dish,
-        confirmed=True,  # Invited users join as confirmed
-        companions=[],
-    )
-
-    updated = await Table.get_collection(db).find_one_and_update(
-        {"_id": table_id},
-        {
-            "$push": {"persons": person.dict()},
-            "$pull": {"invites": auth.sub},
-        },
-        return_document=ReturnDocument.AFTER,
-    )
-
-    # Update user's table_id
-    await User.get_collection(db).update_one(
-        {"_id": auth.sub}, {"$set": {"table_id": table_id}}
-    )
-
-    table_name = table.name or f"Mesa {table.id}"
-    background_tasks.add_task(
-        send_email,
-        auth.email,
-        f"Entraste na mesa \"{table_name}\"",
-        settings=settings,
-        template="table_joined",
-        name=f"{auth.name} {auth.surname}",
-        table=table_name,
-    )
-
-    return Table.parse_obj(updated)

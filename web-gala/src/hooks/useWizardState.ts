@@ -10,6 +10,7 @@ export type BusOption = "round_trip" | "one_way" | "none";
 
 export interface WizardData {
   nmec: string;
+  phone: string;
   year: number | null;
   bus: BusOption;
   meal: string;
@@ -28,6 +29,7 @@ const STORAGE_KEY_PREFIX = "gala-wizard-state";
 
 const defaultData: WizardData = {
   nmec: "",
+  phone: "",
   year: null,
   bus: "none",
   meal: "",

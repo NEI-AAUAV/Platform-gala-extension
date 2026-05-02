@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faEnvelope, faIdCard, faSpinner, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faEnvelope, faIdCard, faPhone, faSpinner, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useUserStore } from "@/stores/useUserStore";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import { WizardData } from "@/hooks/useWizardState";
@@ -43,6 +43,10 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
     }
     if (data.year === undefined) {
       setError("Seleciona o teu ano.");
+      return;
+    }
+    if (!data.phone.trim() || !/^\+?[0-9\s\-]{9,15}$/.test(data.phone.trim())) {
+      setError("Número de telemóvel inválido.");
       return;
     }
 
@@ -215,6 +219,24 @@ function FormSection({
               );
             })}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="phone-input"
+            className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"
+          >
+            <FontAwesomeIcon icon={faPhone} className="text-[0.6rem] text-light-gold/40" />
+            Telemóvel
+          </label>
+          <input
+            id="phone-input"
+            type="tel"
+            value={data.phone}
+            onChange={(e) => onUpdate({ phone: e.target.value })}
+            placeholder="Ex: 912 345 678"
+            className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
+          />
         </div>
       </div>
     </div>

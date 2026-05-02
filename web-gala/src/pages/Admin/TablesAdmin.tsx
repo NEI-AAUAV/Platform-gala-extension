@@ -11,6 +11,7 @@ import useLimits from "@/hooks/useLimits";
 import VisualTable from "@/components/Table/VisualTable";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
+import useNEIUser from "@/hooks/useNEIUser";
 import {
   Field, NumberInput, DateTimeInput, Section,
 } from "./components/AdminUI";
@@ -113,6 +114,48 @@ function MaxTablesEditor() {
   );
 }
 
+// ─── Member row with resolved name ───────────────────────────────────────────
+
+function MemberRow({
+  person,
+  isHead,
+  onRemove,
+}: {
+  readonly person: Person;
+  readonly isHead: boolean;
+  readonly onRemove: () => void;
+}) {
+  const { neiUser } = useNEIUser(person.id);
+  const displayName = neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${person.id}`;
+
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-white/4 px-3 py-2">
+      <div className="flex items-center gap-2 min-w-0">
+        {person.confirmed && <FontAwesomeIcon icon={faCircleCheck} className="text-xs text-emerald-400/60" />}
+        <span className="truncate text-xs text-white/70">{displayName}</span>
+        {isHead && (
+          <span className="shrink-0 rounded-full bg-dark-gold/20 px-2 py-0.5 text-[0.5rem] font-bold uppercase tracking-widest text-dark-gold">
+            Responsável
+          </span>
+        )}
+        {person.companions.length > 0 && (
+          <span className="shrink-0 text-[0.6rem] text-white/30">+{person.companions.length} acomp.</span>
+        )}
+      </div>
+      {!isHead && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
+          title="Remover da mesa"
+        >
+          <FontAwesomeIcon icon={faTrash} className="text-[0.6rem]" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Table card (admin) ───────────────────────────────────────────────────────
 
 function TableAdminCard({ table, onRemoveMember }: {
@@ -142,6 +185,13 @@ function TableAdminCard({ table, onRemoveMember }: {
         <div className="flex items-center gap-3">
           <span className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">#{table._id}</span>
           <span className="font-gala text-sm font-semibold text-white/80">{table.name || "Sem nome"}</span>
+          {table.photo_url && (
+            <img
+              src={table.photo_url}
+              alt="foto da mesa"
+              className="h-5 w-5 rounded-full object-cover ring-1 ring-white/10"
+            />
+          )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/40">
@@ -154,19 +204,30 @@ function TableAdminCard({ table, onRemoveMember }: {
 
       {expanded && (
         <div className="border-t border-white/6 px-4 pb-4 pt-3 flex flex-col gap-3">
-          {/* Visual + invite */}
-          <div className="flex items-center justify-between gap-4">
-            <VisualTable table={table} alwaysVisible className="p-6" />
-            {table.invite_token && (
-              <button
-                type="button"
-                onClick={copyInviteLink}
-                className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[0.6rem] font-semibold text-white/40 transition hover:border-light-gold/40 hover:text-light-gold"
-              >
-                <FontAwesomeIcon icon={copied ? faCheck : faCopy} className="text-[0.55rem]" />
-                {copied ? "Copiado!" : "Copiar link convite"}
-              </button>
-            )}
+          {/* Visual + photo + invite */}
+          <div className="flex items-start gap-4">
+            <div className="shrink-0">
+              <VisualTable table={table} alwaysVisible className="p-6" />
+            </div>
+            <div className="flex flex-col gap-2 pt-1">
+              {table.photo_url && (
+                <img
+                  src={table.photo_url}
+                  alt="foto de grupo"
+                  className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/10"
+                />
+              )}
+              {table.invite_token && (
+                <button
+                  type="button"
+                  onClick={copyInviteLink}
+                  className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[0.6rem] font-semibold text-white/40 transition hover:border-light-gold/40 hover:text-light-gold"
+                >
+                  <FontAwesomeIcon icon={copied ? faCheck : faCopy} className="text-[0.55rem]" />
+                  {copied ? "Copiado!" : "Copiar link convite"}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Members */}
@@ -174,30 +235,12 @@ function TableAdminCard({ table, onRemoveMember }: {
             <div className="flex flex-col gap-1.5">
               <p className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">Membros</p>
               {table.persons.map((p) => (
-                <div key={p.id} className="flex items-center justify-between rounded-lg bg-white/4 px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    {p.confirmed && <FontAwesomeIcon icon={faCircleCheck} className="text-xs text-emerald-400/60" />}
-                    <span className="text-xs text-white/70">ID {p.id}</span>
-                    {table.head === p.id && (
-                      <span className="rounded-full bg-dark-gold/20 px-2 py-0.5 text-[0.5rem] font-bold uppercase tracking-widest text-dark-gold">
-                        Responsável
-                      </span>
-                    )}
-                    {p.companions.length > 0 && (
-                      <span className="text-[0.6rem] text-white/30">+{p.companions.length} acomp.</span>
-                    )}
-                  </div>
-                  {table.head !== p.id && (
-                    <button
-                      type="button"
-                      onClick={() => onRemoveMember(table._id, p.id)}
-                      className="flex h-6 w-6 items-center justify-center rounded-lg text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
-                      title="Remover da mesa"
-                    >
-                      <FontAwesomeIcon icon={faTrash} className="text-[0.6rem]" />
-                    </button>
-                  )}
-                </div>
+                <MemberRow
+                  key={p.id}
+                  person={p}
+                  isHead={table.head === p.id}
+                  onRemove={() => onRemoveMember(table._id, p.id)}
+                />
               ))}
             </div>
           )}

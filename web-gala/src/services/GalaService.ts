@@ -111,6 +111,11 @@ const GalaService = {
       const response: Table = await client.delete(`/table/${id}/remove/${uid}`);
       return response;
     },
+    uploadPhoto: async (tableId: number, file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(`/table/${tableId}/photo`, formData);
+    },
     inviteUser: async (tableId: number, userId: number) => {
       const response: Table = await client.post(`/table/${tableId}/invite/${userId}`, {});
       return response;

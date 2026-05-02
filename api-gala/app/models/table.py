@@ -11,7 +11,7 @@ class DishType(str, Enum):
 
 class Companion(BaseModel):
     name: str
-    dish: DishType
+    dish: Optional[DishType] = None
     allergies: str = ""
 
 

@@ -33,9 +33,9 @@ class TableService:
         person = TablePerson(
             id=user_id,
             allergies=user.food_allergies or "",
-            dish=DishType.NORMAL, # Default, user might change it
+            dish=DishType.NORMAL,
             confirmed=True,
-            companions=[]
+            companions=user.companions,
         )
 
         table = Table(
@@ -89,11 +89,11 @@ class TableService:
             allergies=user.food_allergies or "",
             dish=DishType.NORMAL,
             confirmed=True,
-            companions=[]
+            companions=user.companions,
         )
 
         await collection.update_one(
-            {"_id": table.id}, 
+            {"_id": table.id},
             {"$push": {"persons": person.dict()}}
         )
         

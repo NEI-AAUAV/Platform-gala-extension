@@ -111,10 +111,14 @@ export default function Register() {
         phased_payment: data.phasedPayment,
       });
     } else if (currentStep === 5) {
-      await GalaService.registration.updateStep(5, {
-        table_id: data.tableId,
-        table_name: data.tableName,
-      });
+      if (data.tableRole === "invited" && data.tableId) {
+        await GalaService.table.acceptInvite(Number(data.tableId), {});
+      } else {
+        await GalaService.registration.updateStep(5, {
+          table_id: data.tableId,
+          table_name: data.tableName,
+        });
+      }
     }
   };
 

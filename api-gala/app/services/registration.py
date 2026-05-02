@@ -98,7 +98,7 @@ class RegistrationService:
                             allergies=user.food_allergies or "",
                             dish=DishType.NORMAL,
                             confirmed=True,
-                            companions=[],
+                            companions=user.companions,
                         )
                         await Table.get_collection(db).update_one(
                             {"_id": target_id},
@@ -111,7 +111,7 @@ class RegistrationService:
                             {"_id": user_id}, {"$set": {"table_id": target_id}}
                         )
                     else:
-                        await TableService.join_table(db, user_id, table_id=target_id)
+                        raise ValueError("Não tens convite para essa mesa.")
             else:
                 if user.table_id:
                     await TableService.leave_table(db, user_id)
@@ -121,10 +121,25 @@ class RegistrationService:
             update_data["is_registered"] = True
 
         await collection.update_one({"_id": user_id}, {"$set": update_data})
-        
+
+        if step in (2, 3) and "companions" in data:
+            await RegistrationService._sync_companions_in_table(db, user_id, data["companions"])
+
         # Return updated user
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)
+
+    @staticmethod
+    async def _sync_companions_in_table(db: DBType, user_id: int, companions: list) -> None:
+        from app.models.table import Table
+        user_dict = await User.get_collection(db).find_one({"_id": user_id})
+        if not user_dict or not user_dict.get("table_id"):
+            return
+        table_id = user_dict["table_id"]
+        await Table.get_collection(db).update_one(
+            {"_id": table_id, "persons.id": user_id},
+            {"$set": {"persons.$.companions": companions}},
+        )
 
     @staticmethod
     async def upload_payment_proof(db: DBType, user_id: int, file_data: bytes, content_type: str, phase: int = 1) -> str:
