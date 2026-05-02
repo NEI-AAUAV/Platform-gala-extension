@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCopy, faCheck, faTrash, faChair,
-  faUsers, faCircleCheck,
+  faTrash, faChair, faUsers, faCircleCheck,
+  faPen, faCheck, faCamera, faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import useTables from "@/hooks/tableHooks/useTables";
@@ -158,20 +158,46 @@ function MemberRow({
 
 // ─── Table card (admin) ───────────────────────────────────────────────────────
 
-function TableAdminCard({ table, onRemoveMember }: {
+function TableAdminCard({ table, onRemoveMember, onRefresh }: {
   readonly table: Table;
   readonly onRemoveMember: (tableId: number, userId: number) => void;
+  readonly onRefresh: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(table.name ?? "");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const toast = useAppToast();
   const occupied = table.persons.reduce((acc, p) => acc + 1 + (p.companions?.length ?? 0), 0);
 
-  const copyInviteLink = () => {
-    if (!table.invite_token) return;
-    const url = `${window.location.origin}/register?table=${table._id}&token=${table.invite_token}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const saveName = async () => {
+    if (nameValue.length < 3 || nameValue.length > 20) {
+      toast.error("O nome deve ter entre 3 e 20 caracteres.");
+      return;
+    }
+    try {
+      await GalaService.table.editTable(table._id, { name: nameValue });
+      toast.success("Nome atualizado.");
+      onRefresh();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao guardar nome."));
+    } finally {
+      setEditingName(false);
+    }
+  };
+
+  const handlePhoto = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      await GalaService.table.uploadPhoto(table._id, file);
+      toast.success("Foto atualizada.");
+      onRefresh();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao enviar foto."));
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   return (
@@ -184,14 +210,10 @@ function TableAdminCard({ table, onRemoveMember }: {
       >
         <div className="flex items-center gap-3">
           <span className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">#{table._id}</span>
-          <span className="font-gala text-sm font-semibold text-white/80">{table.name || "Sem nome"}</span>
           {table.photo_url && (
-            <img
-              src={table.photo_url}
-              alt="foto da mesa"
-              className="h-5 w-5 rounded-full object-cover ring-1 ring-white/10"
-            />
+            <img src={table.photo_url} alt="" className="h-5 w-5 rounded-full object-cover ring-1 ring-white/10" />
           )}
+          <span className="font-gala text-sm font-semibold text-white/80">{table.name || "Sem nome"}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/40">
@@ -203,30 +225,75 @@ function TableAdminCard({ table, onRemoveMember }: {
       </button>
 
       {expanded && (
-        <div className="border-t border-white/6 px-4 pb-4 pt-3 flex flex-col gap-3">
-          {/* Visual + photo + invite */}
-          <div className="flex items-start gap-4">
+        <div className="border-t border-white/6 px-4 pb-4 pt-3 flex flex-col gap-4">
+          {/* Visual + photo + name edit */}
+          <div className="flex items-start gap-5">
             <div className="shrink-0">
               <VisualTable table={table} alwaysVisible className="p-6" />
             </div>
-            <div className="flex flex-col gap-2 pt-1">
-              {table.photo_url && (
-                <img
-                  src={table.photo_url}
-                  alt="foto de grupo"
-                  className="h-20 w-20 rounded-xl object-cover ring-1 ring-white/10"
-                />
-              )}
-              {table.invite_token && (
-                <button
-                  type="button"
-                  onClick={copyInviteLink}
-                  className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[0.6rem] font-semibold text-white/40 transition hover:border-light-gold/40 hover:text-light-gold"
-                >
-                  <FontAwesomeIcon icon={copied ? faCheck : faCopy} className="text-[0.55rem]" />
-                  {copied ? "Copiado!" : "Copiar link convite"}
-                </button>
-              )}
+
+            <div className="flex flex-col gap-3 flex-1 min-w-0">
+              {/* Name editor */}
+              <div className="flex flex-col gap-1">
+                <p className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">Nome</p>
+                {editingName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      autoFocus
+                      value={nameValue}
+                      maxLength={20}
+                      onChange={(e) => setNameValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
+                      className="flex-1 rounded-lg border border-light-gold/30 bg-white/5 px-2 py-1 text-xs text-white outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={saveName}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-light-gold/20 text-light-gold hover:bg-light-gold/30"
+                    >
+                      <FontAwesomeIcon icon={faCheck} className="text-[0.6rem]" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setNameValue(table.name ?? ""); setEditingName(true); }}
+                    className="flex items-center gap-1.5 text-left text-xs text-white/60 hover:text-light-gold transition-colors"
+                  >
+                    {table.name || <span className="italic text-white/30">Sem nome</span>}
+                    <FontAwesomeIcon icon={faPen} className="text-[0.55rem] text-white/30" />
+                  </button>
+                )}
+              </div>
+
+              {/* Photo */}
+              <div className="flex flex-col gap-1">
+                <p className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">Foto</p>
+                <div className="flex items-center gap-3">
+                  {table.photo_url ? (
+                    <img src={table.photo_url} alt="foto de grupo" className="h-14 w-14 rounded-lg object-cover ring-1 ring-white/10" />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-white/20">
+                      <FontAwesomeIcon icon={faCamera} />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={() => fileRef.current?.click()}
+                    className="rounded-full border border-white/15 px-3 py-1.5 text-[0.6rem] font-semibold text-white/50 transition hover:border-light-gold/40 hover:text-light-gold disabled:opacity-40"
+                  >
+                    {uploadingPhoto ? <FontAwesomeIcon icon={faSpinner} spin /> : table.photo_url ? "Alterar" : "Adicionar"}
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = ""; }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -332,6 +399,7 @@ export default function TablesAdmin() {
                 key={table._id}
                 table={table}
                 onRemoveMember={handleRemoveMember}
+                onRefresh={refresh}
               />
             ))}
           </div>

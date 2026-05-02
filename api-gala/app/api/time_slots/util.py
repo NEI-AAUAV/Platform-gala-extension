@@ -24,7 +24,7 @@ async def check_tables_open(
         return time_slots
 
     now = datetime.now()
-    if now < time_slots.tablesStart or now > time_slots.tablesEnd:
+    if now < time_slots.tables_start or now > time_slots.tables_end:
         raise HTTPException(status_code=409, detail="Tables aren't open")
     return time_slots
 
@@ -39,6 +39,6 @@ async def check_votes_open(
         return time_slots
 
     now = datetime.now()
-    if now < time_slots.votesStart or now > time_slots.votesEnd:
+    if now < time_slots.votes_start or now > time_slots.votes_end:
         raise HTTPException(status_code=409, detail="Votes aren't open")
     return time_slots

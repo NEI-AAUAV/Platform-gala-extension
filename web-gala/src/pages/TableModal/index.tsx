@@ -78,13 +78,10 @@ function useModal() {
   const modalRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    if (modalRef.current) {
-      modalRef.current.showModal();
-      document.body.style.overflow = "hidden";
-    }
+    modalRef.current?.showModal();
+    document.body.style.overflow = "hidden";
     return () => {
-      modalRef.current?.close();
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = "";
     };
   }, []);
 

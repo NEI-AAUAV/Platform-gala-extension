@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import TableModal from "../TableModal";
 import Table from "@/components/Table";
@@ -11,6 +12,10 @@ export default function Reserve() {
   const { tables } = useTables();
   const { state } = useSessionUser();
   useTime();
+
+  useEffect(() => {
+    if (!tableId) document.body.style.overflow = "";
+  }, [tableId]);
 
   const loginLink = useLoginLink();
 
