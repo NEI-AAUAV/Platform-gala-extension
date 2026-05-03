@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import GalaService, { AdminCreateRegistrationBody, AdminEditRegistrationBody, AuthentikUserResult } from "@/services/GalaService";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
+import { INPUT_CLS } from "./AdminUI";
+import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
+
+interface Props {
+  userToEdit?: User | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }: Props) {
+  const [users, setUsers] = useState<AuthentikUserResult[]>([]);
+  const [useExisting, setUseExisting] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState<number | "">("");
+  
+  const [name, setName] = useState(userToEdit?.name || "");
+  const [email, setEmail] = useState(userToEdit?.email || "");
+  const [nmec, setNmec] = useState(userToEdit?.nmec?.toString() || "");
+  const [matriculation, setMatriculation] = useState(userToEdit?.matriculation?.toString() || "");
+  const [phone, setPhone] = useState(userToEdit?.phone || "");
+  const [busOption, setBusOption] = useState(userToEdit?.bus_option || "NONE");
+  const [mealOption, setMealOption] = useState(userToEdit?.meal_option || "");
+  const [foodAllergies, setFoodAllergies] = useState(userToEdit?.food_allergies || "");
+  const [phasedPayment, setPhasedPayment] = useState(userToEdit?.phased_payment || false);
+  const [hasPayed, setHasPayed] = useState(userToEdit?.has_payed || false);
+  const [companions, setCompanions] = useState<{name: string, dish: string, allergies: string, email: string}[]>(
+    userToEdit?.companions?.map(c => ({
+      name: c.name,
+      dish: c.dish || "",
+      allergies: c.allergies || "",
+      email: c.email || ""
+    })) || []
+  );
+
+  const [saving, setSaving] = useState(false);
+  const toast = useAppToast();
+  const { config } = useRegistrationConfig();
+
+  useEffect(() => {
+    if (!userToEdit) {
+      GalaService.admin.listAuthentikUsers()
+        .then(setUsers)
+        .catch(() => toast.error("Erro ao carregar utilizadores do Authentik."));
+    }
+  }, [userToEdit, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    try {
+      if (userToEdit) {
+        const body: AdminEditRegistrationBody = {
+          name,
+          email,
+          nmec: nmec ? parseInt(nmec) : undefined,
+          matriculation: matriculation ? parseInt(matriculation) : null,
+          phone: phone || undefined,
+          bus_option: busOption,
+          meal_option: mealOption || undefined,
+          food_allergies: foodAllergies || undefined,
+          phased_payment: phasedPayment,
+          has_payed: hasPayed,
+          companions: companions.map(c => ({
+            name: c.name,
+            dish: c.dish || undefined,
+            allergies: c.allergies || undefined,
+            email: c.email || undefined
+          }))
+        };
+        await GalaService.admin.editRegistration(userToEdit._id, body);
+        toast.success("Inscrição atualizada com sucesso.");
+      } else {
+        const body: AdminCreateRegistrationBody = {
+          authentik_user_id: useExisting && typeof selectedUserId === "number" ? selectedUserId : undefined,
+          name: (!useExisting || selectedUserId === "") ? name : undefined,
+          email: (!useExisting || selectedUserId === "") ? email : undefined,
+          nmec: nmec ? parseInt(nmec) : 0,
+          matriculation: matriculation ? parseInt(matriculation) : undefined,
+          phone: phone || undefined,
+          bus_option: busOption,
+          meal_option: mealOption || undefined,
+          food_allergies: foodAllergies || undefined,
+          phased_payment: phasedPayment,
+          companions: companions.map(c => ({
+            name: c.name,
+            dish: c.dish || undefined,
+            allergies: c.allergies || undefined,
+            email: c.email || undefined
+          }))
+        };
+        await GalaService.admin.createRegistration(body);
+        toast.success("Inscrição criada com sucesso.");
+      }
+      onSuccess();
+    } catch (err) {
+      toast.error(extractApiError(err, "Erro ao guardar inscrição."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
+      <div className="flex items-start justify-between sticky top-0 bg-[#0f0f0f] pb-2 z-10">
+        <div>
+          <h2 className="font-gala text-xl font-bold text-white">
+            {userToEdit ? "Editar Inscrição" : "Nova Inscrição"}
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/8 hover:text-white/70"
+        >
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {!userToEdit && (
+          <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                <input type="radio" checked={useExisting} onChange={() => setUseExisting(true)} />
+                Conta Authentik Existente
+              </label>
+              <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                <input type="radio" checked={!useExisting} onChange={() => setUseExisting(false)} />
+                Criar sem Conta (só email)
+              </label>
+            </div>
+            
+            {useExisting ? (
+              <div className="flex flex-col gap-1.5 mt-2">
+                <label className="text-xs font-semibold text-white/50 uppercase">Utilizador Authentik</label>
+                <select 
+                  value={selectedUserId} 
+                  onChange={e => setSelectedUserId(e.target.value ? parseInt(e.target.value) : "")}
+                  className={INPUT_CLS}
+                  required
+                >
+                  <option value="">Selecione um utilizador...</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-white/50 uppercase">Nome Completo</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} required />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-white/50 uppercase">Email</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={INPUT_CLS} required />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {userToEdit && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-white/50 uppercase">Nome</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-white/50 uppercase">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={INPUT_CLS} required />
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-white/50 uppercase">NMec</label>
+            <input type="number" value={nmec} onChange={e => setNmec(e.target.value)} className={INPUT_CLS} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-white/50 uppercase">Ano de Matrícula</label>
+            <input type="number" min="1" max="5" value={matriculation} onChange={e => setMatriculation(e.target.value)} className={INPUT_CLS} placeholder="Deixe em branco se Alumni" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-white/50 uppercase">Telefone</label>
+            <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className={INPUT_CLS} />
+          </div>
+          {config.busEnabled && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-white/50 uppercase">Autocarro</label>
+              <select value={busOption} onChange={e => setBusOption(e.target.value as "ROUND_TRIP" | "ONE_WAY" | "NONE")} className={INPUT_CLS}>
+                <option value="NONE">Sem autocarro</option>
+                <option value="ROUND_TRIP">Ida e volta</option>
+                <option value="ONE_WAY">Só ida</option>
+              </select>
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-white/50 uppercase">Prato</label>
+            <select value={mealOption} onChange={e => setMealOption(e.target.value)} className={INPUT_CLS}>
+              <option value="">Nenhum / Não sabe</option>
+              {config.mealOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-white/50 uppercase">Alergias</label>
+            <input type="text" value={foodAllergies} onChange={e => setFoodAllergies(e.target.value)} className={INPUT_CLS} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs font-semibold text-white/50 uppercase">Pagamento</p>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+              <input type="checkbox" checked={hasPayed} onChange={e => setHasPayed(e.target.checked)} />
+              Pagamento Confirmado
+            </label>
+            <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+              <input type="checkbox" checked={phasedPayment} onChange={e => setPhasedPayment(e.target.checked)} />
+              Pagamento Faseado
+            </label>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <p className="text-xs font-semibold text-white/50 uppercase">Acompanhantes</p>
+            <button 
+              type="button" 
+              onClick={() => setCompanions([...companions, {name: "", dish: "", allergies: "", email: ""}])}
+              className="text-xs text-light-gold hover:underline flex items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faPlus} /> Adicionar
+            </button>
+          </div>
+          
+          {companions.map((c, i) => (
+            <div key={i} className="flex flex-col gap-2 rounded-lg bg-white/5 p-3 relative">
+              <button 
+                type="button" 
+                onClick={() => setCompanions(companions.filter((_, idx) => idx !== i))}
+                className="absolute top-2 right-2 text-red-400 hover:text-red-300"
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+              <div className="grid grid-cols-2 gap-2 mr-6">
+                <input type="text" placeholder="Nome" value={c.name} onChange={e => setCompanions(companions.map((comp, idx) => idx === i ? {...comp, name: e.target.value} : comp))} className={INPUT_CLS} required />
+                <input type="email" placeholder="Email (opcional)" value={c.email} onChange={e => setCompanions(companions.map((comp, idx) => idx === i ? {...comp, email: e.target.value} : comp))} className={INPUT_CLS} />
+                <select value={c.dish} onChange={e => setCompanions(companions.map((comp, idx) => idx === i ? {...comp, dish: e.target.value} : comp))} className={INPUT_CLS}>
+                  <option value="">Selecione o prato...</option>
+                  {config.mealOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
+                </select>
+                <input type="text" placeholder="Alergias" value={c.allergies} onChange={e => setCompanions(companions.map((comp, idx) => idx === i ? {...comp, allergies: e.target.value} : comp))} className={INPUT_CLS} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="mt-4 w-full rounded-xl bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600 disabled:opacity-50"
+        >
+          {saving ? "A guardar..." : "Guardar Inscrição"}
+        </button>
+      </form>
+    </div>
+  );
+}

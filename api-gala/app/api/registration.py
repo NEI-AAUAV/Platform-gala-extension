@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 from app.services.registration import RegistrationService
 from app.services.config import ConfigService
+from app.services.authentik_service import sync_email_based_registrations
 from app.utils import is_deadline_passed
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -45,9 +46,13 @@ async def _require_registration_open(db: DBType) -> None:
 @router.get("/status", response_model=User, responses={**auth_responses})
 async def get_registration_status(
     db: Annotated[DBType, Depends(get_db)],
-    auth: Annotated[AuthData, Depends(api_nei_auth)]
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
 ):
     """Returns the current registration status and wizard progress for the authenticated user."""
+    # On every status check, try to sync any phantom registrations (admin-created for this email)
+    await sync_email_based_registrations(settings, db, auth.sub, auth.email)
+
     user = await RegistrationService.get_user_registration(db, auth.sub)
     if not user:
         user_coll = User.get_collection(db)
@@ -122,22 +127,25 @@ async def update_registration_step(
     if step == 6 and user.is_registered:
         bus_labels = {"ROUND_TRIP": "Autocarro (Ida e Volta)", "ONE_WAY": "Autocarro (Apenas Ida)", "NONE": "Deslocação própria"}
         year_label = f"{user.matriculation.__root__}º Ano" if user.matriculation else "Alumni / Outro"
-        background_tasks.add_task(
-            send_email,
-            user.email,
-            "Inscrição no Jantar de Gala confirmada",
-            settings=settings,
-            template="registered",
-            name=user.name,
-            nmec=user.nmec,
-            year=year_label,
-            bus=bus_labels.get(user.bus_option.value, "—"),
-            meal=user.meal_option or "—",
-            allergies=user.food_allergies or "Nenhuma",
-            phone=user.phone or "—",
-            phased_payment=user.phased_payment,
-            companions=user.companions,
-        )
+        
+        config = await ConfigService.get_config(db)
+        if config.email_notifications.registration_confirmed:
+            background_tasks.add_task(
+                send_email,
+                user.email,
+                "Inscrição no Jantar de Gala confirmada",
+                settings=settings,
+                template="registered",
+                name=user.name,
+                nmec=user.nmec,
+                year=year_label,
+                bus=bus_labels.get(user.bus_option.value, "—"),
+                meal=user.meal_option or "—",
+                allergies=user.food_allergies or "Nenhuma",
+                phone=user.phone or "—",
+                phased_payment=user.phased_payment,
+                companions=user.companions,
+            )
 
     return user
 

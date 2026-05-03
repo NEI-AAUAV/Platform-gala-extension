@@ -46,3 +46,13 @@ class User(BaseDocument):
 
     # Companions
     companions: List[Companion] = []
+
+    # Admin-created registrations (no Authentik account yet)
+    # When set, this registration was created by an admin for a person without an account.
+    # When that person later creates an account with this email, the registration is linked.
+    admin_created: bool = False
+    # Email-indexed companions: maps companion name → email for future account linking
+    companion_emails: List[str] = []
+    
+    # If registered as a companion by someone else, points to the host's ID
+    is_companion_of: Optional[int] = None

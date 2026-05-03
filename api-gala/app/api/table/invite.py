@@ -20,6 +20,7 @@ from app.core.db.types import DBType
 from app.core.email import send_email
 from app.models.table import Table, TablePerson, DishType
 from app.models.user import User
+from app.services.config import ConfigService
 from app.api.table._utils import fetch_table, table_head_permissions
 
 router = APIRouter(tags=["Table Invites"])
@@ -98,15 +99,18 @@ async def accept_invite(
     )
 
     table_name = table.name or f"Mesa {table.id}"
-    background_tasks.add_task(
-        send_email,
-        auth.email,
-        f"Entraste na mesa \"{table_name}\"",
-        settings=settings,
-        template="table_joined",
-        name=f"{auth.name} {auth.surname}",
-        table=table_name,
-    )
+    
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.table_confirmed:
+        background_tasks.add_task(
+            send_email,
+            auth.email,
+            f"Entraste na mesa \"{table_name}\"",
+            settings=settings,
+            template="table_joined",
+            name=f"{auth.name} {auth.surname}",
+            table=table_name,
+        )
 
     return Table.parse_obj(updated)
 
@@ -128,8 +132,10 @@ async def accept_invite(
 async def invite_user(
     table_id: int,
     user_id: int,
+    background_tasks: BackgroundTasks,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
 ) -> Table:
     """Send an invite to a registered user to join this table."""
     table = await fetch_table(table_id, db)
@@ -160,6 +166,21 @@ async def invite_user(
         {"$addToSet": {"invites": user_id}},
         return_document=ReturnDocument.AFTER,
     )
+    
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.table_invite:
+        table_name = table.name or f"Mesa {table.id}"
+        invited_user_obj = User.parse_obj(invited_user)
+        background_tasks.add_task(
+            send_email,
+            invited_user_obj.email,
+            f"Foste convidado para a mesa \"{table_name}\"",
+            settings=settings,
+            template="table_invite",
+            name=invited_user_obj.name,
+            table=table_name,
+        )
+    
     return Table.parse_obj(updated)
 
 

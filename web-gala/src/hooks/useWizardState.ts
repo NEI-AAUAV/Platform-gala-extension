@@ -4,7 +4,9 @@ export interface Companion {
   name: string;
   meal: string;
   allergies: string;
+  email?: string;
 }
+
 
 export type BusOption = "round_trip" | "one_way" | "none";
 

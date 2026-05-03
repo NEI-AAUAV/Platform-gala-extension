@@ -59,6 +59,14 @@ class PaymentInfoConfig(BaseModel):
     visible: bool = True
 
 
+class EmailNotificationsConfig(BaseModel):
+    registration_confirmed: bool = True
+    payment_confirmed: bool = True
+    payment_rejected: bool = True
+    table_invite: bool = True
+    table_confirmed: bool = True
+
+
 class HomepageConfig(BaseModel):
     dj: DJConfig = Field(default_factory=DJConfig)
     bus_schedule: BusScheduleConfig = Field(default_factory=BusScheduleConfig)
@@ -120,6 +128,7 @@ class GlobalConfig(BaseDocument):
     payment_email: str = ""
 
     homepage: HomepageConfig = Field(default_factory=HomepageConfig)
+    email_notifications: EmailNotificationsConfig = Field(default_factory=EmailNotificationsConfig)
 
     @classmethod
     def collection(cls) -> str:

@@ -1,7 +1,10 @@
 type Companion = {
+  name: string;
   dish: string;
   allergies: string;
+  email?: string | null;
 };
+
 
 type Person = {
   id: number;

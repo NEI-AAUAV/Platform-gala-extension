@@ -5,6 +5,7 @@ from .types import DBType
 
 _TABLE_COUNTER = "tableCounter"
 _VOTE_COUNTER = "voteCounter"
+_USER_COUNTER = "userCounter"
 
 
 async def init_counters(db: DBType) -> None:
@@ -14,6 +15,11 @@ async def init_counters(db: DBType) -> None:
     )
     await db.counters.update_one(
         {"_id": _VOTE_COUNTER}, {"$setOnInsert": {"seq": 1}}, upsert=True
+    )
+    # Admin-created user counter starts at -1 and goes negative to avoid
+    # clashing with real Authentik user IDs (which are positive integers)
+    await db.counters.update_one(
+        {"_id": _USER_COUNTER}, {"$setOnInsert": {"seq": -1}}, upsert=True
     )
 
 
@@ -35,3 +41,20 @@ async def get_next_vote_category_id(db: DBType) -> int:
     )
 
     return typing.cast(int, res["seq"])
+
+
+async def get_next_id(db: DBType, counter_name: str) -> int:
+    """Returns the next ID for the given counter.
+    
+    For the 'user' counter, IDs are negative and decrease by 1 each time,
+    ensuring no conflict with real Authentik user IDs.
+    """
+    if counter_name == "user":
+        res = await db.counters.find_one_and_update(
+            {"_id": _USER_COUNTER},
+            {"$inc": {"seq": -1}},  # decrement (goes more negative)
+            return_document=ReturnDocument.BEFORE,
+        )
+        return typing.cast(int, res["seq"])
+    raise ValueError(f"Unknown counter: {counter_name}")
+

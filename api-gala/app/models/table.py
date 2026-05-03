@@ -13,6 +13,7 @@ class Companion(BaseModel):
     name: str
     dish: Optional[DishType] = None
     allergies: str = ""
+    email: Optional[str] = None  # For future account linking
 
 
 class TablePerson(BaseModel):

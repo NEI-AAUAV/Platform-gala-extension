@@ -12,6 +12,7 @@ from app.models.table import Table
 from app.models.user import User
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.utils import NotFoundReCheck
+from app.services.config import ConfigService
 
 from ._utils import (
     sanitize_table,
@@ -140,14 +141,16 @@ async def person_confirm_table(
 
             table_name = head.name
 
-        background_tasks.add_task(
-            send_email,
-            user.email,
-            "Foste aceite na mesa",
-            settings=settings,
-            template="accepted",
-            name=user.name,
-            table=table_name,
-        )
+        config = await ConfigService.get_config(db)
+        if config.email_notifications.table_confirmed:
+            background_tasks.add_task(
+                send_email,
+                user.email,
+                "Foste aceite na mesa",
+                settings=settings,
+                template="accepted",
+                name=user.name,
+                table=table_name,
+            )
 
     return sanitize_table(auth, table)

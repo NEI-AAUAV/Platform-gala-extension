@@ -21,7 +21,7 @@ import TablesAdmin from "./TablesAdmin";
 import RegistrationAdmin from "./RegistrationAdmin";
 import HomepageAdmin from "./HomepageAdmin";
 import PermissoesAdmin from "./PermissoesAdmin";
-import InscritosAdmin from "./InscritosAdmin";
+import RegistrantsAdmin from "./RegistrantsAdmin";
 import { useConfigStore } from "@/stores/useConfigStore";
 import { useManagerPermissions } from "@/hooks/useManagerPermissions";
 import { ManagerPermissionKey } from "@/services/GalaService";
@@ -289,7 +289,7 @@ export default function Admin() {
                     transition={{ duration: 0.25 }}
                   >
                     {activeTab === "registration" && <RegistrationAdmin />}
-                    {activeTab === "inscritos" && <InscritosAdmin />}
+                    {activeTab === "inscritos" && <RegistrantsAdmin />}
                     {activeTab === "tables" && <TablesAdmin />}
                     {activeTab === "categories" && (
                       <div className="mx-auto max-w-3xl">

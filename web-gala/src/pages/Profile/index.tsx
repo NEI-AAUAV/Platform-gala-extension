@@ -77,13 +77,33 @@ export default function Profile() {
           </span>
         </motion.div>
 
+        {sessionUser?.is_companion_of ? (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl border border-purple-400/30 bg-purple-400/10 p-4 text-sm text-purple-100/90 text-center flex flex-col gap-1 items-center"
+          >
+            <span className="font-semibold">Inscrito como Acompanhante</span>
+            <span className="text-purple-100/70 text-xs">Foste inscrito no jantar de gala como acompanhante. O teu pagamento e mesa são geridos pela pessoa que te convidou.</span>
+          </motion.div>
+        ) : sessionUser?.admin_created && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-xl border border-blue-400/30 bg-blue-400/10 p-4 text-sm text-blue-100/90 text-center flex flex-col gap-1 items-center"
+          >
+            <span className="font-semibold">Inscrição Automática</span>
+            <span className="text-blue-100/70 text-xs">A tua inscrição foi criada por um administrador. Podes consultar os detalhes e proceder com a tua mesa ou pagamento.</span>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
           className="mb-8 flex items-center justify-center gap-2 border-b border-white/8 pb-4"
         >
-          {TABS.map(({ id, label: tabLabel }) => (
+          {TABS.filter(t => t.id !== "payment" || !sessionUser?.is_companion_of).map(({ id, label: tabLabel }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}

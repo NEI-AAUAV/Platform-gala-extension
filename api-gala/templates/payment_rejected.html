@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="font-family: sans-serif; color: #333; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #d4af37;">Comprovativo de Pagamento Rejeitado</h2>
+        <p>Olá {{ name }},</p>
+        <p>O teu comprovativo de pagamento referente à Fase {{ phase }} do Jantar de Gala de Engenharia Informática foi <strong>rejeitado</strong>.</p>
+        <p>Por favor, acede novamente à plataforma e envia um comprovativo válido para que possamos validar a tua inscrição.</p>
+        
+        <p style="text-align: center; margin-top: 30px;">
+            <a href="{{ PUBLIC_URL }}/gala/reserve" style="background-color: #d4af37; color: #000; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Enviar Novo Comprovativo
+            </a>
+        </p>
+
+        <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
+            Se tiveres alguma dúvida, contacta-nos respondendo a este email.
+        </p>
+        <p style="font-size: 0.9em; color: #666;">
+            A Comissão de Gala<br>
+            NEI-AAUAV
+        </p>
+    </div>
+</body>
+</html>

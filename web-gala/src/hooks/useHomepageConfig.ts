@@ -47,6 +47,14 @@ export interface PaymentInfoConfig {
   visible: boolean;
 }
 
+export interface EmailNotificationsConfig {
+  registration_confirmed: boolean;
+  payment_confirmed: boolean;
+  payment_rejected: boolean;
+  table_invite: boolean;
+  table_confirmed: boolean;
+}
+
 export interface HomepageConfig {
   dj: DJConfig;
   bus_schedule: BusScheduleConfig;
@@ -65,6 +73,14 @@ const defaults: HomepageConfig = {
   payment_info: { visible: true },
 };
 
+const defaultEmails: EmailNotificationsConfig = {
+  registration_confirmed: true,
+  payment_confirmed: true,
+  payment_rejected: true,
+  table_invite: true,
+  table_confirmed: true,
+};
+
 function extract(raw: Record<string, unknown>): HomepageConfig {
   const hp = (raw.homepage as Partial<HomepageConfig>) ?? {};
   return {
@@ -75,6 +91,11 @@ function extract(raw: Record<string, unknown>): HomepageConfig {
     nominations_display: { ...defaults.nominations_display, ...hp.nominations_display },
     payment_info: { ...defaults.payment_info, ...hp.payment_info },
   };
+}
+
+function extractEmails(raw: Record<string, unknown>): EmailNotificationsConfig {
+  const emails = (raw.email_notifications as Partial<EmailNotificationsConfig>) ?? {};
+  return { ...defaultEmails, ...emails };
 }
 
 export function useHomepageConfig() {
@@ -98,5 +119,12 @@ export function useHomepageConfig() {
     save({ homepage: next });
   };
 
-  return { config, updateSection, loading };
+  const emailConfig: EmailNotificationsConfig = raw ? extractEmails(raw) : defaultEmails;
+
+  const updateEmails = (updates: Partial<EmailNotificationsConfig>) => {
+    const next = { ...emailConfig, ...updates };
+    save({ email_notifications: next });
+  };
+
+  return { config, emailConfig, updateSection, updateEmails, loading };
 }

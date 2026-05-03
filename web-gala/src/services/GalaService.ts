@@ -69,6 +69,43 @@ type VoteCategoryCast = {
   option: number;
 };
 
+export type AdminCompanionInput = {
+  name: string;
+  dish?: string;
+  allergies?: string;
+  email?: string;
+};
+
+export type AdminCreateRegistrationBody = {
+  authentik_user_id?: number;
+  name?: string;
+  email?: string;
+  nmec?: number;
+  matriculation?: number;
+  phone?: string;
+  bus_option?: string;
+  meal_option?: string;
+  food_allergies?: string;
+  phased_payment?: boolean;
+  companions?: AdminCompanionInput[];
+};
+
+export type AdminEditRegistrationBody = {
+  name?: string;
+  email?: string;
+  nmec?: number;
+  matriculation?: number | null;
+  phone?: string;
+  bus_option?: string;
+  meal_option?: string;
+  food_allergies?: string;
+  phased_payment?: boolean;
+  has_payed?: boolean;
+  companions?: AdminCompanionInput[];
+};
+
+export type AuthentikUserResult = { id: number; name: string; email: string };
+
 const GalaService = {
   table: {
     listTables: async () => {
@@ -167,6 +204,26 @@ const GalaService = {
     },
     updateRegistration: async (userId: number, updates: Partial<User>): Promise<void> => {
       return client.patch(`/admin/registrations/${userId}`, updates);
+    },
+    createRegistration: async (body: AdminCreateRegistrationBody): Promise<User> => {
+      return client.post("/admin/registrations", body);
+    },
+    editRegistration: async (userId: number, body: AdminEditRegistrationBody): Promise<User> => {
+      return client.put(`/admin/registrations/${userId}`, body);
+    },
+    deleteRegistration: async (userId: number): Promise<void> => {
+      return client.delete(`/admin/registrations/${userId}`);
+    },
+    listAuthentikUsers: async (): Promise<AuthentikUserResult[]> => {
+      return client.get("/admin/authentik/users");
+    },
+    rejectPaymentProof: async (userId: number, phase: number): Promise<void> => {
+      return client.delete(`/admin/registrations/${userId}/payment-proof?phase=${phase}`);
+    },
+    uploadPaymentProof: async (userId: number, phase: number, file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(`/admin/registrations/${userId}/payment-proof?phase=${phase}`, formData);
     },
   },
 

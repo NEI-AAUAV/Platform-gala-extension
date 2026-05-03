@@ -17,6 +17,10 @@ type User = {
   payment_proof_url_phase2: string | null;
   table_id: number | null;
   companions: Companion[];
+  admin_created?: boolean;
+  companion_emails?: string[];
+  is_companion_of?: number | null;
 };
 
 type UserExtended = User & Person;
+
