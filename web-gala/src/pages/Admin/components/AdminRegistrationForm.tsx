@@ -41,16 +41,34 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
   const toast = useAppToast();
   const { config } = useRegistrationConfig();
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+
   useEffect(() => {
-    if (!userToEdit) {
-      GalaService.admin.listAuthentikUsers()
-        .then(setUsers)
-        .catch(() => toast.error("Erro ao carregar utilizadores do Authentik."));
+    if (userToEdit || !useExisting || searchQuery.length < 3) {
+      setUsers([]);
+      return;
     }
-  }, [userToEdit, toast]);
+    
+    setSearching(true);
+    const timeout = setTimeout(() => {
+      GalaService.admin.listAuthentikUsers(searchQuery)
+        .then(setUsers)
+        .catch(() => toast.error("Erro ao procurar utilizadores do Authentik."))
+        .finally(() => setSearching(false));
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [userToEdit, useExisting, searchQuery, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!userToEdit && useExisting && selectedUserId === "") {
+      toast.error("Por favor, selecione um utilizador Authentik da lista.");
+      return;
+    }
+
     setSaving(true);
     
     try {
@@ -138,18 +156,35 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
             
             {useExisting ? (
               <div className="flex flex-col gap-1.5 mt-2">
-                <label className="text-xs font-semibold text-white/50 uppercase">Utilizador Authentik</label>
-                <select 
-                  value={selectedUserId} 
-                  onChange={e => setSelectedUserId(e.target.value ? parseInt(e.target.value) : "")}
+                <label className="text-xs font-semibold text-white/50 uppercase">Procurar Utilizador Authentik (Nome ou Email)</label>
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className={INPUT_CLS}
-                  required
-                >
-                  <option value="">Selecione um utilizador...</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-                  ))}
-                </select>
+                  placeholder="Mínimo 3 caracteres..."
+                />
+                {searching && <span className="text-xs text-white/40">A procurar...</span>}
+                {users.length > 0 && (
+                  <div className="flex flex-col gap-1 mt-2 max-h-40 overflow-y-auto border border-white/10 rounded-xl p-1">
+                    {users.map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => setSelectedUserId(u.id)}
+                        className={`text-left px-3 py-2 rounded-lg text-sm transition ${
+                          selectedUserId === u.id ? "bg-light-gold/20 text-light-gold" : "hover:bg-white/5 text-white/80"
+                        }`}
+                      >
+                        <div className="font-semibold">{u.name}</div>
+                        <div className="text-xs opacity-70">{u.email}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {searchQuery.length >= 3 && users.length === 0 && !searching && (
+                  <span className="text-xs text-red-400">Nenhum utilizador encontrado.</span>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 mt-2">

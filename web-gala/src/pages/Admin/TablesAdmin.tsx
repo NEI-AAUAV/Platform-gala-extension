@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash, faChair, faUsers, faCircleCheck,
-  faPen, faCheck, faCamera, faSpinner,
+  faPen, faCheck, faCamera, faSpinner, faPlus, faArrowRightArrowLeft
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import useTables from "@/hooks/tableHooks/useTables";
@@ -179,10 +179,12 @@ function MemberRow({
   person,
   isHead,
   onRemove,
+  onMove,
 }: {
   readonly person: Person;
   readonly isHead: boolean;
   readonly onRemove: () => void;
+  readonly onMove: () => void;
 }) {
   const { neiUser } = useNEIUser(person.id);
   const displayName = neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${person.id}`;
@@ -202,14 +204,24 @@ function MemberRow({
         )}
       </div>
       {!isHead && (
-        <button
-          type="button"
-          onClick={onRemove}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
-          title="Remover da mesa"
-        >
-          <FontAwesomeIcon icon={faTrash} className="text-[0.6rem]" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onMove}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-blue-400/40 transition hover:bg-blue-500/10 hover:text-blue-400"
+            title="Mover de mesa"
+          >
+            <FontAwesomeIcon icon={faArrowRightArrowLeft} className="text-[0.6rem]" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
+            title="Remover da mesa"
+          >
+            <FontAwesomeIcon icon={faTrash} className="text-[0.6rem]" />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -217,9 +229,10 @@ function MemberRow({
 
 // ─── Table card (admin) ───────────────────────────────────────────────────────
 
-function TableAdminCard({ table, onRemoveMember, onRefresh }: {
+function TableAdminCard({ table, onRemoveMember, onMoveMember, onRefresh }: {
   readonly table: Table;
   readonly onRemoveMember: (tableId: number, userId: number) => void;
+  readonly onMoveMember: (userId: number) => void;
   readonly onRefresh: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -258,6 +271,19 @@ function TableAdminCard({ table, onRemoveMember, onRefresh }: {
       setUploadingPhoto(false);
     }
   };
+
+  const handleDeleteTable = async () => {
+    if (!confirm("Tem a certeza que deseja eliminar esta mesa?")) return;
+    try {
+      await GalaService.admin.deleteTable(table._id);
+      toast.success("Mesa eliminada.");
+      onRefresh();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao eliminar mesa."));
+    }
+  };
+
+  const [addingMember, setAddingMember] = useState(false);
 
   return (
     <div className="rounded-xl border border-white/8 bg-white/3 transition-colors hover:border-white/12">
@@ -357,18 +383,49 @@ function TableAdminCard({ table, onRemoveMember, onRefresh }: {
           </div>
 
           {/* Members */}
-          {table.persons.length > 0 && (
-            <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
               <p className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">Membros</p>
-              {table.persons.map((p) => (
-                <MemberRow
-                  key={p.id}
-                  person={p}
-                  isHead={table.head === p.id}
-                  onRemove={() => onRemoveMember(table._id, p.id)}
-                />
-              ))}
+              <button 
+                type="button"
+                onClick={() => setAddingMember(true)}
+                className="text-[0.6rem] text-light-gold hover:underline flex items-center gap-1"
+              >
+                <FontAwesomeIcon icon={faPlus} /> Adicionar Membro
+              </button>
             </div>
+            {table.persons.map((p) => (
+              <MemberRow
+                key={p.id}
+                person={p}
+                isHead={table.head === p.id}
+                onRemove={() => onRemoveMember(table._id, p.id)}
+                onMove={() => onMoveMember(p.id)}
+              />
+            ))}
+            {table.persons.length === 0 && (
+              <p className="text-xs text-white/30 italic">Mesa vazia.</p>
+            )}
+          </div>
+
+          {/* Delete Table Button */}
+          <div className="flex justify-end mt-2 pt-2 border-t border-white/5">
+            <button
+              type="button"
+              onClick={handleDeleteTable}
+              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+            >
+              <FontAwesomeIcon icon={faTrash} />
+              Eliminar Mesa
+            </button>
+          </div>
+          
+          {addingMember && (
+            <AddMemberModal 
+              tableId={table._id} 
+              onClose={() => setAddingMember(false)} 
+              onSuccess={() => { setAddingMember(false); onRefresh(); }} 
+            />
           )}
         </div>
       )}
@@ -388,12 +445,146 @@ function StatCard({ label, value, sub }: { readonly label: string; readonly valu
   );
 }
 
+// ─── Add Member Modal ────────────────────────────────────────────────────────
+
+function AddMemberModal({ tableId, onClose, onSuccess }: { tableId: number; onClose: () => void; onSuccess: () => void }) {
+  const [registrants, setRegistrants] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const toast = useAppToast();
+
+  useEffect(() => {
+    GalaService.admin.listRegistrations()
+      .then(users => setRegistrants(users.filter(u => !u.table_id && !u.is_companion_of)))
+      .catch(() => toast.error("Erro ao carregar utilizadores."))
+      .finally(() => setLoading(false));
+  }, [toast]);
+
+  const handleAdd = async (userId: number) => {
+    setSaving(true);
+    try {
+      await GalaService.admin.addMemberToTable(tableId, userId);
+      toast.success("Membro adicionado.");
+      onSuccess();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao adicionar membro."));
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#121212] p-5 shadow-2xl flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-white">Adicionar Membro (sem mesa)</h3>
+        
+        {loading ? (
+          <p className="text-sm text-white/50 text-center py-4">A carregar...</p>
+        ) : registrants.length === 0 ? (
+          <p className="text-sm text-white/50 text-center py-4">Não há inscritos sem mesa.</p>
+        ) : (
+          <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
+            {registrants.map(u => (
+              <div key={u._id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm text-white font-semibold truncate">{u.name}</span>
+                  <span className="text-xs text-white/50 truncate">{u.email}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAdd(u._id)}
+                  disabled={saving}
+                  className="shrink-0 bg-light-gold/20 text-light-gold px-3 py-1 rounded-lg text-xs font-semibold hover:bg-light-gold/30 disabled:opacity-50"
+                >
+                  Adicionar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-end mt-2">
+          <button type="button" onClick={onClose} className="text-sm text-white/50 hover:text-white transition">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Move Member Modal ───────────────────────────────────────────────────────
+
+function MoveMemberModal({ userId, onClose, onSuccess }: { userId: number; onClose: () => void; onSuccess: () => void }) {
+  const { tables } = useTables();
+  const [saving, setSaving] = useState(false);
+  const toast = useAppToast();
+
+  const handleMove = async (tableId: number) => {
+    setSaving(true);
+    try {
+      await GalaService.admin.moveMemberToTable(tableId, userId);
+      toast.success("Membro movido.");
+      onSuccess();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao mover membro."));
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#121212] p-5 shadow-2xl flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-white">Mover Membro para Outra Mesa</h3>
+        
+        {tables.length === 0 ? (
+          <p className="text-sm text-white/50 text-center py-4">Não existem outras mesas.</p>
+        ) : (
+          <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
+            {tables.map(t => {
+              const occ = t.persons.reduce((s, p) => s + 1 + (p.companions?.length ?? 0), 0);
+              const isFull = occ >= t.seats;
+              const hasUser = t.persons.some(p => p.id === userId);
+              
+              if (hasUser) return null; // don't show current table
+              
+              return (
+                <div key={t._id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm text-white font-semibold truncate">{t.name || `Mesa #${t._id}`}</span>
+                    <span className="text-xs text-white/50">{occ}/{t.seats} lugares</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleMove(t._id)}
+                    disabled={saving || isFull}
+                    className="shrink-0 bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-xs font-semibold hover:bg-blue-500/30 disabled:opacity-50"
+                  >
+                    {isFull ? "Cheia" : "Mover"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex justify-end mt-2">
+          <button type="button" onClick={onClose} className="text-sm text-white/50 hover:text-white transition">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export default function TablesAdmin() {
   const { tables, mutate: refresh } = useTables();
   const { limits } = useLimits();
   const toast = useAppToast();
+  
+  const [movingMemberId, setMovingMemberId] = useState<number | null>(null);
 
   const totalOccupied = tables.reduce(
     (acc, t) => acc + t.persons.reduce((s, p) => s + 1 + (p.companions?.length ?? 0), 0), 0,
@@ -446,9 +637,29 @@ export default function TablesAdmin() {
           <h2 className="font-gala text-base font-semibold text-white/70">
             Mesas ({tables.length})
           </h2>
-          <div className="flex items-center gap-3 text-[0.6rem] text-white/25">
-            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400/60" /> Disponível</span>
-            <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400/60" /> Cheia</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 text-[0.6rem] text-white/25">
+              <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400/60" /> Disponível</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400/60" /> Cheia</span>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                const name = prompt("Nome da mesa:");
+                if (!name) return;
+                try {
+                  await GalaService.admin.createTable({ name, seats: 10 });
+                  toast.success("Mesa criada.");
+                  refresh();
+                } catch (e) {
+                  toast.error(extractApiError(e, "Erro ao criar mesa."));
+                }
+              }}
+              className="flex items-center gap-2 rounded-lg bg-light-gold px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-yellow-600"
+            >
+              <FontAwesomeIcon icon={faPlus} />
+              Nova Mesa
+            </button>
           </div>
         </div>
 
@@ -464,12 +675,21 @@ export default function TablesAdmin() {
                 key={table._id}
                 table={table}
                 onRemoveMember={handleRemoveMember}
+                onMoveMember={setMovingMemberId}
                 onRefresh={refresh}
               />
             ))}
           </div>
         )}
       </div>
+      
+      {movingMemberId && (
+        <MoveMemberModal 
+          userId={movingMemberId} 
+          onClose={() => setMovingMemberId(null)} 
+          onSuccess={() => { setMovingMemberId(null); refresh(); }} 
+        />
+      )}
     </div>
   );
 }

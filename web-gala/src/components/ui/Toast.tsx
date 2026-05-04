@@ -93,16 +93,19 @@ export function ToastProvider({
 export const useAppToast = () => {
   const { showToast } = useToast();
 
-  return {
-    success: (message: string, duration?: number) =>
-      showToast(message, "success", duration),
-    error: (message: string, duration?: number) =>
-      showToast(message, "error", duration),
-    info: (message: string, duration?: number) =>
-      showToast(message, "info", duration),
-    warning: (message: string, duration?: number) =>
-      showToast(message, "warning", duration),
-  };
+  return useMemo(
+    () => ({
+      success: (message: string, duration?: number) =>
+        showToast(message, "success", duration),
+      error: (message: string, duration?: number) =>
+        showToast(message, "error", duration),
+      info: (message: string, duration?: number) =>
+        showToast(message, "info", duration),
+      warning: (message: string, duration?: number) =>
+        showToast(message, "warning", duration),
+    }),
+    [showToast],
+  );
 };
 
 function ToastComponent({

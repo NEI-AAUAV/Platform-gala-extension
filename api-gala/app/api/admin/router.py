@@ -20,13 +20,17 @@ from app.services.export import ExportService
 from app.services.vote import VoteService
 from app.services.manager_permissions import ManagerPermissionsService
 from app.services.registration import RegistrationService
+from app.services.table import TableService
+from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 
 
 router = APIRouter()
+router.include_router(tables_router)
 
 ERROR_FORBIDDEN = "Not enough permissions"
+ERROR_USER_NOT_FOUND = "User not found"
 
 
 @router.get("/config", response_model=GlobalConfig, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}})
@@ -90,7 +94,7 @@ async def export_tables(
 
 @router.post(
     "/registrations/{user_id}/confirm_payment",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def confirm_payment(
     user_id: int,
@@ -109,7 +113,7 @@ async def confirm_payment(
         return_document=True,
     )
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     user = User.parse_obj(user_dict)
     
@@ -131,7 +135,7 @@ async def confirm_payment(
 
 @router.delete(
     "/registrations/{user_id}/payment-proof",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def reject_payment_proof(
     user_id: int,
@@ -153,7 +157,7 @@ async def reject_payment_proof(
         return_document=True,
     )
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     user = User.parse_obj(user_dict)
     
@@ -191,7 +195,7 @@ async def admin_upload_payment_proof(
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     file_data = await file.read()
     MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
@@ -214,7 +218,7 @@ async def admin_upload_payment_proof(
 @router.get(
     "/registrations/{user_id}",
     response_model=User,
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def get_registration(
     user_id: int,
@@ -226,13 +230,13 @@ async def get_registration(
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return User.parse_obj(user_dict)
 
 
 @router.patch(
     "/registrations/{user_id}",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def update_registration_admin(
     user_id: int,
@@ -245,7 +249,7 @@ async def update_registration_admin(
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": updates})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return {"status": "success"}
 
 
@@ -322,10 +326,11 @@ async def list_authentik_users(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
+    query: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Lists all Authentik users for admin registration search."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
-    users = await fetch_all_users(settings)
+    users = await fetch_all_users(settings, search=query)
     return [{"id": u.pk, "name": u.name, "email": u.email} for u in users]
 
 
@@ -460,7 +465,7 @@ async def admin_create_registration(
 @router.put(
     "/registrations/{user_id}",
     response_model=User,
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def admin_edit_registration(
     user_id: int,
@@ -474,7 +479,7 @@ async def admin_edit_registration(
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     update_data: Dict[str, Any] = {}
     if body.name is not None:
@@ -520,7 +525,7 @@ async def admin_edit_registration(
 
 @router.delete(
     "/registrations/{user_id}",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def admin_delete_registration(
     user_id: int,
@@ -535,7 +540,7 @@ async def admin_delete_registration(
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     if user_dict.get("admin_created", False):
         # Completely remove the phantom record
@@ -688,7 +693,7 @@ class BusAssignBody(BaseModel):
 
 @router.patch(
     "/registrations/{user_id}/bus",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def assign_bus(
     user_id: int,
@@ -701,7 +706,7 @@ async def assign_bus(
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": {"bus_assignment": body.bus_id}})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return {"status": "success"}
 
 

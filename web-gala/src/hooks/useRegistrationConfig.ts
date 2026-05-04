@@ -86,8 +86,8 @@ export function useRegistrationConfig() {
   const { raw, loading, fetch, save } = useConfigStore();
 
   useEffect(() => {
-    if (!raw) fetch();
-  }, [raw, fetch]);
+    if (!raw && !loading) fetch();
+  }, [raw, loading, fetch]);
 
   const config: RegistrationConfig = raw
     ? { ...defaultConfig, ...mapFromBackend(raw) }

@@ -35,7 +35,7 @@ async def fetch_group_members(settings: Settings, group_name: str) -> List[Authe
     ]
 
 
-async def fetch_all_users(settings: Settings) -> List[AuthentikUser]:
+async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> List[AuthentikUser]:
     """Fetches all users from Authentik (paginated). Used by admin to search for users."""
     if not settings.AUTHENTIK_URL or not settings.AUTHENTIK_TOKEN:
         return []
@@ -45,6 +45,8 @@ async def fetch_all_users(settings: Settings) -> List[AuthentikUser]:
     users: List[AuthentikUser] = []
     url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/"
     params: dict = {"page_size": 100, "page": 1}
+    if search:
+        params["search"] = search
 
     async with httpx.AsyncClient(verify=verify_ssl) as client:
         try:

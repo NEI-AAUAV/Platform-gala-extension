@@ -214,8 +214,9 @@ const GalaService = {
     deleteRegistration: async (userId: number): Promise<void> => {
       return client.delete(`/admin/registrations/${userId}`);
     },
-    listAuthentikUsers: async (): Promise<AuthentikUserResult[]> => {
-      return client.get("/admin/authentik/users");
+    listAuthentikUsers: async (query?: string): Promise<AuthentikUserResult[]> => {
+      const url = query ? `/admin/authentik/users?query=${encodeURIComponent(query)}` : "/admin/authentik/users";
+      return client.get(url);
     },
     rejectPaymentProof: async (userId: number, phase: number): Promise<void> => {
       return client.delete(`/admin/registrations/${userId}/payment-proof?phase=${phase}`);
@@ -224,6 +225,23 @@ const GalaService = {
       const formData = new FormData();
       formData.append("file", file);
       return client.post(`/admin/registrations/${userId}/payment-proof?phase=${phase}`, formData);
+    },
+    
+    // Table Management
+    createTable: async (request: { name: string; seats: number }): Promise<Table> => {
+      return client.post(`/admin/tables/create?name=${encodeURIComponent(request.name)}&seats=${request.seats}`, {});
+    },
+    deleteTable: async (tableId: number): Promise<void> => {
+      return client.delete(`/admin/tables/${tableId}`);
+    },
+    addMemberToTable: async (tableId: number, userId: number): Promise<Table> => {
+      return client.post(`/admin/tables/${tableId}/members/${userId}`, {});
+    },
+    moveMemberToTable: async (tableId: number, userId: number): Promise<Table> => {
+      return client.post(`/admin/tables/${tableId}/members/${userId}/move`, {});
+    },
+    removeMemberFromTable: async (tableId: number, userId: number): Promise<void> => {
+      return client.delete(`/admin/tables/${tableId}/members/${userId}`);
     },
   },
 
