@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -46,16 +46,36 @@ export default function Step2PersonalData({
   const [error, setError] = useState<string | null>(null);
 
   const isAlreadyRegistered = !!sessionUser?.nmec;
+
+  // Sync wizard state with session user if already registered and data is missing
+  useEffect(() => {
+    if (isAlreadyRegistered && !data.nmec && sessionUser?.nmec) {
+      onUpdate({
+        nmec: String(sessionUser.nmec),
+        year: sessionUser.matriculation ?? null,
+      });
+    }
+  }, [isAlreadyRegistered, sessionUser, data.nmec, onUpdate]);
+
   const fullName = [name, surname].filter(Boolean).join(" ");
 
   const handleNext = async () => {
     setError(null);
 
-    if (!data.nmec.trim() || !/^\d+$/.test(data.nmec)) {
+    const nmecToValidate = isAlreadyRegistered
+      ? String(sessionUser?.nmec ?? "")
+      : data.nmec;
+
+    if (!nmecToValidate.trim() || !/^\d+$/.test(nmecToValidate)) {
       setError("Número mecanográfico inválido — deve conter apenas dígitos.");
       return;
     }
-    if (data.year === undefined) {
+
+    const yearToValidate = isAlreadyRegistered
+      ? sessionUser?.matriculation ?? null
+      : data.year;
+
+    if (yearToValidate === undefined) {
       setError("Seleciona o teu ano.");
       return;
     }
@@ -195,6 +215,9 @@ function FormSection({
   isAlreadyRegistered: boolean;
   onUpdate: (updates: Partial<WizardData>) => void;
 }>) {
+  const displayNmec = data.nmec || (isAlreadyRegistered ? String(sessionUser?.nmec ?? "") : "");
+  const displayYear = data.year !== null ? data.year : (isAlreadyRegistered ? sessionUser?.matriculation ?? null : null);
+
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -216,9 +239,7 @@ function FormSection({
             id="nmec-input"
             type="text"
             inputMode="numeric"
-            value={
-              isAlreadyRegistered ? String(sessionUser?.nmec ?? "") : data.nmec
-            }
+            value={displayNmec}
             onChange={(e) => onUpdate({ nmec: e.target.value })}
             disabled={isAlreadyRegistered}
             placeholder="Ex: 123456"
@@ -232,10 +253,7 @@ function FormSection({
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {YEAR_OPTIONS.map(([label, value]) => {
-              const currentValue = isAlreadyRegistered
-                ? sessionUser?.matriculation ?? null
-                : data.year;
-              const isSelected = currentValue === value;
+              const isSelected = displayYear === value;
               return (
                 <button
                   key={String(value)}

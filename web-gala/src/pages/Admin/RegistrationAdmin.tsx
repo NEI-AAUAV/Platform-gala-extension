@@ -15,6 +15,7 @@ import useTime from "@/hooks/timeHooks/useTime";
 import GalaService from "@/services/GalaService";
 import useLimits from "@/hooks/useLimits";
 import { useAppToast } from "@/components/ui/Toast";
+import { useHomepageConfig } from "@/hooks/useHomepageConfig";
 import {
   Field,
   TextInput,
@@ -39,6 +40,8 @@ const NAV_SECTIONS = [
   { id: "payment", label: "7. Pagamento" },
   { id: "phased", label: "8. Pag. faseado" },
   { id: "limits", label: "9. Limites" },
+  { id: "emails", label: "10. Notificações por E-mail" },
+  { id: "security", label: "11. Segurança" },
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -213,6 +216,7 @@ function SectionIndex({
 
 export default function RegistrationAdmin() {
   const { config, updateConfig, resetConfig } = useRegistrationConfig();
+  const { emailConfig, updateEmails } = useHomepageConfig();
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("dates");
 
@@ -533,8 +537,43 @@ export default function RegistrationAdmin() {
           </Section>
         </div>
 
+        <div ref={ref("emails")}>
+          <Section title="10. Notificações por E-mail">
+            <p className="mb-4 text-xs text-white/40">
+              Escolha quais os e-mails automáticos que o sistema deve enviar aos utilizadores.
+            </p>
+            <div className="flex flex-col gap-4">
+              <Toggle
+                enabled={emailConfig.registration_confirmed}
+                onChange={(v) => { updateEmails({ registration_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                label="Confirmação de Inscrição (Submissão inicial)"
+              />
+              <Toggle
+                enabled={emailConfig.payment_confirmed}
+                onChange={(v) => { updateEmails({ payment_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                label="Confirmação de Pagamento"
+              />
+              <Toggle
+                enabled={emailConfig.payment_rejected}
+                onChange={(v) => { updateEmails({ payment_rejected: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                label="Rejeição de Comprovativo de Pagamento"
+              />
+              <Toggle
+                enabled={emailConfig.table_invite}
+                onChange={(v) => { updateEmails({ table_invite: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                label="Convite para Mesa"
+              />
+              <Toggle
+                enabled={emailConfig.table_confirmed}
+                onChange={(v) => { updateEmails({ table_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                label="Confirmação de Entrada em Mesa"
+              />
+            </div>
+          </Section>
+        </div>
+
         <div ref={ref("security")}>
-          <Section title="10. Segurança & Regras de Upload">
+          <Section title="11. Segurança & Regras de Upload">
             <p className="text-xs text-white/40">
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por

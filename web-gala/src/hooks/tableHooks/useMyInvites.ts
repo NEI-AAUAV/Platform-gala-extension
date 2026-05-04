@@ -6,7 +6,7 @@ export default function useMyInvites() {
   const { state, isLoading: userLoading } = useSessionUser();
 
   const { data, error, isLoading, mutate } = useSWR<Table[]>(
-    state === State.REGISTERED ? "/table/my-invites" : null,
+    state >= State.AUTHENTICATED ? "/table/my-invites" : null,
     () => GalaService.table.getMyInvites(),
     { refreshInterval: 30_000, dedupingInterval: 15_000 },
   );

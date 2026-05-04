@@ -14,6 +14,7 @@ import ClaimTable from "./ClaimTable";
 
 type TableModalProps = {
   tableId: number;
+  onClose?: () => void;
 };
 
 function calculateOccupiedSeats(persons: Person[]) {
@@ -91,7 +92,7 @@ function useModal() {
   return modalRef;
 }
 
-export default function TableModal({ tableId }: TableModalProps) {
+export default function TableModal({ tableId, onClose }: TableModalProps) {
   const modalRef = useModal();
   const navigate = useNavigate();
   const modalPage = useModalPage(tableId);
@@ -125,7 +126,7 @@ export default function TableModal({ tableId }: TableModalProps) {
             <button
               className="absolute right-6 top-6 text-xl text-white/30 transition-colors hover:text-white/80"
               type="button"
-              onClick={() => navigate("/reserve")}
+              onClick={() => (onClose ? onClose() : navigate("/reserve"))}
             >
               <FontAwesomeIcon icon={faXmark} />
             </button>
@@ -133,7 +134,15 @@ export default function TableModal({ tableId }: TableModalProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      <Link className="absolute inset-0 -z-10" to="/reserve" />
+      {onClose ? (
+        <button
+          type="button"
+          className="absolute inset-0 -z-10"
+          onClick={onClose}
+        />
+      ) : (
+        <Link className="absolute inset-0 -z-10" to="/reserve" />
+      )}
     </dialog>
   );
 }

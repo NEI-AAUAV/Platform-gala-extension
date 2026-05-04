@@ -375,53 +375,6 @@ export default function HomepageAdmin() {
         )}
       </Section>
 
-      <Section title="7. Notificações por E-mail">
-        <Toggle
-          enabled={emailConfig.registration_confirmed}
-          onChange={(v) => {
-            updateEmails({ registration_confirmed: v });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-          }}
-          label="Confirmação de Inscrição"
-        />
-        <Toggle
-          enabled={emailConfig.payment_confirmed}
-          onChange={(v) => {
-            updateEmails({ payment_confirmed: v });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-          }}
-          label="Pagamento Aceite"
-        />
-        <Toggle
-          enabled={emailConfig.payment_rejected}
-          onChange={(v) => {
-            updateEmails({ payment_rejected: v });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-          }}
-          label="Comprovativo de Pagamento Rejeitado"
-        />
-        <Toggle
-          enabled={emailConfig.table_invite}
-          onChange={(v) => {
-            updateEmails({ table_invite: v });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-          }}
-          label="Convite para Mesa"
-        />
-        <Toggle
-          enabled={emailConfig.table_confirmed}
-          onChange={(v) => {
-            updateEmails({ table_confirmed: v });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-          }}
-          label="Confirmação em Mesa"
-        />
-      </Section>
     </div>
   );
 }

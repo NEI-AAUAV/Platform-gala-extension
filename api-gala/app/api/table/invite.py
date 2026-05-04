@@ -149,9 +149,18 @@ async def invite_user(
     if user_id in (table.invites or []):
         raise HTTPException(status_code=409, detail="User already invited")
 
-    invited_user = await User.get_collection(db).find_one({"_id": user_id, "is_registered": True})
-    if not invited_user:
-        raise HTTPException(status_code=404, detail="User not found or not registered")
+    invited_user_doc = await User.get_collection(db).find_one({"_id": user_id})
+    if invited_user_doc:
+        invited_user_email = invited_user_doc.get("email")
+        invited_user_name = invited_user_doc.get("name")
+    else:
+        # User not registered in Gala yet, fetch from Authentik
+        from app.services.authentik_service import fetch_user_by_id
+        authentik_user = await fetch_user_by_id(settings, user_id)
+        if not authentik_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        invited_user_email = authentik_user.email
+        invited_user_name = authentik_user.name
 
     existing_in_table = await Table.get_collection(db).find_one({"persons.id": user_id})
     if existing_in_table:
@@ -170,14 +179,13 @@ async def invite_user(
     config = await ConfigService.get_config(db)
     if config.email_notifications.table_invite:
         table_name = table.name or f"Mesa {table.id}"
-        invited_user_obj = User.parse_obj(invited_user)
         background_tasks.add_task(
             send_email,
-            invited_user_obj.email,
+            invited_user_email,
             f"Foste convidado para a mesa \"{table_name}\"",
             settings=settings,
             template="table_invite",
-            name=invited_user_obj.name,
+            name=invited_user_name,
             table=table_name,
         )
     

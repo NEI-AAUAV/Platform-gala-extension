@@ -140,6 +140,28 @@ export default function RegistrantsAdmin() {
       toast.error(extractApiError(e, "Erro ao atribuir autocarro."));
     }
   };
+  
+  const handleAssignTable = async (tableId: string | null) => {
+    if (!selectedUser) return;
+    try {
+      if (!tableId) {
+        // Remove from current table
+        if (selectedUser.table_id) {
+          await GalaService.admin.removeMemberFromTable(selectedUser.table_id, selectedUser._id);
+        }
+      } else if (!selectedUser.table_id) {
+        // Add to new table
+        await GalaService.admin.addMemberToTable(tableId, selectedUser._id);
+      } else {
+        // Move table
+        await GalaService.admin.moveMemberBetweenTables(selectedUser.table_id, selectedUser._id, tableId);
+      }
+      toast.success("Mesa atualizada com sucesso.");
+      load();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao atualizar mesa."));
+    }
+  };
 
   const handleAutoAssign = async () => {
     setAssigning(true);
@@ -274,6 +296,7 @@ export default function RegistrantsAdmin() {
             onClose={() => detailRef.current?.close()}
             onUploadProof={handleUploadProof}
             onRejectProof={handleRejectProof}
+            onAssignTable={handleAssignTable}
           />
         )}
       </dialog>

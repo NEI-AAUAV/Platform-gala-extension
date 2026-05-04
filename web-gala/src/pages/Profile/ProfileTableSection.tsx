@@ -12,9 +12,10 @@ import useTable from "@/hooks/tableHooks/useTable";
 import useLimits from "@/hooks/useLimits";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import useMyInvites from "@/hooks/tableHooks/useMyInvites";
+import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import Table from "@/components/Table";
 import VisualTable from "@/components/Table/VisualTable";
-import GuestList from "@/components/TableModal/GuestList";
+import TableModal from "../TableModal";
 import useNEIUser from "@/hooks/useNEIUser";
 import { formatDateTimePT } from "@/utils/formatDate";
 import GalaService from "@/services/GalaService";
@@ -36,7 +37,7 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
 // Pending invites banner
 // ---------------------------------------------------------------------------
 
-function PendingInvitesBanner({
+export function PendingInvitesBanner({
   invites,
   onAccepted,
 }: Readonly<{
@@ -46,6 +47,7 @@ function PendingInvitesBanner({
   const toast = useAppToast();
   const { mutate } = useMyInvites();
   const { mutate: mutateAllTables } = useTables();
+  const { mutate: mutateSession } = useSessionUser();
 
   if (invites.length === 0) return null;
 
@@ -55,6 +57,7 @@ function PendingInvitesBanner({
       toast.success("Entraste na mesa!");
       mutate();
       mutateAllTables();
+      await mutateSession();
       onAccepted();
     } catch (e) {
       toast.error(extractApiError(e, "Erro ao aceitar convite."));
@@ -202,7 +205,7 @@ export default function ProfileTableSection() {
       )}
 
       {selectedId !== null && (
-        <TableDetail tableId={selectedId} onClose={() => setSelectedId(null)} />
+        <TableModal tableId={selectedId} onClose={() => setSelectedId(null)} />
       )}
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
@@ -261,60 +264,3 @@ function EmptySlot({ slotNumber }: Readonly<{ slotNumber: number }>) {
   );
 }
 
-function TableDetail({
-  tableId,
-  onClose,
-}: Readonly<{ tableId: number; onClose: () => void }>) {
-  const { table, isLoading } = useTable(tableId);
-  const { neiUser } = useNEIUser(table?.head ?? null);
-
-  if (isLoading || !table) return null;
-
-  const occupied = table.persons.reduce(
-    (acc, p) => acc + 1 + p.companions.length,
-    0,
-  );
-
-  return (
-    <div className="bg-white/4 rounded-xl border border-light-gold/20 p-5">
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h3 className="text-white/85 font-gala text-lg font-bold">
-            {table.name || "Mesa sem nome"}
-          </h3>
-          {neiUser && (
-            <p className="text-xs text-white/40">
-              Mesa de {neiUser.name} {neiUser.surname}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-white/30">
-            {occupied} / {table.seats} lugares ocupados
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"
-        >
-          <FontAwesomeIcon icon={faXmark} className="text-sm" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="flex items-center justify-center">
-          <VisualTable table={table} alwaysVisible />
-        </div>
-        <div className="flex flex-col gap-4">
-          <GuestList persons={table.persons} />
-          <Link
-            to={`/reserve/${table._id}`}
-            className="flex items-center justify-between rounded-lg border border-light-gold/30 px-4 py-3 text-sm font-semibold text-light-gold/70 transition hover:border-light-gold/60 hover:text-light-gold"
-          >
-            Gerir mesa
-            <FontAwesomeIcon icon={faChevronRight} className="text-xs" />
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}

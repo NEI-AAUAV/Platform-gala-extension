@@ -51,20 +51,33 @@ async def search_users(
     *,
     q: Annotated[str, Query(min_length=2)],
     db: DatabaseDep,
+    settings: SettingsDep,
     auth: AuthData = Security(api_nei_auth),
 ) -> List[dict]:
-    """Search registered users by email or name (for table invites)."""
-    pattern = {"$regex": q, "$options": "i"}
-    cursor = User.get_collection(db).find(
-        {
-            "is_registered": True,
-            "_id": {"$ne": auth.sub},
-            "$or": [{"email": pattern}, {"name": pattern}],
-        },
-        {"_id": 1, "name": 1, "email": 1},
-    ).limit(10)
-    results = await cursor.to_list(length=10)
-    return [{"id": r["_id"], "name": r["name"], "email": r["email"]} for r in results]
+    """Search ALL platform users via Authentik (for table invites)."""
+    from app.services.authentik_service import fetch_all_users
+    
+    # 1. Search in Authentik
+    authentik_users = await fetch_all_users(settings, search=q)
+    
+    # 2. Get registered status for these users
+    user_coll = User.get_collection(db)
+    registered_ids = await user_coll.distinct("_id", {"_id": {"$in": [u.pk for u in authentik_users]}, "is_registered": True})
+    registered_ids_set = set(registered_ids)
+
+    # 3. Map to the expected format and exclude self
+    results = []
+    for u in authentik_users:
+        if u.pk == auth.sub:
+            continue
+        results.append({
+            "id": u.pk,
+            "name": u.name,
+            "email": u.email,
+            "is_registered": u.pk in registered_ids_set
+        })
+
+    return results[:10]
 
 
 @router.get(

@@ -17,7 +17,7 @@ export default function useSessionUser() {
   const { data, error, isLoading, mutate } = useSWR<User>(
     swrKey,
     () => GalaService.user.getSessionUser(),
-    { dedupingInterval: 10000000 },
+    { dedupingInterval: 30_000 },
   );
 
   let state = State.NONE;

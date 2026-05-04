@@ -168,6 +168,7 @@ export default function UserDetail({
   readonly onClose: () => void;
   readonly onUploadProof: (phase: number, file: File) => void;
   readonly onRejectProof: (phase: number) => void;
+  readonly onAssignTable: (tableId: string | null) => void;
 }) {
   const table = tables.find((t) => t._id === user.table_id) ?? null;
 
@@ -276,28 +277,23 @@ export default function UserDetail({
         </div>
       )}
 
-      {/* Mesa */}
+        {/* Mesa */}
       <div>
         <p className="mb-2 text-[0.55rem] font-bold uppercase tracking-widest text-white/25">
           Mesa
         </p>
-        {table ? (
-          <div className="bg-white/4 rounded-lg px-3 py-2 text-sm text-white/70">
-            <span className="font-semibold text-white/80">
-              {table.name || `Mesa #${table._id}`}
-            </span>
-            <span className="ml-2 text-white/30">
-              (
-              {table.persons.reduce(
-                (acc, p) => acc + 1 + (p.companions?.length ?? 0),
-                0,
-              )}
-              /{table.seats} lugares)
-            </span>
-          </div>
-        ) : (
-          <p className="text-sm text-white/30">Sem mesa atribuída.</p>
-        )}
+        <select
+          value={user.table_id ?? ""}
+          onChange={(e) => onAssignTable(e.target.value || null)}
+          className={`w-full ${INPUT_CLS}`}
+        >
+          <option value="">Sem mesa</option>
+          {tables.map((t) => (
+            <option key={t._id} value={t._id}>
+              {t.name || `Mesa #${t._id}`} ({t.persons.reduce((acc, p) => acc + 1 + (p.companions?.length ?? 0), 0)}/{t.seats})
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Pagamento */}

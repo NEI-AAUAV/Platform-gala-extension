@@ -8,6 +8,7 @@ import { useWizardState, BusOption } from "@/hooks/useWizardState";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import { formatDateTimePT } from "@/utils/formatDate";
 import GalaService from "@/services/GalaService";
+import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import StepIndicator from "./StepIndicator";
 import Step1EventInfo from "./steps/Step1EventInfo";
 import Step2PersonalData from "./steps/Step2PersonalData";
@@ -34,6 +35,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { config } = useRegistrationConfig();
   const { time } = useTime();
+  const { mutate: mutateSession } = useSessionUser();
   const { data, update, reset } = useWizardState(sub ? String(sub) : undefined);
   const [syncing, setSyncing] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export default function Register() {
     GalaService.registration
       .getStatus()
       .then((status) => {
-        if (status.registration_step && status.registration_step > 1) {
+        if (status) {
           update({
             nmec: String(status.nmec || ""),
             year:
@@ -61,10 +63,16 @@ export default function Register() {
             allergies:
               ((status as unknown as Record<string, unknown>)
                 .food_allergies as string) || "",
+            phone:
+              ((status as unknown as Record<string, unknown>)
+                .phone as string) || "",
+            phasedPayment:
+              ((status as unknown as Record<string, unknown>)
+                .phased_payment as boolean) ?? false,
             companions:
               ((status as unknown as Record<string, unknown>)
                 .companions as []) || [],
-            currentStep: status.registration_step,
+            currentStep: status.registration_step || 1,
           });
         }
       })
@@ -164,6 +172,7 @@ export default function Register() {
     setSyncing(true);
     try {
       await GalaService.registration.updateStep(6, {});
+      await mutateSession();
       reset();
       navigate("/profile");
     } catch (e: unknown) {
@@ -253,6 +262,7 @@ export default function Register() {
                 <Step5Table
                   config={config}
                   data={data}
+                  userId={sub}
                   onUpdate={update}
                   onNext={next}
                   onBack={back}

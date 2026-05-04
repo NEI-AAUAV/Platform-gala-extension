@@ -20,6 +20,7 @@ import useNEIUser from "@/hooks/useNEIUser";
 interface Props {
   readonly config: RegistrationConfig;
   readonly data: WizardData;
+  readonly userId?: string;
   readonly onUpdate: (updates: Partial<WizardData>) => void;
   readonly onNext: () => void;
   readonly onBack: () => void;
@@ -91,6 +92,7 @@ function InviteCard({
 
 export default function Step5Table({
   data,
+  userId,
   onUpdate,
   onNext,
   onBack,
@@ -99,13 +101,6 @@ export default function Step5Table({
   const { limits } = useLimits();
   const { invites } = useMyInvites();
   const [searchTerm, setSearchTerm] = useState("");
-  const [newTableName, setNewTableName] = useState("");
-
-  useEffect(() => {
-    if (data.tableId === "new" && !newTableName) {
-      setNewTableName("");
-    }
-  }, [data.tableId]);
 
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = useMemo(() => buildSlots(tables, maxCount), [tables, maxCount]);
@@ -127,11 +122,19 @@ export default function Step5Table({
       : null;
 
   const handleSelectTable = (id: number) => {
-    onUpdate({ tableId: String(id), tableRole: "member" });
+    if (data.tableId === String(id)) {
+      onUpdate({ tableId: "none", tableRole: null });
+    } else {
+      onUpdate({ tableId: String(id), tableRole: "member" });
+    }
   };
 
   const handleSelectInvite = (id: number) => {
-    onUpdate({ tableId: String(id), tableRole: "invited" });
+    if (data.tableId === String(id)) {
+      onUpdate({ tableId: "none", tableRole: null });
+    } else {
+      onUpdate({ tableId: String(id), tableRole: "invited" });
+    }
   };
 
   const handleCreateNew = () => {
@@ -143,9 +146,6 @@ export default function Step5Table({
   };
 
   const handleNext = () => {
-    if (data.tableId === "new") {
-      onUpdate({ tableName: newTableName || undefined });
-    }
     onNext();
   };
 
@@ -170,26 +170,29 @@ export default function Step5Table({
       {/* Pending invites section */}
       {invites.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-2"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col gap-3 rounded-2xl border border-light-gold/30 bg-light-gold/10 p-5 shadow-lg shadow-light-gold/5"
         >
-          <p className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-light-gold/70">
-            <FontAwesomeIcon icon={faBell} />
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-light-gold">
+            <FontAwesomeIcon icon={faBell} className="animate-bounce" />
             {invites.length === 1
-              ? "Tens 1 convite pendente"
-              : `Tens ${invites.length} convites pendentes`}
+              ? "Tens 1 convite pendente!"
+              : `Tens ${invites.length} convites pendentes!`}
           </p>
-          {invites.map((t) => (
-            <InviteCard
-              key={t._id}
-              table={t}
-              isSelected={data.tableId === String(t._id)}
-              onSelect={() => handleSelectInvite(t._id)}
-            />
-          ))}
-          <p className="text-[0.6rem] text-white/25">
-            Ao aceitares um convite és adicionado automaticamente à mesa.
+          <div className="flex flex-col gap-2">
+            {invites.map((t) => (
+              <InviteCard
+                key={t._id}
+                table={t}
+                isSelected={data.tableId === String(t._id)}
+                onSelect={() => handleSelectInvite(t._id)}
+              />
+            ))}
+          </div>
+          <p className="text-[0.65rem] font-medium text-light-gold/60">
+            Foste convidado por amigos para te juntares a estas mesas. Aceita um
+            convite para reservares o teu lugar.
           </p>
         </motion.div>
       )}
@@ -238,8 +241,8 @@ export default function Step5Table({
             type="text"
             placeholder="Ex: Os Fixolas, Mesa A, ..."
             maxLength={20}
-            value={newTableName}
-            onChange={(e) => setNewTableName(e.target.value)}
+            value={data.tableName || ""}
+            onChange={(e) => onUpdate({ tableName: e.target.value || undefined })}
             className="border-white/15 rounded-lg border bg-[#1c1c1e] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-light-gold/50"
           />
         </motion.div>
@@ -279,11 +282,19 @@ export default function Step5Table({
         ) : (
           filteredSlots.map((table, i) => {
             const slotKey = table ? `table-${table._id}` : `empty-slot-${i}`;
+            const isInvited = table ? inviteTableIds.has(table._id) : false;
+            const isOwner = table && userId && table.head === Number(userId);
+            const isCurrent = table && data.tableId === String(table._id);
+            const canSelect = isInvited || isOwner || isCurrent;
+
             return table ? (
               <TableCard
                 key={slotKey}
                 table={table}
-                isSelected={data.tableId === String(table._id)}
+                isSelected={isCurrent}
+                canSelect={canSelect}
+                isOwner={!!isOwner}
+                isInvited={isInvited}
                 onSelect={() => handleSelectTable(table._id)}
               />
             ) : (
@@ -354,27 +365,48 @@ export default function Step5Table({
 function TableCard({
   table,
   isSelected,
+  canSelect,
+  isOwner,
+  isInvited,
   onSelect,
-}: Readonly<{ table: Table; isSelected: boolean; onSelect: () => void }>) {
+}: Readonly<{
+  table: Table;
+  isSelected: boolean;
+  canSelect: boolean;
+  isOwner: boolean;
+  isInvited: boolean;
+  onSelect: () => void;
+}>) {
   const occupancy = table.persons.reduce(
     (acc, p) => acc + 1 + p.companions.length,
     0,
   );
   const isFull = occupancy >= table.seats;
 
-  let containerStyles =
-    "border-white/10 bg-white/5 hover:border-white/30 cursor-pointer";
-  if (isSelected)
-    containerStyles =
-      "border-light-gold bg-light-gold/10 ring-1 ring-light-gold cursor-pointer";
-  else if (isFull)
-    containerStyles = "border-white/5 bg-white/2 opacity-50 cursor-not-allowed";
+  let containerStyles = "border-white/10 bg-white/5";
+  let cursorStyles = "cursor-default";
+
+  if (canSelect) {
+    cursorStyles = "cursor-pointer";
+    if (isSelected) {
+      containerStyles = "border-light-gold bg-light-gold/10 ring-1 ring-light-gold";
+    } else {
+      containerStyles = "border-white/20 bg-white/10 hover:border-light-gold/40 hover:bg-light-gold/5";
+    }
+  } else {
+    containerStyles = "border-white/5 bg-white/2 opacity-40";
+  }
+
+  if (isFull && !isSelected) {
+    containerStyles = "border-white/5 bg-white/2 opacity-50";
+    cursorStyles = "cursor-not-allowed";
+  }
 
   return (
     <button
-      onClick={() => !isFull && onSelect()}
-      disabled={isFull && !isSelected}
-      className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all ${containerStyles}`}
+      onClick={() => canSelect && !isFull && onSelect()}
+      disabled={(isFull && !isSelected) || (!canSelect && !isSelected)}
+      className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all ${containerStyles} ${cursorStyles}`}
     >
       <div className="flex w-full items-center justify-between">
         <span className="text-[0.6rem] font-bold uppercase text-white/30">
@@ -391,6 +423,21 @@ function TableCard({
       >
         {table.name || "Mesa sem nome"}
       </h4>
+      {isOwner && (
+        <span className="absolute right-2 top-8 rounded bg-light-gold/20 px-1 py-0.5 text-[0.5rem] font-bold uppercase text-light-gold">
+          Minha
+        </span>
+      )}
+      {isInvited && !isSelected && (
+        <span className="absolute right-2 top-8 rounded bg-blue-500/20 px-1 py-0.5 text-[0.5rem] font-bold uppercase text-blue-400">
+          Convite
+        </span>
+      )}
+      {!canSelect && (
+        <span className="absolute right-2 top-8 rounded bg-white/10 px-1 py-0.5 text-[0.5rem] font-bold uppercase text-white/40">
+          Privada
+        </span>
+      )}
       <div className="pointer-events-none flex w-full justify-center">
         <VisualTable table={table} alwaysVisible className="p-8" />
       </div>

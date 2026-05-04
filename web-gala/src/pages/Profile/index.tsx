@@ -15,7 +15,8 @@ import useLoginLink from "@/hooks/useLoginLink";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { useHomepageConfig } from "@/hooks/useHomepageConfig";
 import ProfilePaymentSection from "./ProfilePaymentSection";
-import ProfileTableSection from "./ProfileTableSection";
+import ProfileTableSection, { PendingInvitesBanner } from "./ProfileTableSection";
+import useMyInvites from "@/hooks/tableHooks/useMyInvites";
 
 type RegistrationStatus = "pending_payment" | "confirmed" | "cancelled";
 
@@ -256,14 +257,33 @@ function InfoRow({
 }
 
 function NotRegisteredView() {
+  const { invites, mutate } = useMyInvites();
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 pt-28 text-center">
-      <h1 className="font-gala text-2xl font-bold text-white/70">
-        Ainda não te inscreveste
-      </h1>
-      <p className="max-w-sm text-sm text-white/40">
-        Completa a inscrição para acederes ao teu perfil do Jantar de Gala.
-      </p>
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-6 pt-28 text-center">
+      <div className="flex flex-col gap-2">
+        <h1 className="font-gala text-2xl font-bold text-white/70">
+          Ainda não te inscreveste
+        </h1>
+        <p className="text-sm text-white/40">
+          Completa a inscrição para acederes ao teu perfil do Jantar de Gala.
+        </p>
+      </div>
+
+      {invites.length > 0 && (
+        <div className="w-full text-left">
+          <PendingInvitesBanner
+            invites={invites}
+            onAccepted={() => {
+              mutate();
+            }}
+          />
+          <p className="mt-3 text-center text-[0.65rem] text-white/30">
+            Precisas de te inscrever primeiro para poderes aceitar convites.
+          </p>
+        </div>
+      )}
+
       <Link
         to="/register"
         className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"

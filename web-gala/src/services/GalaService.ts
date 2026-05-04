@@ -217,7 +217,9 @@ const GalaService = {
     },
     searchUsers: async (
       q: string,
-    ): Promise<{ id: number; name: string; email: string }[]> => {
+    ): Promise<
+      { id: number; name: string; email: string; is_registered: boolean }[]
+    > => {
       return client.get(`/user/search?q=${encodeURIComponent(q)}`);
     },
   },

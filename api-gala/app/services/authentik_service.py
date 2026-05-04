@@ -81,6 +81,28 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
     return users
 
 
+async def fetch_user_by_id(settings: Settings, user_id: int) -> Optional[AuthentikUser]:
+    """Fetches a single user from Authentik by their PK."""
+    if not settings.AUTHENTIK_URL or not settings.AUTHENTIK_TOKEN:
+        return None
+
+    headers = {"Authorization": f"Bearer {settings.AUTHENTIK_TOKEN}"}
+    verify_ssl = settings.PRODUCTION
+    url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/{user_id}/"
+
+    async with httpx.AsyncClient(verify=verify_ssl) as client:
+        try:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code == 404:
+                return None
+            resp.raise_for_status()
+            u = resp.json()
+            return AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
+        except Exception as e:
+            print(f"Error fetching Authentik user {user_id}: {e}")
+            return None
+
+
 async def sync_email_based_registrations(db, authentik_user_id: int, email: str) -> None:
     """Called when a user logs in. If there's an admin-created registration with the same
     email, it is re-linked to the real Authentik user ID. Similarly, if the user is listed

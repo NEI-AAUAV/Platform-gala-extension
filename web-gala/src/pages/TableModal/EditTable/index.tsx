@@ -26,7 +26,12 @@ type EditTableProps = {
   readonly mutate: () => void;
 };
 
-type SearchResult = { id: number; name: string; email: string };
+type SearchResult = {
+  id: number;
+  name: string;
+  email: string;
+  is_registered: boolean;
+};
 
 function InvitePanel({
   table,
@@ -116,9 +121,16 @@ function InvitePanel({
                 className="flex items-center justify-between gap-3 px-4 py-2.5"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-white/80">
-                    {u.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-xs font-semibold text-white/80">
+                      {u.name}
+                    </p>
+                    {!u.is_registered && (
+                      <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[0.5rem] font-bold uppercase tracking-tighter text-white/30 ring-1 ring-white/10">
+                        Sem inscrição
+                      </span>
+                    )}
+                  </div>
                   <p className="truncate text-[0.6rem] text-white/30">
                     {u.email}
                   </p>

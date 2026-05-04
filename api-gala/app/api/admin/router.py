@@ -340,8 +340,8 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
         raise HTTPException(status_code=409, detail="User already has a registration")
 
     # Look up user details from Authentik
-    authentik_users = await fetch_all_users(settings)
-    au: Optional[AuthentikUser] = next((u for u in authentik_users if u.pk == body.authentik_user_id), None)
+    from app.services.authentik_service import fetch_user_by_id
+    au = await fetch_user_by_id(settings, body.authentik_user_id)
     if not au:
         raise HTTPException(status_code=404, detail="Authentik user not found")
 
@@ -449,6 +449,7 @@ async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, us
 )
 async def admin_create_registration(
     body: AdminCreateRegistrationBody,
+    background_tasks: BackgroundTasks,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
@@ -459,9 +460,34 @@ async def admin_create_registration(
     user_coll = User.get_collection(db)
 
     if body.authentik_user_id is not None:
-        return await _create_from_authentik(body, settings, user_coll)
+        user = await _create_from_authentik(body, settings, user_coll)
     else:
-        return await _create_from_scratch(body, db, user_coll)
+        user = await _create_from_scratch(body, db, user_coll)
+
+    # Send notification
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.registration_confirmed:
+        bus_labels = {"ROUND_TRIP": "Autocarro (Ida e Volta)", "ONE_WAY": "Autocarro (Apenas Ida)", "NONE": "Deslocação própria"}
+        year_label = f"{user.matriculation.__root__}º Ano" if user.matriculation else "Alumni / Outro"
+        
+        background_tasks.add_task(
+            send_email,
+            user.email,
+            "Inscrição no Jantar de Gala confirmada (Admin)",
+            settings=settings,
+            template="registered",
+            name=user.name,
+            nmec=user.nmec,
+            year=year_label,
+            bus=bus_labels.get(user.bus_option.value, "—"),
+            meal=user.meal_option or "—",
+            allergies=user.food_allergies or "Nenhuma",
+            phone=user.phone or "—",
+            phased_payment=user.phased_payment,
+            companions=user.companions,
+        )
+
+    return user
 
 
 @router.put(
@@ -544,6 +570,17 @@ async def admin_delete_registration(
     if not user_dict:
         raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
+    # 1. Leave table if in one
+    await TableService.leave_table(db, user_id)
+
+    # 2. If the user was a companion of someone, remove that link to prevent auto-syncing back
+    user_email = user_dict.get("email")
+    if user_email:
+        await user_coll.update_many(
+            {"companions.email": user_email},
+            {"$pull": {"companions": {"email": user_email}}}
+        )
+
     if user_dict.get("admin_created", False):
         # Completely remove the phantom record
         await user_coll.delete_one({"_id": user_id})
@@ -554,6 +591,8 @@ async def admin_delete_registration(
             {"$set": {
                 "is_registered": False,
                 "registration_step": 1,
+                "nmec": 0,
+                "matriculation": None,
                 "has_payed": False,
                 "payment_proof_url": None,
                 "payment_proof_url_phase2": None,
@@ -564,6 +603,7 @@ async def admin_delete_registration(
                 "food_allergies": None,
                 "table_id": None,
                 "bus_assignment": None,
+                "is_companion_of": None,
             }}
         )
 
