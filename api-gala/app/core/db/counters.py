@@ -7,19 +7,21 @@ _TABLE_COUNTER = "tableCounter"
 _VOTE_COUNTER = "voteCounter"
 _USER_COUNTER = "userCounter"
 
+SET_ON_INSERT = "$setOnInsert"
+
 
 async def init_counters(db: DBType) -> None:
     # Initialize counters if none already exist
     await db.counters.update_one(
-        {"_id": _TABLE_COUNTER}, {"$setOnInsert": {"seq": 1}}, upsert=True
+        {"_id": _TABLE_COUNTER}, {SET_ON_INSERT: {"seq": 1}}, upsert=True
     )
     await db.counters.update_one(
-        {"_id": _VOTE_COUNTER}, {"$setOnInsert": {"seq": 1}}, upsert=True
+        {"_id": _VOTE_COUNTER}, {SET_ON_INSERT: {"seq": 1}}, upsert=True
     )
     # Admin-created user counter starts at -1 and goes negative to avoid
     # clashing with real Authentik user IDs (which are positive integers)
     await db.counters.update_one(
-        {"_id": _USER_COUNTER}, {"$setOnInsert": {"seq": -1}}, upsert=True
+        {"_id": _USER_COUNTER}, {SET_ON_INSERT: {"seq": -1}}, upsert=True
     )
 
 

@@ -74,10 +74,11 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
 
         {/* Table name input */}
         <div className="space-y-2">
-          <label className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+          <label htmlFor="table-name" className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
             Nome da Mesa
           </label>
           <input
+            id="table-name"
             type="text"
             value={tableName}
             onChange={(e) => setTableName(e.target.value)}

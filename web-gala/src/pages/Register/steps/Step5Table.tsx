@@ -25,7 +25,7 @@ const DEFAULT_SEATS = 10;
 
 function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   const sorted = [...tables].sort((a, b) => a._id - b._id);
-  const slots: Array<Table | null> = Array(maxCount).fill(null);
+  const slots: Array<Table | null> = new Array(maxCount).fill(null);
   sorted.forEach((t, i) => { if (i < maxCount) slots[i] = t; });
   return slots;
 }
@@ -38,11 +38,11 @@ function InviteCard({
   table,
   isSelected,
   onSelect,
-}: {
+}: Readonly<{
   table: Table;
   isSelected: boolean;
   onSelect: () => void;
-}) {
+}>) {
   const { neiUser } = useNEIUser(table.head ?? null);
   const occupied = table.persons.reduce((a, p) => a + 1 + p.companions.length, 0);
 
@@ -245,18 +245,19 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
         {isLoading ? (
           <div className="col-span-full py-12 text-center text-white/20">A carregar mesas...</div>
         ) : (
-          filteredSlots.map((table, i) =>
-            table ? (
+          filteredSlots.map((table, i) => {
+            const slotKey = table ? `table-${table._id}` : `empty-slot-${i}`;
+            return table ? (
               <TableCard
-                key={table._id}
+                key={slotKey}
                 table={table}
                 isSelected={data.tableId === String(table._id)}
                 onSelect={() => handleSelectTable(table._id)}
               />
             ) : (
-              <EmptySlotCard key={`empty-${i}`} slotNumber={i + 1} dimmed={!!searchTerm} />
-            )
-          )
+              <EmptySlotCard key={slotKey} slotNumber={i + 1} dimmed={!!searchTerm} />
+            );
+          })
         )}
       </div>
 

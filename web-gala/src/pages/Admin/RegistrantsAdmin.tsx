@@ -222,7 +222,7 @@ export default function RegistrantsAdmin() {
 
       {filtered.length > 0 && (
         <p className="text-right text-[0.6rem] text-white/20">
-          {filtered.length} inscrito{filtered.length !== 1 ? "s" : ""} {filtered.length !== users.length && `(de ${users.length})`}
+          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"} {filtered.length !== users.length && `(de ${users.length})`}
         </p>
       )}
 

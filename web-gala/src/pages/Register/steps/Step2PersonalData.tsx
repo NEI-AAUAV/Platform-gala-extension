@@ -45,7 +45,7 @@ export default function Step2PersonalData({ config, data, onUpdate, onNext, onBa
       setError("Seleciona o teu ano.");
       return;
     }
-    if (!data.phone.trim() || !/^\+?[0-9\s\-]{9,15}$/.test(data.phone.trim())) {
+    if (!data.phone.trim() || !/^\+?[0-9\s-]{9,15}$/.test(data.phone.trim())) {
       setError("Número de telemóvel inválido.");
       return;
     }

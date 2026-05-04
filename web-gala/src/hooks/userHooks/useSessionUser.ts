@@ -13,7 +13,7 @@ export default function useSessionUser() {
     (state) => state,
   );
   // Key includes `sub` so switching accounts invalidates the cache immediately.
-  const swrKey = sub !== undefined ? `/user/me?sub=${sub}` : null;
+  const swrKey = sub === undefined ? null : `/user/me?sub=${sub}`;
   const { data, error, isLoading, mutate } = useSWR<User>(
     swrKey,
     () => GalaService.user.getSessionUser(),

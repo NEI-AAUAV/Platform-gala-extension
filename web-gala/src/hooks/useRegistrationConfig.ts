@@ -64,7 +64,7 @@ function mapToBackendPatch(config: RegistrationConfig, existing: Record<string, 
       contacts: config.paymentContacts,
     },
     bus: {
-      ...(existing.bus as Record<string, unknown> ?? {}),
+      ...(existing.bus as Record<string, unknown>),
       enabled: config.busEnabled,
       price_round_trip: config.busRoundTripPrice,
     },

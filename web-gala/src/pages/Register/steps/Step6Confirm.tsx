@@ -64,6 +64,34 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
     : config.eventPrice;
   const totalPrice = totalPersons * pricePerPerson;
 
+  const renderCompanionsSummary = () => {
+    if (data.companions.length === 0) return null;
+    return (
+      <div className="flex flex-col gap-3">
+        <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
+          Acompanhantes ({data.companions.length})
+        </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {data.companions.map((c, i) => {
+            const meal = config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
+            return (
+              <div key={`${c.name}-${i}`} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/6">
+                  <FontAwesomeIcon icon={faUser} className="text-xs text-white/30" />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-semibold text-white/75">{c.name}</p>
+                  <p className="text-xs text-white/40">{meal}</p>
+                  {c.allergies && <p className="text-xs text-white/30">{c.allergies}</p>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -144,31 +172,7 @@ export default function Step6Confirm({ config, data, onBack, onFinish, syncing =
         </div>
       </div>
 
-      {/* Companions (if any) */}
-      {data.companions.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
-            Acompanhantes ({data.companions.length})
-          </h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {data.companions.map((c, i) => {
-              const meal = config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
-              return (
-                <div key={`${c.name}-${i}`} className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/6">
-                    <FontAwesomeIcon icon={faUser} className="text-xs text-white/30" />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-semibold text-white/75">{c.name}</p>
-                    <p className="text-xs text-white/40">{meal}</p>
-                    {c.allergies && <p className="text-xs text-white/30">{c.allergies}</p>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {renderCompanionsSummary()}
 
       {/* Final Total Summary */}
       <div className="rounded-xl border border-light-gold/20 bg-light-gold/6 p-5">

@@ -212,54 +212,62 @@ function ProofUpload({
         {deadlinePassed && <span className="ml-2 text-red-400/70">— Prazo expirado</span>}
       </p>
 
-      {proofName ? (
-        <div className="flex items-center gap-4 rounded-xl border border-dark-gold/30 bg-dark-gold/8 px-5 py-4">
-          <FontAwesomeIcon icon={faFileCircleCheck} className="text-dark-gold/70" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-white/80">
-              {proofName.split("/").pop() ?? proofName}
-            </p>
-            <p className="text-xs text-white/35">Comprovativo submetido</p>
-          </div>
-          {!deadlinePassed && (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="text-xs text-dark-gold/60 underline underline-offset-2 hover:text-dark-gold"
-            >
-              Substituir
-            </button>
-          )}
-        </div>
-      ) : deadlinePassed ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
-          <FontAwesomeIcon icon={faLock} className="text-xl text-red-400/40" />
-          <p className="text-sm font-semibold text-red-400/60">Prazo de envio encerrado</p>
-          <p className="text-xs text-white/30 text-center">
-            Para resolver a situação, contacta a organização por email.
-          </p>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          className={[
-            "flex flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all",
-            dragOver
-              ? "border-light-gold/50 bg-light-gold/5"
-              : "border-white/12 hover:border-white/25",
-          ].join(" ")}
-        >
-          <FontAwesomeIcon icon={faCloudArrowUp} className="text-xl text-white/25" />
-          <div className="text-center">
-            <p className="text-sm font-semibold text-white/50">Clica ou arrasta o comprovativo</p>
-            <p className="text-xs text-white/25">PDF, JPG, PNG ou WebP · Máx. {MAX_SIZE_MB}MB</p>
-          </div>
-        </button>
-      )}
+      {(() => {
+        if (proofName) {
+          return (
+            <div className="flex items-center gap-4 rounded-xl border border-dark-gold/30 bg-dark-gold/8 px-5 py-4">
+              <FontAwesomeIcon icon={faFileCircleCheck} className="text-dark-gold/70" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-white/80">
+                  {proofName.split("/").pop() ?? proofName}
+                </p>
+                <p className="text-xs text-white/35">Comprovativo submetido</p>
+              </div>
+              {!deadlinePassed && (
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="text-xs text-dark-gold/60 underline underline-offset-2 hover:text-dark-gold"
+                >
+                  Substituir
+                </button>
+              )}
+            </div>
+          );
+        }
+        if (deadlinePassed) {
+          return (
+            <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
+              <FontAwesomeIcon icon={faLock} className="text-xl text-red-400/40" />
+              <p className="text-sm font-semibold text-red-400/60">Prazo de envio encerrado</p>
+              <p className="text-xs text-white/30 text-center">
+                Para resolver a situação, contacta a organização por email.
+              </p>
+            </div>
+          );
+        }
+        return (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className={[
+              "flex flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all",
+              dragOver
+                ? "border-light-gold/50 bg-light-gold/5"
+                : "border-white/12 hover:border-white/25",
+            ].join(" ")}
+          >
+            <FontAwesomeIcon icon={faCloudArrowUp} className="text-xl text-white/25" />
+            <div className="text-center">
+              <p className="text-sm font-semibold text-white/50">Clica ou arrasta o comprovativo</p>
+              <p className="text-xs text-white/25">PDF, JPG, PNG ou WebP · Máx. {MAX_SIZE_MB}MB</p>
+            </div>
+          </button>
+        );
+      })()}
 
       {error && <p className="text-xs text-red-400/80">{error}</p>}
 
@@ -268,7 +276,11 @@ function ProofUpload({
         type="file"
         accept=".pdf,.jpg,.jpeg,.png,.webp"
         className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) { handleFile(f); }
+          e.target.value = "";
+        }}
       />
 
       {!deadlinePassed && (

@@ -42,7 +42,6 @@ class AcceptInviteBody(BaseModel):
 
 @router.post(
     "/{table_id}/invite/accept",
-    response_model=Table,
     responses={
         **auth_responses,
         400: {"description": "Not invited or table full"},
@@ -227,7 +226,6 @@ async def remove_invite(
 
 @router.get(
     "/my-invites",
-    response_model=List[Table],
     responses={**auth_responses},
 )
 async def get_my_invites(

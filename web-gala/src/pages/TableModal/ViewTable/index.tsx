@@ -106,39 +106,47 @@ export default function ViewTable({ table, inTable = false, mutate, isInvited = 
         </div>
 
         {/* Actions */}
-        {isInvited ? (
-          <div className="mt-auto flex gap-3">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleDecline}
-              className="flex-1 rounded-xl border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-red-400/40 hover:text-red-400 disabled:opacity-40"
-            >
-              <FontAwesomeIcon icon={faXmark} className="mr-2" />
-              Recusar
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleAccept}
-              className="flex-1 rounded-xl border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:bg-light-gold hover:text-black disabled:opacity-40"
-            >
-              <FontAwesomeIcon icon={faCheck} className="mr-2" />
-              Aceitar
-            </button>
-          </div>
-        ) : inTable ? (
-          <button
-            className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
-            onClick={async () => {
-              await useTableLeave(table._id);
-              mutate();
-              navigate("/reserve");
-            }}
-          >
-            Abandonar Mesa
-          </button>
-        ) : null}
+        {(() => {
+          if (isInvited) {
+            return (
+              <div className="mt-auto flex gap-3">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleDecline}
+                  className="flex-1 rounded-xl border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-red-400/40 hover:text-red-400 disabled:opacity-40"
+                >
+                  <FontAwesomeIcon icon={faXmark} className="mr-2" />
+                  Recusar
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleAccept}
+                  className="flex-1 rounded-xl border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:bg-light-gold hover:text-black disabled:opacity-40"
+                >
+                  <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                  Aceitar
+                </button>
+              </div>
+            );
+          }
+          if (inTable) {
+            return (
+              <button
+                className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+                onClick={async () => {
+                  await useTableLeave(table._id);
+                  mutate();
+                  navigate("/reserve");
+                }}
+              >
+                Abandonar Mesa
+              </button>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       <div className="flex items-center justify-center">

@@ -13,7 +13,7 @@ export default function RegistrantsCharts({ stats }: Readonly<{ stats: Registran
       <div className="rounded-xl border border-white/8 bg-white/3 p-4">
         <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-white/30">Por ano</p>
         <div className="flex flex-col gap-2">
-          {Object.entries(stats.byYear).sort().map(([yr, n]) => (
+          {Object.entries(stats.byYear).sort((a, b) => a[0].localeCompare(b[0])).map(([yr, n]) => (
             <MiniBar key={yr} label={yr} value={n} max={stats.total} color="bg-dark-gold/60" />
           ))}
         </div>

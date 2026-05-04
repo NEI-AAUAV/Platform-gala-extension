@@ -150,8 +150,9 @@ export default function Register() {
     }
   };
 
-  const containerWidth =
-    currentStep === 5 ? "max-w-7xl" : currentStep === 1 ? "max-w-5xl" : "max-w-3xl";
+  let containerWidth = "max-w-3xl";
+  if (currentStep === 5) containerWidth = "max-w-7xl";
+  else if (currentStep === 1) containerWidth = "max-w-5xl";
 
   return (
     <div className="min-h-screen pb-24 pt-28">

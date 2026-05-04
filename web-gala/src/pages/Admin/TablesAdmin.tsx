@@ -328,7 +328,10 @@ function TableAdminCard({ table, onRemoveMember, onMoveMember, onRefresh }: {
                       value={nameValue}
                       maxLength={20}
                       onChange={(e) => setNameValue(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { saveName(); }
+                        if (e.key === "Escape") { setEditingName(false); }
+                      }}
                       className="flex-1 rounded-lg border border-light-gold/30 bg-white/5 px-2 py-1 text-xs text-white outline-none"
                     />
                     <button
@@ -368,14 +371,21 @@ function TableAdminCard({ table, onRemoveMember, onMoveMember, onRefresh }: {
                     onClick={() => fileRef.current?.click()}
                     className="rounded-full border border-white/15 px-3 py-1.5 text-[0.6rem] font-semibold text-white/50 transition hover:border-light-gold/40 hover:text-light-gold disabled:opacity-40"
                   >
-                    {uploadingPhoto ? <FontAwesomeIcon icon={faSpinner} spin /> : table.photo_url ? "Alterar" : "Adicionar"}
+                    {(() => {
+                      if (uploadingPhoto) return <FontAwesomeIcon icon={faSpinner} spin />;
+                      return table.photo_url ? "Alterar" : "Adicionar";
+                    })()}
                   </button>
                   <input
                     ref={fileRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     className="hidden"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = ""; }}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) { handlePhoto(f); }
+                      e.target.value = "";
+                    }}
                   />
                 </div>
               </div>
@@ -447,7 +457,7 @@ function StatCard({ label, value, sub }: { readonly label: string; readonly valu
 
 // ─── Add Member Modal ────────────────────────────────────────────────────────
 
-function AddMemberModal({ tableId, onClose, onSuccess }: { tableId: number; onClose: () => void; onSuccess: () => void }) {
+function AddMemberModal({ tableId, onClose, onSuccess }: Readonly<{ tableId: number; onClose: () => void; onSuccess: () => void }>) {
   const [registrants, setRegistrants] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -477,30 +487,30 @@ function AddMemberModal({ tableId, onClose, onSuccess }: { tableId: number; onCl
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#121212] p-5 shadow-2xl flex flex-col gap-4">
         <h3 className="text-lg font-bold text-white">Adicionar Membro (sem mesa)</h3>
         
-        {loading ? (
-          <p className="text-sm text-white/50 text-center py-4">A carregar...</p>
-        ) : registrants.length === 0 ? (
-          <p className="text-sm text-white/50 text-center py-4">Não há inscritos sem mesa.</p>
-        ) : (
-          <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
-            {registrants.map(u => (
-              <div key={u._id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm text-white font-semibold truncate">{u.name}</span>
-                  <span className="text-xs text-white/50 truncate">{u.email}</span>
+        {(() => {
+          if (loading) return <p className="text-sm text-white/50 text-center py-4">A carregar...</p>;
+          if (registrants.length === 0) return <p className="text-sm text-white/50 text-center py-4">Não há inscritos sem mesa.</p>;
+          return (
+            <div className="max-h-60 overflow-y-auto flex flex-col gap-2">
+              {registrants.map(u => (
+                <div key={u._id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm text-white font-semibold truncate">{u.name}</span>
+                    <span className="text-xs text-white/50 truncate">{u.email}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAdd(u._id)}
+                    disabled={saving}
+                    className="shrink-0 bg-light-gold/20 text-light-gold px-3 py-1 rounded-lg text-xs font-semibold hover:bg-light-gold/30 disabled:opacity-50"
+                  >
+                    Adicionar
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleAdd(u._id)}
-                  disabled={saving}
-                  className="shrink-0 bg-light-gold/20 text-light-gold px-3 py-1 rounded-lg text-xs font-semibold hover:bg-light-gold/30 disabled:opacity-50"
-                >
-                  Adicionar
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          );
+        })()}
 
         <div className="flex justify-end mt-2">
           <button type="button" onClick={onClose} className="text-sm text-white/50 hover:text-white transition">
@@ -514,7 +524,7 @@ function AddMemberModal({ tableId, onClose, onSuccess }: { tableId: number; onCl
 
 // ─── Move Member Modal ───────────────────────────────────────────────────────
 
-function MoveMemberModal({ userId, onClose, onSuccess }: { userId: number; onClose: () => void; onSuccess: () => void }) {
+function MoveMemberModal({ userId, onClose, onSuccess }: Readonly<{ userId: number; onClose: () => void; onSuccess: () => void }>) {
   const { tables } = useTables();
   const [saving, setSaving] = useState(false);
   const toast = useAppToast();

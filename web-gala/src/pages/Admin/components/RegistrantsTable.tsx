@@ -13,11 +13,11 @@ const dishIcon = new Map<string, React.ReactNode>([
 ]);
 
 interface RegistrantsTableProps {
-  loading: boolean;
-  filtered: User[];
-  tables: Table[];
-  buses: { id: string; name: string; capacity: number }[];
-  openDetail: (user: User) => void;
+  readonly loading: boolean;
+  readonly filtered: User[];
+  readonly tables: Table[];
+  readonly buses: { id: string; name: string; capacity: number }[];
+  readonly openDetail: (user: User) => void;
 }
 
 export default function RegistrantsTable({ loading, filtered, tables, buses, openDetail }: RegistrantsTableProps) {
@@ -32,19 +32,27 @@ export default function RegistrantsTable({ loading, filtered, tables, buses, ope
           </tr>
         </thead>
         <tbody className="divide-y divide-white/4">
-          {loading ? (
-            <tr>
-              <td colSpan={8} className="px-4 py-10 text-center text-sm text-white/25">A carregar...</td>
-            </tr>
-          ) : filtered.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="px-4 py-10 text-center text-sm text-white/25">Nenhum inscrito encontrado.</td>
-            </tr>
-          ) : (
-            filtered.map((user) => {
-              const tableName = user.table_id !== null
-                ? (tables.find((t) => t._id === user.table_id)?.name ?? `Mesa #${user.table_id}`)
-                : null;
+          {(() => {
+            if (loading) {
+              return (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-white/25">A carregar...</td>
+                </tr>
+              );
+            }
+            if (filtered.length === 0) {
+              return (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-white/25">Nenhum inscrito encontrado.</td>
+                </tr>
+              );
+            }
+            return filtered.map((user) => {
+              let tableName: string | null = null;
+              if (user.table_id !== null) {
+                tableName = tables.find((t) => t._id === user.table_id)?.name ?? `Mesa #${user.table_id}`;
+              }
+              
               const busName = user.bus_assignment
                 ? (buses.find((b) => b.id === user.bus_assignment)?.name ?? user.bus_assignment)
                 : null;
@@ -73,13 +81,11 @@ export default function RegistrantsTable({ loading, filtered, tables, buses, ope
                     </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-white/50">
-                    {user.bus_option === "NONE" ? (
-                      <span className="text-white/20">—</span>
-                    ) : busName ? (
-                      <span className="text-emerald-400/70">{busName}</span>
-                    ) : (
-                      <span className="text-yellow-400/60">Por atribuir</span>
-                    )}
+                    {(() => {
+                      if (user.bus_option === "NONE") return <span className="text-white/20">—</span>;
+                      if (busName) return <span className="text-emerald-400/70">{busName}</span>;
+                      return <span className="text-yellow-400/60">Por atribuir</span>;
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-xs text-white/50">
                     {tableName ? (
@@ -89,19 +95,27 @@ export default function RegistrantsTable({ loading, filtered, tables, buses, ope
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {user.has_payed ? (
-                      <span className="flex items-center gap-1 text-xs text-emerald-400/80">
-                        <FontAwesomeIcon icon={faCircleCheck} /> Pago
-                      </span>
-                    ) : user.payment_proof_url ? (
-                      <span className="flex items-center gap-1 text-xs text-yellow-400/70">
-                        <FontAwesomeIcon icon={faClock} /> Comprovativo
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-xs text-white/25">
-                        <FontAwesomeIcon icon={faCircleXmark} /> Pendente
-                      </span>
-                    )}
+                    {(() => {
+                      if (user.has_payed) {
+                        return (
+                          <span className="flex items-center gap-1 text-xs text-emerald-400/80">
+                            <FontAwesomeIcon icon={faCircleCheck} /> Pago
+                          </span>
+                        );
+                      }
+                      if (user.payment_proof_url) {
+                        return (
+                          <span className="flex items-center gap-1 text-xs text-yellow-400/70">
+                            <FontAwesomeIcon icon={faClock} /> Comprovativo
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="flex items-center gap-1 text-xs text-white/25">
+                          <FontAwesomeIcon icon={faCircleXmark} /> Pendente
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3">
                     <button
@@ -114,8 +128,8 @@ export default function RegistrantsTable({ loading, filtered, tables, buses, ope
                   </td>
                 </tr>
               );
-            })
-          )}
+            });
+          })()}
         </tbody>
       </table>
     </div>

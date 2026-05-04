@@ -28,7 +28,7 @@ type EditTableProps = {
 
 type SearchResult = { id: number; name: string; email: string };
 
-function InvitePanel({ table, mutate }: { table: Table; mutate: () => void }) {
+function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => void }>) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -155,10 +155,10 @@ function InvitePanel({ table, mutate }: { table: Table; mutate: () => void }) {
 function PendingInviteRow({
   userId,
   onRevoke,
-}: {
+}: Readonly<{
   userId: number;
   onRevoke: () => void;
-}) {
+}>) {
   const { neiUser } = useNEIUser(userId);
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-3 py-2">
@@ -180,7 +180,7 @@ function PendingInviteRow({
   );
 }
 
-function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
+function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => void }>) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const toast = useAppToast();
@@ -236,7 +236,11 @@ function PhotoUpload({ table, mutate }: { table: Table; mutate: () => void }) {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) { handleFile(f); }
+              e.target.value = "";
+            }}
           />
         </>
       )}

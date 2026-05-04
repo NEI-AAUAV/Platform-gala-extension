@@ -55,7 +55,7 @@ export default function Step3Logistics({ config, data, onUpdate, onNext, onBack 
 
       {data.companions.map((companion, i) => (
         <PersonMealSection
-          key={i}
+          key={`${companion.name}-${i}`}
           label={companion.name || `Acompanhante ${i + 1}`}
           meal={companion.meal}
           allergies={companion.allergies}

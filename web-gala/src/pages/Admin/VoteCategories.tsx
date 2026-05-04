@@ -135,10 +135,10 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
     setOptions((prev) => {
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
-        if (updated[index].previewUrl) {
-          URL.revokeObjectURL(updated[index].previewUrl!);
-        }
-        updated[index] = {
+                          const previewUrl = updated[index].previewUrl;
+                          if (previewUrl) {
+                            URL.revokeObjectURL(previewUrl);
+                          }        updated[index] = {
           ...updated[index],
           photo: value,
           previewUrl: URL.createObjectURL(value),
@@ -155,11 +155,11 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
   };
 
   const handleRemoveOption = (index: number) => {
-    setOptions((prev) => {
-      if (prev[index].previewUrl) {
-        URL.revokeObjectURL(prev[index].previewUrl!);
-      }
-      return prev.filter((_, i) => i !== index);
+          setOptions((prev) => {
+            const previewUrl = prev[index].previewUrl;
+            if (previewUrl) {
+              URL.revokeObjectURL(previewUrl);
+            }      return prev.filter((_, i) => i !== index);
     });
   };
 

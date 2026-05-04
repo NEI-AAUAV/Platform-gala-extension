@@ -11,7 +11,7 @@ from app.services.table import TableService
 
 router = APIRouter(prefix="/tables", tags=["admin", "tables"])
 
-@router.post("/create", response_model=Table, responses={**auth_responses})
+@router.post("/create", responses={**auth_responses})
 async def admin_create_table(
     name: str,
     seats: int,
@@ -41,7 +41,7 @@ async def admin_create_table(
     await collection.insert_one(table.dict(by_alias=True))
     return table
 
-@router.delete("/{table_id}", responses={**auth_responses})
+@router.delete("/{table_id}", responses={**auth_responses, 404: {"description": "Table not found"}})
 async def admin_delete_table(
     table_id: int,
     db: Annotated[DBType, Depends(get_db)],
@@ -64,7 +64,7 @@ async def admin_delete_table(
     await collection.delete_one({"_id": table_id})
     return {"message": "Table deleted successfully"}
 
-@router.post("/{table_id}/members/{user_id}", response_model=Table, responses={**auth_responses})
+@router.post("/{table_id}/members/{user_id}", responses={**auth_responses, 400: {"description": "Bad Request"}})
 async def admin_add_member(
     table_id: int,
     user_id: int,
@@ -80,7 +80,7 @@ async def admin_add_member(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/{table_id}/members/{user_id}/move", response_model=Table, responses={**auth_responses})
+@router.post("/{table_id}/members/{user_id}/move", responses={**auth_responses, 400: {"description": "Bad Request"}})
 async def admin_move_member(
     table_id: int,
     user_id: int,
@@ -100,7 +100,7 @@ async def admin_move_member(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.delete("/{table_id}/members/{user_id}", responses={**auth_responses})
+@router.delete("/{table_id}/members/{user_id}", responses={**auth_responses, 400: {"description": "User is not in this table"}})
 async def admin_remove_member(
     table_id: int,
     user_id: int,

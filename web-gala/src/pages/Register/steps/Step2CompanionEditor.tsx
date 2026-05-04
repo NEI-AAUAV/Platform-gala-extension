@@ -25,7 +25,7 @@ export default function Step2CompanionEditor({ companions, onChange }: Readonly<
     <div className="flex flex-col gap-4">
       {companions.map((c, i) => (
         <CompanionCard
-          key={i}
+          key={`${c.name}-${i}`}
           index={i}
           companion={c}
           onUpdateName={(name) => updateName(i, name)}

@@ -146,7 +146,7 @@ export default function RegistrationAdmin() {
     // Find nearest scrollable ancestor
     let parent = el.parentElement;
     while (parent && parent !== document.body) {
-      const { overflowY } = window.getComputedStyle(parent);
+      const { overflowY } = globalThis.getComputedStyle(parent);
       if (overflowY === "auto" || overflowY === "scroll") break;
       parent = parent.parentElement;
     }
@@ -154,7 +154,7 @@ export default function RegistrationAdmin() {
       const offset = el.offsetTop - (parent as HTMLElement).offsetTop - 16;
       (parent as HTMLElement).scrollTop = offset;
     } else {
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100 });
+      globalThis.scrollTo({ top: el.getBoundingClientRect().top + globalThis.scrollY - 100 });
     }
     setActiveSection(id);
   }, []);

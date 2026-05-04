@@ -219,10 +219,7 @@ export default function Admin() {
         </aside>
 
         {/* ── Main content area ── */}
-        <div className={[
-          "flex flex-1 flex-col overflow-hidden transition-all duration-500",
-          previewOpen ? "" : "",
-        ].join(" ")}>
+        <div className="flex flex-1 flex-col overflow-hidden transition-all duration-500">
 
           {/* Top bar (mobile hamburger + preview toggle) */}
           <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-3 lg:px-6">

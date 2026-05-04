@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Security, HTTPException, Query
-from typing import List, Optional
+from typing import List, Optional, Annotated
 
 from app.models.user import User
 from app.core.db import DatabaseDep
@@ -48,8 +48,8 @@ async def get_self(
     responses={**auth_responses},
 )
 async def search_users(
-    q: str = Query(..., min_length=2),
     *,
+    q: Annotated[str, Query(min_length=2)],
     db: DatabaseDep,
     auth: AuthData = Security(api_nei_auth),
 ) -> List[dict]:

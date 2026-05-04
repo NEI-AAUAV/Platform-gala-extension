@@ -72,7 +72,7 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
     return users
 
 
-async def sync_email_based_registrations(settings: Settings, db, authentik_user_id: int, email: str) -> None:
+async def sync_email_based_registrations(db, authentik_user_id: int, email: str) -> None:
     """Called when a user logs in. If there's an admin-created registration with the same
     email, it is re-linked to the real Authentik user ID. Similarly, if the user is listed
     as a companion_email on another registration, a note is stored for display.

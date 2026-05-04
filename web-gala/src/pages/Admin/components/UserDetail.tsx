@@ -47,7 +47,7 @@ function ProofRow({ label, url, phase, onUpload, onReject, uploading }: {
               rel="noreferrer"
               className="flex items-center gap-1.5 rounded-full border border-dark-gold/40 px-3 py-1 text-[0.6rem] font-bold text-dark-gold transition hover:bg-dark-gold/10"
             >
-              <FontAwesomeIcon icon={url.toLowerCase().includes("pdf") ? faExternalLinkAlt : faEye} />
+              <FontAwesomeIcon icon={url?.toLowerCase().includes("pdf") ? faExternalLinkAlt : faEye} />
               Ver
             </a>
             <button
@@ -196,7 +196,7 @@ export default function UserDetail({ user, tables, buses, uploadingProof, onConf
           </p>
           <div className="flex flex-col gap-1.5">
             {user.companions.map((c, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg bg-white/4 px-3 py-2 text-sm">
+              <div key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-lg bg-white/4 px-3 py-2 text-sm">
                 <span className="text-white/40">#{i + 1}</span>
                 <span className="flex items-center gap-1">{dishIcon.get(c.dish)}</span>
                 {c.allergies && (

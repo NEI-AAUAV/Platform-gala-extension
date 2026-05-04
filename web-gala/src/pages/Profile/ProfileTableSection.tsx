@@ -20,7 +20,7 @@ const DEFAULT_SEATS = 10;
 
 function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   const sorted = [...tables].sort((a, b) => a._id - b._id);
-  const slots: Array<Table | null> = Array(maxCount).fill(null);
+  const slots: Array<Table | null> = new Array(maxCount).fill(null);
   sorted.forEach((t, i) => {
     if (i < maxCount) slots[i] = t;
   });
@@ -31,10 +31,10 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
 // Pending invites banner
 // ---------------------------------------------------------------------------
 
-function PendingInvitesBanner({ invites, onAccepted }: {
+function PendingInvitesBanner({ invites, onAccepted }: Readonly<{
   invites: Table[];
   onAccepted: () => void;
-}) {
+}>) {
   const toast = useAppToast();
   const { mutate } = useMyInvites();
   const { mutate: mutateAllTables } = useTables();
@@ -86,11 +86,11 @@ function InviteRow({
   table,
   onAccept,
   onDecline,
-}: {
+}: Readonly<{
   table: Table;
   onAccept: (id: number) => void;
   onDecline: (id: number) => void;
-}) {
+}>) {
   const { neiUser } = useNEIUser(table.head ?? null);
   const occupied = table.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0);
 
@@ -175,10 +175,11 @@ export default function ProfileTableSection() {
       )}
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
-        {slots.map((table, i) =>
-          table ? (
+        {slots.map((table, i) => {
+          const slotKey = table ? `table-${table._id}` : `empty-slot-${i}`;
+          return table ? (
             <button
-              key={table._id}
+              key={slotKey}
               type="button"
               onClick={() => setSelectedId(selectedId === table._id ? null : table._id)}
               className={[
@@ -191,9 +192,9 @@ export default function ProfileTableSection() {
               <Table table={table} />
             </button>
           ) : (
-            <EmptySlot key={`empty-${i}`} slotNumber={i + 1} />
-          )
-        )}
+            <EmptySlot key={slotKey} slotNumber={i + 1} />
+          );
+        })}
       </div>
 
       {maxCount === 0 && (

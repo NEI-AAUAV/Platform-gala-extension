@@ -142,8 +142,7 @@ async def reject_payment_proof(
     background_tasks: BackgroundTasks,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
-    settings: SettingsDep,
-    phase: int = Query(default=1, ge=1, le=2),
+    phase: Annotated[int, Query(default=1, ge=1, le=2)] = 1,
 ):
     """Rejects (deletes) payment proof for a user."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
@@ -180,14 +179,14 @@ async def reject_payment_proof(
 @router.post(
     "/registrations/{user_id}/payment-proof",
     response_model=Dict[str, str],
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}, 400: {"description": "Bad Request"}}
 )
 async def admin_upload_payment_proof(
     user_id: int,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     file: Annotated[UploadFile, File(...)],
-    phase: int = Query(default=1, ge=1, le=2),
+    phase: Annotated[int, Query(default=1, ge=1, le=2)] = 1,
 ):
     """Admin uploads a payment proof file to R2 storage."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
@@ -334,10 +333,119 @@ async def list_authentik_users(
     return [{"id": u.pk, "name": u.name, "email": u.email} for u in users]
 
 
+async def _create_from_authentik(body: AdminCreateRegistrationBody, db: DBType, settings: SettingsDep, user_coll) -> User:
+    # Check if already registered
+    existing = await user_coll.find_one({"_id": body.authentik_user_id, "is_registered": True})
+    if existing:
+        raise HTTPException(status_code=409, detail="User already has a registration")
+
+    # Look up user details from Authentik
+    authentik_users = await fetch_all_users(settings)
+    au: Optional[AuthentikUser] = next((u for u in authentik_users if u.pk == body.authentik_user_id), None)
+    if not au:
+        raise HTTPException(status_code=404, detail="Authentik user not found")
+
+    user_name = au.name
+    user_email = au.email
+    user_db_id = body.authentik_user_id
+
+    # Upsert: the user may already have a skeleton doc from logging in
+    user_dict = await user_coll.find_one({"_id": user_db_id})
+    mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
+    companions = [
+        Companion(
+            name=c.name,
+            dish=c.dish,
+            allergies=c.allergies,
+            email=c.email,
+        ).dict()
+        for c in body.companions
+    ]
+    companion_emails = [c.email for c in body.companions if c.email]
+
+    update_data = {
+        "name": user_name,
+        "email": user_email,
+        "nmec": body.nmec,
+        "matriculation": mat.dict() if mat else None,
+        "phone": body.phone,
+        "bus_option": body.bus_option,
+        "meal_option": body.meal_option,
+        "food_allergies": body.food_allergies,
+        "phased_payment": body.phased_payment,
+        "companions": companions,
+        "companion_emails": companion_emails,
+        "is_registered": True,
+        "registration_step": 7,
+        "admin_created": False,
+    }
+
+    if user_dict:
+        await user_coll.update_one({"_id": user_db_id}, {"$set": update_data})
+    else:
+        doc = {"_id": user_db_id, **update_data}
+        await user_coll.insert_one(doc)
+
+    result = await user_coll.find_one({"_id": user_db_id})
+    return User.parse_obj(result)
+
+async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, user_coll) -> User:
+    if not body.name or not body.email:
+        raise HTTPException(
+            status_code=400,
+            detail="name and email are required when no authentik_user_id is given"
+        )
+
+    email_lower = body.email.strip().lower()
+
+    # Check if there's already a registration with this email
+    existing = await user_coll.find_one({"email": email_lower, "is_registered": True})
+    if existing:
+        raise HTTPException(status_code=409, detail="A registration with this email already exists")
+
+    new_id = await get_next_id(db, "user")
+    mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
+    companions = [
+        Companion(
+            name=c.name,
+            dish=c.dish,
+            allergies=c.allergies,
+            email=c.email,
+        ).dict()
+        for c in body.companions
+    ]
+    companion_emails = [c.email for c in body.companions if c.email]
+
+    doc = {
+        "_id": new_id,
+        "name": body.name.strip(),
+        "email": email_lower,
+        "nmec": body.nmec,
+        "matriculation": mat.dict() if mat else None,
+        "phone": body.phone,
+        "bus_option": body.bus_option,
+        "meal_option": body.meal_option,
+        "food_allergies": body.food_allergies,
+        "phased_payment": body.phased_payment,
+        "companions": companions,
+        "companion_emails": companion_emails,
+        "is_registered": True,
+        "registration_step": 7,
+        "admin_created": True,
+        "has_payed": False,
+        "table_id": None,
+        "bus_assignment": None,
+        "payment_proof_url": None,
+        "payment_proof_url_phase2": None,
+    }
+    await user_coll.insert_one(doc)
+    result = await user_coll.find_one({"_id": new_id})
+    return User.parse_obj(result)
+
 @router.post(
     "/registrations",
     response_model=User,
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 409: {"description": "Already registered"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 409: {"description": "Already registered"}, 404: {"description": "Not Found"}, 400: {"description": "Bad Request"}}
 )
 async def admin_create_registration(
     body: AdminCreateRegistrationBody,
@@ -351,115 +459,9 @@ async def admin_create_registration(
     user_coll = User.get_collection(db)
 
     if body.authentik_user_id is not None:
-        # Case 1: existing Authentik user
-        # Check if already registered
-        existing = await user_coll.find_one({"_id": body.authentik_user_id, "is_registered": True})
-        if existing:
-            raise HTTPException(status_code=409, detail="User already has a registration")
-
-        # Look up user details from Authentik
-        authentik_users = await fetch_all_users(settings)
-        au: Optional[AuthentikUser] = next((u for u in authentik_users if u.pk == body.authentik_user_id), None)
-        if not au:
-            raise HTTPException(status_code=404, detail="Authentik user not found")
-
-        user_name = au.name
-        user_email = au.email
-        user_db_id = body.authentik_user_id
-
-        # Upsert: the user may already have a skeleton doc from logging in
-        user_dict = await user_coll.find_one({"_id": user_db_id})
-        mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
-        companions = [
-            Companion(
-                name=c.name,
-                dish=c.dish,
-                allergies=c.allergies,
-                email=c.email,
-            ).dict()
-            for c in body.companions
-        ]
-        companion_emails = [c.email for c in body.companions if c.email]
-
-        update_data = {
-            "name": user_name,
-            "email": user_email,
-            "nmec": body.nmec,
-            "matriculation": mat.dict() if mat else None,
-            "phone": body.phone,
-            "bus_option": body.bus_option,
-            "meal_option": body.meal_option,
-            "food_allergies": body.food_allergies,
-            "phased_payment": body.phased_payment,
-            "companions": companions,
-            "companion_emails": companion_emails,
-            "is_registered": True,
-            "registration_step": 7,
-            "admin_created": False,
-        }
-
-        if user_dict:
-            await user_coll.update_one({"_id": user_db_id}, {"$set": update_data})
-        else:
-            doc = {"_id": user_db_id, **update_data}
-            await user_coll.insert_one(doc)
-
-        result = await user_coll.find_one({"_id": user_db_id})
-        return User.parse_obj(result)
-
+        return await _create_from_authentik(body, db, settings, user_coll)
     else:
-        # Case 2: person without an Authentik account
-        if not body.name or not body.email:
-            raise HTTPException(
-                status_code=400,
-                detail="name and email are required when no authentik_user_id is given"
-            )
-
-        email_lower = body.email.strip().lower()
-
-        # Check if there's already a registration with this email
-        existing = await user_coll.find_one({"email": email_lower, "is_registered": True})
-        if existing:
-            raise HTTPException(status_code=409, detail="A registration with this email already exists")
-
-        new_id = await get_next_id(db, "user")
-        mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
-        companions = [
-            Companion(
-                name=c.name,
-                dish=c.dish,
-                allergies=c.allergies,
-                email=c.email,
-            ).dict()
-            for c in body.companions
-        ]
-        companion_emails = [c.email for c in body.companions if c.email]
-
-        doc = {
-            "_id": new_id,
-            "name": body.name.strip(),
-            "email": email_lower,
-            "nmec": body.nmec,
-            "matriculation": mat.dict() if mat else None,
-            "phone": body.phone,
-            "bus_option": body.bus_option,
-            "meal_option": body.meal_option,
-            "food_allergies": body.food_allergies,
-            "phased_payment": body.phased_payment,
-            "companions": companions,
-            "companion_emails": companion_emails,
-            "is_registered": True,
-            "registration_step": 7,
-            "admin_created": True,
-            "has_payed": False,
-            "table_id": None,
-            "bus_assignment": None,
-            "payment_proof_url": None,
-            "payment_proof_url_phase2": None,
-        }
-        await user_coll.insert_one(doc)
-        result = await user_coll.find_one({"_id": new_id})
-        return User.parse_obj(result)
+        return await _create_from_scratch(body, db, user_coll)
 
 
 @router.put(
