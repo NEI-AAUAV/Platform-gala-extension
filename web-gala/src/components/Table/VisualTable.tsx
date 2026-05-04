@@ -43,7 +43,11 @@ function generateSeats(
   });
 }
 
-export default function VisualTable({ table, className, alwaysVisible = false }: VisualTableProps) {
+export default function VisualTable({
+  table,
+  className,
+  alwaysVisible = false,
+}: VisualTableProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -108,9 +112,7 @@ export default function VisualTable({ table, className, alwaysVisible = false }:
               </linearGradient>
             </defs>
           </Wave>
-          <h1 className="z-10 text-lg font-bold leading-tight">
-            {freeSeats}
-          </h1>
+          <h1 className="z-10 text-lg font-bold leading-tight">{freeSeats}</h1>
           <h6 className="z-10 text-[0.6rem] font-light leading-tight">
             LIVRE{freeSeats > 1 && "S"}
           </h6>

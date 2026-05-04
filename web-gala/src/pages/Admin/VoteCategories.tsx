@@ -106,7 +106,9 @@ function OptionInput({
 
 // ─── Create Category Form ────────────────────────────────────────────────────
 
-function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) {
+function CreateCategoryForm({
+  onSuccess,
+}: Readonly<{ onSuccess: () => void }>) {
   const toast = useAppToast();
   const [categoryName, setCategoryName] = useState("");
   const [options, setOptions] = useState<OptionState[]>([
@@ -135,10 +137,11 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
     setOptions((prev) => {
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
-                          const previewUrl = updated[index].previewUrl;
-                          if (previewUrl) {
-                            URL.revokeObjectURL(previewUrl);
-                          }        updated[index] = {
+        const { previewUrl } = updated[index];
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+        updated[index] = {
           ...updated[index],
           photo: value,
           previewUrl: URL.createObjectURL(value),
@@ -155,11 +158,12 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
   };
 
   const handleRemoveOption = (index: number) => {
-          setOptions((prev) => {
-            const previewUrl = prev[index].previewUrl;
-            if (previewUrl) {
-              URL.revokeObjectURL(previewUrl);
-            }      return prev.filter((_, i) => i !== index);
+    setOptions((prev) => {
+      const { previewUrl } = prev[index];
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
     });
   };
 
@@ -214,13 +218,16 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
     } catch (err: any) {
       console.error(err);
       setStatus("error");
-      
+
       let errorMsg = "Erro ao criar categoria.";
       if (err?.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : (detail[0]?.msg || JSON.stringify(detail));
+        const { detail } = err.response.data;
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : detail[0]?.msg || JSON.stringify(detail);
       }
-      
+
       toast.error(errorMsg);
     }
   };
@@ -299,7 +306,10 @@ function CreateCategoryForm({ onSuccess }: Readonly<{ onSuccess: () => void }>) 
 
 // ─── Existing Category Row ────────────────────────────────────────────────────
 
-function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => void }>) {
+function CategoryRow({
+  vote,
+  refresh,
+}: Readonly<{ vote: Vote; refresh: () => void }>) {
   const toast = useAppToast();
 
   // Edit state
@@ -320,11 +330,14 @@ function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => vo
       refresh();
     } catch (err: any) {
       console.error(err);
-      
+
       let errorMsg = "Erro ao apagar categoria.";
       if (err?.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : (detail[0]?.msg || JSON.stringify(detail));
+        const { detail } = err.response.data;
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : detail[0]?.msg || JSON.stringify(detail);
       }
 
       toast.error(errorMsg);
@@ -361,8 +374,11 @@ function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => vo
 
       let errorMsg = "Erro ao editar categoria.";
       if (err?.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : (detail[0]?.msg || JSON.stringify(detail));
+        const { detail } = err.response.data;
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : detail[0]?.msg || JSON.stringify(detail);
       }
 
       toast.error(errorMsg);
@@ -381,12 +397,17 @@ function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => vo
 
       let errorMsg = "Erro ao carregar imagem.";
       if (err?.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : (detail[0]?.msg || JSON.stringify(detail));
-        
+        const { detail } = err.response.data;
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : detail[0]?.msg || JSON.stringify(detail);
+
         // Translate some common errors for better UX
-        if (errorMsg.includes("File too large")) errorMsg = "A imagem é demasiado grande (máx. 5MB).";
-        if (errorMsg.includes("Invalid file type")) errorMsg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
+        if (errorMsg.includes("File too large"))
+          errorMsg = "A imagem é demasiado grande (máx. 5MB).";
+        if (errorMsg.includes("Invalid file type"))
+          errorMsg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
       }
 
       toast.error(errorMsg);
@@ -400,11 +421,14 @@ function CategoryRow({ vote, refresh }: Readonly<{ vote: Vote; refresh: () => vo
       refresh();
     } catch (err: any) {
       console.error(err);
-      
+
       let errorMsg = "Erro ao remover imagem.";
       if (err?.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        errorMsg = typeof detail === "string" ? detail : (detail[0]?.msg || JSON.stringify(detail));
+        const { detail } = err.response.data;
+        errorMsg =
+          typeof detail === "string"
+            ? detail
+            : detail[0]?.msg || JSON.stringify(detail);
       }
 
       toast.error(errorMsg);

@@ -19,7 +19,10 @@ export default function Home() {
       <TriangleBackground />
       <HeroSection />
       <NominationsSection nominationsConfig={homepage.nominations_display} />
-      <PaymentInfoSection paymentInfoConfig={homepage.payment_info} registrationConfig={registration} />
+      <PaymentInfoSection
+        paymentInfoConfig={homepage.payment_info}
+        registrationConfig={registration}
+      />
       <DJSection djConfig={homepage.dj} />
       <PhotoGallerySection galleryConfig={homepage.gallery} />
       <BusSection busConfig={homepage.bus_schedule} />

@@ -1,8 +1,15 @@
 import { useEffect } from "react";
-import { RegistrationConfig, defaultConfig, MealOption, PaymentContact } from "@/config/registrationConfig";
+import {
+  RegistrationConfig,
+  defaultConfig,
+  MealOption,
+  PaymentContact,
+} from "@/config/registrationConfig";
 import { useConfigStore } from "@/stores/useConfigStore";
 
-function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationConfig> {
+function mapFromBackend(
+  backend: Record<string, unknown>,
+): Partial<RegistrationConfig> {
   const prices = (backend.prices as Record<string, unknown>) ?? {};
   const bus = (backend.bus as Record<string, unknown>) ?? {};
   const meals = (backend.meals as Array<Record<string, string>>) ?? [];
@@ -17,11 +24,13 @@ function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationC
     eventRules: (backend.rules as string[]) || [],
     busEnabled: (bus.enabled as boolean) ?? true,
     busRoundTripPrice: (bus.price_round_trip as number) || 0,
-    mealOptions: meals.map((m): MealOption => ({
-      id: m.id,
-      label: m.name,
-      description: m.description,
-    })),
+    mealOptions: meals.map(
+      (m): MealOption => ({
+        id: m.id,
+        label: m.name,
+        description: m.description,
+      }),
+    ),
     phasedPaymentEnabled: (prices.phased_payment_enabled as boolean) ?? false,
     phase1Price: (prices.phase1_amount as number) || 0,
     phase1Deadline: (prices.phase1_deadline as string) || "",
@@ -30,20 +39,26 @@ function mapFromBackend(backend: Record<string, unknown>): Partial<RegistrationC
     ibanNumber: (prices.iban as string) || "",
     ibanHolder: (prices.holder as string) || "",
     paymentDescription: (prices.description_template as string) || "",
-    paymentContacts: contacts.map((c): PaymentContact => ({
-      name: c.name,
-      year: c.year,
-      phone: c.phone,
-    })),
+    paymentContacts: contacts.map(
+      (c): PaymentContact => ({
+        name: c.name,
+        year: c.year,
+        phone: c.phone,
+      }),
+    ),
     allergiesRequired: (backend.allergies_required as boolean) ?? false,
-    paymentMethod: (backend.payment_method as RegistrationConfig["paymentMethod"]) || "both",
+    paymentMethod:
+      (backend.payment_method as RegistrationConfig["paymentMethod"]) || "both",
     paymentDeadlineHours: (backend.payment_deadline_hours as number) || 48,
     paymentDeadlineDate: (backend.payment_deadline_date as string) || "",
     paymentEmail: (backend.payment_email as string) || "",
   };
 }
 
-function mapToBackendPatch(config: RegistrationConfig, existing: Record<string, unknown>): Record<string, unknown> {
+function mapToBackendPatch(
+  config: RegistrationConfig,
+  existing: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     ...existing,
     event_location: config.eventLocation,
@@ -86,8 +101,8 @@ export function useRegistrationConfig() {
   const { raw, loading, fetch, save } = useConfigStore();
 
   useEffect(() => {
-    if (!raw && !loading) fetch();
-  }, [raw, loading, fetch]);
+    fetch();
+  }, [fetch]);
 
   const config: RegistrationConfig = raw
     ? { ...defaultConfig, ...mapFromBackend(raw) }

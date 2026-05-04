@@ -19,15 +19,23 @@ interface Props {
   readonly onNext: () => void;
 }
 
-function InfoCard({ icon, label, value }: Readonly<{ icon: typeof faCalendarDay; label: string; value: string }>) {
+function InfoCard({
+  icon,
+  label,
+  value,
+}: Readonly<{ icon: typeof faCalendarDay; label: string; value: string }>) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-white/8 bg-white/4 p-4">
+    <div className="border-white/8 bg-white/4 flex items-start gap-3 rounded-xl border p-4">
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-light-gold/10">
         <FontAwesomeIcon icon={icon} className="text-xs text-light-gold" />
       </div>
       <div>
-        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">{label}</p>
-        <p className="mt-0.5 font-gala text-sm font-semibold text-white/80">{value}</p>
+        <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+          {label}
+        </p>
+        <p className="mt-0.5 font-gala text-sm font-semibold text-white/80">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -35,8 +43,12 @@ function InfoCard({ icon, label, value }: Readonly<{ icon: typeof faCalendarDay;
 
 export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
   const { time } = useTime();
-  const registrationOpen = time ? formatDateTimePT(time.registrationStart) : "A anunciar";
-  const registrationClose = time ? formatDateTimePT(time.registrationEnd) : "A anunciar";
+  const registrationOpen = time
+    ? formatDateTimePT(time.registrationStart)
+    : "A anunciar";
+  const registrationClose = time
+    ? formatDateTimePT(time.registrationEnd)
+    : "A anunciar";
 
   return (
     <motion.div
@@ -53,13 +65,23 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             Detalhes do Evento
           </h3>
           <div className="flex flex-col gap-3">
-            <InfoCard icon={faCalendarDay} label="Data" value={config.eventDate} />
+            <InfoCard
+              icon={faCalendarDay}
+              label="Data"
+              value={config.eventDate}
+            />
             <InfoCard icon={faClock} label="Horário" value={config.eventTime} />
-            <InfoCard icon={faLocationDot} label="Local" value={config.eventLocation} />
+            <InfoCard
+              icon={faLocationDot}
+              label="Local"
+              value={config.eventLocation}
+            />
             <InfoCard
               icon={faTag}
               label="Preço"
-              value={config.eventPrice === 0 ? "A anunciar" : `${config.eventPrice}€`}
+              value={
+                config.eventPrice === 0 ? "A anunciar" : `${config.eventPrice}€`
+              }
             />
           </div>
         </div>
@@ -69,12 +91,15 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             O que está incluído
           </h3>
-          <div className="rounded-xl border border-white/8 bg-white/4 p-5">
+          <div className="border-white/8 bg-white/4 rounded-xl border p-5">
             <ul className="flex flex-col gap-3">
               {config.eventIncludes.map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-dark-gold/20">
-                    <FontAwesomeIcon icon={faCheck} className="text-[0.55rem] text-dark-gold" />
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      className="text-[0.55rem] text-dark-gold"
+                    />
                   </span>
                   <span className="text-sm text-white/70">{item}</span>
                 </li>
@@ -89,7 +114,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             Regras e Datas
           </h3>
           <div className="flex flex-col gap-3">
-            <div className="rounded-xl border border-white/8 bg-white/4 p-5">
+            <div className="border-white/8 bg-white/4 rounded-xl border p-5">
               <ul className="flex flex-col gap-3">
                 {config.eventRules.map((rule) => (
                   <li key={rule} className="flex items-start gap-3">
@@ -104,19 +129,33 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5 rounded-xl border border-white/8 bg-white/4 p-3">
+              <div className="border-white/8 bg-white/4 flex flex-col gap-1.5 rounded-xl border p-3">
                 <div className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={faCalendarPlus} className="text-[0.65rem] text-light-gold/50" />
-                  <span className="text-[0.6rem] uppercase tracking-widest text-white/40">Abertura</span>
+                  <FontAwesomeIcon
+                    icon={faCalendarPlus}
+                    className="text-[0.65rem] text-light-gold/50"
+                  />
+                  <span className="text-[0.6rem] uppercase tracking-widest text-white/40">
+                    Abertura
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-white/70">{registrationOpen}</span>
+                <span className="text-xs font-semibold text-white/70">
+                  {registrationOpen}
+                </span>
               </div>
-              <div className="flex flex-col gap-1.5 rounded-xl border border-white/8 bg-white/4 p-3">
+              <div className="border-white/8 bg-white/4 flex flex-col gap-1.5 rounded-xl border p-3">
                 <div className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={faCalendarXmark} className="text-[0.65rem] text-light-gold/50" />
-                  <span className="text-[0.6rem] uppercase tracking-widest text-white/40">Fecho</span>
+                  <FontAwesomeIcon
+                    icon={faCalendarXmark}
+                    className="text-[0.65rem] text-light-gold/50"
+                  />
+                  <span className="text-[0.6rem] uppercase tracking-widest text-white/40">
+                    Fecho
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-white/70">{registrationClose}</span>
+                <span className="text-xs font-semibold text-white/70">
+                  {registrationClose}
+                </span>
               </div>
             </div>
           </div>

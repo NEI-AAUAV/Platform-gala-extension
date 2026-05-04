@@ -2,7 +2,11 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faSearch, faUsers, faPlus, faCheck, faInfoCircle,
+  faSearch,
+  faUsers,
+  faPlus,
+  faCheck,
+  faInfoCircle,
   faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
@@ -26,7 +30,9 @@ const DEFAULT_SEATS = 10;
 function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
   const sorted = [...tables].sort((a, b) => a._id - b._id);
   const slots: Array<Table | null> = new Array(maxCount).fill(null);
-  sorted.forEach((t, i) => { if (i < maxCount) slots[i] = t; });
+  sorted.forEach((t, i) => {
+    if (i < maxCount) slots[i] = t;
+  });
   return slots;
 }
 
@@ -44,7 +50,10 @@ function InviteCard({
   onSelect: () => void;
 }>) {
   const { neiUser } = useNEIUser(table.head ?? null);
-  const occupied = table.persons.reduce((a, p) => a + 1 + p.companions.length, 0);
+  const occupied = table.persons.reduce(
+    (a, p) => a + 1 + p.companions.length,
+    0,
+  );
 
   return (
     <button
@@ -63,8 +72,10 @@ function InviteCard({
           {table.name || `Mesa #${table._id}`}
         </p>
         <p className="mt-0.5 text-[0.6rem] text-white/40">
-          Convite de {neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${table.head}`}
-          {" · "}{occupied}/{table.seats} lugares ocupados
+          Convite de{" "}
+          {neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${table.head}`}
+          {" · "}
+          {occupied}/{table.seats} lugares ocupados
         </p>
       </div>
       {isSelected && (
@@ -78,7 +89,12 @@ function InviteCard({
 // Main Step5Table component
 // ---------------------------------------------------------------------------
 
-export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<Props>) {
+export default function Step5Table({
+  data,
+  onUpdate,
+  onNext,
+  onBack,
+}: Readonly<Props>) {
   const { tables, isLoading } = useTables();
   const { limits } = useLimits();
   const { invites } = useMyInvites();
@@ -105,9 +121,10 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
     });
   }, [slots, searchTerm]);
 
-  const selectedTable = data.tableId && data.tableId !== "new" && data.tableId !== "none"
-    ? tables.find((t) => String(t._id) === data.tableId) ?? null
-    : null;
+  const selectedTable =
+    data.tableId && data.tableId !== "new" && data.tableId !== "none"
+      ? tables.find((t) => String(t._id) === data.tableId) ?? null
+      : null;
 
   const handleSelectTable = (id: number) => {
     onUpdate({ tableId: String(id), tableRole: "member" });
@@ -146,7 +163,8 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       className="flex flex-col gap-6"
     >
       <p className="text-sm text-white/50">
-        Escolhe onde te queres sentar. Podes juntar-te a uma mesa existente, criar uma nova para o teu grupo, ou continuar sem mesa.
+        Escolhe onde te queres sentar. Podes juntar-te a uma mesa existente,
+        criar uma nova para o teu grupo, ou continuar sem mesa.
       </p>
 
       {/* Pending invites section */}
@@ -158,7 +176,9 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
         >
           <p className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-light-gold/70">
             <FontAwesomeIcon icon={faBell} />
-            {invites.length === 1 ? "Tens 1 convite pendente" : `Tens ${invites.length} convites pendentes`}
+            {invites.length === 1
+              ? "Tens 1 convite pendente"
+              : `Tens ${invites.length} convites pendentes`}
           </p>
           {invites.map((t) => (
             <InviteCard
@@ -177,7 +197,10 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       {/* Search + action bar */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
+          <FontAwesomeIcon
+            icon={faSearch}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20"
+          />
           <input
             type="text"
             placeholder="Procurar mesa por nome ou número..."
@@ -208,7 +231,8 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
           className="flex flex-col gap-3 rounded-xl border border-light-gold/30 bg-light-gold/5 p-5"
         >
           <p className="text-xs font-semibold text-light-gold/70">
-            Dá um nome à tua mesa. Poderás convidar amigos depois de concluíres a inscrição na secção de Mesas do teu perfil.
+            Dá um nome à tua mesa. Poderás convidar amigos depois de concluíres
+            a inscrição na secção de Mesas do teu perfil.
           </p>
           <input
             type="text"
@@ -216,7 +240,7 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
             maxLength={20}
             value={newTableName}
             onChange={(e) => setNewTableName(e.target.value)}
-            className="rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-light-gold/50"
+            className="border-white/15 rounded-lg border bg-[#1c1c1e] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-light-gold/50"
           />
         </motion.div>
       )}
@@ -231,9 +255,15 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
           <div className="flex items-center gap-3">
             <FontAwesomeIcon icon={faCheck} className="text-light-gold" />
             <div>
-              <p className="text-sm font-bold text-light-gold">{selectedTable.name || `Mesa #${selectedTable._id}`}</p>
+              <p className="text-sm font-bold text-light-gold">
+                {selectedTable.name || `Mesa #${selectedTable._id}`}
+              </p>
               <p className="text-xs text-white/40">
-                {selectedTable.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0)}/{selectedTable.seats} lugares ocupados
+                {selectedTable.persons.reduce(
+                  (acc, p) => acc + 1 + p.companions.length,
+                  0,
+                )}
+                /{selectedTable.seats} lugares ocupados
               </p>
             </div>
           </div>
@@ -243,7 +273,9 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
       {/* Tables grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {isLoading ? (
-          <div className="col-span-full py-12 text-center text-white/20">A carregar mesas...</div>
+          <div className="col-span-full py-12 text-center text-white/20">
+            A carregar mesas...
+          </div>
         ) : (
           filteredSlots.map((table, i) => {
             const slotKey = table ? `table-${table._id}` : `empty-slot-${i}`;
@@ -255,7 +287,11 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
                 onSelect={() => handleSelectTable(table._id)}
               />
             ) : (
-              <EmptySlotCard key={slotKey} slotNumber={i + 1} dimmed={!!searchTerm} />
+              <EmptySlotCard
+                key={slotKey}
+                slotNumber={i + 1}
+                dimmed={!!searchTerm}
+              />
             );
           })
         )}
@@ -263,11 +299,19 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
 
       {/* Info box */}
       <div className="flex gap-3 rounded-xl border border-white/5 bg-white/5 p-4">
-        <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 shrink-0 text-light-gold/40" />
-        <p className="text-xs text-white/40 leading-relaxed">
-          Ao criares uma mesa tornas-te o <span className="text-white/60">responsável</span> e podes convidar amigos pelo nome no teu perfil.
-          Podes alterar a mesa mais tarde no teu perfil enquanto o período de mesas estiver aberto.{" "}
-          <span className="text-white/60">A escolha de mesa é opcional — podes concluir a inscrição e escolher depois.</span>
+        <FontAwesomeIcon
+          icon={faInfoCircle}
+          className="mt-0.5 shrink-0 text-light-gold/40"
+        />
+        <p className="text-xs leading-relaxed text-white/40">
+          Ao criares uma mesa tornas-te o{" "}
+          <span className="text-white/60">responsável</span> e podes convidar
+          amigos pelo nome no teu perfil. Podes alterar a mesa mais tarde no teu
+          perfil enquanto o período de mesas estiver aberto.{" "}
+          <span className="text-white/60">
+            A escolha de mesa é opcional — podes concluir a inscrição e escolher
+            depois.
+          </span>
         </p>
       </div>
 
@@ -276,7 +320,7 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
         <button
           type="button"
           onClick={onBack}
-          className="border border-white/15 px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
+          className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
@@ -308,14 +352,23 @@ export default function Step5Table({ data, onUpdate, onNext, onBack }: Readonly<
 }
 
 function TableCard({
-  table, isSelected, onSelect,
+  table,
+  isSelected,
+  onSelect,
 }: Readonly<{ table: Table; isSelected: boolean; onSelect: () => void }>) {
-  const occupancy = table.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0);
+  const occupancy = table.persons.reduce(
+    (acc, p) => acc + 1 + p.companions.length,
+    0,
+  );
   const isFull = occupancy >= table.seats;
 
-  let containerStyles = "border-white/10 bg-white/5 hover:border-white/30 cursor-pointer";
-  if (isSelected) containerStyles = "border-light-gold bg-light-gold/10 ring-1 ring-light-gold cursor-pointer";
-  else if (isFull) containerStyles = "border-white/5 bg-white/2 opacity-50 cursor-not-allowed";
+  let containerStyles =
+    "border-white/10 bg-white/5 hover:border-white/30 cursor-pointer";
+  if (isSelected)
+    containerStyles =
+      "border-light-gold bg-light-gold/10 ring-1 ring-light-gold cursor-pointer";
+  else if (isFull)
+    containerStyles = "border-white/5 bg-white/2 opacity-50 cursor-not-allowed";
 
   return (
     <button
@@ -324,32 +377,59 @@ function TableCard({
       className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all ${containerStyles}`}
     >
       <div className="flex w-full items-center justify-between">
-        <span className="text-[0.6rem] font-bold uppercase text-white/30">#{table._id}</span>
-        {isSelected && <FontAwesomeIcon icon={faCheck} className="text-xs text-light-gold" />}
+        <span className="text-[0.6rem] font-bold uppercase text-white/30">
+          #{table._id}
+        </span>
+        {isSelected && (
+          <FontAwesomeIcon icon={faCheck} className="text-xs text-light-gold" />
+        )}
       </div>
-      <h4 className={`text-sm font-bold ${isSelected ? "text-light-gold" : "text-white/80"}`}>
+      <h4
+        className={`text-sm font-bold ${
+          isSelected ? "text-light-gold" : "text-white/80"
+        }`}
+      >
         {table.name || "Mesa sem nome"}
       </h4>
-      <div className="pointer-events-none w-full flex justify-center">
+      <div className="pointer-events-none flex w-full justify-center">
         <VisualTable table={table} alwaysVisible className="p-8" />
       </div>
       <div className="flex w-full items-center justify-between text-[0.65rem]">
         <div className="flex items-center gap-1.5 text-white/40">
           <FontAwesomeIcon icon={faUsers} />
-          <span>{occupancy}/{table.seats}</span>
+          <span>
+            {occupancy}/{table.seats}
+          </span>
         </div>
-        {isFull && !isSelected && <span className="font-bold uppercase text-red-400/80">Cheia</span>}
+        {isFull && !isSelected && (
+          <span className="font-bold uppercase text-red-400/80">Cheia</span>
+        )}
       </div>
     </button>
   );
 }
 
-function EmptySlotCard({ slotNumber, dimmed }: Readonly<{ slotNumber: number; dimmed: boolean }>) {
-  const placeholder: Table = { _id: -slotNumber, name: null, head: null, seats: DEFAULT_SEATS, persons: [] };
+function EmptySlotCard({
+  slotNumber,
+  dimmed,
+}: Readonly<{ slotNumber: number; dimmed: boolean }>) {
+  const placeholder: Table = {
+    _id: -slotNumber,
+    name: null,
+    head: null,
+    seats: DEFAULT_SEATS,
+    persons: [],
+  };
   return (
-    <div className={`flex flex-col items-center gap-3 rounded-2xl border border-white/5 bg-white/2 p-4 transition-opacity ${dimmed ? "opacity-20" : "opacity-40"}`}>
-      <span className="text-[0.6rem] font-bold uppercase text-white/25">Mesa #{slotNumber}</span>
-      <div className="pointer-events-none w-full flex justify-center">
+    <div
+      className={`bg-white/2 flex flex-col items-center gap-3 rounded-2xl border border-white/5 p-4 transition-opacity ${
+        dimmed ? "opacity-20" : "opacity-40"
+      }`}
+    >
+      <span className="text-[0.6rem] font-bold uppercase text-white/25">
+        Mesa #{slotNumber}
+      </span>
+      <div className="pointer-events-none flex w-full justify-center">
         <VisualTable table={placeholder} alwaysVisible className="p-8" />
       </div>
       <span className="text-[0.65rem] text-white/25">Livre</span>

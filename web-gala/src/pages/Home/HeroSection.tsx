@@ -1,16 +1,26 @@
 import { Link } from "react-router-dom";
-import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
-import useLoginLink from "@/hooks/useLoginLink";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarDay, faLocationDot, faClock } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendarDay,
+  faLocationDot,
+  faClock,
+} from "@fortawesome/free-solid-svg-icons";
+import useLoginLink from "@/hooks/useLoginLink";
+import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import homeBg from "@/assets/home-background.jpg";
 
-function EventPill({ icon, text }: { readonly icon: typeof faCalendarDay; readonly text: string }) {
+function EventPill({
+  icon,
+  text,
+}: {
+  readonly icon: typeof faCalendarDay;
+  readonly text: string;
+}) {
   return (
     <span className="flex items-center gap-2 text-sm text-white/60">
       <FontAwesomeIcon icon={icon} className="text-xs text-light-gold/70" />
@@ -21,7 +31,13 @@ function EventPill({ icon, text }: { readonly icon: typeof faCalendarDay; readon
 
 type StateValue = (typeof State)[keyof typeof State];
 
-function HeroContent({ state, loginLink }: { readonly state: StateValue; readonly loginLink: string }) {
+function HeroContent({
+  state,
+  loginLink,
+}: {
+  readonly state: StateValue;
+  readonly loginLink: string;
+}) {
   const { time } = useTime();
 
   if (state === State.NONE) {
@@ -47,7 +63,10 @@ function HeroContent({ state, loginLink }: { readonly state: StateValue; readonl
           </a>
         </div>
         {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+          <Countdown
+            targetDate={time.galaStart}
+            label="O Grande Dia Começa Em"
+          />
         )}
       </motion.div>
     );
@@ -68,7 +87,10 @@ function HeroContent({ state, loginLink }: { readonly state: StateValue; readonl
           Inscrever no Jantar
         </Link>
         {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+          <Countdown
+            targetDate={time.galaStart}
+            label="O Grande Dia Começa Em"
+          />
         )}
       </motion.div>
     );
@@ -127,16 +149,25 @@ function HeroContent({ state, loginLink }: { readonly state: StateValue; readonl
       </div>
 
       {/* Countdown chips */}
-      {(isRegistrationOpening || isTablesOpening || isNominationsOpening || isVotingOpening) && (
+      {(isRegistrationOpening ||
+        isTablesOpening ||
+        isNominationsOpening ||
+        isVotingOpening) && (
         <div className="flex flex-wrap justify-center gap-4">
           {isRegistrationOpening && (
-            <Countdown targetDate={time!.registrationStart} label="Inscrição Abre Em" />
+            <Countdown
+              targetDate={time!.registrationStart}
+              label="Inscrição Abre Em"
+            />
           )}
           {isTablesOpening && (
             <Countdown targetDate={time!.tablesStart} label="Mesas Abrem Em" />
           )}
           {isNominationsOpening && (
-            <Countdown targetDate={time!.nominationsStart} label="Nomeações Abrem Em" />
+            <Countdown
+              targetDate={time!.nominationsStart}
+              label="Nomeações Abrem Em"
+            />
           )}
           {isVotingOpening && (
             <Countdown targetDate={time!.votesStart} label="Votação Abre Em" />
@@ -201,7 +232,8 @@ export default function HeroSection() {
         </motion.span>
 
         {/* Title */}
-        <h1 className="font-gala font-bold leading-none text-light-gold drop-shadow-2xl"
+        <h1
+          className="font-gala font-bold leading-none text-light-gold drop-shadow-2xl"
           style={{ fontSize: "clamp(3.5rem, 10vw, 8rem)" }}
         >
           Jantar
@@ -216,10 +248,13 @@ export default function HeroSection() {
           transition={{ delay: 0.35 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-4 rounded-full border border-white/10 bg-black/30 px-6 py-3 backdrop-blur-sm"
         >
-          <EventPill icon={faCalendarDay} text={config.eventDate || "Em breve"} />
-          <span className="h-3 w-px bg-white/15" />
+          <EventPill
+            icon={faCalendarDay}
+            text={config.eventDate || "Em breve"}
+          />
+          <span className="bg-white/15 h-3 w-px" />
           <EventPill icon={faClock} text={config.eventTime || "—"} />
-          <span className="h-3 w-px bg-white/15" />
+          <span className="bg-white/15 h-3 w-px" />
           <EventPill icon={faLocationDot} text={config.eventLocation || "—"} />
         </motion.div>
 
@@ -234,7 +269,9 @@ export default function HeroSection() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
         <div className="flex flex-col items-center gap-2">
-          <span className="font-gala text-[0.55rem] uppercase tracking-[0.3em] text-white/25">Explorar</span>
+          <span className="font-gala text-[0.55rem] uppercase tracking-[0.3em] text-white/25">
+            Explorar
+          </span>
           <div className="h-8 w-px bg-gradient-to-b from-white/20 to-transparent" />
         </div>
       </motion.div>

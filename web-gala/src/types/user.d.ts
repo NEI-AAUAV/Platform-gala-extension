@@ -23,4 +23,3 @@ type User = {
 };
 
 type UserExtended = User & Person;
-

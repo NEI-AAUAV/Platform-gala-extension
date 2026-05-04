@@ -44,7 +44,7 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
     verify_ssl = settings.PRODUCTION
     users: List[AuthentikUser] = []
     url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/"
-    params: dict = {"page_size": 100, "page": 1}
+    params: dict = {}
     if search:
         params["search"] = search
 
@@ -58,16 +58,25 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
                     users.append(
                         AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
                     )
-                # Follow pagination
-                next_url = data.get("next")
-                if next_url:
-                    url = next_url
+                
+                # Check for pagination in Authentik's format
+                pagination = data.get("pagination", {})
+                next_page = pagination.get("next")
+                
+                # Some versions might return standard DRF next URL string
+                next_url_str = data.get("next")
+                
+                if isinstance(next_url_str, str) and next_url_str.startswith("http"):
+                    url = next_url_str
                     params = {}
+                elif isinstance(next_page, int) and next_page > 0:
+                    params["page"] = next_page
                 else:
                     break
-        except httpx.HTTPError as e:
+        except Exception as e:
             print(f"Error fetching Authentik users: {e}")
-            return []
+            # Return whatever users we managed to fetch before the error
+            pass
 
     return users
 
@@ -95,7 +104,7 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
             # MongoDB doesn't support _id updates, so we copy-and-delete
             new_doc = {**phantom, "_id": authentik_user_id, "admin_created": False}
             try:
-                await user_coll.insert_one(new_doc)
+                await user_coll.replace_one({"_id": authentik_user_id}, new_doc, upsert=True)
                 await user_coll.delete_one({"_id": phantom_id})
             except Exception:
                 pass  # If the real user doc already exists somehow, skip silently

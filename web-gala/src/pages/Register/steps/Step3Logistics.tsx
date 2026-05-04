@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBus, faUtensils, faLeaf, faBan, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBus,
+  faUtensils,
+  faLeaf,
+  faBan,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData, BusOption, Companion } from "@/hooks/useWizardState";
 
@@ -12,14 +18,37 @@ interface Props {
   readonly onBack: () => void;
 }
 
-const BUS_OPTIONS: { value: BusOption; label: string; sub: string; icon: typeof faBus }[] = [
-  { value: "round_trip", label: "Autocarro (Ida e Volta)", sub: "Transporte incluído na inscrição", icon: faBus },
-  { value: "none", label: "Deslocação própria", sub: "Sem autocarro", icon: faBan },
+const BUS_OPTIONS: {
+  value: BusOption;
+  label: string;
+  sub: string;
+  icon: typeof faBus;
+}[] = [
+  {
+    value: "round_trip",
+    label: "Autocarro (Ida e Volta)",
+    sub: "Transporte incluído na inscrição",
+    icon: faBus,
+  },
+  {
+    value: "none",
+    label: "Deslocação própria",
+    sub: "Sem autocarro",
+    icon: faBan,
+  },
 ];
 
-export default function Step3Logistics({ config, data, onUpdate, onNext, onBack }: Readonly<Props>) {
+export default function Step3Logistics({
+  config,
+  data,
+  onUpdate,
+  onNext,
+  onBack,
+}: Readonly<Props>) {
   const updateCompanion = (i: number, patch: Partial<Companion>) => {
-    const next = data.companions.map((c, idx) => (idx === i ? { ...c, ...patch } : c));
+    const next = data.companions.map((c, idx) =>
+      idx === i ? { ...c, ...patch } : c,
+    );
     onUpdate({ companions: next });
   };
 
@@ -69,7 +98,7 @@ export default function Step3Logistics({ config, data, onUpdate, onNext, onBack 
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="border border-white/15 px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
+          className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
@@ -105,8 +134,10 @@ function BusSection({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {BUS_OPTIONS.map((opt) => {
           const isSelected = data.bus === opt.value;
-          const showPrice = opt.value === "round_trip" && config.busRoundTripPrice > 0;
-          const included = opt.value === "round_trip" && config.busRoundTripPrice === 0;
+          const showPrice =
+            opt.value === "round_trip" && config.busRoundTripPrice > 0;
+          const included =
+            opt.value === "round_trip" && config.busRoundTripPrice === 0;
           return (
             <button
               key={opt.value}
@@ -115,7 +146,7 @@ function BusSection({
               className={[
                 "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
                 isSelected
-                  ? "border-light-gold/60 bg-light-gold/8"
+                  ? "bg-light-gold/8 border-light-gold/60"
                   : "border-white/8 bg-white/3 hover:border-white/20",
               ].join(" ")}
             >
@@ -124,14 +155,23 @@ function BusSection({
                   icon={opt.icon}
                   className={isSelected ? "text-light-gold" : "text-white/30"}
                 />
-                {isSelected && <span className="h-2 w-2 rounded-full bg-light-gold" />}
+                {isSelected && (
+                  <span className="h-2 w-2 rounded-full bg-light-gold" />
+                )}
               </div>
-              <p className={["text-sm font-bold", isSelected ? "text-light-gold" : "text-white/60"].join(" ")}>
+              <p
+                className={[
+                  "text-sm font-bold",
+                  isSelected ? "text-light-gold" : "text-white/60",
+                ].join(" ")}
+              >
                 {opt.label}
               </p>
-              <p className="text-xs text-white/35">{opt.sub}</p>
+              <p className="text-white/35 text-xs">{opt.sub}</p>
               {showPrice && (
-                <p className="text-xs font-semibold text-dark-gold/80">+{config.busRoundTripPrice}€ por pessoa</p>
+                <p className="text-xs font-semibold text-dark-gold/80">
+                  +{config.busRoundTripPrice}€ por pessoa
+                </p>
               )}
               {included && (
                 <p className="text-xs text-white/25">Incluído no preço</p>
@@ -164,9 +204,12 @@ function PersonMealSection({
   onAllergiesChange,
 }: Readonly<PersonMealSectionProps>) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 p-5">
+    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-center gap-2">
-        <FontAwesomeIcon icon={faUser} className="text-[0.65rem] text-light-gold/40" />
+        <FontAwesomeIcon
+          icon={faUser}
+          className="text-[0.65rem] text-light-gold/40"
+        />
         <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
           {label}
         </h3>
@@ -189,7 +232,7 @@ function PersonMealSection({
                   className={[
                     "flex items-center gap-3 rounded-lg border p-3 text-left transition-all",
                     isSelected
-                      ? "border-light-gold/60 bg-light-gold/8"
+                      ? "bg-light-gold/8 border-light-gold/60"
                       : "border-white/8 hover:border-white/20",
                   ].join(" ")}
                 >
@@ -201,31 +244,44 @@ function PersonMealSection({
                   >
                     <FontAwesomeIcon
                       icon={icon}
-                      className={isSelected ? "text-light-gold" : "text-white/30"}
+                      className={
+                        isSelected ? "text-light-gold" : "text-white/30"
+                      }
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={["text-sm font-bold", isSelected ? "text-light-gold" : "text-white/70"].join(" ")}>
+                    <p
+                      className={[
+                        "text-sm font-bold",
+                        isSelected ? "text-light-gold" : "text-white/70",
+                      ].join(" ")}
+                    >
                       {opt.label}
                     </p>
                     {opt.description && (
                       <p className="text-xs text-white/40">{opt.description}</p>
                     )}
                   </div>
-                  {isSelected && <span className="h-2 w-2 flex-shrink-0 rounded-full bg-light-gold" />}
+                  {isSelected && (
+                    <span className="h-2 w-2 flex-shrink-0 rounded-full bg-light-gold" />
+                  )}
                 </button>
               );
             })}
           </div>
           {!meal && (
-            <p className="text-xs text-red-400/70">Escolhe um prato para continuar.</p>
+            <p className="text-xs text-red-400/70">
+              Escolhe um prato para continuar.
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-3">
           <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
             Alergias Alimentares
-            {allergiesRequired && <span className="ml-2 text-red-400/70">*</span>}
+            {allergiesRequired && (
+              <span className="ml-2 text-red-400/70">*</span>
+            )}
           </p>
           <textarea
             value={allergies}
@@ -235,7 +291,9 @@ function PersonMealSection({
             className="resize-none rounded-lg border border-white/10 bg-transparent px-4 py-3 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
           />
           {!allergiesRequired && (
-            <p className="text-[0.6rem] text-white/25">Opcional. Deixa em branco se não tiveres.</p>
+            <p className="text-[0.6rem] text-white/25">
+              Opcional. Deixa em branco se não tiveres.
+            </p>
           )}
         </div>
       </div>

@@ -161,21 +161,20 @@ function ToastComponent({
 
   return (
     <div
-      className={`relative min-w-[320px] max-w-[450px] ${bg} ${border} border backdrop-blur-xl animate-in fade-in slide-in-from-right-5 pointer-events-auto rounded-2xl p-4 shadow-2xl transition-all duration-300 md:mt-2`}
+      className={`relative min-w-[320px] max-w-[450px] ${bg} ${border} animate-in fade-in slide-in-from-right-5 pointer-events-auto rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 md:mt-2`}
     >
       {/* Accent line */}
-      <div className={`absolute left-0 top-1/4 h-1/2 w-1.5 rounded-r-full ${accent}`} />
+      <div
+        className={`absolute left-0 top-1/4 h-1/2 w-1.5 rounded-r-full ${accent}`}
+      />
 
       <div className="flex items-start gap-4">
         <div className="mt-0.5 flex-shrink-0">
-          <FontAwesomeIcon
-            icon={Icon}
-            className={`h-5 w-5 ${iconColor}`}
-          />
+          <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${iconColor}`} />
         </div>
-        
+
         <div className="flex-1">
-          <p className="text-sm font-semibold text-white/95 leading-tight">
+          <p className="text-sm font-semibold leading-tight text-white/95">
             {message}
           </p>
         </div>

@@ -66,9 +66,26 @@ export interface HomepageConfig {
 
 const defaults: HomepageConfig = {
   dj: { visible: false, name: "", bio: "", photo_url: null, spotify_url: null },
-  bus_schedule: { visible: false, departure_location: "", departure_time: "", return_time: "", buses: [] },
-  after_party: { visible: false, title: "After Party", description: "", drinks: [] },
-  gallery: { visible: false, title: "Galeria", description: "", drive_url: "", preview_photo_url: null },
+  bus_schedule: {
+    visible: false,
+    departure_location: "",
+    departure_time: "",
+    return_time: "",
+    buses: [],
+  },
+  after_party: {
+    visible: false,
+    title: "After Party",
+    description: "",
+    drinks: [],
+  },
+  gallery: {
+    visible: false,
+    title: "Galeria",
+    description: "",
+    drive_url: "",
+    preview_photo_url: null,
+  },
   nominations_display: { visible: false, show_nominees: false },
   payment_info: { visible: true },
 };
@@ -88,13 +105,17 @@ function extract(raw: Record<string, unknown>): HomepageConfig {
     bus_schedule: { ...defaults.bus_schedule, ...hp.bus_schedule },
     after_party: { ...defaults.after_party, ...hp.after_party },
     gallery: { ...defaults.gallery, ...hp.gallery },
-    nominations_display: { ...defaults.nominations_display, ...hp.nominations_display },
+    nominations_display: {
+      ...defaults.nominations_display,
+      ...hp.nominations_display,
+    },
     payment_info: { ...defaults.payment_info, ...hp.payment_info },
   };
 }
 
 function extractEmails(raw: Record<string, unknown>): EmailNotificationsConfig {
-  const emails = (raw.email_notifications as Partial<EmailNotificationsConfig>) ?? {};
+  const emails =
+    (raw.email_notifications as Partial<EmailNotificationsConfig>) ?? {};
   return { ...defaultEmails, ...emails };
 }
 
@@ -119,7 +140,9 @@ export function useHomepageConfig() {
     save({ homepage: next });
   };
 
-  const emailConfig: EmailNotificationsConfig = raw ? extractEmails(raw) : defaultEmails;
+  const emailConfig: EmailNotificationsConfig = raw
+    ? extractEmails(raw)
+    : defaultEmails;
 
   const updateEmails = (updates: Partial<EmailNotificationsConfig>) => {
     const next = { ...emailConfig, ...updates };

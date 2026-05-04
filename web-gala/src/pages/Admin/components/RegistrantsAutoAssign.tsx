@@ -10,13 +10,19 @@ interface RegistrantsAutoAssignProps {
 }
 
 export default function RegistrantsAutoAssign({
-  busesLength, autoStrategy, setAutoStrategy, assigning, handleAutoAssign
+  busesLength,
+  autoStrategy,
+  setAutoStrategy,
+  assigning,
+  handleAutoAssign,
 }: Readonly<RegistrantsAutoAssignProps>) {
   if (busesLength === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/8 bg-white/3 p-4">
-      <span className="text-xs font-semibold text-white/40">Auto-distribuir autocarros por</span>
+    <div className="border-white/8 bg-white/3 flex flex-wrap items-center gap-3 rounded-xl border p-4">
+      <span className="text-xs font-semibold text-white/40">
+        Auto-distribuir autocarros por
+      </span>
       {(["year", "order"] as const).map((s) => (
         <button
           key={s}

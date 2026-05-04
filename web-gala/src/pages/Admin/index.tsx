@@ -26,7 +26,14 @@ import { useConfigStore } from "@/stores/useConfigStore";
 import { useManagerPermissions } from "@/hooks/useManagerPermissions";
 import { ManagerPermissionKey } from "@/services/GalaService";
 
-type Tab = "registration" | "inscritos" | "tables" | "categories" | "results" | "homepage" | "permissoes";
+type Tab =
+  | "registration"
+  | "inscritos"
+  | "tables"
+  | "categories"
+  | "results"
+  | "homepage"
+  | "permissoes";
 
 type TabDefinition = {
   id: Tab;
@@ -38,13 +45,55 @@ type TabDefinition = {
 };
 
 const ALL_TABS: TabDefinition[] = [
-  { id: "registration", label: "Configurações", icon: faClipboardList, description: "Datas, preços, refeições e limites", permission: "registration" },
-  { id: "inscritos", label: "Inscritos", icon: faUsers, description: "Gestão de inscritos, mesas e autocarros", permission: "registration" },
-  { id: "tables", label: "Mesas", icon: faChair, description: "Período, limites e visão geral de mesas", permission: "tables" },
-  { id: "categories", label: "Categorias", icon: faTrophy, description: "Gerir categorias de votação", permission: "categories" },
-  { id: "results", label: "Resultados", icon: faChartBar, description: "Resultados e contagens de votos", permission: "categories" },
-  { id: "homepage", label: "Homepage", icon: faHouse, description: "Conteúdo visível na página inicial", permission: "homepage" },
-  { id: "permissoes", label: "Permissões", icon: faShieldHalved, description: "Gerir managers e acessos", adminOnly: true },
+  {
+    id: "registration",
+    label: "Configurações",
+    icon: faClipboardList,
+    description: "Datas, preços, refeições e limites",
+    permission: "registration",
+  },
+  {
+    id: "inscritos",
+    label: "Inscritos",
+    icon: faUsers,
+    description: "Gestão de inscritos, mesas e autocarros",
+    permission: "registration",
+  },
+  {
+    id: "tables",
+    label: "Mesas",
+    icon: faChair,
+    description: "Período, limites e visão geral de mesas",
+    permission: "tables",
+  },
+  {
+    id: "categories",
+    label: "Categorias",
+    icon: faTrophy,
+    description: "Gerir categorias de votação",
+    permission: "categories",
+  },
+  {
+    id: "results",
+    label: "Resultados",
+    icon: faChartBar,
+    description: "Resultados e contagens de votos",
+    permission: "categories",
+  },
+  {
+    id: "homepage",
+    label: "Homepage",
+    icon: faHouse,
+    description: "Conteúdo visível na página inicial",
+    permission: "homepage",
+  },
+  {
+    id: "permissoes",
+    label: "Permissões",
+    icon: faShieldHalved,
+    description: "Gerir managers e acessos",
+    adminOnly: true,
+  },
 ];
 
 const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
@@ -56,13 +105,34 @@ const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
 };
 
 const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
-  registration: { title: "Configurações do Jantar", sub: "Datas, preços, refeições, pagamento e limites." },
-  inscritos: { title: "Gestão de Inscritos", sub: "Estatísticas, inscritos, confirmação de pagamentos, mesas e autocarros." },
-  tables: { title: "Mesas e Reservas", sub: "Período de escolha, limites e visão geral das mesas criadas." },
-  categories: { title: "Categorias de Votação", sub: "Gerir as categorias disponíveis para votação." },
-  results: { title: "Resultados de Votação", sub: "Ver contagens e aprovar a publicação de resultados." },
-  homepage: { title: "Conteúdo da Homepage", sub: "Controla o que aparece na página inicial do evento." },
-  permissoes: { title: "Permissões de Managers", sub: "Controla quem tem acesso ao painel de administração e a que secções." },
+  registration: {
+    title: "Configurações do Jantar",
+    sub: "Datas, preços, refeições, pagamento e limites.",
+  },
+  inscritos: {
+    title: "Gestão de Inscritos",
+    sub: "Estatísticas, inscritos, confirmação de pagamentos, mesas e autocarros.",
+  },
+  tables: {
+    title: "Mesas e Reservas",
+    sub: "Período de escolha, limites e visão geral das mesas criadas.",
+  },
+  categories: {
+    title: "Categorias de Votação",
+    sub: "Gerir as categorias disponíveis para votação.",
+  },
+  results: {
+    title: "Resultados de Votação",
+    sub: "Ver contagens e aprovar a publicação de resultados.",
+  },
+  homepage: {
+    title: "Conteúdo da Homepage",
+    sub: "Controla o que aparece na página inicial do evento.",
+  },
+  permissoes: {
+    title: "Permissões de Managers",
+    sub: "Controla quem tem acesso ao painel de administração e a que secções.",
+  },
 };
 
 export default function Admin() {
@@ -84,7 +154,7 @@ export default function Admin() {
     if (visibleTabs.length > 0) setActiveTab(visibleTabs[0].id);
   }, [loading, visibleTabs, activeTab]);
 
-  const previewRoute = activeTab ? (PREVIEW_ROUTES[activeTab] ?? "/") : "/";
+  const previewRoute = activeTab ? PREVIEW_ROUTES[activeTab] ?? "/" : "/";
 
   const reload = useCallback(() => {
     if (iframeRef.current?.contentWindow) {
@@ -107,7 +177,9 @@ export default function Admin() {
   // Lock body scroll when mobile sidebar is open
   useEffect(() => {
     document.body.style.overflow = sidebarOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [sidebarOpen]);
 
   const hasPreview = activeTab !== null && activeTab in PREVIEW_ROUTES;
@@ -115,7 +187,7 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center text-white/30 text-sm">
+      <div className="flex min-h-screen items-center justify-center pt-20 text-sm text-white/30">
         A carregar...
       </div>
     );
@@ -123,16 +195,20 @@ export default function Admin() {
 
   if (error) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <p className="text-red-400/60 text-sm">Erro ao carregar permissões. Tenta recarregar a página.</p>
+      <div className="flex min-h-screen items-center justify-center pt-20">
+        <p className="text-sm text-red-400/60">
+          Erro ao carregar permissões. Tenta recarregar a página.
+        </p>
       </div>
     );
   }
 
   if (visibleTabs.length === 0) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <p className="text-white/40 text-sm">Sem permissões de acesso ao painel de administração.</p>
+      <div className="flex min-h-screen items-center justify-center pt-20">
+        <p className="text-sm text-white/40">
+          Sem permissões de acesso ao painel de administração.
+        </p>
       </div>
     );
   }
@@ -140,7 +216,6 @@ export default function Admin() {
   return (
     <div className="min-h-screen pt-20">
       <div className="flex h-[calc(100vh-5rem)]">
-
         {/* ── Mobile sidebar backdrop ── */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -161,18 +236,20 @@ export default function Admin() {
         <aside
           className={[
             // Mobile: fixed full-height drawer
-            "fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r border-white/8 bg-[#0a0a0a] transition-transform duration-300 lg:relative lg:top-0 lg:flex lg:translate-x-0 lg:z-auto",
-            sidebarOpen ? "flex translate-x-0" : "-translate-x-full hidden lg:flex",
+            "border-white/8 fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r bg-[#0a0a0a] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
+            sidebarOpen
+              ? "flex translate-x-0"
+              : "hidden -translate-x-full lg:flex",
           ].join(" ")}
         >
           {/* Sidebar header */}
-          <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+          <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
             <span className="font-gala text-[0.6rem] font-bold uppercase tracking-[0.3em] text-white/30">
               Admin
             </span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/8 hover:text-white/60 lg:hidden"
+              className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60 lg:hidden"
             >
               <FontAwesomeIcon icon={faXmark} className="text-xs" />
             </button>
@@ -197,15 +274,21 @@ export default function Admin() {
                     icon={icon}
                     className={[
                       "mt-0.5 w-4 shrink-0 text-sm transition-colors",
-                      isActive ? "text-dark-gold" : "text-white/25 group-hover:text-white/50",
+                      isActive
+                        ? "text-dark-gold"
+                        : "text-white/25 group-hover:text-white/50",
                     ].join(" ")}
                   />
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="font-gala text-sm font-semibold leading-tight">{label}</span>
-                    <span className={[
-                      "text-[0.6rem] leading-snug",
-                      isActive ? "text-dark-gold/60" : "text-white/25",
-                    ].join(" ")}>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-gala text-sm font-semibold leading-tight">
+                      {label}
+                    </span>
+                    <span
+                      className={[
+                        "text-[0.6rem] leading-snug",
+                        isActive ? "text-dark-gold/60" : "text-white/25",
+                      ].join(" ")}
+                    >
                       {description}
                     </span>
                   </div>
@@ -220,9 +303,8 @@ export default function Admin() {
 
         {/* ── Main content area ── */}
         <div className="flex flex-1 flex-col overflow-hidden transition-all duration-500">
-
           {/* Top bar (mobile hamburger + preview toggle) */}
-          <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-3 lg:px-6">
+          <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
             {/* Mobile: hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -236,10 +318,12 @@ export default function Admin() {
             <div className="hidden lg:block">
               {sectionMeta && (
                 <div>
-                  <h1 className="font-gala text-lg font-bold text-dark-gold leading-tight">
+                  <h1 className="font-gala text-lg font-bold leading-tight text-dark-gold">
                     {sectionMeta.title}
                   </h1>
-                  <p className="mt-0.5 text-xs text-white/35">{sectionMeta.sub}</p>
+                  <p className="text-white/35 mt-0.5 text-xs">
+                    {sectionMeta.sub}
+                  </p>
                 </div>
               )}
             </div>
@@ -255,7 +339,10 @@ export default function Admin() {
                     : "border-white/15 text-white/40 hover:border-white/30 hover:text-white/70",
                 ].join(" ")}
               >
-                <FontAwesomeIcon icon={previewOpen ? faEyeSlash : faEye} className="text-[0.7rem]" />
+                <FontAwesomeIcon
+                  icon={previewOpen ? faEyeSlash : faEye}
+                  className="text-[0.7rem]"
+                />
                 {previewOpen ? "Fechar preview" : "Ver preview"}
               </button>
             )}
@@ -264,16 +351,22 @@ export default function Admin() {
           {/* Content + optional preview */}
           <div className="flex flex-1 overflow-hidden">
             {/* Scrollable content */}
-            <div className={[
-              "flex-1 overflow-y-auto transition-all duration-500",
-              previewOpen ? "hidden md:block md:w-1/2" : "w-full",
-            ].join(" ")}>
+            <div
+              className={[
+                "flex-1 overflow-y-auto transition-all duration-500",
+                previewOpen ? "hidden md:block md:w-1/2" : "w-full",
+              ].join(" ")}
+            >
               <div className="mx-auto w-full max-w-5xl px-4 py-8 lg:px-8">
                 {/* Mobile section title */}
                 {sectionMeta && (
                   <div className="mb-6 lg:hidden">
-                    <h1 className="font-gala text-xl font-bold text-dark-gold">{sectionMeta.title}</h1>
-                    <p className="mt-1 text-xs text-white/35">{sectionMeta.sub}</p>
+                    <h1 className="font-gala text-xl font-bold text-dark-gold">
+                      {sectionMeta.title}
+                    </h1>
+                    <p className="text-white/35 mt-1 text-xs">
+                      {sectionMeta.sub}
+                    </p>
                   </div>
                 )}
 
@@ -315,15 +408,15 @@ export default function Admin() {
 
             {/* Live preview pane */}
             {previewOpen && (
-              <div className="flex w-full flex-col bg-black md:w-1/2 md:border-l md:border-white/8">
-                <div className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-2">
+              <div className="md:border-white/8 flex w-full flex-col bg-black md:w-1/2 md:border-l">
+                <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-2">
                   <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/30">
                     Preview — {previewRoute}
                   </span>
                   <button
                     onClick={reload}
                     title="Recarregar preview"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/8 hover:text-white/60"
+                    className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"
                   >
                     <FontAwesomeIcon icon={faRotateRight} className="text-xs" />
                   </button>
@@ -332,7 +425,7 @@ export default function Admin() {
                   key={activeTab}
                   ref={iframeRef}
                   src={previewRoute}
-                  className="flex-1 w-full border-0"
+                  className="w-full flex-1 border-0"
                   title="Preview"
                 />
               </div>

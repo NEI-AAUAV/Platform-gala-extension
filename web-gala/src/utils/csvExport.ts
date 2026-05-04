@@ -1,8 +1,8 @@
-import { useUserStore } from "@/stores/useUserStore";
 import axios from "axios";
+import { useUserStore } from "@/stores/useUserStore";
 
 export async function downloadCsv(path: string, filename: string) {
-  const token = useUserStore.getState().token;
+  const { token } = useUserStore.getState();
   const response = await axios.get(path, {
     responseType: "blob",
     headers: { Authorization: `Bearer ${token}` },

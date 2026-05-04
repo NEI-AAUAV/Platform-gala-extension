@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImages, faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faImages,
+  faArrowUpRightFromSquare,
+} from "@fortawesome/free-solid-svg-icons";
 import type { GalleryConfig } from "@/hooks/useHomepageConfig";
 
 interface Props {
@@ -44,17 +47,25 @@ export default function PhotoGallerySection({ galleryConfig }: Props) {
             <img
               src={galleryConfig.preview_photo_url}
               alt="Galeria de fotos"
-              className="h-[400px] w-full object-cover brightness-60"
+              className="brightness-60 h-[400px] w-full object-cover"
             />
           ) : (
-            <div className="flex h-[300px] w-full items-center justify-center bg-white/3">
-              <FontAwesomeIcon icon={faImages} className="text-8xl text-white/8" />
+            <div className="bg-white/3 flex h-[300px] w-full items-center justify-center">
+              <FontAwesomeIcon
+                icon={faImages}
+                className="text-white/8 text-8xl"
+              />
             </div>
           )}
 
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/50 backdrop-blur-sm">
-            <FontAwesomeIcon icon={faImages} className="text-5xl text-light-gold/60" />
-            <p className="font-gala text-2xl font-bold text-white">Ver todas as fotos</p>
+            <FontAwesomeIcon
+              icon={faImages}
+              className="text-5xl text-light-gold/60"
+            />
+            <p className="font-gala text-2xl font-bold text-white">
+              Ver todas as fotos
+            </p>
             <a
               href={galleryConfig.drive_url}
               target="_blank"
@@ -62,7 +73,10 @@ export default function PhotoGallerySection({ galleryConfig }: Props) {
               className="flex items-center gap-2 border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
             >
               Abrir Galeria
-              <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-xs" />
+              <FontAwesomeIcon
+                icon={faArrowUpRightFromSquare}
+                className="text-xs"
+              />
             </a>
           </div>
         </motion.div>

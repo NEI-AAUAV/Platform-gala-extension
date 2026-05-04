@@ -92,9 +92,13 @@ class TableService:
             companions=user.companions,
         )
 
+        update_op: dict = {"$push": {"persons": person.dict()}}
+        if table.head is None:
+            update_op["$set"] = {"head": user_id}
+
         await collection.update_one(
             {"_id": table.id},
-            {"$push": {"persons": person.dict()}}
+            update_op
         )
         
         await user_coll.update_one({"_id": user_id}, {"$set": {"table_id": table.id}})

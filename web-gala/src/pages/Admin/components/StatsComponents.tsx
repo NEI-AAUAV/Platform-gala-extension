@@ -1,6 +1,12 @@
 import React from "react";
 
-export function StatCard({ label, value, sub, icon, accent }: {
+export function StatCard({
+  label,
+  value,
+  sub,
+  icon,
+  accent,
+}: {
   readonly label: string;
   readonly value: string | number;
   readonly sub?: string;
@@ -15,7 +21,7 @@ export function StatCard({ label, value, sub, icon, accent }: {
   }[accent ?? "default"];
 
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+    <div className="border-white/8 bg-white/3 rounded-xl border p-4">
       <div className="flex items-center gap-2 text-xs text-white/40">
         {icon}
         <span>{label}</span>
@@ -26,7 +32,12 @@ export function StatCard({ label, value, sub, icon, accent }: {
   );
 }
 
-export function MiniBar({ label, value, max, color }: {
+export function MiniBar({
+  label,
+  value,
+  max,
+  color,
+}: {
   readonly label: string;
   readonly value: number;
   readonly max: number;
@@ -35,11 +46,18 @@ export function MiniBar({ label, value, max, color }: {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
-      <span className="w-20 shrink-0 text-[0.65rem] text-white/50 truncate">{label}</span>
-      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/8">
-        <div className={`absolute left-0 top-0 h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      <span className="w-20 shrink-0 truncate text-[0.65rem] text-white/50">
+        {label}
+      </span>
+      <div className="bg-white/8 relative h-2 flex-1 overflow-hidden rounded-full">
+        <div
+          className={`absolute left-0 top-0 h-full rounded-full ${color}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      <span className="w-6 text-right text-[0.65rem] text-white/40">{value}</span>
+      <span className="w-6 text-right text-[0.65rem] text-white/40">
+        {value}
+      </span>
     </div>
   );
 }

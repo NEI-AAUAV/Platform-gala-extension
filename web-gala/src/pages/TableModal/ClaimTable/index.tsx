@@ -52,7 +52,7 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
       <div className="flex w-full flex-col gap-8">
         {/* Header */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-light-gold w-fit">
+          <div className="flex w-fit items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-light-gold">
             <FontAwesomeIcon icon={faChair} className="w-3" />
             Mesa #{table._id}
           </div>
@@ -67,14 +67,21 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
         <div className="flex items-center gap-3 rounded-xl border border-light-gold/20 bg-light-gold/5 px-4 py-3">
           <Avatar className="w-8 rounded-full border border-white/10" />
           <div>
-            <p className="text-xs font-bold text-light-gold">Serás o dono da mesa</p>
-            <p className="text-[0.6rem] text-white/30">Podes convidar outros inscritos depois de a criar.</p>
+            <p className="text-xs font-bold text-light-gold">
+              Serás o dono da mesa
+            </p>
+            <p className="text-[0.6rem] text-white/30">
+              Podes convidar outros inscritos depois de a criar.
+            </p>
           </div>
         </div>
 
         {/* Table name input */}
         <div className="space-y-2">
-          <label htmlFor="table-name" className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+          <label
+            htmlFor="table-name"
+            className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30"
+          >
             Nome da Mesa
           </label>
           <input
@@ -84,11 +91,9 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
             onChange={(e) => setTableName(e.target.value)}
             placeholder="Ex: Os Fixolas, Mesa A, ..."
             maxLength={20}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/25 outline-none focus:border-light-gold/40"
+            className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
           />
-          {nameError && (
-            <p className="text-xs text-red-400">{nameError}</p>
-          )}
+          {nameError && <p className="text-xs text-red-400">{nameError}</p>}
         </div>
 
         {/* Visual table preview on mobile */}

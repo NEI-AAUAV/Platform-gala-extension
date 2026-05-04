@@ -5,7 +5,6 @@ type Companion = {
   email?: string | null;
 };
 
-
 type Person = {
   id: number;
   allergies: string;

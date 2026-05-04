@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faChevronRight, faBell, faCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faXmark,
+  faChevronRight,
+  faBell,
+  faCheck,
+} from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import useTables from "@/hooks/tableHooks/useTables";
 import useTable from "@/hooks/tableHooks/useTable";
@@ -31,7 +36,10 @@ function buildSlots(tables: Table[], maxCount: number): Array<Table | null> {
 // Pending invites banner
 // ---------------------------------------------------------------------------
 
-function PendingInvitesBanner({ invites, onAccepted }: Readonly<{
+function PendingInvitesBanner({
+  invites,
+  onAccepted,
+}: Readonly<{
   invites: Table[];
   onAccepted: () => void;
 }>) {
@@ -66,16 +74,23 @@ function PendingInvitesBanner({ invites, onAccepted }: Readonly<{
   };
 
   return (
-    <div className="rounded-xl border border-light-gold/25 bg-light-gold/5 p-4 space-y-3">
+    <div className="space-y-3 rounded-xl border border-light-gold/25 bg-light-gold/5 p-4">
       <div className="flex items-center gap-2">
         <FontAwesomeIcon icon={faBell} className="text-light-gold" />
         <p className="text-xs font-bold text-light-gold">
-          {invites.length === 1 ? "Tens 1 convite pendente" : `Tens ${invites.length} convites pendentes`}
+          {invites.length === 1
+            ? "Tens 1 convite pendente"
+            : `Tens ${invites.length} convites pendentes`}
         </p>
       </div>
       <div className="space-y-2">
         {invites.map((t) => (
-          <InviteRow key={t._id} table={t} onAccept={accept} onDecline={decline} />
+          <InviteRow
+            key={t._id}
+            table={t}
+            onAccept={accept}
+            onDecline={decline}
+          />
         ))}
       </div>
     </div>
@@ -92,24 +107,30 @@ function InviteRow({
   onDecline: (id: number) => void;
 }>) {
   const { neiUser } = useNEIUser(table.head ?? null);
-  const occupied = table.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0);
+  const occupied = table.persons.reduce(
+    (acc, p) => acc + 1 + p.companions.length,
+    0,
+  );
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-4 py-3">
+    <div className="border-white/8 bg-white/3 flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-white/85">
+        <p className="text-white/85 truncate text-sm font-semibold">
           {table.name || `Mesa #${table._id}`}
         </p>
-        <p className="text-[0.6rem] text-white/35">
-          {neiUser ? `Por ${neiUser.name} ${neiUser.surname}` : `Mesa #${table._id}`}
-          {" · "}{occupied}/{table.seats} lugares
+        <p className="text-white/35 text-[0.6rem]">
+          {neiUser
+            ? `Por ${neiUser.name} ${neiUser.surname}`
+            : `Mesa #${table._id}`}
+          {" · "}
+          {occupied}/{table.seats} lugares
         </p>
       </div>
       <div className="flex shrink-0 gap-2">
         <button
           type="button"
           onClick={() => onDecline(table._id)}
-          className="rounded-full border border-white/15 px-3 py-1.5 text-[0.65rem] font-bold text-white/40 transition hover:border-red-400/40 hover:text-red-400"
+          className="border-white/15 rounded-full border px-3 py-1.5 text-[0.65rem] font-bold text-white/40 transition hover:border-red-400/40 hover:text-red-400"
         >
           Recusar
         </button>
@@ -140,7 +161,9 @@ export default function ProfileTableSection() {
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = buildSlots(tables, maxCount);
   const tablePeriodClosed = time?.tablesStatus === TimeStatus.CLOSED;
-  const tableDeadlineLabel = time ? formatDateTimePT(time.tablesEnd) : "A anunciar";
+  const tableDeadlineLabel = time
+    ? formatDateTimePT(time.tablesEnd)
+    : "A anunciar";
 
   const handleAccepted = () => {
     mutateAllTables();
@@ -151,16 +174,24 @@ export default function ProfileTableSection() {
     <div className="flex flex-col gap-4">
       <p className="text-xs text-white/40">
         Prazo para escolha de mesa:{" "}
-        <span className={["font-semibold", tablePeriodClosed ? "text-red-400/80" : "text-white/60"].join(" ")}>
+        <span
+          className={[
+            "font-semibold",
+            tablePeriodClosed ? "text-red-400/80" : "text-white/60",
+          ].join(" ")}
+        >
           {tableDeadlineLabel}
         </span>
-        {tablePeriodClosed && <span className="ml-2 text-red-400/70">— Período encerrado</span>}
+        {tablePeriodClosed && (
+          <span className="ml-2 text-red-400/70">— Período encerrado</span>
+        )}
       </p>
 
       {tablePeriodClosed && (
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
           <p className="text-xs text-red-400/70">
-            O período de escolha e alteração de mesa já terminou. Para resolver qualquer situação, contacta a organização.
+            O período de escolha e alteração de mesa já terminou. Para resolver
+            qualquer situação, contacta a organização.
           </p>
         </div>
       )}
@@ -181,7 +212,9 @@ export default function ProfileTableSection() {
             <button
               key={slotKey}
               type="button"
-              onClick={() => setSelectedId(selectedId === table._id ? null : table._id)}
+              onClick={() =>
+                setSelectedId(selectedId === table._id ? null : table._id)
+              }
               className={[
                 "rounded-xl border p-3 text-left transition-all hover:border-white/20",
                 selectedId === table._id
@@ -198,7 +231,9 @@ export default function ProfileTableSection() {
       </div>
 
       {maxCount === 0 && (
-        <p className="text-sm text-white/35">Nenhuma mesa disponível de momento.</p>
+        <p className="text-white/35 text-sm">
+          Nenhuma mesa disponível de momento.
+        </p>
       )}
     </div>
   );
@@ -214,7 +249,7 @@ function EmptySlot({ slotNumber }: Readonly<{ slotNumber: number }>) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-white/5 bg-white/2 p-3 opacity-40">
+    <div className="bg-white/2 flex flex-col items-center gap-2 rounded-xl border border-white/5 p-3 opacity-40">
       <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
         Mesa #{slotNumber}
       </span>
@@ -226,19 +261,25 @@ function EmptySlot({ slotNumber }: Readonly<{ slotNumber: number }>) {
   );
 }
 
-function TableDetail({ tableId, onClose }: Readonly<{ tableId: number; onClose: () => void }>) {
+function TableDetail({
+  tableId,
+  onClose,
+}: Readonly<{ tableId: number; onClose: () => void }>) {
   const { table, isLoading } = useTable(tableId);
   const { neiUser } = useNEIUser(table?.head ?? null);
 
   if (isLoading || !table) return null;
 
-  const occupied = table.persons.reduce((acc, p) => acc + 1 + p.companions.length, 0);
+  const occupied = table.persons.reduce(
+    (acc, p) => acc + 1 + p.companions.length,
+    0,
+  );
 
   return (
-    <div className="rounded-xl border border-light-gold/20 bg-white/4 p-5">
+    <div className="bg-white/4 rounded-xl border border-light-gold/20 p-5">
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="font-gala text-lg font-bold text-white/85">
+          <h3 className="text-white/85 font-gala text-lg font-bold">
             {table.name || "Mesa sem nome"}
           </h3>
           {neiUser && (
@@ -253,7 +294,7 @@ function TableDetail({ tableId, onClose }: Readonly<{ tableId: number; onClose: 
         <button
           type="button"
           onClick={onClose}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/8 hover:text-white/60"
+          className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"
         >
           <FontAwesomeIcon icon={faXmark} className="text-sm" />
         </button>

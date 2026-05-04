@@ -61,7 +61,11 @@ export const defaultConfig: RegistrationConfig = {
   busRoundTripPrice: 0,
   mealOptions: [
     { id: "meat", label: "Carne", description: "Arroz de Pato" },
-    { id: "veg", label: "Vegetariano / Vegan", description: "Tofu com legumes salteados" },
+    {
+      id: "veg",
+      label: "Vegetariano / Vegan",
+      description: "Tofu com legumes salteados",
+    },
   ],
   allergiesRequired: false,
   paymentMethod: "both",

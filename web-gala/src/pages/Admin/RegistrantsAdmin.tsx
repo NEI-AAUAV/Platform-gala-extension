@@ -14,7 +14,10 @@ import UserDetail from "./components/UserDetail";
 import RegistrantsTable from "./components/RegistrantsTable";
 import RegistrantsStatsGrid from "./components/RegistrantsStatsGrid";
 import RegistrantsCharts from "./components/RegistrantsCharts";
-import RegistrantsFilters, { PaymentFilter, TableFilter } from "./components/RegistrantsFilters";
+import RegistrantsFilters, {
+  PaymentFilter,
+  TableFilter,
+} from "./components/RegistrantsFilters";
 import RegistrantsAutoAssign from "./components/RegistrantsAutoAssign";
 
 export default function RegistrantsAdmin() {
@@ -35,14 +38,16 @@ export default function RegistrantsAdmin() {
   const toast = useAppToast();
   const { config } = useHomepageConfig();
   const { tables } = useTables();
-  const buses = config.bus_schedule.buses;
+  const { buses } = config.bus_schedule;
 
   const load = async () => {
     setLoading(true);
     try {
       const data = await GalaService.admin.listRegistrations();
       setUsers(data);
-      setSelectedUser(prev => prev ? (data.find(u => u._id === prev._id) || null) : null);
+      setSelectedUser((prev) =>
+        prev ? data.find((u) => u._id === prev._id) || null : null,
+      );
     } catch {
       toast.error("Erro ao carregar inscritos.");
     } finally {
@@ -50,7 +55,9 @@ export default function RegistrantsAdmin() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const stats = useMemo(() => computeStats(users), [users]);
 
@@ -58,13 +65,19 @@ export default function RegistrantsAdmin() {
     return users.filter((u) => {
       if (search) {
         const q = search.toLowerCase();
-        if (!u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q) && !String(u.nmec).includes(q)) {
+        if (
+          !u.name.toLowerCase().includes(q) &&
+          !u.email.toLowerCase().includes(q) &&
+          !String(u.nmec).includes(q)
+        ) {
           return false;
         }
       }
       if (paymentFilter === "paid" && !u.has_payed) return false;
-      if (paymentFilter === "proof" && (u.has_payed || !u.payment_proof_url)) return false;
-      if (paymentFilter === "pending" && (u.has_payed || u.payment_proof_url)) return false;
+      if (paymentFilter === "proof" && (u.has_payed || !u.payment_proof_url))
+        return false;
+      if (paymentFilter === "pending" && (u.has_payed || u.payment_proof_url))
+        return false;
       if (tableFilter === "with" && u.table_id === null) return false;
       if (tableFilter === "without" && u.table_id !== null) return false;
       return true;
@@ -89,7 +102,12 @@ export default function RegistrantsAdmin() {
 
   const handleDelete = async () => {
     if (!selectedUser) return;
-    if (!confirm(`Tem a certeza que deseja eliminar a inscrição de ${selectedUser.name}? Esta ação não pode ser desfeita.`)) return;
+    if (
+      !confirm(
+        `Tem a certeza que deseja eliminar a inscrição de ${selectedUser.name}? Esta ação não pode ser desfeita.`,
+      )
+    )
+      return;
     try {
       await GalaService.admin.deleteRegistration(selectedUser._id);
       toast.success("Inscrição eliminada com sucesso.");
@@ -152,7 +170,12 @@ export default function RegistrantsAdmin() {
 
   const handleRejectProof = async (phase: number) => {
     if (!selectedUser) return;
-    if (!confirm(`Tem a certeza que deseja rejeitar o comprovativo (fase ${phase}) e notificar o utilizador por email?`)) return;
+    if (
+      !confirm(
+        `Tem a certeza que deseja rejeitar o comprovativo (fase ${phase}) e notificar o utilizador por email?`,
+      )
+    )
+      return;
     try {
       await GalaService.admin.rejectPaymentProof(selectedUser._id, phase);
       toast.success("Comprovativo rejeitado com sucesso.");
@@ -177,7 +200,7 @@ export default function RegistrantsAdmin() {
 
       <RegistrantsStatsGrid stats={stats} />
       <RegistrantsCharts stats={stats} />
-      
+
       <RegistrantsAutoAssign
         busesLength={buses.length}
         autoStrategy={autoStrategy}
@@ -198,14 +221,21 @@ export default function RegistrantsAdmin() {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => downloadCsv("/api/gala/v1/admin/export/registrations", "inscricoes.csv")}
+          onClick={() =>
+            downloadCsv(
+              "/api/gala/v1/admin/export/registrations",
+              "inscricoes.csv",
+            )
+          }
           className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
         >
           <FontAwesomeIcon icon={faDownload} /> Exportar inscrições (CSV)
         </button>
         <button
           type="button"
-          onClick={() => downloadCsv("/api/gala/v1/admin/export/tables", "mesas.csv")}
+          onClick={() =>
+            downloadCsv("/api/gala/v1/admin/export/tables", "mesas.csv")
+          }
           className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
         >
           <FontAwesomeIcon icon={faDownload} /> Exportar mesas (CSV)
@@ -222,7 +252,8 @@ export default function RegistrantsAdmin() {
 
       {filtered.length > 0 && (
         <p className="text-right text-[0.6rem] text-white/20">
-          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"} {filtered.length !== users.length && `(de ${users.length})`}
+          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"}{" "}
+          {filtered.length !== users.length && `(de ${users.length})`}
         </p>
       )}
 

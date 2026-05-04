@@ -7,11 +7,20 @@ interface Props {
   readonly onChange: (companions: Companion[]) => void;
 }
 
-const emptyCompanion = (): Companion => ({ name: "", meal: "", allergies: "", email: "" });
+const emptyCompanion = (): Companion => ({
+  name: "",
+  meal: "",
+  allergies: "",
+  email: "",
+});
 
-export default function Step2CompanionEditor({ companions, onChange }: Readonly<Props>) {
+export default function Step2CompanionEditor({
+  companions,
+  onChange,
+}: Readonly<Props>) {
   const add = () => onChange([...companions, emptyCompanion()]);
-  const remove = (i: number) => onChange(companions.filter((_, idx) => idx !== i));
+  const remove = (i: number) =>
+    onChange(companions.filter((_, idx) => idx !== i));
   const updateName = (i: number, name: string) => {
     const next = companions.map((c, idx) => (idx === i ? { ...c, name } : c));
     onChange(next);
@@ -54,9 +63,15 @@ interface CardProps {
   readonly onRemove: () => void;
 }
 
-function CompanionCard({ index, companion, onUpdateName, onUpdateEmail, onRemove }: Readonly<CardProps>) {
+function CompanionCard({
+  index,
+  companion,
+  onUpdateName,
+  onUpdateEmail,
+  onRemove,
+}: Readonly<CardProps>) {
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+    <div className="border-white/8 bg-white/3 rounded-xl border p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
           Acompanhante {index + 1}
@@ -94,7 +109,10 @@ function CompanionCard({ index, companion, onUpdateName, onUpdateEmail, onRemove
             className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
           >
             <FontAwesomeIcon icon={faEnvelope} className="text-[0.5rem]" />
-            Email <span className="normal-case text-white/25">(opcional — para sincronizar conta futura)</span>
+            Email{" "}
+            <span className="normal-case text-white/25">
+              (opcional — para sincronizar conta futura)
+            </span>
           </label>
           <input
             id={`companion-email-${index}`}
@@ -105,11 +123,11 @@ function CompanionCard({ index, companion, onUpdateName, onUpdateEmail, onRemove
             className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
           />
           <p className="text-[0.55rem] text-white/25">
-            Se esta pessoa criar conta com este email, a inscrição como acompanhante será ligada automaticamente.
+            Se esta pessoa criar conta com este email, a inscrição como
+            acompanhante será ligada automaticamente.
           </p>
         </div>
       </div>
     </div>
   );
 }
-

@@ -1,6 +1,11 @@
 import { useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faTrash, faUpload, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlus,
+  faTrash,
+  faUpload,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { useHomepageConfig, type BusVehicle } from "@/hooks/useHomepageConfig";
 import GalaService from "@/services/GalaService";
 import {
@@ -12,7 +17,6 @@ import {
   StringListEditor,
   INPUT_CLS,
 } from "./components/AdminUI";
-
 
 function ImageUploadField({
   label,
@@ -68,18 +72,35 @@ function ImageUploadField({
             return "Carregar foto";
           })()}
         </button>
-        <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFile}
+        />
       </div>
     </Field>
   );
 }
 
-function BusesEditor({ buses, onChange }: { readonly buses: BusVehicle[]; readonly onChange: (v: BusVehicle[]) => void }) {
+function BusesEditor({
+  buses,
+  onChange,
+}: {
+  readonly buses: BusVehicle[];
+  readonly onChange: (v: BusVehicle[]) => void;
+}) {
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-[1fr_6rem_2.5rem] gap-2 px-1">
         {["Nome do autocarro", "Lugares", ""].map((h) => (
-          <span key={h} className="text-[0.55rem] uppercase tracking-widest text-white/25">{h}</span>
+          <span
+            key={h}
+            className="text-[0.55rem] uppercase tracking-widest text-white/25"
+          >
+            {h}
+          </span>
         ))}
       </div>
       {buses.map((bus, i) => (
@@ -87,7 +108,13 @@ function BusesEditor({ buses, onChange }: { readonly buses: BusVehicle[]; readon
           <input
             type="text"
             value={bus.name}
-            onChange={(e) => onChange(buses.map((b, idx) => idx === i ? { ...b, name: e.target.value } : b))}
+            onChange={(e) =>
+              onChange(
+                buses.map((b, idx) =>
+                  idx === i ? { ...b, name: e.target.value } : b,
+                ),
+              )
+            }
             placeholder="Ex: Autocarro 1"
             className={INPUT_CLS}
           />
@@ -95,17 +122,32 @@ function BusesEditor({ buses, onChange }: { readonly buses: BusVehicle[]; readon
             type="number"
             min={1}
             value={bus.capacity}
-            onChange={(e) => onChange(buses.map((b, idx) => idx === i ? { ...b, capacity: Number(e.target.value) } : b))}
+            onChange={(e) =>
+              onChange(
+                buses.map((b, idx) =>
+                  idx === i ? { ...b, capacity: Number(e.target.value) } : b,
+                ),
+              )
+            }
             className={INPUT_CLS}
           />
-          <button type="button" onClick={() => onChange(buses.filter((_, idx) => idx !== i))} className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400">
+          <button
+            type="button"
+            onClick={() => onChange(buses.filter((_, idx) => idx !== i))}
+            className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
+          >
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           </button>
         </div>
       ))}
       <button
         type="button"
-        onClick={() => onChange([...buses, { id: `bus_${Date.now()}`, name: "", capacity: 50 }])}
+        onClick={() =>
+          onChange([
+            ...buses,
+            { id: `bus_${Date.now()}`, name: "", capacity: 50 },
+          ])
+        }
         className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"
       >
         <FontAwesomeIcon icon={faPlus} /> Adicionar autocarro
@@ -115,10 +157,14 @@ function BusesEditor({ buses, onChange }: { readonly buses: BusVehicle[]; readon
 }
 
 export default function HomepageAdmin() {
-  const { config, emailConfig, updateSection, updateEmails } = useHomepageConfig();
+  const { config, emailConfig, updateSection, updateEmails } =
+    useHomepageConfig();
   const [saved, setSaved] = useState(false);
 
-  const save = <K extends keyof typeof config>(section: K, updates: Partial<(typeof config)[K]>) => {
+  const save = <K extends keyof typeof config>(
+    section: K,
+    updates: Partial<(typeof config)[K]>,
+  ) => {
     updateSection(section, updates);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -142,8 +188,14 @@ export default function HomepageAdmin() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/40">Controla o que aparece na homepage.</p>
-        {saved && <span className="text-xs font-semibold text-dark-gold/80">✓ Guardado</span>}
+        <p className="text-sm text-white/40">
+          Controla o que aparece na homepage.
+        </p>
+        {saved && (
+          <span className="text-xs font-semibold text-dark-gold/80">
+            ✓ Guardado
+          </span>
+        )}
       </div>
 
       <Section title="1. Categorias e Nomeados" defaultOpen>
@@ -178,13 +230,25 @@ export default function HomepageAdmin() {
         {config.dj.visible && (
           <>
             <Field label="Nome do DJ">
-              <TextInput value={config.dj.name} onChange={(v) => save("dj", { name: v })} placeholder="Ex: DJ Nuno" />
+              <TextInput
+                value={config.dj.name}
+                onChange={(v) => save("dj", { name: v })}
+                placeholder="Ex: DJ Nuno"
+              />
             </Field>
             <Field label="Bio / Descrição">
-              <TextArea value={config.dj.bio} onChange={(v) => save("dj", { bio: v })} placeholder="Uma breve descrição..." />
+              <TextArea
+                value={config.dj.bio}
+                onChange={(v) => save("dj", { bio: v })}
+                placeholder="Uma breve descrição..."
+              />
             </Field>
             <Field label="Link Playlist Spotify">
-              <TextInput value={config.dj.spotify_url ?? ""} onChange={(v) => save("dj", { spotify_url: v || null })} placeholder="https://open.spotify.com/..." />
+              <TextInput
+                value={config.dj.spotify_url ?? ""}
+                onChange={(v) => save("dj", { spotify_url: v || null })}
+                placeholder="https://open.spotify.com/..."
+              />
             </Field>
             <ImageUploadField
               label="Foto do DJ"
@@ -205,19 +269,32 @@ export default function HomepageAdmin() {
         {config.gallery.visible && (
           <>
             <Field label="Título">
-              <TextInput value={config.gallery.title} onChange={(v) => save("gallery", { title: v })} placeholder="Galeria" />
+              <TextInput
+                value={config.gallery.title}
+                onChange={(v) => save("gallery", { title: v })}
+                placeholder="Galeria"
+              />
             </Field>
             <Field label="Descrição (opcional)">
-              <TextArea value={config.gallery.description} onChange={(v) => save("gallery", { description: v })} />
+              <TextArea
+                value={config.gallery.description}
+                onChange={(v) => save("gallery", { description: v })}
+              />
             </Field>
             <Field label="Link da Galeria (Google Drive, etc.)">
-              <TextInput value={config.gallery.drive_url} onChange={(v) => save("gallery", { drive_url: v })} placeholder="https://drive.google.com/..." />
+              <TextInput
+                value={config.gallery.drive_url}
+                onChange={(v) => save("gallery", { drive_url: v })}
+                placeholder="https://drive.google.com/..."
+              />
             </Field>
             <ImageUploadField
               label="Foto de preview"
               currentUrl={config.gallery.preview_photo_url}
               onUpload={handleGalleryPreviewUpload}
-              onDelete={async () => save("gallery", { preview_photo_url: null })}
+              onDelete={async () =>
+                save("gallery", { preview_photo_url: null })
+              }
             />
           </>
         )}
@@ -234,7 +311,9 @@ export default function HomepageAdmin() {
             <Field label="Local de partida">
               <TextInput
                 value={config.bus_schedule.departure_location}
-                onChange={(v) => save("bus_schedule", { departure_location: v })}
+                onChange={(v) =>
+                  save("bus_schedule", { departure_location: v })
+                }
                 placeholder="Ex: Rotunda do Rossio, Aveiro"
               />
             </Field>
@@ -273,10 +352,17 @@ export default function HomepageAdmin() {
         {config.after_party.visible && (
           <>
             <Field label="Título">
-              <TextInput value={config.after_party.title} onChange={(v) => save("after_party", { title: v })} placeholder="After Party" />
+              <TextInput
+                value={config.after_party.title}
+                onChange={(v) => save("after_party", { title: v })}
+                placeholder="After Party"
+              />
             </Field>
             <Field label="Descrição (opcional)">
-              <TextArea value={config.after_party.description} onChange={(v) => save("after_party", { description: v })} />
+              <TextArea
+                value={config.after_party.description}
+                onChange={(v) => save("after_party", { description: v })}
+              />
             </Field>
             <Field label="Bebidas incluídas">
               <StringListEditor
@@ -292,27 +378,47 @@ export default function HomepageAdmin() {
       <Section title="7. Notificações por E-mail">
         <Toggle
           enabled={emailConfig.registration_confirmed}
-          onChange={(v) => { updateEmails({ registration_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+          onChange={(v) => {
+            updateEmails({ registration_confirmed: v });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }}
           label="Confirmação de Inscrição"
         />
         <Toggle
           enabled={emailConfig.payment_confirmed}
-          onChange={(v) => { updateEmails({ payment_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+          onChange={(v) => {
+            updateEmails({ payment_confirmed: v });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }}
           label="Pagamento Aceite"
         />
         <Toggle
           enabled={emailConfig.payment_rejected}
-          onChange={(v) => { updateEmails({ payment_rejected: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+          onChange={(v) => {
+            updateEmails({ payment_rejected: v });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }}
           label="Comprovativo de Pagamento Rejeitado"
         />
         <Toggle
           enabled={emailConfig.table_invite}
-          onChange={(v) => { updateEmails({ table_invite: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+          onChange={(v) => {
+            updateEmails({ table_invite: v });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }}
           label="Convite para Mesa"
         />
         <Toggle
           enabled={emailConfig.table_confirmed}
-          onChange={(v) => { updateEmails({ table_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+          onChange={(v) => {
+            updateEmails({ table_confirmed: v });
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }}
           label="Confirmação em Mesa"
         />
       </Section>

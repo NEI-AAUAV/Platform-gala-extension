@@ -55,7 +55,8 @@ export default function TriangleBackground() {
         style={{
           left: "8%",
           top: "-15%",
-          background: "linear-gradient(135deg, rgba(247,187,172,0.12), rgba(197,134,118,0.08))",
+          background:
+            "linear-gradient(135deg, rgba(247,187,172,0.12), rgba(197,134,118,0.08))",
         }}
       />
       <div
@@ -63,7 +64,8 @@ export default function TriangleBackground() {
         style={{
           right: "-8%",
           top: "45%",
-          background: "linear-gradient(135deg, rgba(197,134,118,0.10), rgba(247,187,172,0.06))",
+          background:
+            "linear-gradient(135deg, rgba(197,134,118,0.10), rgba(247,187,172,0.06))",
         }}
       />
       <div
@@ -71,7 +73,8 @@ export default function TriangleBackground() {
         style={{
           left: "35%",
           bottom: "-10%",
-          background: "linear-gradient(135deg, rgba(247,187,172,0.08), rgba(197,134,118,0.04))",
+          background:
+            "linear-gradient(135deg, rgba(247,187,172,0.08), rgba(197,134,118,0.04))",
         }}
       />
 
@@ -82,7 +85,10 @@ export default function TriangleBackground() {
           animate={{ opacity: 1 }}
           transition={{ duration: 2 }}
         >
-          <Particles className="absolute h-full w-full" options={particlesConfig} />
+          <Particles
+            className="absolute h-full w-full"
+            options={particlesConfig}
+          />
         </motion.div>
       )}
     </div>

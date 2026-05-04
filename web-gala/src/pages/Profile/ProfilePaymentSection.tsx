@@ -11,7 +11,12 @@ import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import GalaService from "@/services/GalaService";
 
-const ALLOWED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 const MAX_SIZE_MB = 10;
 
 interface Props {
@@ -29,16 +34,30 @@ function isDeadlinePassed(dateStr: string): boolean {
   }
 }
 
-export default function ProfilePaymentSection({ config, proofName, onProofChange }: Readonly<Props>) {
+export default function ProfilePaymentSection({
+  config,
+  proofName,
+  onProofChange,
+}: Readonly<Props>) {
   const { sessionUser } = useSessionUser();
-  const yearLabel = sessionUser?.matriculation ? String(sessionUser.matriculation) : null;
-  const contact = config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ?? config.paymentContacts[0];
+  const yearLabel = sessionUser?.matriculation
+    ? String(sessionUser.matriculation)
+    : null;
+  const contact =
+    config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ??
+    config.paymentContacts[0];
 
   const userChosePhased = sessionUser?.phased_payment ?? false;
   const phase2ProofName = sessionUser?.payment_proof_url_phase2 ?? null;
 
-  const phase1Deadline = userChosePhased && config.phase1Deadline ? config.phase1Deadline : config.paymentDeadlineDate;
-  const phase2Deadline = userChosePhased && config.phase2Deadline ? config.phase2Deadline : config.paymentDeadlineDate;
+  const phase1Deadline =
+    userChosePhased && config.phase1Deadline
+      ? config.phase1Deadline
+      : config.paymentDeadlineDate;
+  const phase2Deadline =
+    userChosePhased && config.phase2Deadline
+      ? config.phase2Deadline
+      : config.paymentDeadlineDate;
 
   const phase1Passed = isDeadlinePassed(phase1Deadline);
   const phase2Passed = isDeadlinePassed(phase2Deadline);
@@ -46,18 +65,27 @@ export default function ProfilePaymentSection({ config, proofName, onProofChange
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {(config.paymentMethod === "mbway" || config.paymentMethod === "both") && (
+        {(config.paymentMethod === "mbway" ||
+          config.paymentMethod === "both") && (
           <MBWayCard contact={contact} config={config} />
         )}
-        {(config.paymentMethod === "iban" || config.paymentMethod === "both") && (
-          <IBANCard config={config} />
-        )}
+        {(config.paymentMethod === "iban" ||
+          config.paymentMethod === "both") && <IBANCard config={config} />}
       </div>
 
-      <div className={["grid grid-cols-1 gap-4", userChosePhased ? "md:grid-cols-2" : ""].join(" ")}>
+      <div
+        className={[
+          "grid grid-cols-1 gap-4",
+          userChosePhased ? "md:grid-cols-2" : "",
+        ].join(" ")}
+      >
         <ProofUpload
           phase={1}
-          label={userChosePhased ? "Comprovativo — Fase 1" : "Comprovativo de Pagamento"}
+          label={
+            userChosePhased
+              ? "Comprovativo — Fase 1"
+              : "Comprovativo de Pagamento"
+          }
           deadline={phase1Deadline}
           deadlinePassed={phase1Passed}
           proofName={proofName}
@@ -88,7 +116,7 @@ function MBWayCard({
   config: RegistrationConfig;
 }>) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 p-5">
+    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faCreditCard} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -97,16 +125,22 @@ function MBWayCard({
       </div>
       {contact && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-white/40">Contacto para a tua matrícula ({contact.year} ano):</p>
+          <p className="text-xs text-white/40">
+            Contacto para a tua matrícula ({contact.year} ano):
+          </p>
           <p className="text-sm font-semibold text-white/80">{contact.name}</p>
           <p className="font-gala text-lg font-bold tracking-wider text-light-gold">
             {contact.phone}
           </p>
         </div>
       )}
-      <div className="rounded-lg border border-white/6 bg-white/3 px-4 py-3">
-        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">Descrição do pagamento</p>
-        <p className="mt-1 text-xs text-white/60">{config.paymentDescription}</p>
+      <div className="border-white/6 bg-white/3 rounded-lg border px-4 py-3">
+        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
+          Descrição do pagamento
+        </p>
+        <p className="mt-1 text-xs text-white/60">
+          {config.paymentDescription}
+        </p>
       </div>
     </div>
   );
@@ -123,7 +157,7 @@ function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 p-5">
+    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faBuilding} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -132,7 +166,9 @@ function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
       </div>
       <div className="flex flex-col gap-2">
         <p className="text-xs text-white/40">Titular da conta:</p>
-        <p className="text-sm font-semibold text-white/80">{config.ibanHolder || "—"}</p>
+        <p className="text-sm font-semibold text-white/80">
+          {config.ibanHolder || "—"}
+        </p>
       </div>
       {config.ibanNumber && (
         <button
@@ -140,15 +176,21 @@ function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
           onClick={copy}
           className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 transition hover:border-light-gold/30"
         >
-          <span className="font-mono text-sm tracking-wider text-white/70">{config.ibanNumber}</span>
+          <span className="font-mono text-sm tracking-wider text-white/70">
+            {config.ibanNumber}
+          </span>
           <span className="ml-3 text-[0.6rem] font-semibold uppercase tracking-widest text-light-gold/60">
             {copied ? "Copiado ✓" : "Copiar"}
           </span>
         </button>
       )}
-      <div className="rounded-lg border border-white/6 bg-white/3 px-4 py-3">
-        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">Descrição da transferência</p>
-        <p className="mt-1 text-xs text-white/60">{config.paymentDescription}</p>
+      <div className="border-white/6 bg-white/3 rounded-lg border px-4 py-3">
+        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
+          Descrição da transferência
+        </p>
+        <p className="mt-1 text-xs text-white/60">
+          {config.paymentDescription}
+        </p>
       </div>
     </div>
   );
@@ -177,14 +219,19 @@ function ProofUpload({
   const { mutate } = useSessionUser();
 
   const validate = (file: File): string | null => {
-    if (!ALLOWED_TYPES.has(file.type)) return "Formato inválido. Usa PDF, JPG, PNG ou WebP.";
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) return `Ficheiro demasiado grande (máx. ${MAX_SIZE_MB}MB).`;
+    if (!ALLOWED_TYPES.has(file.type))
+      return "Formato inválido. Usa PDF, JPG, PNG ou WebP.";
+    if (file.size > MAX_SIZE_MB * 1024 * 1024)
+      return `Ficheiro demasiado grande (máx. ${MAX_SIZE_MB}MB).`;
     return null;
   };
 
   const handleFile = async (file: File) => {
     const err = validate(file);
-    if (err) { setError(err); return; }
+    if (err) {
+      setError(err);
+      return;
+    }
     setError(null);
     try {
       await GalaService.registration.uploadPaymentProof(file, phase);
@@ -208,20 +255,33 @@ function ProofUpload({
         {label}
       </h3>
       <p className="text-xs text-white/40">
-        Prazo: <span className={["font-semibold", deadlinePassed ? "text-red-400/80" : "text-white/60"].join(" ")}>{deadline}</span>
-        {deadlinePassed && <span className="ml-2 text-red-400/70">— Prazo expirado</span>}
+        Prazo:{" "}
+        <span
+          className={[
+            "font-semibold",
+            deadlinePassed ? "text-red-400/80" : "text-white/60",
+          ].join(" ")}
+        >
+          {deadline}
+        </span>
+        {deadlinePassed && (
+          <span className="ml-2 text-red-400/70">— Prazo expirado</span>
+        )}
       </p>
 
       {(() => {
         if (proofName) {
           return (
-            <div className="flex items-center gap-4 rounded-xl border border-dark-gold/30 bg-dark-gold/8 px-5 py-4">
-              <FontAwesomeIcon icon={faFileCircleCheck} className="text-dark-gold/70" />
+            <div className="bg-dark-gold/8 flex items-center gap-4 rounded-xl border border-dark-gold/30 px-5 py-4">
+              <FontAwesomeIcon
+                icon={faFileCircleCheck}
+                className="text-dark-gold/70"
+              />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-white/80">
                   {proofName.split("/").pop() ?? proofName}
                 </p>
-                <p className="text-xs text-white/35">Comprovativo submetido</p>
+                <p className="text-white/35 text-xs">Comprovativo submetido</p>
               </div>
               {!deadlinePassed && (
                 <button
@@ -238,9 +298,14 @@ function ProofUpload({
         if (deadlinePassed) {
           return (
             <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
-              <FontAwesomeIcon icon={faLock} className="text-xl text-red-400/40" />
-              <p className="text-sm font-semibold text-red-400/60">Prazo de envio encerrado</p>
-              <p className="text-xs text-white/30 text-center">
+              <FontAwesomeIcon
+                icon={faLock}
+                className="text-xl text-red-400/40"
+              />
+              <p className="text-sm font-semibold text-red-400/60">
+                Prazo de envio encerrado
+              </p>
+              <p className="text-center text-xs text-white/30">
                 Para resolver a situação, contacta a organização por email.
               </p>
             </div>
@@ -250,7 +315,10 @@ function ProofUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
             className={[
@@ -260,10 +328,17 @@ function ProofUpload({
                 : "border-white/12 hover:border-white/25",
             ].join(" ")}
           >
-            <FontAwesomeIcon icon={faCloudArrowUp} className="text-xl text-white/25" />
+            <FontAwesomeIcon
+              icon={faCloudArrowUp}
+              className="text-xl text-white/25"
+            />
             <div className="text-center">
-              <p className="text-sm font-semibold text-white/50">Clica ou arrasta o comprovativo</p>
-              <p className="text-xs text-white/25">PDF, JPG, PNG ou WebP · Máx. {MAX_SIZE_MB}MB</p>
+              <p className="text-sm font-semibold text-white/50">
+                Clica ou arrasta o comprovativo
+              </p>
+              <p className="text-xs text-white/25">
+                PDF, JPG, PNG ou WebP · Máx. {MAX_SIZE_MB}MB
+              </p>
             </div>
           </button>
         );
@@ -278,7 +353,9 @@ function ProofUpload({
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) { handleFile(f); }
+          if (f) {
+            handleFile(f);
+          }
           e.target.value = "";
         }}
       />
@@ -286,7 +363,10 @@ function ProofUpload({
       {!deadlinePassed && (
         <p className="text-xs text-white/30">
           Em alternativa, envia o comprovativo por email para{" "}
-          <a href={`mailto:${config.paymentEmail}`} className="text-light-gold/50 underline underline-offset-2 hover:text-light-gold">
+          <a
+            href={`mailto:${config.paymentEmail}`}
+            className="text-light-gold/50 underline underline-offset-2 hover:text-light-gold"
+          >
             {config.paymentEmail}
           </a>
         </p>

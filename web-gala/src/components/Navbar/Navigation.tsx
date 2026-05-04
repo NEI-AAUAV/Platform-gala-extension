@@ -81,8 +81,7 @@ export default function Navigation({ className }: NavigationProps) {
             </Link>
           </li>
         )}
-        {(scopes?.includes("admin") ||
-          scopes?.includes("manager-gala")) && (
+        {(scopes?.includes("admin") || scopes?.includes("manager-gala")) && (
           <li>
             <Link
               className={classNames(

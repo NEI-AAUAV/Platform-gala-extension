@@ -142,7 +142,7 @@ async def reject_payment_proof(
     background_tasks: BackgroundTasks,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
-    phase: Annotated[int, Query(default=1, ge=1, le=2)] = 1,
+    phase: Annotated[int, Query(ge=1, le=2)] = 1,
 ):
     """Rejects (deletes) payment proof for a user."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
@@ -186,7 +186,7 @@ async def admin_upload_payment_proof(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     file: Annotated[UploadFile, File(...)],
-    phase: Annotated[int, Query(default=1, ge=1, le=2)] = 1,
+    phase: Annotated[int, Query(ge=1, le=2)] = 1,
 ):
     """Admin uploads a payment proof file to R2 storage."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)

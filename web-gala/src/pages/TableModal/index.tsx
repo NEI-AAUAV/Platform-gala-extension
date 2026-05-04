@@ -53,7 +53,8 @@ function useModalPage(tableId: number) {
   const isHead = sessionUser?._id != null && table.head === sessionUser._id;
 
   // Check if the current user is invited to THIS specific table
-  const isInvited = sessionUser?._id != null && (table.invites ?? []).includes(sessionUser._id);
+  const isInvited =
+    sessionUser?._id != null && (table.invites ?? []).includes(sessionUser._id);
 
   if (state !== State.REGISTERED || time.tablesStatus !== TimeStatus.OPEN) {
     return <ViewTable table={table} inTable={false} mutate={mutate} />;
@@ -69,7 +70,9 @@ function useModalPage(tableId: number) {
   }
   if (isInvited && !inAnyTable) {
     // User has been invited to this table — show an accept/decline view
-    return <ViewTable table={table} inTable={false} mutate={mutate} isInvited />;
+    return (
+      <ViewTable table={table} inTable={false} mutate={mutate} isInvited />
+    );
   }
   return <ViewTable table={table} inTable={false} mutate={mutate} />;
 }

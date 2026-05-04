@@ -1,9 +1,18 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faCircleXmark, faBus, faChair, faUserGroup, faClock } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleCheck,
+  faCircleXmark,
+  faBus,
+  faChair,
+  faUserGroup,
+  faClock,
+} from "@fortawesome/free-solid-svg-icons";
 import { StatCard } from "./StatsComponents";
 import { RegistrantsStats } from "@/utils/registrantsStats";
 
-export default function RegistrantsStatsGrid({ stats }: Readonly<{ stats: RegistrantsStats }>) {
+export default function RegistrantsStatsGrid({
+  stats,
+}: Readonly<{ stats: RegistrantsStats }>) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       <StatCard

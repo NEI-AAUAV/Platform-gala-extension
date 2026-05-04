@@ -1,6 +1,16 @@
 const PT_MONTHS = [
-  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
 ];
 
 export function formatDatePT(isoString: string): string {

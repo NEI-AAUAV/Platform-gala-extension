@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBars,
+  faXmark,
+  faUser,
+  faUsersGear,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useUserStore } from "@/stores/useUserStore";
 import NEIService from "@/services/NEIService";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faXmark, faUser, faUsersGear, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 async function handleLogout() {
   const { end_session_url } = await NEIService.logout().catch(() => ({
@@ -38,42 +44,54 @@ export default function Navbar() {
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isMobileMenuOpen]);
 
   const closeMenu = () => setIsMobileMenuOpen(false);
   const displayName = [name, surname].filter(Boolean).join(" ");
-  const isAdmin = scopes?.some((role) => ["admin", "manager-gala"].includes(role));
+  const isAdmin = scopes?.some((role) =>
+    ["admin", "manager-gala"].includes(role),
+  );
 
-  const navLinks = [
-    { href: "/#sobre", label: "Sobre" },
-    { href: "/#timeline", label: "Fases" },
-    { href: "/vote", label: "Nomeados", internal: true },
-  ];
+  const navLinks = [];
 
   return (
     <header className="fixed top-0 z-50 w-full">
       <nav
         className={`w-full transition-all duration-300 ${
           isScrolled
-            ? "border-b border-light-gold/15 bg-[#050505]/90 shadow-lg backdrop-blur-md"
+            ? "border-light-gold/15 border-b bg-[#050505]/90 shadow-lg backdrop-blur-md"
             : "bg-transparent"
         }`}
       >
         <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3 md:px-8">
           {/* Logo */}
-          <Link to="/" onClick={closeMenu} className="flex items-center font-gala group">
-            <img src="/gala/logo.svg" alt="NEI Logo" className="h-12 w-auto transition-transform group-hover:scale-105" />
+          <Link
+            to="/"
+            onClick={closeMenu}
+            className="group flex items-center font-gala"
+          >
+            <img
+              src="/gala/logo.svg"
+              alt="NEI Logo"
+              className="h-12 w-auto transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop nav links */}
           <div className="hidden items-center gap-8 md:flex">
             {navLinks.map(({ href, label, internal }) =>
               internal ? (
-                <Link key={label} to={href} className={navLinkClass}>{label}</Link>
+                <Link key={label} to={href} className={navLinkClass}>
+                  {label}
+                </Link>
               ) : (
-                <a key={label} href={href} className={navLinkClass}>{label}</a>
-              )
+                <a key={label} href={href} className={navLinkClass}>
+                  {label}
+                </a>
+              ),
             )}
           </div>
 
@@ -102,7 +120,10 @@ export default function Navbar() {
                     to="/admin"
                     className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
                   >
-                    <FontAwesomeIcon icon={faUsersGear} className="text-[0.7rem] text-light-gold/50" />
+                    <FontAwesomeIcon
+                      icon={faUsersGear}
+                      className="text-[0.7rem] text-light-gold/50"
+                    />
                     Admin
                   </Link>
                 )}
@@ -110,7 +131,10 @@ export default function Navbar() {
                   to="/profile"
                   className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
                 >
-                  <FontAwesomeIcon icon={faUser} className="text-[0.7rem] text-light-gold/50" />
+                  <FontAwesomeIcon
+                    icon={faUser}
+                    className="text-[0.7rem] text-light-gold/50"
+                  />
                   {displayName || "Perfil"}
                 </Link>
                 <button
@@ -130,7 +154,10 @@ export default function Navbar() {
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
-            <FontAwesomeIcon icon={isMobileMenuOpen ? faXmark : faBars} className="text-sm" />
+            <FontAwesomeIcon
+              icon={isMobileMenuOpen ? faXmark : faBars}
+              className="text-sm"
+            />
           </button>
         </div>
       </nav>
@@ -160,8 +187,12 @@ export default function Navbar() {
               className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#0a0a0a] shadow-2xl md:hidden"
             >
               {/* Drawer header */}
-              <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-                <img src="/gala/logo.svg" alt="NEI Logo" className="h-10 w-auto" />
+              <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
+                <img
+                  src="/gala/logo.svg"
+                  alt="NEI Logo"
+                  className="h-10 w-auto"
+                />
                 <button
                   onClick={closeMenu}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/50 transition-colors hover:border-white/25 hover:text-white/80"
@@ -173,7 +204,7 @@ export default function Navbar() {
 
               {/* Nav links */}
               <nav className="flex flex-col gap-1 px-3 py-4">
-                {navLinks.map(({ href, label, internal }) => (
+                {navLinks.map(({ href, label, internal }) =>
                   internal ? (
                     <Link
                       key={label}
@@ -182,7 +213,10 @@ export default function Navbar() {
                       className="flex items-center justify-between rounded-xl px-4 py-3.5 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:bg-white/5 hover:text-light-gold"
                     >
                       {label}
-                      <FontAwesomeIcon icon={faChevronRight} className="text-[0.55rem] text-white/20" />
+                      <FontAwesomeIcon
+                        icon={faChevronRight}
+                        className="text-[0.55rem] text-white/20"
+                      />
                     </Link>
                   ) : (
                     <a
@@ -192,14 +226,17 @@ export default function Navbar() {
                       className="flex items-center justify-between rounded-xl px-4 py-3.5 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:bg-white/5 hover:text-light-gold"
                     >
                       {label}
-                      <FontAwesomeIcon icon={faChevronRight} className="text-[0.55rem] text-white/20" />
+                      <FontAwesomeIcon
+                        icon={faChevronRight}
+                        className="text-[0.55rem] text-white/20"
+                      />
                     </a>
-                  )
-                ))}
+                  ),
+                )}
               </nav>
 
               {/* Divider */}
-              <div className="mx-5 border-t border-white/8" />
+              <div className="border-white/8 mx-5 border-t" />
 
               {/* Auth section */}
               <div className="flex flex-col gap-2 px-4 py-5">
@@ -226,8 +263,12 @@ export default function Navbar() {
                   <>
                     {displayName && (
                       <div className="mb-1 px-1">
-                        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">Sessão iniciada como</p>
-                        <p className="mt-0.5 font-gala text-sm font-semibold text-white/70">{displayName}</p>
+                        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
+                          Sessão iniciada como
+                        </p>
+                        <p className="mt-0.5 font-gala text-sm font-semibold text-white/70">
+                          {displayName}
+                        </p>
                       </div>
                     )}
 
@@ -236,7 +277,10 @@ export default function Navbar() {
                       onClick={closeMenu}
                       className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
                     >
-                      <FontAwesomeIcon icon={faUser} className="w-4 text-light-gold/40" />
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        className="w-4 text-light-gold/40"
+                      />
                       O Meu Perfil
                     </Link>
 
@@ -246,13 +290,19 @@ export default function Navbar() {
                         onClick={closeMenu}
                         className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
                       >
-                        <FontAwesomeIcon icon={faUsersGear} className="w-4 text-light-gold/40" />
+                        <FontAwesomeIcon
+                          icon={faUsersGear}
+                          className="w-4 text-light-gold/40"
+                        />
                         Painel Admin
                       </Link>
                     )}
 
                     <button
-                      onClick={() => { closeMenu(); handleLogout(); }}
+                      onClick={() => {
+                        closeMenu();
+                        handleLogout();
+                      }}
                       className="mt-1 flex items-center justify-center py-3 font-gala text-sm font-semibold text-white/30 transition-colors hover:text-red-400"
                     >
                       Terminar Sessão

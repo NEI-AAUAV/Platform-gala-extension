@@ -15,9 +15,16 @@ interface StepIndicatorProps {
   readonly maxReached: number;
 }
 
-export default function StepIndicator({ current, onStepClick, maxReached }: Readonly<StepIndicatorProps>) {
+export default function StepIndicator({
+  current,
+  onStepClick,
+  maxReached,
+}: Readonly<StepIndicatorProps>) {
   return (
-    <nav className="relative flex items-center justify-center gap-0" aria-label="Passos da inscrição">
+    <nav
+      className="relative flex items-center justify-center gap-0"
+      aria-label="Passos da inscrição"
+    >
       {STEPS.map((step, i) => {
         const isDone = step.n < current;
         const isActive = step.n === current;
@@ -36,7 +43,7 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Read
                 {isActive && (
                   <motion.div
                     layoutId="active-step"
-                    className="absolute inset-0 rounded-full border border-light-gold/60 bg-light-gold/15"
+                    className="bg-light-gold/15 absolute inset-0 rounded-full border border-light-gold/60"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}

@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faEnvelope, faIdCard, faCircleDot, faBus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faUser,
+  faEnvelope,
+  faIdCard,
+  faCircleDot,
+  faBus,
+} from "@fortawesome/free-solid-svg-icons";
 import { useUserStore } from "@/stores/useUserStore";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useLoginLink from "@/hooks/useLoginLink";
@@ -13,10 +19,22 @@ import ProfileTableSection from "./ProfileTableSection";
 
 type RegistrationStatus = "pending_payment" | "confirmed" | "cancelled";
 
-const STATUS_LABEL: Record<RegistrationStatus, { label: string; color: string }> = {
-  pending_payment: { label: "Aguarda pagamento", color: "text-yellow-400/80 border-yellow-400/30 bg-yellow-400/8" },
-  confirmed: { label: "Confirmada", color: "text-emerald-400/80 border-emerald-400/30 bg-emerald-400/8" },
-  cancelled: { label: "Cancelada", color: "text-red-400/80 border-red-400/30 bg-red-400/8" },
+const STATUS_LABEL: Record<
+  RegistrationStatus,
+  { label: string; color: string }
+> = {
+  pending_payment: {
+    label: "Aguarda pagamento",
+    color: "text-yellow-400/80 border-yellow-400/30 bg-yellow-400/8",
+  },
+  confirmed: {
+    label: "Confirmada",
+    color: "text-emerald-400/80 border-emerald-400/30 bg-emerald-400/8",
+  },
+  cancelled: {
+    label: "Cancelada",
+    color: "text-red-400/80 border-red-400/30 bg-red-400/8",
+  },
 };
 
 type Tab = "registration" | "payment" | "table";
@@ -41,8 +59,8 @@ export default function Profile() {
   // flickering "not registered" for users who are actually registered.
   if (state === State.AUTHENTICATED && isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-white/30 text-sm">A carregar perfil...</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-sm text-white/30">A carregar perfil...</p>
       </div>
     );
   }
@@ -52,7 +70,9 @@ export default function Profile() {
   }
 
   // Derive registration status and proof from backend data (source of truth)
-  const registrationStatus: RegistrationStatus = sessionUser?.has_payed ? "confirmed" : "pending_payment";
+  const registrationStatus: RegistrationStatus = sessionUser?.has_payed
+    ? "confirmed"
+    : "pending_payment";
   const proofName = sessionUser?.payment_proof_url ?? null;
 
   const { label, color } = STATUS_LABEL[registrationStatus];
@@ -70,9 +90,16 @@ export default function Profile() {
           <span className="text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-light-gold/40">
             Jantar de Gala — Perfil
           </span>
-          <h1 className="font-gala text-3xl font-bold text-light-gold">O Meu Perfil</h1>
-          <span className={`rounded-full border px-4 py-1 text-xs font-semibold ${color}`}>
-            <FontAwesomeIcon icon={faCircleDot} className="mr-1.5 text-[0.6rem]" />
+          <h1 className="font-gala text-3xl font-bold text-light-gold">
+            O Meu Perfil
+          </h1>
+          <span
+            className={`rounded-full border px-4 py-1 text-xs font-semibold ${color}`}
+          >
+            <FontAwesomeIcon
+              icon={faCircleDot}
+              className="mr-1.5 text-[0.6rem]"
+            />
             {label}
           </span>
         </motion.div>
@@ -81,29 +108,39 @@ export default function Profile() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 rounded-xl border border-purple-400/30 bg-purple-400/10 p-4 text-sm text-purple-100/90 text-center flex flex-col gap-1 items-center"
+            className="mb-6 flex flex-col items-center gap-1 rounded-xl border border-purple-400/30 bg-purple-400/10 p-4 text-center text-sm text-purple-100/90"
           >
             <span className="font-semibold">Inscrito como Acompanhante</span>
-            <span className="text-purple-100/70 text-xs">Foste inscrito no jantar de gala como acompanhante. O teu pagamento e mesa são geridos pela pessoa que te convidou.</span>
+            <span className="text-xs text-purple-100/70">
+              Foste inscrito no jantar de gala como acompanhante. O teu
+              pagamento e mesa são geridos pela pessoa que te convidou.
+            </span>
           </motion.div>
-        ) : sessionUser?.admin_created && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 rounded-xl border border-blue-400/30 bg-blue-400/10 p-4 text-sm text-blue-100/90 text-center flex flex-col gap-1 items-center"
-          >
-            <span className="font-semibold">Inscrição Automática</span>
-            <span className="text-blue-100/70 text-xs">A tua inscrição foi criada por um administrador. Podes consultar os detalhes e proceder com a tua mesa ou pagamento.</span>
-          </motion.div>
+        ) : (
+          sessionUser?.admin_created && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex flex-col items-center gap-1 rounded-xl border border-blue-400/30 bg-blue-400/10 p-4 text-center text-sm text-blue-100/90"
+            >
+              <span className="font-semibold">Inscrição Automática</span>
+              <span className="text-xs text-blue-100/70">
+                A tua inscrição foi criada por um administrador. Podes consultar
+                os detalhes e proceder com a tua mesa ou pagamento.
+              </span>
+            </motion.div>
+          )
         )}
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="mb-8 flex items-center justify-center gap-2 border-b border-white/8 pb-4"
+          className="border-white/8 mb-8 flex items-center justify-center gap-2 border-b pb-4"
         >
-          {TABS.filter(t => t.id !== "payment" || !sessionUser?.is_companion_of).map(({ id, label: tabLabel }) => (
+          {TABS.filter(
+            (t) => t.id !== "payment" || !sessionUser?.is_companion_of,
+          ).map(({ id, label: tabLabel }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
@@ -119,15 +156,20 @@ export default function Profile() {
           ))}
         </motion.div>
 
-        <div className="rounded-2xl border border-white/8 bg-white/3 p-6 sm:p-8">
+        <div className="border-white/8 bg-white/3 rounded-2xl border p-6 sm:p-8">
           {activeTab === "registration" && (
-            <RegistrationTab sessionUser={sessionUser} buses={homepage.bus_schedule.buses} />
+            <RegistrationTab
+              sessionUser={sessionUser}
+              buses={homepage.bus_schedule.buses}
+            />
           )}
           {activeTab === "payment" && (
             <ProfilePaymentSection
               config={config}
               proofName={proofName}
-              onProofChange={() => { /* proof updates are now reflected via SWR revalidation */ }}
+              onProofChange={() => {
+                /* proof updates are now reflected via SWR revalidation */
+              }}
             />
           )}
           {activeTab === "table" && <ProfileTableSection />}
@@ -147,19 +189,32 @@ function RegistrationTab({
   const { name, surname, email } = useUserStore();
 
   const busName = sessionUser?.bus_assignment
-    ? (buses.find((b) => b.id === sessionUser.bus_assignment)?.name ?? sessionUser.bus_assignment)
+    ? buses.find((b) => b.id === sessionUser.bus_assignment)?.name ??
+      sessionUser.bus_assignment
     : null;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <InfoRow icon={faUser} label="Nome" value={[name, surname].filter(Boolean).join(" ") || "—"} />
+        <InfoRow
+          icon={faUser}
+          label="Nome"
+          value={[name, surname].filter(Boolean).join(" ") || "—"}
+        />
         <InfoRow icon={faEnvelope} label="Email" value={email || "—"} />
-        <InfoRow icon={faIdCard} label="Nº Mecanográfico" value={String(sessionUser?.nmec || "—")} />
+        <InfoRow
+          icon={faIdCard}
+          label="Nº Mecanográfico"
+          value={String(sessionUser?.nmec || "—")}
+        />
         <InfoRow
           icon={faIdCard}
           label="Ano"
-          value={sessionUser?.matriculation ? `${sessionUser.matriculation}º Ano` : "Alumni / Outro"}
+          value={
+            sessionUser?.matriculation
+              ? `${sessionUser.matriculation}º Ano`
+              : "Alumni / Outro"
+          }
         />
         {sessionUser?.bus_option && sessionUser.bus_option !== "NONE" && (
           <InfoRow
@@ -169,22 +224,31 @@ function RegistrationTab({
           />
         )}
       </div>
-      <div className="rounded-xl border border-white/6 bg-white/3 px-5 py-4">
+      <div className="border-white/6 bg-white/3 rounded-xl border px-5 py-4">
         <p className="text-xs text-white/40">
-          Para alterar os dados da inscrição (prato, autocarro, acompanhantes), contacta a organização
-          por email.
+          Para alterar os dados da inscrição (prato, autocarro, acompanhantes),
+          contacta a organização por email.
         </p>
       </div>
     </div>
   );
 }
 
-function InfoRow({ icon, label, value }: Readonly<{ icon: typeof faUser; label: string; value: string }>) {
+function InfoRow({
+  icon,
+  label,
+  value,
+}: Readonly<{ icon: typeof faUser; label: string; value: string }>) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-4 py-3">
-      <FontAwesomeIcon icon={icon} className="w-3 flex-shrink-0 text-light-gold/40" />
+    <div className="border-white/6 bg-white/3 flex items-center gap-3 rounded-xl border px-4 py-3">
+      <FontAwesomeIcon
+        icon={icon}
+        className="w-3 flex-shrink-0 text-light-gold/40"
+      />
       <div>
-        <p className="text-[0.6rem] uppercase tracking-widest text-white/35">{label}</p>
+        <p className="text-white/35 text-[0.6rem] uppercase tracking-widest">
+          {label}
+        </p>
         <p className="text-sm font-semibold text-white/75">{value}</p>
       </div>
     </div>
@@ -194,7 +258,9 @@ function InfoRow({ icon, label, value }: Readonly<{ icon: typeof faUser; label: 
 function NotRegisteredView() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 pt-28 text-center">
-      <h1 className="font-gala text-2xl font-bold text-white/70">Ainda não te inscreveste</h1>
+      <h1 className="font-gala text-2xl font-bold text-white/70">
+        Ainda não te inscreveste
+      </h1>
       <p className="max-w-sm text-sm text-white/40">
         Completa a inscrição para acederes ao teu perfil do Jantar de Gala.
       </p>

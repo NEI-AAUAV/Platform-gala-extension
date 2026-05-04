@@ -7,7 +7,6 @@ export interface Companion {
   email?: string;
 }
 
-
 export type BusOption = "round_trip" | "one_way" | "none";
 
 export interface WizardData {
@@ -63,13 +62,16 @@ function loadData(userId: string | undefined): WizardData {
 export function useWizardState(userId: string | undefined) {
   const [data, setData] = useState<WizardData>(() => loadData(userId));
 
-  const update = useCallback((updates: Partial<WizardData>) => {
-    setData((prev) => {
-      const next = { ...prev, ...updates };
-      localStorage.setItem(storageKey(userId), JSON.stringify(next));
-      return next;
-    });
-  }, [userId]);
+  const update = useCallback(
+    (updates: Partial<WizardData>) => {
+      setData((prev) => {
+        const next = { ...prev, ...updates };
+        localStorage.setItem(storageKey(userId), JSON.stringify(next));
+        return next;
+      });
+    },
+    [userId],
+  );
 
   const reset = useCallback(() => {
     localStorage.removeItem(storageKey(userId));

@@ -8,4 +8,3 @@ type Table = {
   invite_token?: string | null;
   invites?: number[];
 };
-

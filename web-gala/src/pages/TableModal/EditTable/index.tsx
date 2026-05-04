@@ -28,7 +28,10 @@ type EditTableProps = {
 
 type SearchResult = { id: number; name: string; email: string };
 
-function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => void }>) {
+function InvitePanel({
+  table,
+  mutate,
+}: Readonly<{ table: Table; mutate: () => void }>) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -40,7 +43,10 @@ function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => v
   const handleSearch = (q: string) => {
     setQuery(q);
     clearTimeout(debounceRef.current);
-    if (q.length < 2) { setResults([]); return; }
+    if (q.length < 2) {
+      setResults([]);
+      return;
+    }
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
@@ -88,7 +94,7 @@ function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => v
       <div className="relative">
         <FontAwesomeIcon
           icon={faSearch}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20 text-xs"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-white/20"
         />
         <input
           type="text"
@@ -101,14 +107,21 @@ function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => v
 
       {/* Search results */}
       {results.length > 0 && (
-        <div className="rounded-xl border border-white/8 bg-[#111] divide-y divide-white/5 overflow-hidden">
+        <div className="border-white/8 divide-y divide-white/5 overflow-hidden rounded-xl border bg-[#111]">
           {results.map((u) => {
             const alreadyInvited = pending.includes(u.id);
             return (
-              <div key={u.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <div
+                key={u.id}
+                className="flex items-center justify-between gap-3 px-4 py-2.5"
+              >
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-white/80">{u.name}</p>
-                  <p className="truncate text-[0.6rem] text-white/30">{u.email}</p>
+                  <p className="truncate text-xs font-semibold text-white/80">
+                    {u.name}
+                  </p>
+                  <p className="truncate text-[0.6rem] text-white/30">
+                    {u.email}
+                  </p>
                 </div>
                 {alreadyInvited ? (
                   <span className="shrink-0 text-[0.6rem] font-bold uppercase text-light-gold/60">
@@ -118,7 +131,7 @@ function InvitePanel({ table, mutate }: Readonly<{ table: Table; mutate: () => v
                   <button
                     type="button"
                     onClick={() => invite(u.id)}
-                    className="shrink-0 rounded-full border border-light-gold/40 px-3 py-1 text-[0.6rem] font-bold text-light-gold hover:bg-light-gold/10 transition-all"
+                    className="shrink-0 rounded-full border border-light-gold/40 px-3 py-1 text-[0.6rem] font-bold text-light-gold transition-all hover:bg-light-gold/10"
                   >
                     Convidar
                   </button>
@@ -161,8 +174,8 @@ function PendingInviteRow({
 }>) {
   const { neiUser } = useNEIUser(userId);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-white/3 px-3 py-2">
-      <div className="flex items-center gap-2 min-w-0">
+    <div className="border-white/8 bg-white/3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2">
         <Avatar id={userId} className="w-4 rounded-full" />
         <span className="truncate text-xs text-white/60">
           {neiUser ? `${neiUser.name} ${neiUser.surname}` : `#${userId}`}
@@ -180,7 +193,10 @@ function PendingInviteRow({
   );
 }
 
-function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => void }>) {
+function PhotoUpload({
+  table,
+  mutate,
+}: Readonly<{ table: Table; mutate: () => void }>) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const toast = useAppToast();
@@ -203,7 +219,7 @@ function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => v
   if (!photoEnabled && !table.photo_url) return null;
 
   return (
-    <div className="flex items-center justify-between rounded-xl border border-dashed border-white/10 bg-white/2 p-4">
+    <div className="bg-white/2 flex items-center justify-between rounded-xl border border-dashed border-white/10 p-4">
       <div className="flex items-center gap-4">
         {table.photo_url ? (
           <img
@@ -218,7 +234,9 @@ function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => v
         )}
         <div>
           <p className="text-xs font-bold text-white/80">Foto de Grupo</p>
-          <p className="text-[0.6rem] text-white/40 uppercase tracking-tighter">Visível para todos na mesa</p>
+          <p className="text-[0.6rem] uppercase tracking-tighter text-white/40">
+            Visível para todos na mesa
+          </p>
         </div>
       </div>
       {photoEnabled && (
@@ -227,7 +245,7 @@ function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => v
             type="button"
             disabled={uploading}
             onClick={() => fileRef.current?.click()}
-            className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 hover:border-light-gold/40 hover:text-light-gold transition-all disabled:opacity-40"
+            className="rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-[0.6rem] font-bold text-white/70 transition-all hover:border-light-gold/40 hover:text-light-gold disabled:opacity-40"
           >
             {uploading ? <FontAwesomeIcon icon={faSpinner} spin /> : "ALTERAR"}
           </button>
@@ -238,7 +256,9 @@ function PhotoUpload({ table, mutate }: Readonly<{ table: Table; mutate: () => v
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) { handleFile(f); }
+              if (f) {
+                handleFile(f);
+              }
               e.target.value = "";
             }}
           />
@@ -274,11 +294,11 @@ export default function EditTable({ table, mutate }: EditTableProps) {
         {/* Header with Table Name & Owner Badge */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-light-gold">
-               <Avatar className="w-3" /> Dono da Mesa
-             </div>
+            <div className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-light-gold">
+              <Avatar className="w-3" /> Dono da Mesa
+            </div>
           </div>
-          
+
           <div className="flex items-start gap-4">
             <textarea
               rows={1}
@@ -301,13 +321,18 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                 if (val === table.name) return;
 
                 useTableEdit(table._id, { name: val })
-                  .then(() => { toast.success("Nome guardado."); mutate(); })
-                  .catch((e) => toast.error(extractApiError(e, "Erro ao guardar nome.")));
+                  .then(() => {
+                    toast.success("Nome guardado.");
+                    mutate();
+                  })
+                  .catch((e) =>
+                    toast.error(extractApiError(e, "Erro ao guardar nome.")),
+                  );
                 titleRef.current!.readOnly = true;
               }}
             />
             <button
-              className="mt-2 text-white/20 hover:text-light-gold transition-colors"
+              className="mt-2 text-white/20 transition-colors hover:text-light-gold"
               type="button"
               onClick={() => {
                 titleRef.current!.readOnly = false;
@@ -318,7 +343,9 @@ export default function EditTable({ table, mutate }: EditTableProps) {
             </button>
           </div>
           {error?.name && (
-            <p className="text-[0.65rem] font-bold uppercase text-red-400">O nome deve ter entre 3 a 20 caracteres</p>
+            <p className="text-[0.65rem] font-bold uppercase text-red-400">
+              O nome deve ter entre 3 a 20 caracteres
+            </p>
           )}
         </div>
 
@@ -327,7 +354,9 @@ export default function EditTable({ table, mutate }: EditTableProps) {
 
         {/* Guest List & Pending Requests */}
         <div className="space-y-6">
-          <h4 className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">Lugar dos Convidados</h4>
+          <h4 className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+            Lugar dos Convidados
+          </h4>
           <GuestList persons={table.persons} />
           <AcceptPending
             persons={table.persons}
@@ -348,7 +377,9 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                 mutate();
                 navigate("/reserve");
               } catch (e) {
-                toast.error(extractApiError(e, "Não foi possível abandonar a mesa."));
+                toast.error(
+                  extractApiError(e, "Não foi possível abandonar a mesa."),
+                );
               }
             }}
           >

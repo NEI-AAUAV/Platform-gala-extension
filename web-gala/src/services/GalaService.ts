@@ -51,7 +51,12 @@ type VoteCategoryCreate = {
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
 
-export type ManagerPermissionKey = "registration" | "tables" | "categories" | "homepage" | "buses";
+export type ManagerPermissionKey =
+  | "registration"
+  | "tables"
+  | "categories"
+  | "homepage"
+  | "buses";
 
 export type ManagerPermissionsResponse = {
   is_admin: boolean;
@@ -129,15 +134,24 @@ const GalaService = {
       return response;
     },
     reserveTable: async (id: string | number, request: ReserveTable) => {
-      const response: Table = await client.post(`/table/${id}/reserve`, request);
+      const response: Table = await client.post(
+        `/table/${id}/reserve`,
+        request,
+      );
       return response;
     },
     confirmTable: async (id: string | number, request: Confirmation) => {
-      const response: Table = await client.patch(`/table/${id}/confirm`, request);
+      const response: Table = await client.patch(
+        `/table/${id}/confirm`,
+        request,
+      );
       return response;
     },
     tableTransfer: async (id: string | number, request: { uid: number }) => {
-      const response: Table = await client.patch(`/table/${id}/transfer`, request);
+      const response: Table = await client.patch(
+        `/table/${id}/transfer`,
+        request,
+      );
       return response;
     },
     tableLeave: async (id: string | number) => {
@@ -148,24 +162,38 @@ const GalaService = {
       const response: Table = await client.delete(`/table/${id}/remove/${uid}`);
       return response;
     },
-    uploadPhoto: async (tableId: number, file: File): Promise<{ url: string }> => {
+    uploadPhoto: async (
+      tableId: number,
+      file: File,
+    ): Promise<{ url: string }> => {
       const formData = new FormData();
       formData.append("file", file);
       return client.post(`/table/${tableId}/photo`, formData);
     },
     inviteUser: async (tableId: number, userId: number) => {
-      const response: Table = await client.post(`/table/${tableId}/invite/${userId}`, {});
+      const response: Table = await client.post(
+        `/table/${tableId}/invite/${userId}`,
+        {},
+      );
       return response;
     },
     revokeInvite: async (tableId: number, userId: number) => {
-      const response: Table = await client.delete(`/table/${tableId}/invite/${userId}`);
+      const response: Table = await client.delete(
+        `/table/${tableId}/invite/${userId}`,
+      );
       return response;
     },
     getMyInvites: async (): Promise<Table[]> => {
       return client.get("/table/my-invites");
     },
-    acceptInvite: async (tableId: number, body: { dish?: string; allergies?: string }) => {
-      const response: Table = await client.post(`/table/${tableId}/invite/accept`, body);
+    acceptInvite: async (
+      tableId: number,
+      body: { dish?: string; allergies?: string },
+    ) => {
+      const response: Table = await client.post(
+        `/table/${tableId}/invite/accept`,
+        body,
+      );
       return response;
     },
   },
@@ -187,7 +215,9 @@ const GalaService = {
     getMyTable: async () => {
       return client.get("/user/me/table");
     },
-    searchUsers: async (q: string): Promise<{ id: number; name: string; email: string }[]> => {
+    searchUsers: async (
+      q: string,
+    ): Promise<{ id: number; name: string; email: string }[]> => {
       return client.get(`/user/search?q=${encodeURIComponent(q)}`);
     },
   },
@@ -202,45 +232,86 @@ const GalaService = {
     confirmPayment: async (userId: number): Promise<void> => {
       return client.post(`/admin/registrations/${userId}/confirm_payment`, {});
     },
-    updateRegistration: async (userId: number, updates: Partial<User>): Promise<void> => {
+    updateRegistration: async (
+      userId: number,
+      updates: Partial<User>,
+    ): Promise<void> => {
       return client.patch(`/admin/registrations/${userId}`, updates);
     },
-    createRegistration: async (body: AdminCreateRegistrationBody): Promise<User> => {
+    createRegistration: async (
+      body: AdminCreateRegistrationBody,
+    ): Promise<User> => {
       return client.post("/admin/registrations", body);
     },
-    editRegistration: async (userId: number, body: AdminEditRegistrationBody): Promise<User> => {
+    editRegistration: async (
+      userId: number,
+      body: AdminEditRegistrationBody,
+    ): Promise<User> => {
       return client.put(`/admin/registrations/${userId}`, body);
     },
     deleteRegistration: async (userId: number): Promise<void> => {
       return client.delete(`/admin/registrations/${userId}`);
     },
-    listAuthentikUsers: async (query?: string): Promise<AuthentikUserResult[]> => {
-      const url = query ? `/admin/authentik/users?query=${encodeURIComponent(query)}` : "/admin/authentik/users";
+    listAuthentikUsers: async (
+      query?: string,
+    ): Promise<AuthentikUserResult[]> => {
+      const url = query
+        ? `/admin/authentik/users?query=${encodeURIComponent(query)}`
+        : "/admin/authentik/users";
       return client.get(url);
     },
-    rejectPaymentProof: async (userId: number, phase: number): Promise<void> => {
-      return client.delete(`/admin/registrations/${userId}/payment-proof?phase=${phase}`);
+    rejectPaymentProof: async (
+      userId: number,
+      phase: number,
+    ): Promise<void> => {
+      return client.delete(
+        `/admin/registrations/${userId}/payment-proof?phase=${phase}`,
+      );
     },
-    uploadPaymentProof: async (userId: number, phase: number, file: File): Promise<{ url: string }> => {
+    uploadPaymentProof: async (
+      userId: number,
+      phase: number,
+      file: File,
+    ): Promise<{ url: string }> => {
       const formData = new FormData();
       formData.append("file", file);
-      return client.post(`/admin/registrations/${userId}/payment-proof?phase=${phase}`, formData);
+      return client.post(
+        `/admin/registrations/${userId}/payment-proof?phase=${phase}`,
+        formData,
+      );
     },
-    
+
     // Table Management
-    createTable: async (request: { name: string; seats: number }): Promise<Table> => {
-      return client.post(`/admin/tables/create?name=${encodeURIComponent(request.name)}&seats=${request.seats}`, {});
+    createTable: async (request: {
+      name: string;
+      seats: number;
+    }): Promise<Table> => {
+      return client.post(
+        `/admin/tables/create?name=${encodeURIComponent(request.name)}&seats=${
+          request.seats
+        }`,
+        {},
+      );
     },
     deleteTable: async (tableId: number): Promise<void> => {
       return client.delete(`/admin/tables/${tableId}`);
     },
-    addMemberToTable: async (tableId: number, userId: number): Promise<Table> => {
+    addMemberToTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<Table> => {
       return client.post(`/admin/tables/${tableId}/members/${userId}`, {});
     },
-    moveMemberToTable: async (tableId: number, userId: number): Promise<Table> => {
+    moveMemberToTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<Table> => {
       return client.post(`/admin/tables/${tableId}/members/${userId}/move`, {});
     },
-    removeMemberFromTable: async (tableId: number, userId: number): Promise<void> => {
+    removeMemberFromTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<void> => {
       return client.delete(`/admin/tables/${tableId}/members/${userId}`);
     },
   },
@@ -285,7 +356,10 @@ const GalaService = {
       return response;
     },
     castVote: async (id: string | number, request: VoteCategoryCast) => {
-      const response: Vote = await client.post(`/voting/categories/${id}/vote`, request);
+      const response: Vote = await client.post(
+        `/voting/categories/${id}/vote`,
+        request,
+      );
       return response;
     },
     uploadOptionPhoto: async (
@@ -308,7 +382,9 @@ const GalaService = {
       categoryId: string | number,
       optionIndex: number,
     ) => {
-      return client.delete(`/voting/${categoryId}/options/${optionIndex}/photo`);
+      return client.delete(
+        `/voting/${categoryId}/options/${optionIndex}/photo`,
+      );
     },
   },
 
@@ -316,13 +392,22 @@ const GalaService = {
     getStatus: async (): Promise<User> => {
       return client.get("/registration/status");
     },
-    updateStep: async (step: number, data: Record<string, unknown>): Promise<User> => {
+    updateStep: async (
+      step: number,
+      data: Record<string, unknown>,
+    ): Promise<User> => {
       return client.post(`/registration/step/${step}`, data);
     },
-    uploadPaymentProof: async (file: File, phase: 1 | 2 = 1): Promise<{ url: string }> => {
+    uploadPaymentProof: async (
+      file: File,
+      phase: 1 | 2 = 1,
+    ): Promise<{ url: string }> => {
       const formData = new FormData();
       formData.append("file", file);
-      return client.post(`/registration/payment-proof?phase=${phase}`, formData);
+      return client.post(
+        `/registration/payment-proof?phase=${phase}`,
+        formData,
+      );
     },
   },
 
@@ -330,7 +415,9 @@ const GalaService = {
     getConfig: async (): Promise<Record<string, unknown>> => {
       return client.get("/config");
     },
-    updateConfig: async (data: Record<string, unknown>): Promise<Record<string, unknown>> => {
+    updateConfig: async (
+      data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> => {
       return client.put("/admin/config", data);
     },
   },
@@ -342,8 +429,17 @@ const GalaService = {
     listManagers: async (): Promise<Manager[]> => {
       return client.get("/admin/managers");
     },
-    setManagerPermissions: async (managerId: number, permissions: ManagerPermissionKey[], name: string, email: string): Promise<Manager> => {
-      return client.put(`/admin/managers/${managerId}/permissions`, { permissions, name, email });
+    setManagerPermissions: async (
+      managerId: number,
+      permissions: ManagerPermissionKey[],
+      name: string,
+      email: string,
+    ): Promise<Manager> => {
+      return client.put(`/admin/managers/${managerId}/permissions`, {
+        permissions,
+        name,
+        email,
+      });
     },
   },
 
@@ -362,9 +458,13 @@ const GalaService = {
       return client.put("/admin/homepage/gallery/preview", formData);
     },
     assignBus: async (userId: number, busId: string | null): Promise<void> => {
-      return client.patch(`/admin/registrations/${userId}/bus`, { bus_id: busId });
+      return client.patch(`/admin/registrations/${userId}/bus`, {
+        bus_id: busId,
+      });
     },
-    autoAssignBuses: async (strategy: "year" | "order"): Promise<{ assigned: number }> => {
+    autoAssignBuses: async (
+      strategy: "year" | "order",
+    ): Promise<{ assigned: number }> => {
       return client.post("/admin/buses/auto-assign", { strategy });
     },
   },

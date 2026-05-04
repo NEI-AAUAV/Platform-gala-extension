@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { faChair, faUser, faCheck, faXmark, faBell } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChair,
+  faUser,
+  faCheck,
+  faXmark,
+  faBell,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "@/components/Avatar";
 import VisualTable from "@/components/Table/VisualTable";
@@ -18,7 +24,12 @@ type ViewTableProps = {
   readonly isInvited?: boolean;
 };
 
-export default function ViewTable({ table, inTable = false, mutate, isInvited = false }: ViewTableProps) {
+export default function ViewTable({
+  table,
+  inTable = false,
+  mutate,
+  isInvited = false,
+}: ViewTableProps) {
   const { neiUser } = useNEIUser(table.head ?? null);
   const navigate = useNavigate();
   const toast = useAppToast();
@@ -58,16 +69,21 @@ export default function ViewTable({ table, inTable = false, mutate, isInvited = 
       <div className="flex min-w-[20rem] flex-col gap-8">
         {/* Table Identity Header */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 rounded-full border border-dark-gold/20 bg-dark-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-dark-gold w-fit">
+          <div className="flex w-fit items-center gap-2 rounded-full border border-dark-gold/20 bg-dark-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-dark-gold">
             <FontAwesomeIcon icon={faChair} className="w-3" /> Mesa #{table._id}
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight">
+          <h1 className="text-4xl font-bold tracking-tight text-white">
             {table.name || "Mesa sem nome"}
           </h1>
           {neiUser && (
             <div className="flex items-center gap-2 text-white/40">
-              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/20">Head:</span>
-              <Avatar id={neiUser.id} className="w-4 rounded-full border border-white/10" />
+              <span className="text-[0.65rem] font-bold uppercase tracking-widest text-white/20">
+                Head:
+              </span>
+              <Avatar
+                id={neiUser.id}
+                className="w-4 rounded-full border border-white/10"
+              />
               <span className="text-xs font-semibold text-white/60">{`${neiUser.name} ${neiUser.surname}`}</span>
             </div>
           )}
@@ -76,10 +92,17 @@ export default function ViewTable({ table, inTable = false, mutate, isInvited = 
         {/* Invite banner */}
         {isInvited && (
           <div className="flex items-start gap-3 rounded-xl border border-light-gold/30 bg-light-gold/5 px-4 py-3">
-            <FontAwesomeIcon icon={faBell} className="mt-0.5 shrink-0 text-light-gold" />
+            <FontAwesomeIcon
+              icon={faBell}
+              className="mt-0.5 shrink-0 text-light-gold"
+            />
             <div>
-              <p className="text-sm font-bold text-light-gold">Foste convidado para esta mesa!</p>
-              <p className="text-xs text-white/40">Aceita ou recusa o convite abaixo.</p>
+              <p className="text-sm font-bold text-light-gold">
+                Foste convidado para esta mesa!
+              </p>
+              <p className="text-xs text-white/40">
+                Aceita ou recusa o convite abaixo.
+              </p>
             </div>
           </div>
         )}
@@ -87,22 +110,22 @@ export default function ViewTable({ table, inTable = false, mutate, isInvited = 
         {/* Group Photo Section */}
         {table.photo_url && (
           <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-             <img
-               src={table.photo_url}
-               alt={table.name || "Mesa"}
-               className="h-full w-full object-cover"
-             />
+            <img
+              src={table.photo_url}
+              alt={table.name || "Mesa"}
+              className="h-full w-full object-cover"
+            />
           </div>
         )}
 
         {/* Guest List */}
         <div className="space-y-4">
-           <h4 className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
-              <FontAwesomeIcon icon={faUser} /> Convidados na Mesa
-           </h4>
-           <div className="rounded-xl border border-white/6 bg-white/2 p-2">
-              <GuestList persons={table.persons} />
-           </div>
+          <h4 className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
+            <FontAwesomeIcon icon={faUser} /> Convidados na Mesa
+          </h4>
+          <div className="border-white/6 bg-white/2 rounded-xl border p-2">
+            <GuestList persons={table.persons} />
+          </div>
         </div>
 
         {/* Actions */}

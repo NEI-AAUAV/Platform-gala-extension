@@ -40,16 +40,30 @@ export default function Register() {
 
   useEffect(() => {
     if (sub === undefined) return;
-    GalaService.registration.getStatus()
+    GalaService.registration
+      .getStatus()
       .then((status) => {
         if (status.registration_step && status.registration_step > 1) {
           update({
             nmec: String(status.nmec || ""),
-            year: (status as unknown as Record<string, unknown>).matriculation as number | null ?? null,
-            bus: BUS_OPTION_MAP[(status as unknown as Record<string, unknown>).bus_option as string ?? "NONE"] ?? "none",
-            meal: (status as unknown as Record<string, unknown>).meal_option as string || "",
-            allergies: (status as unknown as Record<string, unknown>).food_allergies as string || "",
-            companions: (status as unknown as Record<string, unknown>).companions as [] || [],
+            year:
+              ((status as unknown as Record<string, unknown>).matriculation as
+                | number
+                | null) ?? null,
+            bus:
+              BUS_OPTION_MAP[
+                ((status as unknown as Record<string, unknown>)
+                  .bus_option as string) ?? "NONE"
+              ] ?? "none",
+            meal:
+              ((status as unknown as Record<string, unknown>)
+                .meal_option as string) || "",
+            allergies:
+              ((status as unknown as Record<string, unknown>)
+                .food_allergies as string) || "",
+            companions:
+              ((status as unknown as Record<string, unknown>)
+                .companions as []) || [],
             currentStep: status.registration_step,
           });
         }
@@ -67,8 +81,12 @@ export default function Register() {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
-          <p className="font-gala text-xl font-bold text-white/80">Inscrições ainda não abertas</p>
-          <p className="mt-2 text-sm text-white/40">As inscrições abrem a {opensAt}.</p>
+          <p className="font-gala text-xl font-bold text-white/80">
+            Inscrições ainda não abertas
+          </p>
+          <p className="mt-2 text-sm text-white/40">
+            As inscrições abrem a {opensAt}.
+          </p>
         </div>
       </div>
     );
@@ -79,14 +97,18 @@ export default function Register() {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
-          <p className="font-gala text-xl font-bold text-white/80">Inscrições encerradas</p>
-          <p className="mt-2 text-sm text-white/40">O prazo de inscrições terminou a {closedAt}.</p>
+          <p className="font-gala text-xl font-bold text-white/80">
+            Inscrições encerradas
+          </p>
+          <p className="mt-2 text-sm text-white/40">
+            O prazo de inscrições terminou a {closedAt}.
+          </p>
         </div>
       </div>
     );
   }
 
-  const currentStep = data.currentStep;
+  const { currentStep } = data;
   const maxReached = data.currentStep;
 
   const goTo = (step: number) => update({ currentStep: step });
@@ -129,7 +151,8 @@ export default function Register() {
       await syncCurrentStep();
       update({ currentStep: Math.min(currentStep + 1, 6) });
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const detail = (e as { response?: { data?: { detail?: string } } })
+        ?.response?.data?.detail;
       setStepError(detail || "Erro ao guardar dados. Tenta novamente.");
     } finally {
       setSyncing(false);
@@ -144,7 +167,8 @@ export default function Register() {
       reset();
       navigate("/profile");
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const detail = (e as { response?: { data?: { detail?: string } } })
+        ?.response?.data?.detail;
       setStepError(detail || "Erro ao concluir inscrição. Tenta novamente.");
       setSyncing(false);
     }
@@ -176,10 +200,14 @@ export default function Register() {
           transition={{ delay: 0.1 }}
           className="mb-12"
         >
-          <StepIndicator current={currentStep} onStepClick={goTo} maxReached={maxReached} />
+          <StepIndicator
+            current={currentStep}
+            onStepClick={goTo}
+            maxReached={maxReached}
+          />
         </motion.div>
 
-        <div className="rounded-2xl border border-white/8 bg-white/3 p-6 backdrop-blur-sm sm:p-8">
+        <div className="border-white/8 bg-white/3 rounded-2xl border p-6 backdrop-blur-sm sm:p-8">
           <StepTitle step={currentStep} />
 
           {stepError && (
@@ -190,21 +218,54 @@ export default function Register() {
 
           <AnimatePresence mode="wait">
             <div key={currentStep}>
-              {currentStep === 1 && <Step1EventInfo config={config} onNext={next} />}
+              {currentStep === 1 && (
+                <Step1EventInfo config={config} onNext={next} />
+              )}
               {currentStep === 2 && (
-                <Step2PersonalData config={config} data={data} onUpdate={update} onNext={next} onBack={back} syncing={syncing} />
+                <Step2PersonalData
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                  syncing={syncing}
+                />
               )}
               {currentStep === 3 && (
-                <Step3Logistics config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+                <Step3Logistics
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
               )}
               {currentStep === 4 && (
-                <Step4Payment config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+                <Step4Payment
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
               )}
               {currentStep === 5 && (
-                <Step5Table config={config} data={data} onUpdate={update} onNext={next} onBack={back} />
+                <Step5Table
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
               )}
               {currentStep === 6 && (
-                <Step6Confirm config={config} data={data} onBack={back} onFinish={handleFinish} syncing={syncing} />
+                <Step6Confirm
+                  config={config}
+                  data={data}
+                  onBack={back}
+                  onFinish={handleFinish}
+                  syncing={syncing}
+                />
               )}
             </div>
           </AnimatePresence>
@@ -219,18 +280,33 @@ export default function Register() {
 }
 
 const STEP_TITLES: Record<number, { title: string; sub: string }> = {
-  1: { title: "Informações do Evento", sub: "Conhece todos os detalhes antes de te inscreveres." },
-  2: { title: "Dados Pessoais & Acompanhantes", sub: "Confirma os teus dados e adiciona quem te acompanha." },
+  1: {
+    title: "Informações do Evento",
+    sub: "Conhece todos os detalhes antes de te inscreveres.",
+  },
+  2: {
+    title: "Dados Pessoais & Acompanhantes",
+    sub: "Confirma os teus dados e adiciona quem te acompanha.",
+  },
   3: { title: "Logística", sub: "Transporte e preferências de refeição." },
-  4: { title: "Pagamento", sub: "Instruções de pagamento e envio de comprovativos." },
-  5: { title: "Escolha de Mesa", sub: "Reserva o teu lugar ou cria uma nova mesa para os teus amigos." },
-  6: { title: "Confirmação Final", sub: "Revê os teus dados e conclui a inscrição." },
+  4: {
+    title: "Pagamento",
+    sub: "Instruções de pagamento e envio de comprovativos.",
+  },
+  5: {
+    title: "Escolha de Mesa",
+    sub: "Reserva o teu lugar ou cria uma nova mesa para os teus amigos.",
+  },
+  6: {
+    title: "Confirmação Final",
+    sub: "Revê os teus dados e conclui a inscrição.",
+  },
 };
 
 function StepTitle({ step }: Readonly<{ step: number }>) {
   const { title, sub } = STEP_TITLES[step] ?? { title: "", sub: "" };
   return (
-    <div className="mb-6 border-b border-white/8 pb-5">
+    <div className="border-white/8 mb-6 border-b pb-5">
       <h2 className="font-gala text-xl font-bold text-white/90">{title}</h2>
       <p className="mt-1 text-sm text-white/40">{sub}</p>
     </div>
