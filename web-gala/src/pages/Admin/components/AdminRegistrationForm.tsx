@@ -34,7 +34,7 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
       dish: c.dish || "",
       allergies: c.allergies || "",
       email: c.email || "",
-      _id: Math.random().toString()
+      _id: crypto.randomUUID()
     })) || []
   );
 
@@ -167,7 +167,7 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
             {useExisting ? (
               <div className="flex flex-col gap-1.5 mt-2">
                 <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                  Procurar Utilizador Authentik (Nome ou Email)
+                  <span>Procurar Utilizador Authentik (Nome ou Email)</span>
                   <input 
                     type="text" 
                     value={searchQuery}
@@ -202,13 +202,13 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
               <div className="grid grid-cols-2 gap-3 mt-2">
                 <div className="flex flex-col gap-1.5">
                   <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                    Nome Completo
+                    <span>Nome Completo</span>
                     <input type="text" value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} required />
                   </label>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                    Email
+                    <span>Email</span>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={INPUT_CLS} required />
                   </label>
                 </div>
@@ -221,13 +221,13 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                Nome
+                <span>Nome</span>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} required />
               </label>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                Email
+                <span>Email</span>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={INPUT_CLS} required />
               </label>
             </div>
@@ -237,26 +237,26 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-              NMec
+              <span>NMec</span>
               <input type="number" value={nmec} onChange={e => setNmec(e.target.value)} className={INPUT_CLS} />
             </label>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-              Ano de Matrícula
+              <span>Ano de Matrícula</span>
               <input type="number" min="1" max="5" value={matriculation} onChange={e => setMatriculation(e.target.value)} className={INPUT_CLS} placeholder="Deixe em branco se Alumni" />
             </label>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-              Telefone
+              <span>Telefone</span>
               <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className={INPUT_CLS} />
             </label>
           </div>
           {config.busEnabled && (
             <div className="flex flex-col gap-1.5">
               <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-                Autocarro
+                <span>Autocarro</span>
                 <select value={busOption} onChange={e => setBusOption(e.target.value as "ROUND_TRIP" | "ONE_WAY" | "NONE")} className={INPUT_CLS}>
                   <option value="NONE">Sem autocarro</option>
                   <option value="ROUND_TRIP">Ida e volta</option>
@@ -267,7 +267,7 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
           )}
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-              Prato
+              <span>Prato</span>
               <select value={mealOption} onChange={e => setMealOption(e.target.value)} className={INPUT_CLS}>
                 <option value="">Nenhum / Não sabe</option>
                 {config.mealOptions.map((opt) => (
@@ -278,7 +278,7 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/50 uppercase">
-              Alergias
+              <span>Alergias</span>
               <input type="text" value={foodAllergies} onChange={e => setFoodAllergies(e.target.value)} className={INPUT_CLS} />
             </label>
           </div>
@@ -303,7 +303,7 @@ export default function AdminRegistrationForm({ userToEdit, onClose, onSuccess }
             <p className="text-xs font-semibold text-white/50 uppercase">Acompanhantes</p>
             <button 
               type="button" 
-              onClick={() => setCompanions([...companions, {name: "", dish: "", allergies: "", email: "", _id: Math.random().toString()}])}
+              onClick={() => setCompanions([...companions, {name: "", dish: "", allergies: "", email: "", _id: crypto.randomUUID()}])}
               className="text-xs text-light-gold hover:underline flex items-center gap-1"
             >
               <FontAwesomeIcon icon={faPlus} /> Adicionar

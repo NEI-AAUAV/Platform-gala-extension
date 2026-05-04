@@ -123,6 +123,7 @@ async def accept_invite(
     "/{table_id}/invite/{user_id}",
     responses={
         **auth_responses,
+        400: {"description": "Bad Request"},
         403: {"description": "Not the table head"},
         404: {"description": "Table or user not found"},
         409: {"description": "User already invited or already in a table"},

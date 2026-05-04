@@ -14,115 +14,111 @@ class RegistrationService:
         return None
 
     @staticmethod
+    async def _check_table_deadline(db: DBType) -> None:
+        from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
+        from datetime import datetime, timezone
+        ts_coll = TimeSlots.get_collection(db)
+        ts_doc = await ts_coll.find_one({"_id": TIME_SLOTS_ID})
+        if ts_doc:
+            ts = TimeSlots.parse_obj(ts_doc)
+            now = datetime.now(tz=timezone.utc)
+            tables_end = ts.tables_end
+            if tables_end.tzinfo is None:
+                tables_end = tables_end.replace(tzinfo=timezone.utc)
+            if now > tables_end and tables_end.year > 1970:
+                raise ValueError("O prazo para escolha de mesa já passou.")
+
+    @staticmethod
+    async def _join_table_via_invite(db: DBType, user: User, target_id: int, user_id: int) -> None:
+        from app.models.table import Table, TablePerson, DishType
+        if user.table_id:
+            from app.services.table import TableService
+            await TableService.leave_table(db, user_id)
+        table_doc = await Table.get_collection(db).find_one({"_id": target_id})
+        if table_doc and user_id in (table_doc.get("invites") or []):
+            person = TablePerson(
+                id=user_id,
+                allergies=user.food_allergies or "",
+                dish=DishType.NORMAL,
+                confirmed=True,
+                companions=user.companions,
+            )
+            await Table.get_collection(db).update_one(
+                {"_id": target_id},
+                {
+                    "$push": {"persons": person.dict()},
+                    "$pull": {"invites": user_id},
+                },
+            )
+            await User.get_collection(db).update_one(
+                {"_id": user_id}, {"$set": {"table_id": target_id}}
+            )
+        else:
+            raise ValueError("Não tens convite para essa mesa.")
+
+    @staticmethod
     async def _handle_step_5(db: DBType, user: User, user_id: int, data: Dict[str, Any]) -> None:
         if user.is_registered:
-            from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
-            from datetime import datetime, timezone
-            ts_coll = TimeSlots.get_collection(db)
-            ts_doc = await ts_coll.find_one({"_id": TIME_SLOTS_ID})
-            if ts_doc:
-                ts = TimeSlots.parse_obj(ts_doc)
-                now = datetime.now(tz=timezone.utc)
-                tables_end = ts.tables_end
-                if tables_end.tzinfo is None:
-                    tables_end = tables_end.replace(tzinfo=timezone.utc)
-                if now > tables_end and tables_end.year > 1970:
-                    raise ValueError("O prazo para escolha de mesa já passou.")
+            await RegistrationService._check_table_deadline(db)
 
         table_id = data.get("table_id")
         table_name = data.get("table_name") or f"Mesa de {user.name}"
         from app.services.table import TableService
-        from app.models.table import Table
 
         if table_id == "new":
             if not user.table_id:
                 await TableService.create_table(db, user_id, table_name)
-        elif table_id == "invited":
-            pass
-        elif table_id and table_id not in ("none", "null"):
+        elif table_id and table_id not in ("none", "null", "invited"):
             target_id = int(table_id)
             if user.table_id != target_id:
-                if user.table_id:
-                    await TableService.leave_table(db, user_id)
-                table_doc = await Table.get_collection(db).find_one({"_id": target_id})
-                if table_doc and user_id in (table_doc.get("invites") or []):
-                    from app.models.table import TablePerson, DishType
-                    person = TablePerson(
-                        id=user_id,
-                        allergies=user.food_allergies or "",
-                        dish=DishType.NORMAL,
-                        confirmed=True,
-                        companions=user.companions,
-                    )
-                    await Table.get_collection(db).update_one(
-                        {"_id": target_id},
-                        {
-                            "$push": {"persons": person.dict()},
-                            "$pull": {"invites": user_id},
-                        },
-                    )
-                    await User.get_collection(db).update_one(
-                        {"_id": user_id}, {"$set": {"table_id": target_id}}
-                    )
-                else:
-                    raise ValueError("Não tens convite para essa mesa.")
-        else:
+                await RegistrationService._join_table_via_invite(db, user, target_id, user_id)
+        elif table_id in ("none", "null"):
             if user.table_id:
                 await TableService.leave_table(db, user_id)
+
+    @staticmethod
+    def _apply_step_data(step: int, data: Dict[str, Any], update_data: Dict[str, Any]) -> None:
+        if step == 2:
+            update_data["matriculation"] = data.get("matriculation")
+            update_data["phone"] = data.get("phone")
+            if "nmec" in data:
+                update_data["nmec"] = data["nmec"]
+            if "companions" in data:
+                update_data["companions"] = data["companions"]
+        elif step == 3:
+            update_data["bus_option"] = BusOption(data.get("bus_option", "NONE"))
+            update_data["meal_option"] = data.get("meal_option")
+            update_data["food_allergies"] = data.get("food_allergies")
+            if "companions" in data:
+                update_data["companions"] = data["companions"]
+        elif step == 4:
+            if "payment_proof_url" in data:
+                update_data["payment_proof_url"] = data["payment_proof_url"]
+            if "phased_payment" in data:
+                update_data["phased_payment"] = data["phased_payment"]
+        elif step == 6:
+            update_data["is_registered"] = True
 
     @staticmethod
     async def update_step(db: DBType, user_id: int, step: int, data: Dict[str, Any]) -> User:
         collection = User.get_collection(db)
         
-        # Ensure user exists or create skeleton from OIDC (handled by auth usually, but let's be safe)
         user = await RegistrationService.get_user_registration(db, user_id)
         if not user:
-            # This should have been created during first login, but if not, we fail here
-            # as we need base data from Authentik.
             raise ValueError("Utilizador não encontrado. Por favor inicia sessão novamente.")
 
         update_data = {"registration_step": max(user.registration_step, step)}
         
-        if step == 2:
-            # Personal data
-            update_data["matriculation"] = data.get("matriculation")
-            update_data["phone"] = data.get("phone")
-            # nmec should be fixed, but if user can edit it:
-            if "nmec" in data:
-                update_data["nmec"] = data["nmec"]
-            
-            if "companions" in data:
-                update_data["companions"] = data["companions"]
+        RegistrationService._apply_step_data(step, data, update_data)
 
-        elif step == 3:
-            # Logistics
-            update_data["bus_option"] = BusOption(data.get("bus_option", "NONE"))
-            update_data["meal_option"] = data.get("meal_option")
-            update_data["food_allergies"] = data.get("food_allergies")
-            
-            if "companions" in data:
-                update_data["companions"] = data["companions"]
-
-        elif step == 4:
-            # Payment - proof upload is usually a separate call, but if sent here:
-            if "payment_proof_url" in data:
-                update_data["payment_proof_url"] = data["payment_proof_url"]
-            if "phased_payment" in data:
-                update_data["phased_payment"] = data["phased_payment"]
-
-        elif step == 5:
+        if step == 5:
             await RegistrationService._handle_step_5(db, user, user_id, data)
-
-        elif step == 6:
-            # Final confirmation
-            update_data["is_registered"] = True
 
         await collection.update_one({"_id": user_id}, {"$set": update_data})
 
         if step in (2, 3) and "companions" in data:
             await RegistrationService._sync_companions_in_table(db, user_id, data["companions"])
 
-        # Return updated user
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)
 

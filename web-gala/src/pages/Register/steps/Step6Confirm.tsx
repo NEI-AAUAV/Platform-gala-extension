@@ -24,36 +24,33 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>
   );
 }
 
+const getYearLabel = (sessionUser: any, data: WizardData) => {
+  if (sessionUser?.matriculation) return `${sessionUser.matriculation}º Ano`;
+  if (data.year) return `${data.year}º Ano`;
+  return "Alumni / Outro";
+};
+
+const getBusLabel = (bus: string) => {
+  if (bus === "none") return "Deslocação própria";
+  if (bus === "round_trip") return "Autocarro (Ida e Volta)";
+  return "Autocarro (Apenas Ida)";
+};
+
+const getSelectedTable = (tableId: string | null, tables: any[]) => {
+  if (tableId === "new") return "Nova Mesa (A criar)";
+  const tableObj = tables?.find((t) => String(t._id) === tableId);
+  return tableObj?.name || `Mesa #${tableId}`;
+};
+
 export default function Step6Confirm({ config, data, onBack, onFinish, syncing = false }: Props) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
   const { tables } = useTables();
 
   const mealLabel = config.mealOptions.find((m) => m.id === data.meal)?.label ?? "—";
-
-  let yearLabel = "Alumni / Outro";
-  if (sessionUser?.matriculation) {
-    yearLabel = `${sessionUser.matriculation}º Ano`;
-  } else if (data.year) {
-    yearLabel = `${data.year}º Ano`;
-  }
-
-  let busLabel = "Autocarro (Apenas Ida)";
-  if (data.bus === "none") {
-    busLabel = "Deslocação própria";
-  } else if (data.bus === "round_trip") {
-    busLabel = "Autocarro (Ida e Volta)";
-  }
-
-  let selectedTable = `Mesa #${data.tableId}`;
-  if (data.tableId === "new") {
-    selectedTable = "Nova Mesa (A criar)";
-  } else {
-    const tableObj = tables?.find((t) => String(t._id) === data.tableId);
-    if (tableObj?.name) {
-      selectedTable = tableObj.name;
-    }
-  }
+  const yearLabel = getYearLabel(sessionUser, data);
+  const busLabel = getBusLabel(data.bus);
+  const selectedTable = getSelectedTable(data.tableId, tables);
 
   // Use user's actual choice (data.phasedPayment), not admin config
   const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;

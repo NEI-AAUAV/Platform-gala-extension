@@ -333,7 +333,7 @@ async def list_authentik_users(
     return [{"id": u.pk, "name": u.name, "email": u.email} for u in users]
 
 
-async def _create_from_authentik(body: AdminCreateRegistrationBody, db: DBType, settings: SettingsDep, user_coll) -> User:
+async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: SettingsDep, user_coll) -> User:
     # Check if already registered
     existing = await user_coll.find_one({"_id": body.authentik_user_id, "is_registered": True})
     if existing:
@@ -459,7 +459,7 @@ async def admin_create_registration(
     user_coll = User.get_collection(db)
 
     if body.authentik_user_id is not None:
-        return await _create_from_authentik(body, db, settings, user_coll)
+        return await _create_from_authentik(body, settings, user_coll)
     else:
         return await _create_from_scratch(body, db, user_coll)
 
