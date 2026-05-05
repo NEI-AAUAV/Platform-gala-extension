@@ -231,8 +231,15 @@ const GalaService = {
     getRegistration: async (userId: number): Promise<User> => {
       return client.get(`/admin/registrations/${userId}`);
     },
-    confirmPayment: async (userId: number): Promise<void> => {
-      return client.post(`/admin/registrations/${userId}/confirm_payment`, {});
+    confirmPayment: async (userId: number, phase?: number): Promise<void> => {
+      const suffix = phase ? `?phase=${phase}` : "";
+      return client.post(
+        `/admin/registrations/${userId}/confirm_payment${suffix}`,
+        {},
+      );
+    },
+    sendPaymentReminder: async (userId: number): Promise<void> => {
+      return client.post(`/admin/registrations/${userId}/payment-reminder`, {});
     },
     updateRegistration: async (
       userId: number,

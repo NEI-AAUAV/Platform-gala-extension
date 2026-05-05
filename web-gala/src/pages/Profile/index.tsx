@@ -15,10 +15,16 @@ import useLoginLink from "@/hooks/useLoginLink";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { useHomepageConfig } from "@/hooks/useHomepageConfig";
 import ProfilePaymentSection from "./ProfilePaymentSection";
-import ProfileTableSection, { PendingInvitesBanner } from "./ProfileTableSection";
+import ProfileTableSection, {
+  PendingInvitesBanner,
+} from "./ProfileTableSection";
 import useMyInvites from "@/hooks/tableHooks/useMyInvites";
 
-type RegistrationStatus = "pending_payment" | "confirmed" | "cancelled";
+type RegistrationStatus =
+  | "pending_payment"
+  | "partially_paid"
+  | "confirmed"
+  | "cancelled";
 
 const STATUS_LABEL: Record<
   RegistrationStatus,
@@ -27,6 +33,10 @@ const STATUS_LABEL: Record<
   pending_payment: {
     label: "Aguarda pagamento",
     color: "text-yellow-400/80 border-yellow-400/30 bg-yellow-400/8",
+  },
+  partially_paid: {
+    label: "Parcialmente pago",
+    color: "text-sky-400/80 border-sky-400/30 bg-sky-400/8",
   },
   confirmed: {
     label: "Confirmada",
@@ -71,9 +81,14 @@ export default function Profile() {
   }
 
   // Derive registration status and proof from backend data (source of truth)
-  const registrationStatus: RegistrationStatus = sessionUser?.has_payed
-    ? "confirmed"
-    : "pending_payment";
+  const registrationStatus: RegistrationStatus =
+    sessionUser?.payment_expired || sessionUser?.registration_active === false
+      ? "cancelled"
+      : sessionUser?.has_payed
+      ? "confirmed"
+      : sessionUser?.phased_payment && sessionUser?.payment_phase1_confirmed
+      ? "partially_paid"
+      : "pending_payment";
   const proofName = sessionUser?.payment_proof_url ?? null;
 
   const { label, color } = STATUS_LABEL[registrationStatus];

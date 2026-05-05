@@ -1,7 +1,13 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
-export type PaymentFilter = "all" | "paid" | "proof" | "pending";
+export type PaymentFilter =
+  | "all"
+  | "paid"
+  | "partial"
+  | "proof"
+  | "pending"
+  | "expired";
 export type TableFilter = "all" | "with" | "without";
 
 interface RegistrantsFiltersProps {
@@ -37,7 +43,16 @@ export default function RegistrantsFilters({
         />
       </div>
       <div className="flex flex-wrap gap-2">
-        {(["all", "paid", "proof", "pending"] as PaymentFilter[]).map((f) => (
+        {(
+          [
+            "all",
+            "paid",
+            "partial",
+            "proof",
+            "pending",
+            "expired",
+          ] as PaymentFilter[]
+        ).map((f) => (
           <button
             key={f}
             type="button"
@@ -53,8 +68,10 @@ export default function RegistrantsFilters({
               {
                 all: "Todos",
                 paid: "Pagos",
-                proof: "Comprovativo",
+                partial: "Parcial",
+                proof: "Por rever",
                 pending: "Pendente",
+                expired: "Expirados",
               }[f]
             }
           </button>

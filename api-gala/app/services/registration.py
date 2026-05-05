@@ -1,7 +1,9 @@
 from typing import Optional, Dict, Any
 from app.core.db.types import DBType
 from app.models.user import User, BusOption
+from app.services.config import ConfigService
 from app.services.storage import storage_client
+from app.utils import is_deadline_passed
 
 
 class RegistrationService:
@@ -12,6 +14,77 @@ class RegistrationService:
         if user_dict:
             return User.parse_obj(user_dict)
         return None
+
+    @staticmethod
+    def payment_review_state(user: User, phase: int) -> str:
+        confirmed = user.payment_phase1_confirmed if phase == 1 else user.payment_phase2_confirmed
+        proof = user.payment_proof_url if phase == 1 else user.payment_proof_url_phase2
+        if confirmed:
+            return "confirmed"
+        if proof:
+            return "review"
+        return "missing"
+
+    @staticmethod
+    async def apply_payment_deadline_policy(db: DBType) -> None:
+        """Marks registrations inactive when the relevant payment deadline passed without proof."""
+        try:
+            config = await ConfigService.get_config(db)
+        except Exception:
+            return
+        user_coll = User.get_collection(db)
+
+        common_set = {
+            "registration_active": False,
+            "payment_expired": True,
+        }
+
+        if config.payment_deadline_date and is_deadline_passed(config.payment_deadline_date):
+            await user_coll.update_many(
+                {
+                    "is_registered": True,
+                    "registration_active": {"$ne": False},
+                    "has_payed": {"$ne": True},
+                    "phased_payment": {"$ne": True},
+                    "$or": [
+                        {"payment_proof_url": None},
+                        {"payment_proof_url": {"$exists": False}},
+                    ],
+                },
+                {"$set": common_set},
+            )
+
+        phase1_deadline = config.prices.phase1_deadline
+        if phase1_deadline and is_deadline_passed(phase1_deadline):
+            await user_coll.update_many(
+                {
+                    "is_registered": True,
+                    "registration_active": {"$ne": False},
+                    "has_payed": {"$ne": True},
+                    "phased_payment": True,
+                    "$or": [
+                        {"payment_proof_url": None},
+                        {"payment_proof_url": {"$exists": False}},
+                    ],
+                },
+                {"$set": common_set},
+            )
+
+        phase2_deadline = config.prices.phase2_deadline
+        if phase2_deadline and is_deadline_passed(phase2_deadline):
+            await user_coll.update_many(
+                {
+                    "is_registered": True,
+                    "registration_active": {"$ne": False},
+                    "has_payed": {"$ne": True},
+                    "phased_payment": True,
+                    "$or": [
+                        {"payment_proof_url_phase2": None},
+                        {"payment_proof_url_phase2": {"$exists": False}},
+                    ],
+                },
+                {"$set": common_set},
+            )
 
     @staticmethod
     async def _check_table_deadline(db: DBType) -> None:
@@ -142,9 +215,10 @@ class RegistrationService:
             raise RuntimeError("Failed to upload payment proof to storage.")
 
         field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
+        confirmed_field = "payment_phase1_confirmed" if phase == 1 else "payment_phase2_confirmed"
         collection = User.get_collection(db)
         await collection.update_one(
             {"_id": user_id},
-            {"$set": {field: url}}
+            {"$set": {field: url, confirmed_field: False, "payment_expired": False}}
         )
         return url

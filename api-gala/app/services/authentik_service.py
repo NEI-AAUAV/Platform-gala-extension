@@ -17,21 +17,40 @@ async def fetch_group_members(settings: Settings, group_name: str) -> List[Authe
         return []
 
     headers = {"Authorization": f"Bearer {settings.AUTHENTIK_TOKEN}"}
-    url = f"{settings.AUTHENTIK_URL}/api/v3/core/groups/"
-    params = {"name": group_name, "include_users": "true"}
     verify_ssl = settings.PRODUCTION
 
     async with httpx.AsyncClient(verify=verify_ssl) as client:
-        resp = await client.get(url, params=params, headers=headers)
-        resp.raise_for_status()
+        users_url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/"
+        users_resp = await client.get(
+            users_url,
+            params={"groups_by_name": group_name},
+            headers=headers,
+        )
+        if users_resp.status_code < 400:
+            return [
+                AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
+                for u in users_resp.json().get("results", [])
+            ]
 
-    results = resp.json().get("results", [])
+        groups_url = f"{settings.AUTHENTIK_URL}/api/v3/core/groups/"
+        groups_resp = await client.get(
+            groups_url,
+            params={"search": group_name, "include_users": "true"},
+            headers=headers,
+        )
+        groups_resp.raise_for_status()
+
+    results = [
+        g for g in groups_resp.json().get("results", [])
+        if g.get("name") == group_name
+    ]
     if not results:
         return []
 
+    users_obj = results[0].get("users_obj") or []
     return [
         AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
-        for u in results[0].get("users_obj", [])
+        for u in users_obj
     ]
 
 
@@ -160,4 +179,3 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
                 },
                 upsert=True
             )
-

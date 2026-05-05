@@ -10,6 +10,9 @@ import {
   faTrash,
   faGhost,
   faUpload,
+  faClock,
+  faEnvelope,
+  faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
 import { INPUT_CLS } from "./AdminUI";
@@ -37,16 +40,20 @@ const dishIcon = new Map<string, React.ReactNode>([
 function ProofRow({
   label,
   url,
+  confirmed,
   phase,
   onUpload,
   onReject,
+  onConfirm,
   uploading,
 }: {
   readonly label: string;
   readonly url: string | null;
+  readonly confirmed: boolean;
   readonly phase: number;
   readonly onUpload: (phase: number, file: File) => void;
   readonly onReject: (phase: number) => void;
+  readonly onConfirm: (phase: number) => void;
   readonly uploading: boolean;
 }) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -60,7 +67,21 @@ function ProofRow({
   return (
     <div className="bg-white/4 flex flex-col gap-2 rounded-lg px-3 py-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-white/60">{label}</span>
+        <div className="flex flex-col">
+          <span className="text-xs text-white/60">{label}</span>
+          <span
+            className={[
+              "text-[0.6rem] font-semibold",
+              confirmed
+                ? "text-emerald-400/75"
+                : url
+                ? "text-yellow-400/70"
+                : "text-white/25",
+            ].join(" ")}
+          >
+            {confirmed ? "Validado" : url ? "Por rever" : "Não enviado"}
+          </span>
+        </div>
         {url ? (
           <div className="flex items-center gap-2">
             <a
@@ -86,6 +107,17 @@ function ProofRow({
               <FontAwesomeIcon icon={faUpload} />
               {uploading ? "..." : "Substituir"}
             </button>
+            {!confirmed && (
+              <button
+                type="button"
+                onClick={() => onConfirm(phase)}
+                className="flex items-center gap-1.5 rounded-full border border-emerald-500/40 px-3 py-1 text-[0.6rem] font-bold text-emerald-400 transition hover:bg-emerald-500/10"
+                title="Validar comprovativo"
+              >
+                <FontAwesomeIcon icon={faCircleCheck} />
+                Validar
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onReject(phase)}
@@ -150,18 +182,21 @@ export default function UserDetail({
   buses,
   uploadingProof,
   onConfirmPayment,
+  onSendPaymentReminder,
   onAssignBus,
   onEdit,
   onDelete,
   onClose,
   onUploadProof,
   onRejectProof,
+  onAssignTable,
 }: {
   readonly user: User;
   readonly tables: Table[];
   readonly buses: { id: string; name: string; capacity: number }[];
   readonly uploadingProof: boolean;
-  readonly onConfirmPayment: () => void;
+  readonly onConfirmPayment: (phase?: number) => void;
+  readonly onSendPaymentReminder: () => void;
   readonly onAssignBus: (busId: string | null) => void;
   readonly onEdit: () => void;
   readonly onDelete: () => void;
@@ -170,7 +205,8 @@ export default function UserDetail({
   readonly onRejectProof: (phase: number) => void;
   readonly onAssignTable: (tableId: string | null) => void;
 }) {
-  const table = tables.find((t) => t._id === user.table_id) ?? null;
+  const isPartiallyPaid =
+    user.phased_payment && user.payment_phase1_confirmed && !user.has_payed;
 
   return (
     <div className="flex max-h-[80vh] flex-col gap-5 overflow-y-auto">
@@ -277,7 +313,7 @@ export default function UserDetail({
         </div>
       )}
 
-        {/* Mesa */}
+      {/* Mesa */}
       <div>
         <p className="mb-2 text-[0.55rem] font-bold uppercase tracking-widest text-white/25">
           Mesa
@@ -290,7 +326,12 @@ export default function UserDetail({
           <option value="">Sem mesa</option>
           {tables.map((t) => (
             <option key={t._id} value={t._id}>
-              {t.name || `Mesa #${t._id}`} ({t.persons.reduce((acc, p) => acc + 1 + (p.companions?.length ?? 0), 0)}/{t.seats})
+              {t.name || `Mesa #${t._id}`} (
+              {t.persons.reduce(
+                (acc, p) => acc + 1 + (p.companions?.length ?? 0),
+                0,
+              )}
+              /{t.seats})
             </option>
           ))}
         </select>
@@ -305,34 +346,62 @@ export default function UserDetail({
           <ProofRow
             label="Comprovativo Fase 1"
             url={user.payment_proof_url}
+            confirmed={user.payment_phase1_confirmed}
             phase={1}
             onUpload={onUploadProof}
             onReject={onRejectProof}
+            onConfirm={onConfirmPayment}
             uploading={uploadingProof}
           />
           {user.phased_payment && (
             <ProofRow
               label="Comprovativo Fase 2"
               url={user.payment_proof_url_phase2}
+              confirmed={user.payment_phase2_confirmed}
               phase={2}
               onUpload={onUploadProof}
               onReject={onRejectProof}
+              onConfirm={onConfirmPayment}
               uploading={uploadingProof}
             />
+          )}
+          {(user.payment_expired || user.registration_active === false) && (
+            <div className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300/80">
+              <FontAwesomeIcon icon={faTriangleExclamation} /> Inscrição
+              desativada por falta de comprovativo no prazo.
+            </div>
+          )}
+          {isPartiallyPaid && (
+            <div className="flex items-center gap-2 rounded-lg bg-sky-500/10 px-3 py-2 text-sm text-sky-300/80">
+              <FontAwesomeIcon icon={faClock} /> Pagamento parcialmente
+              validado.
+            </div>
           )}
           {user.has_payed ? (
             <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
               <FontAwesomeIcon icon={faCircleCheck} /> Pagamento confirmado
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={onConfirmPayment}
-              className="w-full rounded-xl bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600"
-            >
-              <FontAwesomeIcon icon={faCircleCheck} className="mr-2" />
-              Confirmar Pagamento
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => onConfirmPayment(undefined)}
+                className="w-full rounded-xl bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600"
+              >
+                <FontAwesomeIcon icon={faCircleCheck} className="mr-2" />
+                Confirmar Pagamento
+              </button>
+              <button
+                type="button"
+                onClick={onSendPaymentReminder}
+                className="w-full rounded-xl border border-white/10 py-2.5 text-sm font-bold text-white/60 transition hover:border-white/25 hover:text-white/80"
+              >
+                <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
+                {user.payment_reminder_sent
+                  ? "Reenviar lembrete"
+                  : "Lembrar por email"}
+              </button>
+            </div>
           )}
         </div>
       </div>

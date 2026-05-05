@@ -3,7 +3,9 @@ from typing import List, Optional, Annotated
 
 from app.models.user import User
 from app.core.db import DatabaseDep
+from app.core.config import SettingsDep
 from app.api.auth import AuthData, api_nei_auth, auth_responses, ScopeEnum
+from app.services.registration import RegistrationService
 
 router = APIRouter()
 
@@ -35,6 +37,7 @@ async def get_self(
     auth: AuthData = Security(api_nei_auth),
 ) -> User:
     """Fetches the self user information"""
+    await RegistrationService.apply_payment_deadline_policy(db)
     res = await User.get_collection(db).find_one({"_id": auth.sub})
 
     if res is None:

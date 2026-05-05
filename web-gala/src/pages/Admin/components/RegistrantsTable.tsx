@@ -6,6 +6,8 @@ import {
   faCircleCheck,
   faClock,
   faCircleXmark,
+  faCircleHalfStroke,
+  faTriangleExclamation,
   faGhost,
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
@@ -101,6 +103,16 @@ export default function RegistrantsTable({
                 ? buses.find((b) => b.id === user.bus_assignment)?.name ??
                   user.bus_assignment
                 : null;
+              const hasReviewProof =
+                (!user.payment_phase1_confirmed &&
+                  Boolean(user.payment_proof_url)) ||
+                (user.phased_payment &&
+                  !user.payment_phase2_confirmed &&
+                  Boolean(user.payment_proof_url_phase2));
+              const isPartiallyPaid =
+                user.phased_payment &&
+                user.payment_phase1_confirmed &&
+                !user.has_payed;
 
               return (
                 <tr
@@ -167,10 +179,29 @@ export default function RegistrantsTable({
                           </span>
                         );
                       }
-                      if (user.payment_proof_url) {
+                      if (isPartiallyPaid) {
+                        return (
+                          <span className="flex items-center gap-1 text-xs text-sky-400/75">
+                            <FontAwesomeIcon icon={faCircleHalfStroke} />{" "}
+                            Parcial
+                          </span>
+                        );
+                      }
+                      if (hasReviewProof) {
                         return (
                           <span className="flex items-center gap-1 text-xs text-yellow-400/70">
-                            <FontAwesomeIcon icon={faClock} /> Comprovativo
+                            <FontAwesomeIcon icon={faClock} /> Por rever
+                          </span>
+                        );
+                      }
+                      if (
+                        user.payment_expired ||
+                        user.registration_active === false
+                      ) {
+                        return (
+                          <span className="flex items-center gap-1 text-xs text-red-400/70">
+                            <FontAwesomeIcon icon={faTriangleExclamation} />{" "}
+                            Expirado
                           </span>
                         );
                       }

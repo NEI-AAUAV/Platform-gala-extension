@@ -37,6 +37,11 @@ class User(BaseDocument):
     phased_payment: bool = False
     payment_proof_url: Optional[str] = None
     payment_proof_url_phase2: Optional[str] = None
+    payment_phase1_confirmed: bool = False
+    payment_phase2_confirmed: bool = False
+    payment_expired: bool = False
+    payment_reminder_sent: bool = False
+    registration_active: bool = True
     
     # Table
     table_id: Optional[int] = None

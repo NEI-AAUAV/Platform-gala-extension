@@ -63,6 +63,13 @@ export default function RegistrantsAdmin() {
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
+      const hasReviewProof =
+        (!u.payment_phase1_confirmed && Boolean(u.payment_proof_url)) ||
+        (u.phased_payment &&
+          !u.payment_phase2_confirmed &&
+          Boolean(u.payment_proof_url_phase2));
+      const partiallyPaid =
+        u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -74,9 +81,14 @@ export default function RegistrantsAdmin() {
         }
       }
       if (paymentFilter === "paid" && !u.has_payed) return false;
-      if (paymentFilter === "proof" && (u.has_payed || !u.payment_proof_url))
+      if (paymentFilter === "partial" && !partiallyPaid) return false;
+      if (paymentFilter === "proof" && (u.has_payed || !hasReviewProof))
         return false;
-      if (paymentFilter === "pending" && (u.has_payed || u.payment_proof_url))
+      if (paymentFilter === "expired" && !u.payment_expired) return false;
+      if (
+        paymentFilter === "pending" &&
+        (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
+      )
         return false;
       if (tableFilter === "with" && u.table_id === null) return false;
       if (tableFilter === "without" && u.table_id !== null) return false;
@@ -118,15 +130,27 @@ export default function RegistrantsAdmin() {
     }
   };
 
-  const handleConfirmPayment = async () => {
+  const handleConfirmPayment = async (phase?: number) => {
     if (!selectedUser) return;
     try {
-      await GalaService.admin.confirmPayment(selectedUser._id);
-      toast.success("Pagamento confirmado!");
-      detailRef.current?.close();
+      await GalaService.admin.confirmPayment(selectedUser._id, phase);
+      toast.success(
+        phase ? `Fase ${phase} confirmada!` : "Pagamento confirmado!",
+      );
       load();
     } catch (e) {
       toast.error(extractApiError(e, "Erro ao confirmar pagamento."));
+    }
+  };
+
+  const handlePaymentReminder = async () => {
+    if (!selectedUser) return;
+    try {
+      await GalaService.admin.sendPaymentReminder(selectedUser._id);
+      toast.success("Lembrete de pagamento enviado.");
+      load();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao enviar lembrete."));
     }
   };
 
@@ -140,21 +164,30 @@ export default function RegistrantsAdmin() {
       toast.error(extractApiError(e, "Erro ao atribuir autocarro."));
     }
   };
-  
+
   const handleAssignTable = async (tableId: string | null) => {
     if (!selectedUser) return;
     try {
       if (!tableId) {
         // Remove from current table
         if (selectedUser.table_id) {
-          await GalaService.admin.removeMemberFromTable(selectedUser.table_id, selectedUser._id);
+          await GalaService.admin.removeMemberFromTable(
+            selectedUser.table_id,
+            selectedUser._id,
+          );
         }
       } else if (!selectedUser.table_id) {
         // Add to new table
-        await GalaService.admin.addMemberToTable(tableId, selectedUser._id);
+        await GalaService.admin.addMemberToTable(
+          Number(tableId),
+          selectedUser._id,
+        );
       } else {
         // Move table
-        await GalaService.admin.moveMemberBetweenTables(selectedUser.table_id, selectedUser._id, tableId);
+        await GalaService.admin.moveMemberToTable(
+          Number(tableId),
+          selectedUser._id,
+        );
       }
       toast.success("Mesa atualizada com sucesso.");
       load();
@@ -290,6 +323,7 @@ export default function RegistrantsAdmin() {
             buses={buses}
             uploadingProof={uploadingProof}
             onConfirmPayment={handleConfirmPayment}
+            onSendPaymentReminder={handlePaymentReminder}
             onAssignBus={handleAssignBus}
             onEdit={() => openForm(selectedUser)}
             onDelete={handleDelete}

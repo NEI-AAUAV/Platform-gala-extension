@@ -89,6 +89,7 @@ export default function ProfilePaymentSection({
           deadline={phase1Deadline}
           deadlinePassed={phase1Passed}
           proofName={proofName}
+          confirmed={sessionUser?.payment_phase1_confirmed ?? false}
           onProofChange={onProofChange}
           config={config}
         />
@@ -99,6 +100,7 @@ export default function ProfilePaymentSection({
             deadline={phase2Deadline}
             deadlinePassed={phase2Passed}
             proofName={phase2ProofName}
+            confirmed={sessionUser?.payment_phase2_confirmed ?? false}
             onProofChange={onProofChange}
             config={config}
           />
@@ -202,6 +204,7 @@ function ProofUpload({
   deadline,
   deadlinePassed,
   proofName,
+  confirmed,
   onProofChange,
   config,
 }: Readonly<{
@@ -210,6 +213,7 @@ function ProofUpload({
   deadline: string;
   deadlinePassed: boolean;
   proofName: string | null;
+  confirmed: boolean;
   onProofChange: (name: string) => void;
   config: RegistrationConfig;
 }>) {
@@ -282,6 +286,14 @@ function ProofUpload({
                   {proofName.split("/").pop() ?? proofName}
                 </p>
                 <p className="text-white/35 text-xs">Comprovativo submetido</p>
+                <p
+                  className={[
+                    "mt-1 text-[0.65rem] font-semibold",
+                    confirmed ? "text-emerald-400/75" : "text-yellow-400/70",
+                  ].join(" ")}
+                >
+                  {confirmed ? "Validado pela organização" : "Por rever"}
+                </p>
               </div>
               {!deadlinePassed && (
                 <button

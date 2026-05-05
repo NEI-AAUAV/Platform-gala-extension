@@ -102,23 +102,46 @@ async def confirm_payment(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
+    phase: Annotated[Optional[int], Query(ge=1, le=2)] = None,
 ):
-    """Manually confirms payment for a user."""
+    """Manually confirms payment for a user, either by phase or as a full payment."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
 
     user_coll = User.get_collection(db)
+    current = await user_coll.find_one({"_id": user_id})
+    if not current:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    current_user = User.parse_obj(current)
+    update_data: Dict[str, Any] = {
+        "registration_active": True,
+        "payment_expired": False,
+    }
+    if phase is None:
+        update_data["payment_phase1_confirmed"] = True
+        update_data["payment_phase2_confirmed"] = current_user.phased_payment
+        update_data["has_payed"] = True
+    elif phase == 1:
+        update_data["payment_phase1_confirmed"] = True
+        update_data["has_payed"] = (
+            current_user.payment_phase2_confirmed if current_user.phased_payment else True
+        )
+    else:
+        update_data["payment_phase2_confirmed"] = True
+        update_data["has_payed"] = (
+            current_user.payment_phase1_confirmed if current_user.phased_payment else True
+        )
+
     user_dict = await user_coll.find_one_and_update(
         {"_id": user_id},
-        {"$set": {"has_payed": True}},
+        {"$set": update_data},
         return_document=True,
     )
-    if not user_dict:
-        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     user = User.parse_obj(user_dict)
     
     config = await ConfigService.get_config(db)
-    if config.email_notifications.payment_confirmed:
+    if user.has_payed and config.email_notifications.payment_confirmed:
         background_tasks.add_task(
             send_email,
             user.email,
@@ -133,6 +156,48 @@ async def confirm_payment(
     return {"status": "success"}
 
 
+@router.post(
+    "/registrations/{user_id}/payment-reminder",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def send_payment_reminder(
+    user_id: int,
+    background_tasks: BackgroundTasks,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+):
+    """Sends a missing payment reminder email."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    user_dict = await user_coll.find_one({"_id": user_id})
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    user = User.parse_obj(user_dict)
+    if user.has_payed:
+        raise HTTPException(status_code=400, detail="Payment already confirmed")
+
+    config = await ConfigService.get_config(db)
+    background_tasks.add_task(
+        send_email,
+        user.email,
+        "Lembrete de pagamento — Jantar de Gala",
+        settings=settings,
+        template="payment_reminder",
+        name=user.name,
+        nmec=user.nmec,
+        phased_payment=user.phased_payment,
+        payment_deadline=config.payment_deadline_date,
+        phase1_deadline=config.prices.phase1_deadline,
+        phase2_deadline=config.prices.phase2_deadline,
+    )
+    await user_coll.update_one({"_id": user_id}, {"$set": {"payment_reminder_sent": True}})
+
+    return {"status": "success"}
+
+
 @router.delete(
     "/registrations/{user_id}/payment-proof",
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
@@ -142,6 +207,7 @@ async def reject_payment_proof(
     background_tasks: BackgroundTasks,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
     phase: Annotated[int, Query(ge=1, le=2)] = 1,
 ):
     """Rejects (deletes) payment proof for a user."""
@@ -149,10 +215,11 @@ async def reject_payment_proof(
 
     user_coll = User.get_collection(db)
     field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
+    confirmed_field = "payment_phase1_confirmed" if phase == 1 else "payment_phase2_confirmed"
     
     user_dict = await user_coll.find_one_and_update(
         {"_id": user_id},
-        {"$set": {"has_payed": False, field: None}},
+        {"$set": {"has_payed": False, field: None, confirmed_field: False}},
         return_document=True,
     )
     if not user_dict:
@@ -263,6 +330,7 @@ async def list_registrations(
 ):
     """Lists all registered users (including admin-created ones)."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    await RegistrationService.apply_payment_deadline_policy(db)
     user_coll = User.get_collection(db)
     # Include admin-created registrations even when is_registered may be True by design
     cursor = user_coll.find({"is_registered": True})
@@ -378,6 +446,8 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
         "is_registered": True,
         "registration_step": 7,
         "admin_created": False,
+        "registration_active": True,
+        "payment_expired": False,
     }
 
     if user_dict:
@@ -433,6 +503,11 @@ async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, us
         "registration_step": 7,
         "admin_created": True,
         "has_payed": False,
+        "payment_phase1_confirmed": False,
+        "payment_phase2_confirmed": False,
+        "payment_expired": False,
+        "payment_reminder_sent": False,
+        "registration_active": True,
         "table_id": None,
         "bus_assignment": None,
         "payment_proof_url": None,
@@ -532,6 +607,11 @@ async def admin_edit_registration(
         update_data["phased_payment"] = body.phased_payment
     if body.has_payed is not None:
         update_data["has_payed"] = body.has_payed
+        update_data["payment_phase1_confirmed"] = body.has_payed
+        update_data["payment_phase2_confirmed"] = body.has_payed if user_dict.get("phased_payment") else False
+        if body.has_payed:
+            update_data["registration_active"] = True
+            update_data["payment_expired"] = False
     if body.companions is not None:
         update_data["companions"] = [
             Companion(
@@ -594,6 +674,11 @@ async def admin_delete_registration(
                 "nmec": 0,
                 "matriculation": None,
                 "has_payed": False,
+                "payment_phase1_confirmed": False,
+                "payment_phase2_confirmed": False,
+                "payment_expired": False,
+                "payment_reminder_sent": False,
+                "registration_active": True,
                 "payment_proof_url": None,
                 "payment_proof_url_phase2": None,
                 "companions": [],

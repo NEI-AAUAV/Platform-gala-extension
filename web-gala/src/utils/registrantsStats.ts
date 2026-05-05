@@ -26,8 +26,21 @@ export function computeStats(users: User[]): RegistrantsStats {
   return {
     total: users.length,
     paid: users.filter((u) => u.has_payed).length,
-    proofSent: users.filter((u) => !u.has_payed && u.payment_proof_url).length,
-    pending: users.filter((u) => !u.has_payed && !u.payment_proof_url).length,
+    proofSent: users.filter(
+      (u) =>
+        !u.has_payed &&
+        ((!u.payment_phase1_confirmed && u.payment_proof_url) ||
+          (u.phased_payment &&
+            !u.payment_phase2_confirmed &&
+            u.payment_proof_url_phase2)),
+    ).length,
+    pending: users.filter(
+      (u) =>
+        !u.has_payed &&
+        !u.payment_expired &&
+        !u.payment_proof_url &&
+        !u.payment_proof_url_phase2,
+    ).length,
     withTable: users.filter((u) => u.table_id !== null).length,
     withBus: users.filter((u) => u.bus_option !== "NONE").length,
     byYear,

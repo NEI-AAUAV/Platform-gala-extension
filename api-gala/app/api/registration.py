@@ -52,6 +52,7 @@ async def get_registration_status(
     """Returns the current registration status and wizard progress for the authenticated user."""
     # On every status check, try to sync any phantom registrations (admin-created for this email)
     await sync_email_based_registrations(db, auth.sub, auth.email)
+    await RegistrationService.apply_payment_deadline_policy(db)
 
     user = await RegistrationService.get_user_registration(db, auth.sub)
     if not user:
