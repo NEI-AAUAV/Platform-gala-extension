@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import GalaService, { Manager, ManagerPermissionKey } from "@/services/GalaService";
+import GalaService, {
+  Manager,
+  ManagerPermissionKey,
+} from "@/services/GalaService";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
 
@@ -41,8 +44,16 @@ function PermissionToggle({
   );
 }
 
-function ManagerRow({ manager, onUpdated }: { readonly manager: Manager; readonly onUpdated: (m: Manager) => void }) {
-  const [perms, setPerms] = useState<Set<ManagerPermissionKey>>(new Set(manager.permissions));
+function ManagerRow({
+  manager,
+  onUpdated,
+}: {
+  readonly manager: Manager;
+  readonly onUpdated: (m: Manager) => void;
+}) {
+  const [perms, setPerms] = useState<Set<ManagerPermissionKey>>(
+    new Set(manager.permissions),
+  );
   const [saving, setSaving] = useState(false);
   const toast = useAppToast();
 
@@ -58,7 +69,12 @@ function ManagerRow({ manager, onUpdated }: { readonly manager: Manager; readonl
   const save = async () => {
     setSaving(true);
     try {
-      const updated = await GalaService.permissions.setManagerPermissions(manager._id, [...perms]);
+      const updated = await GalaService.permissions.setManagerPermissions(
+        manager._id,
+        [...perms],
+        manager.name,
+        manager.email,
+      );
       onUpdated(updated);
       toast.success("Permissões guardadas.");
     } catch (e) {
@@ -68,10 +84,12 @@ function ManagerRow({ manager, onUpdated }: { readonly manager: Manager; readonl
     }
   };
 
-  const hasChanges = [...perms].sort().join() !== [...manager.permissions].sort().join();
+  const hasChanges =
+    [...perms].sort((a, b) => a.localeCompare(b)).join() !== 
+    [...manager.permissions].sort((a, b) => a.localeCompare(b)).join();
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-white/8 bg-white/3 p-5">
+    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-semibold text-white">{manager.name}</p>
@@ -102,7 +120,9 @@ function ManagerRow({ manager, onUpdated }: { readonly manager: Manager; readonl
       </div>
 
       {perms.size === 0 && (
-        <p className="text-xs text-yellow-400/60">Sem permissões — este manager não tem acesso a nenhuma funcionalidade.</p>
+        <p className="text-xs text-yellow-400/60">
+          Sem permissões — este manager não tem acesso a nenhuma funcionalidade.
+        </p>
       )}
     </div>
   );
@@ -114,14 +134,17 @@ export default function PermissoesAdmin() {
   const toast = useAppToast();
 
   useEffect(() => {
-    GalaService.permissions.listManagers()
+    GalaService.permissions
+      .listManagers()
       .then(setManagers)
       .catch(() => toast.error("Erro ao carregar managers."))
       .finally(() => setLoading(false));
   }, []);
 
   const handleUpdated = (updated: Manager) => {
-    setManagers((prev) => prev.map((m) => (m._id === updated._id ? updated : m)));
+    setManagers((prev) =>
+      prev.map((m) => (m._id === updated._id ? updated : m)),
+    );
   };
 
   if (loading) {
@@ -131,7 +154,7 @@ export default function PermissoesAdmin() {
   if (managers.length === 0) {
     return (
       <p className="text-sm text-white/40">
-        Nenhum manager registado ainda. Os managers aparecem aqui após o primeiro login no painel de administração.
+        Nenhum utilizador com o role manager-gala encontrado.
       </p>
     );
   }
@@ -139,7 +162,8 @@ export default function PermissoesAdmin() {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-white/40">
-        Gestão individual das permissões de cada manager-gala. Por defeito, novos managers não têm acesso a nenhuma funcionalidade.
+        Gestão individual das permissões de cada manager-gala. Por defeito,
+        novos managers não têm acesso a nenhuma funcionalidade.
       </p>
       {managers.map((m) => (
         <ManagerRow key={m._id} manager={m} onUpdated={handleUpdated} />

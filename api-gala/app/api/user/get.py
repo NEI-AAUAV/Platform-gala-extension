@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Security, HTTPException
-from typing import List
+from fastapi import APIRouter, Security, HTTPException, Query
+from typing import List, Optional, Annotated
 
 from app.models.user import User
 from app.core.db import DatabaseDep
+from app.core.config import SettingsDep
 from app.api.auth import AuthData, api_nei_auth, auth_responses, ScopeEnum
+from app.services.registration import RegistrationService
 
 router = APIRouter()
 
@@ -35,12 +37,50 @@ async def get_self(
     auth: AuthData = Security(api_nei_auth),
 ) -> User:
     """Fetches the self user information"""
+    await RegistrationService.apply_payment_deadline_policy(db)
     res = await User.get_collection(db).find_one({"_id": auth.sub})
 
     if res is None:
         raise HTTPException(status_code=404, detail="User doesn't exist")
 
     return User.parse_obj(res)
+
+
+@router.get(
+    "/search",
+    responses={**auth_responses},
+)
+async def search_users(
+    *,
+    q: Annotated[str, Query(min_length=2)],
+    db: DatabaseDep,
+    settings: SettingsDep,
+    auth: AuthData = Security(api_nei_auth),
+) -> List[dict]:
+    """Search ALL platform users via Authentik (for table invites)."""
+    from app.services.authentik_service import fetch_all_users
+    
+    # 1. Search in Authentik
+    authentik_users = await fetch_all_users(settings, search=q)
+    
+    # 2. Get registered status for these users
+    user_coll = User.get_collection(db)
+    registered_ids = await user_coll.distinct("_id", {"_id": {"$in": [u.pk for u in authentik_users]}, "is_registered": True})
+    registered_ids_set = set(registered_ids)
+
+    # 3. Map to the expected format and exclude self
+    results = []
+    for u in authentik_users:
+        if u.pk == auth.sub:
+            continue
+        results.append({
+            "id": u.pk,
+            "name": u.name,
+            "email": u.email,
+            "is_registered": u.pk in registered_ids_set
+        })
+
+    return results[:10]
 
 
 @router.get(

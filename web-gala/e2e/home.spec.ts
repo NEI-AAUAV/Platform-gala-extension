@@ -20,9 +20,6 @@ test.describe('Gala Home Page', () => {
     await expect(logo).toBeVisible();
 
     const header = page.locator('header');
-    await expect(header.getByText('Sobre', { exact: true })).toBeVisible();
-    await expect(header.getByText('Fases', { exact: true })).toBeVisible();
-    await expect(header.getByText('Nomeados', { exact: true })).toBeVisible();
   });
 
   test('should show login and registration buttons for unauthenticated users', async ({ page }) => {

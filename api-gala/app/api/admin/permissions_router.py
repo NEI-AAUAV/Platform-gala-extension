@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Annotated, List
 from pydantic import BaseModel
 from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
+from app.core.config import SettingsDep
 from app.core.db import get_db
 from app.core.db.types import DBType
 from app.models.manager_permissions import ManagerPermission, ManagerPermissions
@@ -19,6 +20,8 @@ class PermissionsResponse(BaseModel):
 
 class SetPermissionsBody(BaseModel):
     permissions: List[ManagerPermission]
+    name: str
+    email: str
 
 
 @router.get(
@@ -51,22 +54,19 @@ async def get_my_permissions(
 )
 async def list_managers(
     db: Annotated[DBType, Depends(get_db)],
+    settings: SettingsDep,
     auth: Annotated[AuthData, Depends(api_nei_auth)],
 ):
-    """Lists all registered managers and their permissions (Admin only)."""
+    """Lists all managers from Authentik group, merged with their stored permissions."""
     if ScopeEnum.ADMIN not in auth.scopes:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
-    return await ManagerPermissionsService.list_managers(db)
+    return await ManagerPermissionsService.list_managers(db, settings)
 
 
 @router.put(
     "/managers/{manager_id}/permissions",
     response_model=ManagerPermissions,
-    responses={
-        **auth_responses,
-        403: {"description": ERROR_FORBIDDEN},
-        404: {"description": "Manager not found"},
-    },
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}},
 )
 async def set_manager_permissions(
     manager_id: int,
@@ -74,12 +74,10 @@ async def set_manager_permissions(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
 ):
-    """Sets the permissions for a specific manager (Admin only)."""
+    """Sets the permissions for a specific manager (Admin only). Creates record if it doesn't exist yet."""
     if ScopeEnum.ADMIN not in auth.scopes:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=ERROR_FORBIDDEN)
 
-    coll = ManagerPermissions.get_collection(db)
-    if not await coll.find_one({"_id": manager_id}):
-        raise HTTPException(status_code=404, detail="Manager not found")
-
-    return await ManagerPermissionsService.set_permissions(db, manager_id, body.permissions)
+    return await ManagerPermissionsService.set_permissions(
+        db, manager_id, body.permissions, body.name, body.email
+    )

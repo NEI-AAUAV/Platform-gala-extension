@@ -33,18 +33,27 @@ export default function useTime() {
   const [time, setTime] = useState<TimeExtended>();
 
   useEffect(() => {
-    GalaService.time.getTimeSlots().then((response) => {
-      setTime({
-        ...response,
-        registrationStatus: getTimeStatus(response.registrationStart, response.registrationEnd),
-        nominationsStatus: getTimeStatus(response.nominationsStart, response.nominationsEnd),
-        votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
-        tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
-        galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),
+    GalaService.time
+      .getTimeSlots()
+      .then((response) => {
+        setTime({
+          ...response,
+          registrationStatus: getTimeStatus(
+            response.registrationStart,
+            response.registrationEnd,
+          ),
+          nominationsStatus: getTimeStatus(
+            response.nominationsStart,
+            response.nominationsEnd,
+          ),
+          votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
+          tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
+          galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),
+        });
+      })
+      .catch(() => {
+        // time_slots not initialised yet — leave time as undefined
       });
-    }).catch(() => {
-      // time_slots not initialised yet — leave time as undefined
-    });
   }, []);
 
   return { time };

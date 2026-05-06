@@ -1,0 +1,16 @@
+Olá {{ name }},
+
+Ainda não temos o teu pagamento do Jantar de Gala confirmado.
+
+{% if phased_payment %}
+Prazos:
+- Fase 1: {{ phase1_deadline or payment_deadline or "a anunciar" }}
+- Fase 2: {{ phase2_deadline or payment_deadline or "a anunciar" }}
+{% else %}
+Prazo: {{ payment_deadline or "a anunciar" }}
+{% endif %}
+
+Envia o comprovativo no teu perfil para que a inscrição possa ser validada.
+
+Até já,
+NEI-AAUAv

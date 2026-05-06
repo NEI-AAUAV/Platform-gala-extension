@@ -2,10 +2,16 @@
  * Extracts a human-readable error message from an Axios error response.
  * FastAPI returns errors as { detail: string | { msg: string }[] }
  */
-export function extractApiError(error: unknown, fallback = "Ocorreu um erro. Tenta novamente."): string {
+export function extractApiError(
+  error: unknown,
+  fallback = "Ocorreu um erro. Tenta novamente.",
+): string {
   if (!error || typeof error !== "object") return fallback;
 
-  const axiosError = error as { response?: { data?: { detail?: unknown } }; message?: string };
+  const axiosError = error as {
+    response?: { data?: { detail?: unknown } };
+    message?: string;
+  };
   const detail = axiosError.response?.data?.detail;
 
   if (typeof detail === "string") return detail;
@@ -16,7 +22,10 @@ export function extractApiError(error: unknown, fallback = "Ocorreu um erro. Ten
     }
   }
 
-  if (typeof axiosError.message === "string" && axiosError.message !== "Network Error") {
+  if (
+    typeof axiosError.message === "string" &&
+    axiosError.message !== "Network Error"
+  ) {
     return axiosError.message;
   }
 

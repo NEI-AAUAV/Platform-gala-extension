@@ -15,8 +15,16 @@ type User = {
   phased_payment: boolean;
   payment_proof_url: string | null;
   payment_proof_url_phase2: string | null;
+  payment_phase1_confirmed: boolean;
+  payment_phase2_confirmed: boolean;
+  payment_expired: boolean;
+  payment_reminder_sent: boolean;
+  registration_active: boolean;
   table_id: number | null;
   companions: Companion[];
+  admin_created?: boolean;
+  companion_emails?: string[];
+  is_companion_of?: number | null;
 };
 
 type UserExtended = User & Person;

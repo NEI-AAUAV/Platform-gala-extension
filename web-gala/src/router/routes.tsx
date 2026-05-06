@@ -49,15 +49,13 @@ const routes = [
           const { default: Reserve } = await import("@/pages/Reserve");
           return { Component: Reserve };
         },
-        children: [
-          {
-            path: "/reserve/:tableId",
-            async lazy() {
-              const { default: Reserve } = await import("@/pages/Reserve");
-              return { Component: Reserve };
-            },
-          },
-        ],
+      },
+      {
+        path: "/reserve/:tableId",
+        async lazy() {
+          const { default: Reserve } = await import("@/pages/Reserve");
+          return { Component: Reserve };
+        },
       },
       {
         path: "/vote",

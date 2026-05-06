@@ -59,6 +59,14 @@ class PaymentInfoConfig(BaseModel):
     visible: bool = True
 
 
+class EmailNotificationsConfig(BaseModel):
+    registration_confirmed: bool = True
+    payment_confirmed: bool = True
+    payment_rejected: bool = True
+    table_invite: bool = True
+    table_confirmed: bool = True
+
+
 class HomepageConfig(BaseModel):
     dj: DJConfig = Field(default_factory=DJConfig)
     bus_schedule: BusScheduleConfig = Field(default_factory=BusScheduleConfig)
@@ -95,37 +103,23 @@ class PriceConfig(BaseModel):
     contacts: List[PaymentContact] = []
 
 
-class EventDates(BaseModel):
-    registration_start: str = ""
-    registration_end: str = ""
-
-    tables_start: str = ""
-    tables_end: str = ""
-
-    nominations_start: str = ""
-    nominations_end: str = ""
-    voting_start: str = ""
-    voting_end: str = ""
-
-    event_time: str = ""
-    event_date: str = ""
-
-
 class GlobalConfig(BaseDocument):
     id: str = Field(default=CONFIG_ID, alias="_id")
     event_name: str = "Gala Dinner"
     event_location: str = ""
     event_description: str = ""
+    event_date: str = ""
+    event_time: str = ""
     rules: List[str] = []
     items_included: List[str] = []
 
-    dates: EventDates = Field(default_factory=EventDates)
     prices: PriceConfig = Field(default_factory=PriceConfig)
     bus: BusConfig = Field(default_factory=BusConfig)
     meals: List[MealOption] = []
 
     max_registrations: int = 200
     max_table_size: int = 10
+    table_photo_enabled: bool = True
 
     allergies_required: bool = False
     payment_method: str = "both"
@@ -134,6 +128,7 @@ class GlobalConfig(BaseDocument):
     payment_email: str = ""
 
     homepage: HomepageConfig = Field(default_factory=HomepageConfig)
+    email_notifications: EmailNotificationsConfig = Field(default_factory=EmailNotificationsConfig)
 
     @classmethod
     def collection(cls) -> str:

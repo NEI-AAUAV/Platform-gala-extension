@@ -1,5 +1,5 @@
-import config from "@/config";
 import { useHref } from "react-router-dom";
+import config from "@/config";
 
 export default function useLoginLink() {
   const homePathname = useHref("");

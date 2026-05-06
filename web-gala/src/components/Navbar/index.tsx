@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBars,
+  faXmark,
+  faUser,
+  faUsersGear,
+} from "@fortawesome/free-solid-svg-icons";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useUserStore } from "@/stores/useUserStore";
 import NEIService from "@/services/NEIService";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faXmark, faUser, faUsersGear } from "@fortawesome/free-solid-svg-icons";
-
-
-
 
 async function handleLogout() {
   const { end_session_url } = await NEIService.logout().catch(() => ({
@@ -38,46 +40,65 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   }, [location.pathname, location.hash]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   const closeMenu = () => setIsMobileMenuOpen(false);
   const displayName = [name, surname].filter(Boolean).join(" ");
-  const isAdmin = scopes?.some((role) => ["admin", "manager-gala"].includes(role));
+  const isAdmin = scopes?.some((role) =>
+    ["admin", "manager-gala"].includes(role),
+  );
 
   return (
     <header className="fixed top-0 z-50 w-full">
       <nav
         className={`w-full transition-all duration-300 ${
           isScrolled
-            ? "border-b border-light-gold/15 bg-[#050505]/90 shadow-lg backdrop-blur-md"
+            ? "border-light-gold/15 border-b bg-[#050505]/90 shadow-lg backdrop-blur-md"
             : "bg-transparent"
         }`}
       >
         <div className="mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3 md:px-8">
-          <Link to="/" onClick={closeMenu} className="flex items-center font-gala group">
-            <img src="/gala/logo.svg" alt="NEI Logo" className="h-12 w-auto transition-transform group-hover:scale-105" />
+          {/* Logo */}
+          <Link
+            to="/"
+            onClick={closeMenu}
+            className="group flex items-center font-gala"
+          >
+            <img
+              src="/gala/logo.svg"
+              alt="NEI Logo"
+              className="h-12 w-auto transition-transform group-hover:scale-105"
+            />
           </Link>
 
-
-
-
+          {/* Desktop nav links */}
           <div className="hidden items-center gap-8 md:flex">
-            <a href="/#sobre" className={navLinkClass}>Sobre</a>
-            <a href="/#timeline" className={navLinkClass}>Fases</a>
-            <Link to="/vote" className={navLinkClass}>Nomeados</Link>
           </div>
 
-
+          {/* Desktop auth */}
           <div className="hidden items-center gap-4 md:flex">
             {!sessionLoading && !token && (
               <>
-                <a href={loginLink} className="font-gala text-[0.8rem] font-semibold text-white/50 transition-colors hover:text-white/80">
+                <a
+                  href={loginLink}
+                  className="font-gala text-[0.8rem] font-semibold text-white/50 transition-colors hover:text-white/80"
+                >
                   Entrar
                 </a>
-                <a href={loginLink} className="border border-light-gold/60 px-5 py-2 font-gala text-[0.8rem] font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black">
+                <a
+                  href={loginLink}
+                  className="border border-light-gold/60 px-5 py-2 font-gala text-[0.8rem] font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+                >
                   Inscrever
                 </a>
               </>
             )}
-
             {!sessionLoading && token && (
               <>
                 {isAdmin && (
@@ -85,7 +106,10 @@ export default function Navbar() {
                     to="/admin"
                     className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
                   >
-                    <FontAwesomeIcon icon={faUsersGear} className="text-[0.7rem] text-light-gold/50" />
+                    <FontAwesomeIcon
+                      icon={faUsersGear}
+                      className="text-[0.7rem] text-light-gold/50"
+                    />
                     Admin
                   </Link>
                 )}
@@ -93,7 +117,10 @@ export default function Navbar() {
                   to="/profile"
                   className="flex items-center gap-2 font-gala text-[0.8rem] font-semibold text-white/60 transition-colors hover:text-light-gold"
                 >
-                  <FontAwesomeIcon icon={faUser} className="text-[0.7rem] text-light-gold/50" />
+                  <FontAwesomeIcon
+                    icon={faUser}
+                    className="text-[0.7rem] text-light-gold/50"
+                  />
                   {displayName || "Perfil"}
                 </Link>
                 <button
@@ -106,89 +133,142 @@ export default function Navbar() {
             )}
           </div>
 
+          {/* Mobile hamburger */}
           <button
-            className="flex h-9 w-9 items-center justify-center border border-light-gold/30 text-light-gold transition-colors hover:border-light-gold md:hidden"
+            className="flex h-10 w-10 items-center justify-center border border-light-gold/30 text-light-gold transition-colors hover:border-light-gold md:hidden"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
           >
-            <FontAwesomeIcon icon={isMobileMenuOpen ? faXmark : faBars} className="text-sm" />
+            <FontAwesomeIcon
+              icon={isMobileMenuOpen ? faXmark : faBars}
+              className="text-sm"
+            />
           </button>
         </div>
       </nav>
 
+      {/* Mobile drawer — full-screen overlay slide from right */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="overflow-hidden border-b border-light-gold/15 bg-[#050505]/95 backdrop-blur-md md:hidden"
-          >
-            <div className="flex flex-col px-4 py-4">
-              {([
-                { href: "/#sobre", label: "Sobre" },
-                { href: "/#timeline", label: "Fases" },
-              ] as const).map(({ href, label }) => (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm md:hidden"
+              onClick={closeMenu}
+            />
 
-                <a
-                  key={href}
-                  href={href}
+            {/* Drawer panel */}
+            <motion.div
+              key="drawer"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#0a0a0a] shadow-2xl md:hidden"
+            >
+              {/* Drawer header */}
+              <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
+                <img
+                  src="/gala/logo.svg"
+                  alt="NEI Logo"
+                  className="h-10 w-auto"
+                />
+                <button
                   onClick={closeMenu}
-                  className="border-b border-white/5 py-3 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:text-light-gold"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/50 transition-colors hover:border-white/25 hover:text-white/80"
+                  aria-label="Fechar menu"
                 >
-                  {label}
-                </a>
-              ))}
-              <Link
-                to="/vote"
-                onClick={closeMenu}
-                className="border-b border-white/5 py-3 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:text-light-gold"
-              >
-                Nomeados
-              </Link>
+                  <FontAwesomeIcon icon={faXmark} className="text-sm" />
+                </button>
+              </div>
 
-              <div className="flex flex-col gap-3 pt-5">
+              {/* Nav links */}
+              <nav className="flex flex-col gap-1 px-3 py-4">
+              </nav>
+
+              {/* Divider */}
+              <div className="border-white/8 mx-5 border-t" />
+
+              {/* Auth section */}
+              <div className="flex flex-col gap-2 px-4 py-5">
                 {!sessionLoading && !token && (
-                  <a
-                    href={loginLink}
-                    onClick={closeMenu}
-                    className="border border-light-gold/60 px-5 py-3 text-center font-gala text-sm font-bold text-light-gold transition-all hover:bg-light-gold hover:text-black"
-                  >
-                    Inscrever
-                  </a>
+                  <>
+                    <a
+                      href={loginLink}
+                      onClick={closeMenu}
+                      className="flex items-center justify-center border border-light-gold/60 px-5 py-3.5 font-gala text-sm font-bold text-light-gold transition-all hover:bg-light-gold hover:text-black"
+                    >
+                      Inscrever
+                    </a>
+                    <a
+                      href={loginLink}
+                      onClick={closeMenu}
+                      className="flex items-center justify-center py-3 font-gala text-sm font-semibold text-white/40 transition-colors hover:text-white/70"
+                    >
+                      Já tens conta? Entrar
+                    </a>
+                  </>
                 )}
+
                 {!sessionLoading && token && (
                   <>
+                    {displayName && (
+                      <div className="mb-1 px-1">
+                        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
+                          Sessão iniciada como
+                        </p>
+                        <p className="mt-0.5 font-gala text-sm font-semibold text-white/70">
+                          {displayName}
+                        </p>
+                      </div>
+                    )}
+
+                    <Link
+                      to="/profile"
+                      onClick={closeMenu}
+                      className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
+                    >
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        className="w-4 text-light-gold/40"
+                      />
+                      O Meu Perfil
+                    </Link>
+
                     {isAdmin && (
                       <Link
                         to="/admin"
                         onClick={closeMenu}
-                        className="flex items-center justify-center gap-2 border border-white/20 px-5 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/40 hover:text-light-gold"
+                        className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
                       >
-                        <FontAwesomeIcon icon={faUsersGear} className="text-[0.7rem]" />
-                        Admin
+                        <FontAwesomeIcon
+                          icon={faUsersGear}
+                          className="w-4 text-light-gold/40"
+                        />
+                        Painel Admin
                       </Link>
                     )}
-                    <Link
-                      to="/profile"
-                      onClick={closeMenu}
-                      className="flex items-center justify-center gap-2 border border-white/20 px-5 py-3 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/40 hover:text-light-gold"
-                    >
-                      <FontAwesomeIcon icon={faUser} className="text-[0.7rem]" />
-                      {displayName || "Perfil"}
-                    </Link>
+
                     <button
-                      onClick={handleLogout}
-                      className="py-3 font-gala text-sm font-semibold text-white/40 transition-colors hover:text-red-400"
+                      onClick={() => {
+                        closeMenu();
+                        handleLogout();
+                      }}
+                      className="mt-1 flex items-center justify-center py-3 font-gala text-sm font-semibold text-white/30 transition-colors hover:text-red-400"
                     >
-                      Sair
+                      Terminar Sessão
                     </button>
                   </>
                 )}
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

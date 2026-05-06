@@ -1,28 +1,36 @@
 import uuid
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, UploadFile, File, status, Query
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Annotated, Optional, Dict, Any, Union
 from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
 from app.services.storage import storage_client
+from app.services.authentik_service import fetch_all_users, AuthentikUser
 from app.core.config import SettingsDep
 from app.core.db import get_db
 from app.core.db.types import DBType
+from app.core.db.counters import get_next_id
 from app.core.email import send_email
 from app.models.config import GlobalConfig
-from app.models.user import User
+from app.models.user import User, BusOption, Matriculation
+from app.models.table import Companion
 from app.models.manager_permissions import ManagerPermission
 from app.services.config import ConfigService
 from app.services.export import ExportService
 from app.services.vote import VoteService
 from app.services.manager_permissions import ManagerPermissionsService
+from app.services.registration import RegistrationService
+from app.services.table import TableService
+from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 
 
 router = APIRouter()
+router.include_router(tables_router)
 
 ERROR_FORBIDDEN = "Not enough permissions"
+ERROR_USER_NOT_FOUND = "User not found"
 
 
 @router.get("/config", response_model=GlobalConfig, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}})
@@ -86,7 +94,7 @@ async def export_tables(
 
 @router.post(
     "/registrations/{user_id}/confirm_payment",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def confirm_payment(
     user_id: int,
@@ -94,38 +102,189 @@ async def confirm_payment(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
+    phase: Annotated[Optional[int], Query(ge=1, le=2)] = None,
 ):
-    """Manually confirms payment for a user."""
+    """Manually confirms payment for a user, either by phase or as a full payment."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
 
     user_coll = User.get_collection(db)
+    current = await user_coll.find_one({"_id": user_id})
+    if not current:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    current_user = User.parse_obj(current)
+    update_data: Dict[str, Any] = {
+        "registration_active": True,
+        "payment_expired": False,
+    }
+    if phase is None:
+        update_data["payment_phase1_confirmed"] = True
+        update_data["payment_phase2_confirmed"] = current_user.phased_payment
+        update_data["has_payed"] = True
+    elif phase == 1:
+        update_data["payment_phase1_confirmed"] = True
+        update_data["has_payed"] = (
+            current_user.payment_phase2_confirmed if current_user.phased_payment else True
+        )
+    else:
+        update_data["payment_phase2_confirmed"] = True
+        update_data["has_payed"] = (
+            current_user.payment_phase1_confirmed if current_user.phased_payment else True
+        )
+
     user_dict = await user_coll.find_one_and_update(
         {"_id": user_id},
-        {"$set": {"has_payed": True}},
+        {"$set": update_data},
         return_document=True,
     )
-    if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
 
     user = User.parse_obj(user_dict)
+    
+    config = await ConfigService.get_config(db)
+    if user.has_payed and config.email_notifications.payment_confirmed:
+        background_tasks.add_task(
+            send_email,
+            user.email,
+            "Pagamento confirmado — Jantar de Gala",
+            settings=settings,
+            template="payment_confirmed",
+            name=user.name,
+            nmec=user.nmec,
+            phased_payment=user.phased_payment,
+        )
+
+    return {"status": "success"}
+
+
+@router.post(
+    "/registrations/{user_id}/payment-reminder",
+    responses={**auth_responses, 400: {"description": "Payment already confirmed"}, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def send_payment_reminder(
+    user_id: int,
+    background_tasks: BackgroundTasks,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+):
+    """Sends a missing payment reminder email."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    user_dict = await user_coll.find_one({"_id": user_id})
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    user = User.parse_obj(user_dict)
+    if user.has_payed:
+        raise HTTPException(status_code=400, detail="Payment already confirmed")
+
+    config = await ConfigService.get_config(db)
     background_tasks.add_task(
         send_email,
         user.email,
-        "Pagamento confirmado — Jantar de Gala",
+        "Lembrete de pagamento — Jantar de Gala",
         settings=settings,
-        template="payment_confirmed",
+        template="payment_reminder",
         name=user.name,
         nmec=user.nmec,
         phased_payment=user.phased_payment,
+        payment_deadline=config.payment_deadline_date,
+        phase1_deadline=config.prices.phase1_deadline,
+        phase2_deadline=config.prices.phase2_deadline,
     )
+    await user_coll.update_one({"_id": user_id}, {"$set": {"payment_reminder_sent": True}})
 
     return {"status": "success"}
+
+
+@router.delete(
+    "/registrations/{user_id}/payment-proof",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def reject_payment_proof(
+    user_id: int,
+    background_tasks: BackgroundTasks,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+    phase: Annotated[int, Query(ge=1, le=2)] = 1,
+):
+    """Rejects (deletes) payment proof for a user."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
+    confirmed_field = "payment_phase1_confirmed" if phase == 1 else "payment_phase2_confirmed"
+    
+    user_dict = await user_coll.find_one_and_update(
+        {"_id": user_id},
+        {"$set": {"has_payed": False, field: None, confirmed_field: False}},
+        return_document=True,
+    )
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    user = User.parse_obj(user_dict)
+    
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.payment_rejected:
+        background_tasks.add_task(
+            send_email,
+            user.email,
+            "Comprovativo de Pagamento Rejeitado — Jantar de Gala",
+            settings=settings,
+            template="payment_rejected",
+            name=user.name,
+            nmec=user.nmec,
+            phase=phase,
+        )
+
+    return {"status": "success"}
+
+
+@router.post(
+    "/registrations/{user_id}/payment-proof",
+    response_model=Dict[str, str],
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}, 400: {"description": "Bad Request"}}
+)
+async def admin_upload_payment_proof(
+    user_id: int,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    file: Annotated[UploadFile, File(...)],
+    phase: Annotated[int, Query(ge=1, le=2)] = 1,
+):
+    """Admin uploads a payment proof file to R2 storage."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    
+    user_coll = User.get_collection(db)
+    user_dict = await user_coll.find_one({"_id": user_id})
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    file_data = await file.read()
+    MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+    if len(file_data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Maximum size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB."
+        )
+
+    if not file.content_type.startswith("image/") and file.content_type != "application/pdf":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only images and PDFs are allowed."
+        )
+
+    url = await RegistrationService.upload_payment_proof(db, user_id, file_data, file.content_type, phase)
+    return {"url": url}
 
 
 @router.get(
     "/registrations/{user_id}",
     response_model=User,
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def get_registration(
     user_id: int,
@@ -137,13 +296,13 @@ async def get_registration(
     user_coll = User.get_collection(db)
     user_dict = await user_coll.find_one({"_id": user_id})
     if not user_dict:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return User.parse_obj(user_dict)
 
 
 @router.patch(
     "/registrations/{user_id}",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def update_registration_admin(
     user_id: int,
@@ -156,7 +315,7 @@ async def update_registration_admin(
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": updates})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return {"status": "success"}
 
 
@@ -169,12 +328,356 @@ async def list_registrations(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
-    """Lists all successfully registered users."""
+    """Lists all registered users (including admin-created ones)."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    await RegistrationService.apply_payment_deadline_policy(db)
     user_coll = User.get_collection(db)
+    # Include admin-created registrations even when is_registered may be True by design
     cursor = user_coll.find({"is_registered": True})
     users = await cursor.to_list(length=1000)
     return [User.parse_obj(u) for u in users]
+
+
+# ─── Admin Registration Management ───────────────────────────────────────────
+
+class AdminCompanionInput(BaseModel):
+    name: str
+    dish: Optional[str] = None
+    allergies: str = ""
+    email: Optional[str] = None
+
+
+class AdminCreateRegistrationBody(BaseModel):
+    """Body for admin-created registrations.
+    
+    Either authentik_user_id (for existing Authentik users) or
+    name + email (for people without an account) must be provided.
+    """
+    # For an existing Authentik user
+    authentik_user_id: Optional[int] = None
+
+    # For a person without an Authentik account yet
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+    # Registration fields
+    nmec: int = 0
+    matriculation: Optional[int] = None  # 1-5
+    phone: Optional[str] = None
+    bus_option: str = "NONE"
+    meal_option: Optional[str] = None
+    food_allergies: Optional[str] = None
+    phased_payment: bool = False
+    companions: List[AdminCompanionInput] = []
+
+
+class AdminEditRegistrationBody(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    nmec: Optional[int] = None
+    matriculation: Optional[int] = None
+    phone: Optional[str] = None
+    bus_option: Optional[str] = None
+    meal_option: Optional[str] = None
+    food_allergies: Optional[str] = None
+    phased_payment: Optional[bool] = None
+    has_payed: Optional[bool] = None
+    companions: Optional[List[AdminCompanionInput]] = None
+
+
+@router.get(
+    "/authentik/users",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+)
+async def list_authentik_users(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+    query: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Lists all Authentik users for admin registration search."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    users = await fetch_all_users(settings, search=query)
+    return [{"id": u.pk, "name": u.name, "email": u.email} for u in users]
+
+
+async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: SettingsDep, user_coll) -> User:
+    # Check if already registered
+    existing = await user_coll.find_one({"_id": body.authentik_user_id, "is_registered": True})
+    if existing:
+        raise HTTPException(status_code=409, detail="User already has a registration")
+
+    # Look up user details from Authentik
+    from app.services.authentik_service import fetch_user_by_id
+    au = await fetch_user_by_id(settings, body.authentik_user_id)
+    if not au:
+        raise HTTPException(status_code=404, detail="Authentik user not found")
+
+    user_name = au.name
+    user_email = au.email
+    user_db_id = body.authentik_user_id
+
+    # Upsert: the user may already have a skeleton doc from logging in
+    user_dict = await user_coll.find_one({"_id": user_db_id})
+    mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
+    companions = [
+        Companion(
+            name=c.name,
+            dish=c.dish,
+            allergies=c.allergies,
+            email=c.email,
+        ).dict()
+        for c in body.companions
+    ]
+    companion_emails = [c.email for c in body.companions if c.email]
+
+    update_data = {
+        "name": user_name,
+        "email": user_email,
+        "nmec": body.nmec,
+        "matriculation": mat.dict() if mat else None,
+        "phone": body.phone,
+        "bus_option": body.bus_option,
+        "meal_option": body.meal_option,
+        "food_allergies": body.food_allergies,
+        "phased_payment": body.phased_payment,
+        "companions": companions,
+        "companion_emails": companion_emails,
+        "is_registered": True,
+        "registration_step": 7,
+        "admin_created": False,
+        "registration_active": True,
+        "payment_expired": False,
+    }
+
+    if user_dict:
+        await user_coll.update_one({"_id": user_db_id}, {"$set": update_data})
+    else:
+        doc = {"_id": user_db_id, **update_data}
+        await user_coll.insert_one(doc)
+
+    result = await user_coll.find_one({"_id": user_db_id})
+    return User.parse_obj(result)
+
+async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, user_coll) -> User:
+    if not body.name or not body.email:
+        raise HTTPException(
+            status_code=400,
+            detail="name and email are required when no authentik_user_id is given"
+        )
+
+    email_lower = body.email.strip().lower()
+
+    # Check if there's already a registration with this email
+    existing = await user_coll.find_one({"email": email_lower, "is_registered": True})
+    if existing:
+        raise HTTPException(status_code=409, detail="A registration with this email already exists")
+
+    new_id = await get_next_id(db, "user")
+    mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
+    companions = [
+        Companion(
+            name=c.name,
+            dish=c.dish,
+            allergies=c.allergies,
+            email=c.email,
+        ).dict()
+        for c in body.companions
+    ]
+    companion_emails = [c.email for c in body.companions if c.email]
+
+    doc = {
+        "_id": new_id,
+        "name": body.name.strip(),
+        "email": email_lower,
+        "nmec": body.nmec,
+        "matriculation": mat.dict() if mat else None,
+        "phone": body.phone,
+        "bus_option": body.bus_option,
+        "meal_option": body.meal_option,
+        "food_allergies": body.food_allergies,
+        "phased_payment": body.phased_payment,
+        "companions": companions,
+        "companion_emails": companion_emails,
+        "is_registered": True,
+        "registration_step": 7,
+        "admin_created": True,
+        "has_payed": False,
+        "payment_phase1_confirmed": False,
+        "payment_phase2_confirmed": False,
+        "payment_expired": False,
+        "payment_reminder_sent": False,
+        "registration_active": True,
+        "table_id": None,
+        "bus_assignment": None,
+        "payment_proof_url": None,
+        "payment_proof_url_phase2": None,
+    }
+    await user_coll.insert_one(doc)
+    result = await user_coll.find_one({"_id": new_id})
+    return User.parse_obj(result)
+
+@router.post(
+    "/registrations",
+    response_model=User,
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 409: {"description": "Already registered"}, 404: {"description": "Not Found"}, 400: {"description": "Bad Request"}}
+)
+async def admin_create_registration(
+    body: AdminCreateRegistrationBody,
+    background_tasks: BackgroundTasks,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    settings: SettingsDep,
+):
+    """Admin creates a registration for a person (with or without an Authentik account)."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+
+    if body.authentik_user_id is not None:
+        user = await _create_from_authentik(body, settings, user_coll)
+    else:
+        user = await _create_from_scratch(body, db, user_coll)
+
+    # Send notification
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.registration_confirmed:
+        bus_labels = {"ROUND_TRIP": "Autocarro (Ida e Volta)", "ONE_WAY": "Autocarro (Apenas Ida)", "NONE": "Deslocação própria"}
+        year_label = f"{user.matriculation.__root__}º Ano" if user.matriculation else "Alumni / Outro"
+        
+        background_tasks.add_task(
+            send_email,
+            user.email,
+            "Inscrição no Jantar de Gala confirmada (Admin)",
+            settings=settings,
+            template="registered",
+            name=user.name,
+            nmec=user.nmec,
+            year=year_label,
+            bus=bus_labels.get(user.bus_option.value, "—"),
+            meal=user.meal_option or "—",
+            allergies=user.food_allergies or "Nenhuma",
+            phone=user.phone or "—",
+            phased_payment=user.phased_payment,
+            companions=user.companions,
+        )
+
+    return user
+
+
+@router.put(
+    "/registrations/{user_id}",
+    response_model=User,
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def admin_edit_registration(
+    user_id: int,
+    body: AdminEditRegistrationBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+):
+    """Admin fully edits a registration."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    user_dict = await user_coll.find_one({"_id": user_id})
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    update_data: Dict[str, Any] = {}
+    for field in ["name", "email", "nmec", "phone", "bus_option", "meal_option", "food_allergies", "phased_payment"]:
+        if (val := getattr(body, field)) is not None:
+            if field == "name": val = val.strip()
+            elif field == "email": val = val.strip().lower()
+            update_data[field] = val
+
+    if body.matriculation is not None:
+        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
+    elif body.matriculation == 0:  # explicit clear
+        update_data["matriculation"] = None
+    
+    if body.has_payed is not None:
+        update_data.update({
+            "has_payed": body.has_payed,
+            "payment_phase1_confirmed": body.has_payed,
+            "payment_phase2_confirmed": body.has_payed if user_dict.get("phased_payment") else False
+        })
+        if body.has_payed:
+            update_data.update({"registration_active": True, "payment_expired": False})
+
+    if body.companions is not None:
+        update_data["companions"] = [Companion.parse_obj(c).dict() for c in body.companions]
+        update_data["companion_emails"] = [c.email for c in body.companions if c.email]
+
+    if update_data:
+        await user_coll.update_one({"_id": user_id}, {"$set": update_data})
+
+    result = await user_coll.find_one({"_id": user_id})
+    return User.parse_obj(result)
+
+
+@router.delete(
+    "/registrations/{user_id}",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def admin_delete_registration(
+    user_id: int,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+):
+    """Admin deletes a registration. For admin-created records the entire document is removed;
+    for real Authentik users the registration fields are cleared but the user doc is kept.
+    """
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    user_dict = await user_coll.find_one({"_id": user_id})
+    if not user_dict:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    # 1. Leave table if in one
+    await TableService.leave_table(db, user_id)
+
+    # 2. If the user was a companion of someone, remove that link to prevent auto-syncing back
+    user_email = user_dict.get("email")
+    if user_email:
+        await user_coll.update_many(
+            {"companions.email": user_email},
+            {"$pull": {"companions": {"email": user_email}}}
+        )
+
+    if user_dict.get("admin_created", False):
+        # Completely remove the phantom record
+        await user_coll.delete_one({"_id": user_id})
+    else:
+        # Reset registration fields, keep the user document
+        await user_coll.update_one(
+            {"_id": user_id},
+            {"$set": {
+                "is_registered": False,
+                "registration_step": 1,
+                "nmec": 0,
+                "matriculation": None,
+                "has_payed": False,
+                "payment_phase1_confirmed": False,
+                "payment_phase2_confirmed": False,
+                "payment_expired": False,
+                "payment_reminder_sent": False,
+                "registration_active": True,
+                "payment_proof_url": None,
+                "payment_proof_url_phase2": None,
+                "companions": [],
+                "companion_emails": [],
+                "bus_option": "NONE",
+                "meal_option": None,
+                "food_allergies": None,
+                "table_id": None,
+                "bus_assignment": None,
+                "is_companion_of": None,
+            }}
+        )
+
+    return {"status": "success"}
 
 
 class MergeNomineesBody(BaseModel):
@@ -302,7 +805,7 @@ class BusAssignBody(BaseModel):
 
 @router.patch(
     "/registrations/{user_id}/bus",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "User not found"}}
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def assign_bus(
     user_id: int,
@@ -315,7 +818,7 @@ async def assign_bus(
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": {"bus_assignment": body.bus_id}})
     if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
     return {"status": "success"}
 
 

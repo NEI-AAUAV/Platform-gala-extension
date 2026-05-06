@@ -10,9 +10,10 @@ interface ConfigStore {
 
 export const useConfigStore = create<ConfigStore>((set, get) => ({
   raw: null,
-  loading: true,
+  loading: false,
 
   fetch: async () => {
+    if (get().loading) return;
     set({ loading: true });
     try {
       const data = await GalaService.config.getConfig();
@@ -26,7 +27,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
     const current = get().raw ?? {};
     const merged = deepMerge(current, patch);
     set({ raw: merged });
-    await GalaService.config.updateConfig(merged);
+    const updated = await GalaService.config.updateConfig(merged);
+    set({ raw: updated });
   },
 }));
 

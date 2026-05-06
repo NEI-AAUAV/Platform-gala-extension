@@ -83,12 +83,13 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
             <span className="mb-4 font-gala text-[4.5rem] font-black italic leading-none text-light-gold/10 sm:text-[6rem]">
               {String(active + 1).padStart(2, "0")}
             </span>
-            <h3 className="font-gala text-[2rem] font-black text-white sm:text-[3rem] leading-tight">
+            <h3 className="font-gala text-[2rem] font-black leading-tight text-white sm:text-[3rem]">
               {votes[active].category}
             </h3>
             {votes[active].options.length > 0 && (
               <p className="mt-4 font-gala text-sm text-white/40">
-                {votes[active].options.length} nomeado{votes[active].options.length === 1 ? "" : "s"}
+                {votes[active].options.length} nomeado
+                {votes[active].options.length === 1 ? "" : "s"}
               </p>
             )}
           </motion.div>
@@ -125,7 +126,13 @@ function NomineesGrid({ votes }: { readonly votes: Vote[] }) {
   );
 }
 
-function CategoryNominees({ vote, index }: { readonly vote: Vote; readonly index: number }) {
+function CategoryNominees({
+  vote,
+  index,
+}: {
+  readonly vote: Vote;
+  readonly index: number;
+}) {
   const nominees = vote.options.length > 0 ? vote.options : [];
   if (nominees.length === 0) return null;
 
@@ -135,22 +142,26 @@ function CategoryNominees({ vote, index }: { readonly vote: Vote; readonly index
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: index * 0.07, duration: 0.6 }}
-      className="rounded-2xl border border-white/8 bg-white/3 p-6"
+      className="border-white/8 bg-white/3 rounded-2xl border p-6"
     >
       <p className="mb-1 font-gala text-[0.6rem] font-bold uppercase tracking-[0.35em] text-light-gold/50">
         Categoria
       </p>
-      <h3 className="mb-5 font-gala text-xl font-bold text-white">{vote.category}</h3>
+      <h3 className="mb-5 font-gala text-xl font-bold text-white">
+        {vote.category}
+      </h3>
       <ul className="flex flex-col gap-2">
         {nominees.map((name, i) => (
           <li
             key={name + i}
-            className="flex items-center gap-3 rounded-xl border border-white/6 bg-white/3 px-4 py-2.5"
+            className="border-white/6 bg-white/3 flex items-center gap-3 rounded-xl border px-4 py-2.5"
           >
             <span className="font-gala text-xs font-bold text-light-gold/40">
               {String(i + 1).padStart(2, "0")}
             </span>
-            <span className="font-gala text-sm font-semibold text-white/75">{name}</span>
+            <span className="font-gala text-sm font-semibold text-white/75">
+              {name}
+            </span>
           </li>
         ))}
       </ul>

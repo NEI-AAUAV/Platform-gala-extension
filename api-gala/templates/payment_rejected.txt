@@ -1,0 +1,11 @@
+Olá {{ name }},
+
+O teu comprovativo de pagamento referente à Fase {{ phase }} do Jantar de Gala de Engenharia Informática foi rejeitado.
+
+Por favor, acede novamente à plataforma e envia um comprovativo válido para que possamos validar a tua inscrição:
+{{ PUBLIC_URL }}/gala/reserve
+
+Se tiveres alguma dúvida, contacta-nos respondendo a este email.
+
+A Comissão de Gala
+NEI-AAUAV

@@ -42,6 +42,8 @@ def sanitize_table(auth: Optional[AuthData], table: Table) -> Table:
                 table.persons,
             )
         )
+        # Only the head (or admin) should see who's been invited
+        table.invites = []
 
     return table
 

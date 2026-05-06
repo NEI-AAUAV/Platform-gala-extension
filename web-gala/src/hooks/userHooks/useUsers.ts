@@ -9,7 +9,9 @@ export default function useUsers() {
     setUsers(response);
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
   return { users, mutate: fetch };
 }

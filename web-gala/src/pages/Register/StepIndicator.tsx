@@ -4,7 +4,9 @@ const STEPS = [
   { n: 1, label: "Evento" },
   { n: 2, label: "Dados" },
   { n: 3, label: "Logística" },
-  { n: 4, label: "Confirmação" },
+  { n: 4, label: "Pagamento" },
+  { n: 5, label: "Mesa" },
+  { n: 6, label: "Confirmação" },
 ];
 
 interface StepIndicatorProps {
@@ -13,9 +15,16 @@ interface StepIndicatorProps {
   readonly maxReached: number;
 }
 
-export default function StepIndicator({ current, onStepClick, maxReached }: Readonly<StepIndicatorProps>) {
+export default function StepIndicator({
+  current,
+  onStepClick,
+  maxReached,
+}: Readonly<StepIndicatorProps>) {
   return (
-    <nav className="relative flex items-center justify-center gap-0">
+    <nav
+      className="relative flex items-center justify-center gap-0"
+      aria-label="Passos da inscrição"
+    >
       {STEPS.map((step, i) => {
         const isDone = step.n < current;
         const isActive = step.n === current;
@@ -27,13 +36,14 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Read
               onClick={() => isClickable && onStepClick(step.n)}
               disabled={!isClickable}
               className="flex flex-col items-center gap-1.5 disabled:cursor-not-allowed"
+              aria-current={isActive ? "step" : undefined}
               title={step.label}
             >
               <div className="relative flex h-8 w-8 items-center justify-center">
                 {isActive && (
                   <motion.div
                     layoutId="active-step"
-                    className="absolute inset-0 rounded-full border border-light-gold/60 bg-light-gold/15"
+                    className="bg-light-gold/15 absolute inset-0 rounded-full border border-light-gold/60"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -50,9 +60,12 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Read
                   {isDone ? "✓" : step.n}
                 </span>
               </div>
+              {/* Label — hidden on mobile for steps 3+ to avoid overflow */}
               <span
                 className={[
-                  "hidden text-[0.6rem] font-semibold uppercase tracking-widest transition-colors sm:block",
+                  "text-[0.6rem] font-semibold uppercase tracking-widest transition-colors",
+                  // On very small screens, only show label for active step
+                  isActive ? "block" : "hidden sm:block",
                   (() => {
                     if (isActive) return "text-light-gold";
                     if (isDone) return "text-dark-gold/70";
@@ -65,7 +78,7 @@ export default function StepIndicator({ current, onStepClick, maxReached }: Read
             </button>
 
             {i < STEPS.length - 1 && (
-              <div className="mx-1 mt-[-0.75rem] h-px w-10 sm:w-16 md:w-24 lg:w-32">
+              <div className="mx-0.5 mb-4 h-px w-6 sm:w-10 md:w-14 lg:w-20">
                 <div
                   className={[
                     "h-full transition-colors duration-500",

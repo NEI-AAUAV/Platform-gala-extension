@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import TableModal from "../TableModal";
 import Table from "@/components/Table";
@@ -11,6 +12,10 @@ export default function Reserve() {
   const { tables } = useTables();
   const { state } = useSessionUser();
   useTime();
+
+  useEffect(() => {
+    if (!tableId) document.body.style.overflow = "";
+  }, [tableId]);
 
   const loginLink = useLoginLink();
 
@@ -33,7 +38,9 @@ export default function Reserve() {
   return (
     <>
       <div className="m-20 text-center">
-        <p className="block text-2xl font-bold text-white/80">{header[state].text}</p>
+        <p className="block text-2xl font-bold text-white/80">
+          {header[state].text}
+        </p>
         {header[state].link && (
           <Link
             className="mt-4 inline-block border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"

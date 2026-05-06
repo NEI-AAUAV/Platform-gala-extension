@@ -27,7 +27,7 @@ export default function AfterPartySection({ afterPartyConfig }: Props) {
             {afterPartyConfig.title}
           </h2>
           {afterPartyConfig.description && (
-            <p className="mx-auto mt-6 max-w-xl font-gala text-lg text-white/55">
+            <p className="text-white/55 mx-auto mt-6 max-w-xl font-gala text-lg">
               {afterPartyConfig.description}
             </p>
           )}
@@ -62,8 +62,13 @@ function DrinksList({ drinks }: { readonly drinks: string[] }) {
             transition={{ delay: i * 0.06, duration: 0.4 }}
             className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-light-gold/5 px-5 py-2.5"
           >
-            <FontAwesomeIcon icon={faMartiniGlass} className="text-xs text-light-gold/50" />
-            <span className="font-gala text-sm font-semibold text-white/75">{drink}</span>
+            <FontAwesomeIcon
+              icon={faMartiniGlass}
+              className="text-xs text-light-gold/50"
+            />
+            <span className="font-gala text-sm font-semibold text-white/75">
+              {drink}
+            </span>
           </motion.div>
         ))}
       </div>

@@ -19,8 +19,6 @@ export interface RegistrationConfig {
   eventPrice: number;
   eventIncludes: string[];
   eventRules: string[];
-  registrationOpenDate: string;
-  registrationCloseDate: string;
   busEnabled: boolean;
   busRoundTripPrice: number;
   mealOptions: MealOption[];
@@ -30,7 +28,6 @@ export interface RegistrationConfig {
   ibanHolder: string;
   paymentDeadlineHours: number;
   paymentDeadlineDate: string;
-  tableDeadlineDate: string;
   paymentContacts: PaymentContact[];
   paymentEmail: string;
   paymentDescription: string;
@@ -60,13 +57,15 @@ export const defaultConfig: RegistrationConfig = {
     "Em caso de não comparência não há reembolso.",
     "O comprovativo de pagamento deve ser enviado por email.",
   ],
-  registrationOpenDate: "A anunciar",
-  registrationCloseDate: "A anunciar",
   busEnabled: true,
   busRoundTripPrice: 0,
   mealOptions: [
     { id: "meat", label: "Carne", description: "Arroz de Pato" },
-    { id: "veg", label: "Vegetariano / Vegan", description: "Tofu com legumes salteados" },
+    {
+      id: "veg",
+      label: "Vegetariano / Vegan",
+      description: "Tofu com legumes salteados",
+    },
   ],
   allergiesRequired: false,
   paymentMethod: "both",
@@ -74,7 +73,6 @@ export const defaultConfig: RegistrationConfig = {
   ibanHolder: "NEI — Núcleo de Estudantes de Informática",
   paymentDeadlineHours: 48,
   paymentDeadlineDate: "A anunciar",
-  tableDeadlineDate: "A anunciar",
   paymentContacts: [
     { year: "1ª", name: "Sara Almeida", phone: "967 892 167" },
     { year: "2ª", name: "Roberto Castro", phone: "916 162 223" },

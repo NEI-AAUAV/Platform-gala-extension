@@ -11,8 +11,9 @@ class DishType(str, Enum):
 
 class Companion(BaseModel):
     name: str
-    dish: DishType
+    dish: Optional[DishType] = None
     allergies: str = ""
+    email: Optional[str] = None  # For future account linking
 
 
 class TablePerson(BaseModel):
@@ -25,9 +26,11 @@ class TablePerson(BaseModel):
 
 class Table(BaseDocument):
     id: int = Field(alias="_id")
-    name: str = "Table Name"
+    name: Optional[str] = None
     photo_url: Optional[str] = None
     invite_token: Optional[str] = None
+    # User IDs (auth.sub) that have been invited to this table
+    invites: List[int] = []
     head: Optional[int] = None
     seats: PositiveInt = 10
     persons: List[TablePerson] = []

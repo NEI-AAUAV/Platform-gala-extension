@@ -1,46 +1,58 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export interface Companion {
+  id?: string;
   name: string;
   meal: string;
   allergies: string;
+  email?: string;
 }
 
 export type BusOption = "round_trip" | "one_way" | "none";
 
 export interface WizardData {
   nmec: string;
+  phone: string;
   year: number | null;
   bus: BusOption;
   meal: string;
   allergies: string;
   companions: Companion[];
+  phasedPayment: boolean;
   paymentProofPhase1: string | null;
   paymentProofPhase2: string | null;
   tableId: string | null;
-  tableRole: "owner" | "member" | null;
+  tableRole: "owner" | "member" | "invited" | null;
+  tableName: string | undefined;
   currentStep: number;
 }
 
-const STORAGE_KEY = "gala-wizard-state";
+const STORAGE_KEY_PREFIX = "gala-wizard-state";
 
 const defaultData: WizardData = {
   nmec: "",
+  phone: "",
   year: null,
   bus: "none",
   meal: "",
   allergies: "",
   companions: [],
+  phasedPayment: false,
   paymentProofPhase1: null,
   paymentProofPhase2: null,
   tableId: null,
   tableRole: null,
+  tableName: undefined,
   currentStep: 1,
 };
 
-function loadData(): WizardData {
+function storageKey(userId: string | undefined): string {
+  return userId ? `${STORAGE_KEY_PREFIX}:${userId}` : STORAGE_KEY_PREFIX;
+}
+
+function loadData(userId: string | undefined): WizardData {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(storageKey(userId));
     if (!stored) return defaultData;
     return { ...defaultData, ...JSON.parse(stored) };
   } catch {
@@ -48,19 +60,24 @@ function loadData(): WizardData {
   }
 }
 
-export function useWizardState() {
-  const [data, setData] = useState<WizardData>(loadData);
+export function useWizardState(userId: string | undefined) {
+  const [data, setData] = useState<WizardData>(() => loadData(userId));
 
-  const update = (updates: Partial<WizardData>) => {
-    const next = { ...data, ...updates };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setData(next);
-  };
+  const update = useCallback(
+    (updates: Partial<WizardData>) => {
+      setData((prev) => {
+        const next = { ...prev, ...updates };
+        localStorage.setItem(storageKey(userId), JSON.stringify(next));
+        return next;
+      });
+    },
+    [userId],
+  );
 
-  const reset = () => {
-    localStorage.removeItem(STORAGE_KEY);
+  const reset = useCallback(() => {
+    localStorage.removeItem(storageKey(userId));
     setData(defaultData);
-  };
+  }, [userId]);
 
   return { data, update, reset };
 }

@@ -1,21 +1,33 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faTrash, faLeaf, faUtensils } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTrash, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { Companion } from "@/hooks/useWizardState";
-import { MealOption } from "@/config/registrationConfig";
 
 interface Props {
   readonly companions: Companion[];
-  readonly mealOptions: MealOption[];
   readonly onChange: (companions: Companion[]) => void;
 }
 
-const emptyCompanion = (): Companion => ({ name: "", meal: "", allergies: "" });
+const emptyCompanion = (): Companion => ({
+  id: crypto.randomUUID(),
+  name: "",
+  meal: "",
+  allergies: "",
+  email: "",
+});
 
-export default function Step2CompanionEditor({ companions, mealOptions, onChange }: Readonly<Props>) {
+export default function Step2CompanionEditor({
+  companions,
+  onChange,
+}: Readonly<Props>) {
   const add = () => onChange([...companions, emptyCompanion()]);
-  const remove = (i: number) => onChange(companions.filter((_, idx) => idx !== i));
-  const update = (i: number, patch: Partial<Companion>) => {
-    const next = companions.map((c, idx) => (idx === i ? { ...c, ...patch } : c));
+  const remove = (i: number) =>
+    onChange(companions.filter((_, idx) => idx !== i));
+  const updateName = (i: number, name: string) => {
+    const next = companions.map((c, idx) => (idx === i ? { ...c, name } : c));
+    onChange(next);
+  };
+  const updateEmail = (i: number, email: string) => {
+    const next = companions.map((c, idx) => (idx === i ? { ...c, email } : c));
     onChange(next);
   };
 
@@ -23,11 +35,11 @@ export default function Step2CompanionEditor({ companions, mealOptions, onChange
     <div className="flex flex-col gap-4">
       {companions.map((c, i) => (
         <CompanionCard
-          key={`companion-${i}-${c.name}`}
+          key={c.id || i}
           index={i}
           companion={c}
-          mealOptions={mealOptions}
-          onUpdate={(patch) => update(i, patch)}
+          onUpdateName={(name) => updateName(i, name)}
+          onUpdateEmail={(email) => updateEmail(i, email)}
           onRemove={() => remove(i)}
         />
       ))}
@@ -47,14 +59,20 @@ export default function Step2CompanionEditor({ companions, mealOptions, onChange
 interface CardProps {
   readonly index: number;
   readonly companion: Companion;
-  readonly mealOptions: MealOption[];
-  readonly onUpdate: (patch: Partial<Companion>) => void;
+  readonly onUpdateName: (name: string) => void;
+  readonly onUpdateEmail: (email: string) => void;
   readonly onRemove: () => void;
 }
 
-function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Readonly<CardProps>) {
+function CompanionCard({
+  index,
+  companion,
+  onUpdateName,
+  onUpdateEmail,
+  onRemove,
+}: Readonly<CardProps>) {
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+    <div className="border-white/8 bg-white/3 rounded-xl border p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
           Acompanhante {index + 1}
@@ -68,7 +86,7 @@ function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Re
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor={`companion-name-${index}`}
@@ -80,55 +98,35 @@ function CompanionCard({ index, companion, mealOptions, onUpdate, onRemove }: Re
             id={`companion-name-${index}`}
             type="text"
             value={companion.name}
-            onChange={(e) => onUpdate({ name: e.target.value })}
+            onChange={(e) => onUpdateName(e.target.value)}
             placeholder="Ex: João Silva"
             className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
-            Prato principal
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {mealOptions.map((meal) => {
-              const isSelected = companion.meal === meal.id;
-              const icon = meal.id === "veg" ? faLeaf : faUtensils;
-              return (
-                <button
-                  key={meal.id}
-                  type="button"
-                  onClick={() => onUpdate({ meal: meal.id })}
-                  className={[
-                    "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-all",
-                    isSelected
-                      ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-                      : "border-white/10 text-white/45 hover:border-white/25",
-                  ].join(" ")}
-                >
-                  <FontAwesomeIcon icon={icon} className="text-[0.65rem]" />
-                  {meal.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
           <label
-            htmlFor={`companion-allergies-${index}`}
-            className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
+            htmlFor={`companion-email-${index}`}
+            className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
           >
-            Alergias (opcional)
+            <FontAwesomeIcon icon={faEnvelope} className="text-[0.5rem]" />
+            Email{" "}
+            <span className="normal-case text-white/25">
+              (opcional — para sincronizar conta futura)
+            </span>
           </label>
           <input
-            id={`companion-allergies-${index}`}
-            type="text"
-            value={companion.allergies}
-            onChange={(e) => onUpdate({ allergies: e.target.value })}
-            placeholder="Ex: intolerância à lactose"
+            id={`companion-email-${index}`}
+            type="email"
+            value={companion.email ?? ""}
+            onChange={(e) => onUpdateEmail(e.target.value)}
+            placeholder="Ex: joao@exemplo.com"
             className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
           />
+          <p className="text-[0.55rem] text-white/25">
+            Se esta pessoa criar conta com este email, a inscrição como
+            acompanhante será ligada automaticamente.
+          </p>
         </div>
       </div>
     </div>

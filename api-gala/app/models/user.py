@@ -37,6 +37,11 @@ class User(BaseDocument):
     phased_payment: bool = False
     payment_proof_url: Optional[str] = None
     payment_proof_url_phase2: Optional[str] = None
+    payment_phase1_confirmed: bool = False
+    payment_phase2_confirmed: bool = False
+    payment_expired: bool = False
+    payment_reminder_sent: bool = False
+    registration_active: bool = True
     
     # Table
     table_id: Optional[int] = None
@@ -46,3 +51,13 @@ class User(BaseDocument):
 
     # Companions
     companions: List[Companion] = []
+
+    # Admin-created registrations (no Authentik account yet)
+    # When set, this registration was created by an admin for a person without an account.
+    # When that person later creates an account with this email, the registration is linked.
+    admin_created: bool = False
+    # Email-indexed companions: maps companion name → email for future account linking
+    companion_emails: List[str] = []
+    
+    # If registered as a companion by someone else, points to the host's ID
+    is_companion_of: Optional[int] = None

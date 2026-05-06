@@ -31,22 +31,51 @@ export function useManagerPermissions(): ManagerPermissionsState {
 
   useEffect(() => {
     if (isAdminUser) {
-      setState({ isAdmin: true, permissions: new Set(ALL_PERMISSION_KEYS), loading: false, error: false });
+      setState({
+        isAdmin: true,
+        permissions: new Set(ALL_PERMISSION_KEYS),
+        loading: false,
+        error: false,
+      });
       return;
     }
 
     if (!isManagerGala) {
-      setState({ isAdmin: false, permissions: new Set(), loading: false, error: false });
+      setState({
+        isAdmin: false,
+        permissions: new Set(),
+        loading: false,
+        error: false,
+      });
       return;
     }
 
     GalaService.permissions
       .getMyPermissions()
-      .then((res) =>
-        setState({ isAdmin: false, permissions: new Set(res.permissions), loading: false, error: false })
-      )
+      .then((res) => {
+        if (res.is_admin) {
+          setState({
+            isAdmin: true,
+            permissions: new Set(ALL_PERMISSION_KEYS),
+            loading: false,
+            error: false,
+          });
+        } else {
+          setState({
+            isAdmin: false,
+            permissions: new Set(res.permissions),
+            loading: false,
+            error: false,
+          });
+        }
+      })
       .catch(() =>
-        setState({ isAdmin: false, permissions: new Set(), loading: false, error: true })
+        setState({
+          isAdmin: false,
+          permissions: new Set(),
+          loading: false,
+          error: true,
+        }),
       );
   }, [isAdminUser, isManagerGala]);
 

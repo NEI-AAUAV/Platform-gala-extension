@@ -9,6 +9,7 @@ from app.core.email import send_email
 from app.models.table import Table
 from app.services.table import TableService
 from app.services.storage import storage_client
+from app.services.config import ConfigService
 from app.api.table._utils import fetch_table, table_head_permissions
 
 
@@ -109,6 +110,10 @@ async def upload_table_photo(
     file: Annotated[UploadFile, File(...)],
 ):
     """Uploads a photo for a table (head or admin only)."""
+    config = await ConfigService.get_config(db)
+    is_admin = ScopeEnum.ADMIN in auth.scopes or ScopeEnum.MANAGER_GALA in auth.scopes
+    if not config.table_photo_enabled and not is_admin:
+        raise HTTPException(status_code=403, detail="Table photo upload is disabled")
     table = await fetch_table(table_id, db)
     if not table_head_permissions(auth, table):
         raise HTTPException(status_code=403, detail="Not enough permissions")
