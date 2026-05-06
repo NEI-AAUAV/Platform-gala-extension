@@ -25,12 +25,12 @@ const YEAR_OPTIONS: [string, number | null][] = [
 ];
 
 interface Props {
-  config: RegistrationConfig;
-  data: WizardData;
-  onUpdate: (updates: Partial<WizardData>) => void;
-  onNext: () => void;
-  onBack: () => void;
-  syncing?: boolean;
+  readonly config: RegistrationConfig;
+  readonly data: WizardData;
+  readonly onUpdate: (updates: Partial<WizardData>) => void;
+  readonly onNext: () => void;
+  readonly onBack: () => void;
+  readonly syncing?: boolean;
 }
 
 export default function Step2PersonalData({
@@ -40,7 +40,7 @@ export default function Step2PersonalData({
   onNext,
   onBack,
   syncing = false,
-}: Props) {
+}: Readonly<Props>) {
   const { name, surname, email } = useUserStore();
   const { sessionUser } = useSessionUser();
   const [error, setError] = useState<string | null>(null);
@@ -215,8 +215,15 @@ function FormSection({
   isAlreadyRegistered: boolean;
   onUpdate: (updates: Partial<WizardData>) => void;
 }>) {
-  const displayNmec = data.nmec || (isAlreadyRegistered ? String(sessionUser?.nmec ?? "") : "");
-  const displayYear = data.year !== null ? data.year : (isAlreadyRegistered ? sessionUser?.matriculation ?? null : null);
+  let displayNmec = data.nmec;
+  if (!displayNmec && isAlreadyRegistered) {
+    displayNmec = String(sessionUser?.nmec ?? "");
+  }
+
+  let displayYear = data.year;
+  if (displayYear === null && isAlreadyRegistered) {
+    displayYear = sessionUser?.matriculation ?? null;
+  }
 
   return (
     <div className="flex flex-col gap-4">

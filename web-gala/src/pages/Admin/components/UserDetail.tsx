@@ -59,27 +59,26 @@ function ProofRow({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       onUpload(phase, e.target.files[0]);
     }
   };
+
+  const statusColor = confirmed
+    ? "text-emerald-400/75"
+    : url
+    ? "text-yellow-400/70"
+    : "text-white/25";
+
+  const statusLabel = confirmed ? "Validado" : url ? "Por rever" : "Não enviado";
 
   return (
     <div className="bg-white/4 flex flex-col gap-2 rounded-lg px-3 py-2">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-xs text-white/60">{label}</span>
-          <span
-            className={[
-              "text-[0.6rem] font-semibold",
-              confirmed
-                ? "text-emerald-400/75"
-                : url
-                ? "text-yellow-400/70"
-                : "text-white/25",
-            ].join(" ")}
-          >
-            {confirmed ? "Validado" : url ? "Por rever" : "Não enviado"}
+          <span className={["text-[0.6rem] font-semibold", statusColor].join(" ")}>
+            {statusLabel}
           </span>
         </div>
         {url ? (

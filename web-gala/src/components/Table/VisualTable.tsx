@@ -4,9 +4,9 @@ import Wave from "react-wavify";
 import Seat from "./Seat";
 
 type VisualTableProps = {
-  table: Table;
-  className?: string;
-  alwaysVisible?: boolean;
+  readonly table: Table;
+  readonly className?: string;
+  readonly alwaysVisible?: boolean;
 };
 
 function calculateOccupiedSeats(persons: Person[]) {

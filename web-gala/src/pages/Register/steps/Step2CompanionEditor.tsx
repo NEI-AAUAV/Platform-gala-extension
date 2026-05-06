@@ -8,6 +8,7 @@ interface Props {
 }
 
 const emptyCompanion = (): Companion => ({
+  id: Math.random().toString(36).slice(2, 11),
   name: "",
   meal: "",
   allergies: "",
@@ -34,7 +35,7 @@ export default function Step2CompanionEditor({
     <div className="flex flex-col gap-4">
       {companions.map((c, i) => (
         <CompanionCard
-          key={i}
+          key={c.id || i}
           index={i}
           companion={c}
           onUpdateName={(name) => updateName(i, name)}

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faXmark,
-  faChevronRight,
   faBell,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";

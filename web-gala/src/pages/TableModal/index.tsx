@@ -13,8 +13,8 @@ import ViewTable from "./ViewTable";
 import ClaimTable from "./ClaimTable";
 
 type TableModalProps = {
-  tableId: number;
-  onClose?: () => void;
+  readonly tableId: number;
+  readonly onClose?: () => void;
 };
 
 function calculateOccupiedSeats(persons: Person[]) {

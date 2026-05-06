@@ -158,7 +158,7 @@ async def confirm_payment(
 
 @router.post(
     "/registrations/{user_id}/payment-reminder",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+    responses={**auth_responses, 400: {"description": "Payment already confirmed"}, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def send_payment_reminder(
     user_id: int,
@@ -585,43 +585,28 @@ async def admin_edit_registration(
         raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     update_data: Dict[str, Any] = {}
-    if body.name is not None:
-        update_data["name"] = body.name.strip()
-    if body.email is not None:
-        update_data["email"] = body.email.strip().lower()
-    if body.nmec is not None:
-        update_data["nmec"] = body.nmec
+    for field in ["name", "email", "nmec", "phone", "bus_option", "meal_option", "food_allergies", "phased_payment"]:
+        if (val := getattr(body, field)) is not None:
+            if field == "name": val = val.strip()
+            elif field == "email": val = val.strip().lower()
+            update_data[field] = val
+
     if body.matriculation is not None:
         update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
     elif body.matriculation == 0:  # explicit clear
         update_data["matriculation"] = None
-    if body.phone is not None:
-        update_data["phone"] = body.phone
-    if body.bus_option is not None:
-        update_data["bus_option"] = body.bus_option
-    if body.meal_option is not None:
-        update_data["meal_option"] = body.meal_option
-    if body.food_allergies is not None:
-        update_data["food_allergies"] = body.food_allergies
-    if body.phased_payment is not None:
-        update_data["phased_payment"] = body.phased_payment
+    
     if body.has_payed is not None:
-        update_data["has_payed"] = body.has_payed
-        update_data["payment_phase1_confirmed"] = body.has_payed
-        update_data["payment_phase2_confirmed"] = body.has_payed if user_dict.get("phased_payment") else False
+        update_data.update({
+            "has_payed": body.has_payed,
+            "payment_phase1_confirmed": body.has_payed,
+            "payment_phase2_confirmed": body.has_payed if user_dict.get("phased_payment") else False
+        })
         if body.has_payed:
-            update_data["registration_active"] = True
-            update_data["payment_expired"] = False
+            update_data.update({"registration_active": True, "payment_expired": False})
+
     if body.companions is not None:
-        update_data["companions"] = [
-            Companion(
-                name=c.name,
-                dish=c.dish,
-                allergies=c.allergies,
-                email=c.email,
-            ).dict()
-            for c in body.companions
-        ]
+        update_data["companions"] = [Companion.parse_obj(c).dict() for c in body.companions]
         update_data["companion_emails"] = [c.email for c in body.companions if c.email]
 
     if update_data:

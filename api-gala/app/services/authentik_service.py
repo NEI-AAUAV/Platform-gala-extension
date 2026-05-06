@@ -20,38 +20,50 @@ async def fetch_group_members(settings: Settings, group_name: str) -> List[Authe
     verify_ssl = settings.PRODUCTION
 
     async with httpx.AsyncClient(verify=verify_ssl) as client:
-        users_url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/"
-        users_resp = await client.get(
-            users_url,
-            params={"groups_by_name": group_name},
-            headers=headers,
-        )
-        if users_resp.status_code < 400:
-            return [
-                AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
-                for u in users_resp.json().get("results", [])
-            ]
+        # Strategy 1: Fetch users directly by group filter (requires view_user permission)
+        try:
+            users_url = f"{settings.AUTHENTIK_URL}/api/v3/core/users/"
+            users_resp = await client.get(
+                users_url,
+                params={"groups_by_name": group_name},
+                headers=headers,
+            )
+            if users_resp.status_code < 400:
+                return [
+                    AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
+                    for u in users_resp.json().get("results", [])
+                ]
+            else:
+                print(f"Authentik users API returned {users_resp.status_code}: {users_resp.text}")
+        except Exception as e:
+            print(f"Error calling Authentik users API: {e}")
 
-        groups_url = f"{settings.AUTHENTIK_URL}/api/v3/core/groups/"
-        groups_resp = await client.get(
-            groups_url,
-            params={"search": group_name, "include_users": "true"},
-            headers=headers,
-        )
-        groups_resp.raise_for_status()
+        # Strategy 2: Fetch group and its members (requires view_group permission)
+        try:
+            groups_url = f"{settings.AUTHENTIK_URL}/api/v3/core/groups/"
+            groups_resp = await client.get(
+                groups_url,
+                params={"search": group_name, "include_users": "true"},
+                headers=headers,
+            )
+            if groups_resp.status_code < 400:
+                data = groups_resp.json()
+                results = [
+                    g for g in data.get("results", [])
+                    if g.get("name") == group_name
+                ]
+                if results:
+                    users_obj = results[0].get("users_obj") or []
+                    return [
+                        AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
+                        for u in users_obj
+                    ]
+            else:
+                print(f"Authentik groups API returned {groups_resp.status_code}: {groups_resp.text}")
+        except Exception as e:
+            print(f"Error calling Authentik groups API: {e}")
 
-    results = [
-        g for g in groups_resp.json().get("results", [])
-        if g.get("name") == group_name
-    ]
-    if not results:
-        return []
-
-    users_obj = results[0].get("users_obj") or []
-    return [
-        AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
-        for u in users_obj
-    ]
+    return []
 
 
 async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> List[AuthentikUser]:
@@ -95,7 +107,6 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
         except Exception as e:
             print(f"Error fetching Authentik users: {e}")
             # Return whatever users we managed to fetch before the error
-            pass
 
     return users
 

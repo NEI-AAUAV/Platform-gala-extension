@@ -84,7 +84,7 @@ export default function Step3Logistics({
 
       {data.companions.map((companion, i) => (
         <PersonMealSection
-          key={i}
+          key={companion.id || i}
           label={companion.name || `Acompanhante ${i + 1}`}
           meal={companion.meal}
           allergies={companion.allergies}

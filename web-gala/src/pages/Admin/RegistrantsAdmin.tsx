@@ -63,35 +63,42 @@ export default function RegistrantsAdmin() {
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
-      const hasReviewProof =
-        (!u.payment_phase1_confirmed && Boolean(u.payment_proof_url)) ||
-        (u.phased_payment &&
-          !u.payment_phase2_confirmed &&
-          Boolean(u.payment_proof_url_phase2));
-      const partiallyPaid =
-        u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
+      // 1. Search Filter
       if (search) {
         const q = search.toLowerCase();
-        if (
-          !u.name.toLowerCase().includes(q) &&
-          !u.email.toLowerCase().includes(q) &&
-          !String(u.nmec).includes(q)
-        ) {
-          return false;
-        }
+        const matchesSearch =
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          String(u.nmec).includes(q);
+        if (!matchesSearch) return false;
       }
-      if (paymentFilter === "paid" && !u.has_payed) return false;
-      if (paymentFilter === "partial" && !partiallyPaid) return false;
-      if (paymentFilter === "proof" && (u.has_payed || !hasReviewProof))
-        return false;
-      if (paymentFilter === "expired" && !u.payment_expired) return false;
-      if (
-        paymentFilter === "pending" &&
-        (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
-      )
-        return false;
+
+      // 2. Payment Filter
+      if (paymentFilter !== "all") {
+        const hasReviewProof =
+          (!u.payment_phase1_confirmed && Boolean(u.payment_proof_url)) ||
+          (u.phased_payment &&
+            !u.payment_phase2_confirmed &&
+            Boolean(u.payment_proof_url_phase2));
+        const partiallyPaid =
+          u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
+
+        if (paymentFilter === "paid" && !u.has_payed) return false;
+        if (paymentFilter === "partial" && !partiallyPaid) return false;
+        if (paymentFilter === "proof" && (u.has_payed || !hasReviewProof))
+          return false;
+        if (paymentFilter === "expired" && !u.payment_expired) return false;
+        if (
+          paymentFilter === "pending" &&
+          (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
+        )
+          return false;
+      }
+
+      // 3. Table Filter
       if (tableFilter === "with" && u.table_id === null) return false;
       if (tableFilter === "without" && u.table_id !== null) return false;
+
       return true;
     });
   }, [users, search, paymentFilter, tableFilter]);
@@ -168,24 +175,24 @@ export default function RegistrantsAdmin() {
   const handleAssignTable = async (tableId: string | null) => {
     if (!selectedUser) return;
     try {
-      if (!tableId) {
-        // Remove from current table
-        if (selectedUser.table_id) {
-          await GalaService.admin.removeMemberFromTable(
-            selectedUser.table_id,
+      if (tableId) {
+        if (!selectedUser.table_id) {
+          // Add to new table
+          await GalaService.admin.addMemberToTable(
+            Number(tableId),
+            selectedUser._id,
+          );
+        } else {
+          // Move table
+          await GalaService.admin.moveMemberToTable(
+            Number(tableId),
             selectedUser._id,
           );
         }
-      } else if (!selectedUser.table_id) {
-        // Add to new table
-        await GalaService.admin.addMemberToTable(
-          Number(tableId),
-          selectedUser._id,
-        );
-      } else {
-        // Move table
-        await GalaService.admin.moveMemberToTable(
-          Number(tableId),
+      } else if (selectedUser.table_id) {
+        // Remove from current table
+        await GalaService.admin.removeMemberFromTable(
+          selectedUser.table_id,
           selectedUser._id,
         );
       }

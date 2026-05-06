@@ -85,7 +85,8 @@ function ManagerRow({
   };
 
   const hasChanges =
-    [...perms].sort().join() !== [...manager.permissions].sort().join();
+    [...perms].sort((a, b) => a.localeCompare(b)).join() !== 
+    [...manager.permissions].sort((a, b) => a.localeCompare(b)).join();
 
   return (
     <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 
 export interface Companion {
+  id?: string;
   name: string;
   meal: string;
   allergies: string;

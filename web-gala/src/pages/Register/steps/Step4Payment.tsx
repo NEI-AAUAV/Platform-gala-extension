@@ -14,13 +14,13 @@ import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
 
-const ALLOWED_TYPES = [
+const ALLOWED_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
   "application/pdf",
-];
+]);
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
 interface Props {
@@ -49,7 +49,7 @@ export default function Step4Payment({
   const handleUpload = async (phase: 1 | 2, file: File) => {
     setUploadError(null);
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.has(file.type)) {
       setUploadError("Tipo de ficheiro não permitido. Usa imagens ou PDF.");
       return;
     }

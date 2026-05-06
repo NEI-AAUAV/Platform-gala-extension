@@ -157,8 +157,7 @@ function BusesEditor({
 }
 
 export default function HomepageAdmin() {
-  const { config, emailConfig, updateSection, updateEmails } =
-    useHomepageConfig();
+  const { config, updateSection } = useHomepageConfig();
   const [saved, setSaved] = useState(false);
 
   const save = <K extends keyof typeof config>(

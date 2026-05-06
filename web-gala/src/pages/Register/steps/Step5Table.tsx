@@ -383,7 +383,7 @@ function TableCard({
   );
   const isFull = occupancy >= table.seats;
 
-  let containerStyles = "border-white/10 bg-white/5";
+  let containerStyles: string;
   let cursorStyles = "cursor-default";
 
   if (canSelect) {

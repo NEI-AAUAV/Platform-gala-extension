@@ -7,7 +7,6 @@ import {
   faXmark,
   faUser,
   faUsersGear,
-  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useUserStore } from "@/stores/useUserStore";
@@ -55,8 +54,6 @@ export default function Navbar() {
     ["admin", "manager-gala"].includes(role),
   );
 
-  const navLinks = [];
-
   return (
     <header className="fixed top-0 z-50 w-full">
       <nav
@@ -82,17 +79,6 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden items-center gap-8 md:flex">
-            {navLinks.map(({ href, label, internal }) =>
-              internal ? (
-                <Link key={label} to={href} className={navLinkClass}>
-                  {label}
-                </Link>
-              ) : (
-                <a key={label} href={href} className={navLinkClass}>
-                  {label}
-                </a>
-              ),
-            )}
           </div>
 
           {/* Desktop auth */}
@@ -204,35 +190,6 @@ export default function Navbar() {
 
               {/* Nav links */}
               <nav className="flex flex-col gap-1 px-3 py-4">
-                {navLinks.map(({ href, label, internal }) =>
-                  internal ? (
-                    <Link
-                      key={label}
-                      to={href}
-                      onClick={closeMenu}
-                      className="flex items-center justify-between rounded-xl px-4 py-3.5 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:bg-white/5 hover:text-light-gold"
-                    >
-                      {label}
-                      <FontAwesomeIcon
-                        icon={faChevronRight}
-                        className="text-[0.55rem] text-white/20"
-                      />
-                    </Link>
-                  ) : (
-                    <a
-                      key={label}
-                      href={href}
-                      onClick={closeMenu}
-                      className="flex items-center justify-between rounded-xl px-4 py-3.5 font-gala text-sm font-semibold uppercase tracking-widest text-white/60 transition-colors hover:bg-white/5 hover:text-light-gold"
-                    >
-                      {label}
-                      <FontAwesomeIcon
-                        icon={faChevronRight}
-                        className="text-[0.55rem] text-white/20"
-                      />
-                    </a>
-                  ),
-                )}
               </nav>
 
               {/* Divider */}

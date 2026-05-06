@@ -5,6 +5,8 @@ from app.services.config import ConfigService
 from app.services.storage import storage_client
 from app.utils import is_deadline_passed
 
+EXISTS = "$exists"
+
 
 class RegistrationService:
     @staticmethod
@@ -48,7 +50,7 @@ class RegistrationService:
                     "phased_payment": {"$ne": True},
                     "$or": [
                         {"payment_proof_url": None},
-                        {"payment_proof_url": {"$exists": False}},
+                        {"payment_proof_url": {EXISTS: False}},
                     ],
                 },
                 {"$set": common_set},
@@ -64,7 +66,7 @@ class RegistrationService:
                     "phased_payment": True,
                     "$or": [
                         {"payment_proof_url": None},
-                        {"payment_proof_url": {"$exists": False}},
+                        {"payment_proof_url": {EXISTS: False}},
                     ],
                 },
                 {"$set": common_set},
@@ -80,7 +82,7 @@ class RegistrationService:
                     "phased_payment": True,
                     "$or": [
                         {"payment_proof_url_phase2": None},
-                        {"payment_proof_url_phase2": {"$exists": False}},
+                        {"payment_proof_url_phase2": {EXISTS: False}},
                     ],
                 },
                 {"$set": common_set},
@@ -138,9 +140,8 @@ class RegistrationService:
         table_name = data.get("table_name") or f"Mesa de {user.name}"
         from app.services.table import TableService
 
-        if table_id == "new":
-            if not user.table_id:
-                await TableService.create_table(db, user_id, table_name)
+        if table_id == "new" and not user.table_id:
+            await TableService.create_table(db, user_id, table_name)
         elif table_id and table_id not in ("none", "null", "invited"):
             target_id = int(table_id)
             if user.table_id != target_id:
