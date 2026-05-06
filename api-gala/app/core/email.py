@@ -27,13 +27,13 @@ def render_template(
     template: str, settings: Settings, **kwargs: Any
 ) -> tuple[str, str]:
     global _env
-    _htmlTemplate = _env.get_template(f"{template}.html")
-    _txtTemplate = _env.get_template(f"{template}.txt")
+    _html_template = _env.get_template(f"{template}.html")
+    _txt_template = _env.get_template(f"{template}.txt")
 
     kwargs["PUBLIC_URL"] = settings.HOST
     return (
-        _htmlTemplate.render(kwargs),
-        _txtTemplate.render(kwargs),
+        _html_template.render(kwargs),
+        _txt_template.render(kwargs),
     )
 
 
@@ -57,9 +57,9 @@ async def send_email(
     message["Subject"] = subject
     message["Message-Id"] = make_msgid(domain=settings.EMAIL_DOMAIN)
 
-    (htmlContent, textContent) = bodies
-    message.attach(MIMEText(textContent))
-    message.attach(MIMEText(htmlContent, "html"))
+    (html_content, text_content) = bodies
+    message.attach(MIMEText(text_content))
+    message.attach(MIMEText(html_content, "html"))
 
     await aiosmtplib.send(
         message,

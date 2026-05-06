@@ -31,7 +31,7 @@ interface TokenPayload {
   scopes?: string[];
 }
 
-interface UserState extends TokenPayload {
+export interface UserState extends TokenPayload {
   sessionLoading: boolean;
   theme?: string;
   token?: string;

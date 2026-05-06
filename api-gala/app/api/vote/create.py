@@ -1,7 +1,7 @@
-from typing import Annotated, List, Self
+from typing import List
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, validator
 from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
@@ -13,15 +13,16 @@ router = APIRouter()
 
 
 class VoteCategoryCreateForm(BaseModel):
-    category: Annotated[str, Field(min_length=3)]
-    options: Annotated[List[str], Field(min_items=2)]
-    photo_paths: Annotated[List[str], Field(min_items=2)]
+    category: str = Field(..., min_length=3)
+    options: List[str] = Field(..., min_items=2)
+    photo_paths: List[str] = Field(..., min_items=2)
 
-    @model_validator(mode="after")
-    def validate_lengths(self) -> Self:
-        if len(self.options) != len(self.photo_paths):
+    @validator("photo_paths")
+    def validate_lengths(cls, photo_paths, values):
+        options = values.get("options", [])
+        if len(options) != len(photo_paths):
             raise ValueError("options and photo_paths must have the same length")
-        return self
+        return photo_paths
 
 
 @router.post(
@@ -38,7 +39,7 @@ async def create_category(
     form_data: VoteCategoryCreateForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
     category_id = await get_next_vote_category_id(db)

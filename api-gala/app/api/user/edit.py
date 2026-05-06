@@ -19,7 +19,7 @@ async def edit_user(
     form_data: UserEditForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> User:
     """Edits a user"""
     res = await User.get_collection(db).find_one_and_update(

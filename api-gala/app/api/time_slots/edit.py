@@ -18,6 +18,17 @@ class TimeSlotsEditForm(TimeSlots):
     pass
 
 
+def _ensure_utc(dt: datetime) -> datetime:
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+
+def _validate_period(start_val, end_val, order_msg):
+    start_val = _ensure_utc(start_val)
+    end_val = _ensure_utc(end_val)
+    if start_val > end_val:
+        raise HTTPException(status_code=400, detail=order_msg)
+
+
 @router.put(
     "/",
     responses={
@@ -30,49 +41,42 @@ async def edit_time_slots(
     *,
     db: DatabaseDep,
     settings: SettingsDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    auth: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> TimeSlots:
     """Edits the time slots"""
     initial = await fetch_time_slots(db)
 
+    # Admins can set any dates; non-admins cannot set dates in the past
+    is_admin = ScopeEnum.ADMIN in auth.scopes
+    allow_past = is_admin or settings.ALLOW_TIME_SLOTS_PAST
     now = datetime.now(tz=timezone.utc)
 
-    tablesStart = form_data.tablesStart or initial.tablesStart
-    if tablesStart.tzinfo is None:
-        tablesStart = tablesStart.replace(tzinfo=timezone.utc)
+    def _check_not_past(val: datetime, msg: str) -> None:
+        if not allow_past and _ensure_utc(val) < now:
+            raise HTTPException(status_code=400, detail=msg)
 
-    if not settings.ALLOW_TIME_SLOTS_PAST and now > tablesStart:
-        raise HTTPException(
-            status_code=400,
-            detail="Tables start date cannot be before the current time",
-        )
+    reg_start = form_data.registration_start or initial.registration_start
+    reg_end = form_data.registration_end or initial.registration_end
+    _check_not_past(reg_start, "A data de início das inscrições não pode estar no passado.")
+    _validate_period(reg_start, reg_end, "A data de início das inscrições não pode ser depois do fim.")
 
-    tablesEnd = form_data.tablesEnd or initial.tablesEnd
-    if tablesEnd.tzinfo is None:
-        tablesEnd = tablesEnd.replace(tzinfo=timezone.utc)
+    nom_start = form_data.nominations_start or initial.nominations_start
+    nom_end = form_data.nominations_end or initial.nominations_end
+    _check_not_past(nom_start, "A data de início das nomeações não pode estar no passado.")
+    _validate_period(nom_start, nom_end, "A data de início das nomeações não pode ser depois do fim.")
 
-    if tablesStart > tablesEnd:
-        raise HTTPException(
-            status_code=400, detail="Tables start date cannot be after end date"
-        )
+    votes_start = form_data.votes_start or initial.votes_start
+    votes_end = form_data.votes_end or initial.votes_end
+    _check_not_past(votes_start, "A data de início das votações não pode estar no passado.")
+    _validate_period(votes_start, votes_end, "A data de início das votações não pode ser depois do fim.")
 
-    votesStart = form_data.votesStart or initial.votesStart
-    if votesStart.tzinfo is None:
-        votesStart = votesStart.replace(tzinfo=timezone.utc)
+    tables_start = form_data.tables_start or initial.tables_start
+    tables_end = form_data.tables_end or initial.tables_end
+    _check_not_past(tables_start, "A data de início das mesas não pode estar no passado.")
+    _validate_period(tables_start, tables_end, "A data de início das mesas não pode ser depois do fim.")
 
-    if not settings.ALLOW_TIME_SLOTS_PAST and now > votesStart:
-        raise HTTPException(
-            status_code=400, detail="Votes start date cannot be before the current time"
-        )
-
-    votesEnd = form_data.votesEnd or initial.votesEnd
-    if votesEnd.tzinfo is None:
-        votesEnd = votesEnd.replace(tzinfo=timezone.utc)
-
-    if votesStart > votesEnd:
-        raise HTTPException(
-            status_code=400, detail="Votes start date cannot be after end date"
-        )
+    gala_start = form_data.gala_start or initial.gala_start
+    _check_not_past(gala_start, "A data do jantar de gala não pode estar no passado.")
 
     res = await TimeSlots.get_collection(db).find_one_and_update(
         {"_id": TIME_SLOTS_ID},

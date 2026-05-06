@@ -19,23 +19,26 @@ type Confirmation = {
 
 type EditUser = {
   id: number;
-  has_payed: boolean;
-};
-
-type CreateUser = {
-  nmec: number | null;
-  matriculation: number | null;
+  has_payed?: boolean;
+  [key: string]: unknown;
 };
 
 type EditTimeSlots = {
+  registrationStart?: string;
+  registrationEnd?: string;
+  nominationsStart?: string;
+  nominationsEnd?: string;
   votesStart?: string;
   votesEnd?: string;
   tablesStart?: string;
   tablesEnd?: string;
+  galaStart?: string;
 };
 
 export type Limits = {
   maxRegistrations: number;
+  maxBusSeats: number;
+  maxTablesCount: number;
 };
 
 export type EditLimits = Partial<Limits>;
@@ -48,9 +51,65 @@ type VoteCategoryCreate = {
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
 
+export type ManagerPermissionKey =
+  | "registration"
+  | "tables"
+  | "categories"
+  | "homepage"
+  | "buses";
+
+export type ManagerPermissionsResponse = {
+  is_admin: boolean;
+  permissions: ManagerPermissionKey[];
+};
+
+export type Manager = {
+  _id: number;
+  name: string;
+  email: string;
+  permissions: ManagerPermissionKey[];
+};
+
 type VoteCategoryCast = {
   option: number;
 };
+
+export type AdminCompanionInput = {
+  name: string;
+  dish?: string;
+  allergies?: string;
+  email?: string;
+};
+
+export type AdminCreateRegistrationBody = {
+  authentik_user_id?: number;
+  name?: string;
+  email?: string;
+  nmec?: number;
+  matriculation?: number;
+  phone?: string;
+  bus_option?: string;
+  meal_option?: string;
+  food_allergies?: string;
+  phased_payment?: boolean;
+  companions?: AdminCompanionInput[];
+};
+
+export type AdminEditRegistrationBody = {
+  name?: string;
+  email?: string;
+  nmec?: number;
+  matriculation?: number | null;
+  phone?: string;
+  bus_option?: string;
+  meal_option?: string;
+  food_allergies?: string;
+  phased_payment?: boolean;
+  has_payed?: boolean;
+  companions?: AdminCompanionInput[];
+};
+
+export type AuthentikUserResult = { id: number; name: string; email: string };
 
 const GalaService = {
   table: {
@@ -66,8 +125,8 @@ const GalaService = {
       const response: Table = await client.get(`/table/${id}`);
       return response;
     },
-    createTable: async (request: { seats: number }) => {
-      const response: Table = await client.post("/table/new", request);
+    createTable: async (request: { name: string; seats?: number }) => {
+      const response: Table = await client.post("/table/create", request);
       return response;
     },
     editTable: async (id: string | number, request: { name: string }) => {
@@ -103,64 +162,213 @@ const GalaService = {
       const response: Table = await client.delete(`/table/${id}/remove/${uid}`);
       return response;
     },
+    uploadPhoto: async (
+      tableId: number,
+      file: File,
+    ): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(`/table/${tableId}/photo`, formData);
+    },
+    inviteUser: async (tableId: number, userId: number) => {
+      const response: Table = await client.post(
+        `/table/${tableId}/invite/${userId}`,
+        {},
+      );
+      return response;
+    },
+    revokeInvite: async (tableId: number, userId: number) => {
+      const response: Table = await client.delete(
+        `/table/${tableId}/invite/${userId}`,
+      );
+      return response;
+    },
+    getMyInvites: async (): Promise<Table[]> => {
+      return client.get("/table/my-invites");
+    },
+    acceptInvite: async (
+      tableId: number,
+      body: { dish?: string; allergies?: string },
+    ) => {
+      const response: Table = await client.post(
+        `/table/${tableId}/invite/accept`,
+        body,
+      );
+      return response;
+    },
   },
+
   user: {
     listUsers: async () => {
-      const response: User[] = await client.get("/users");
+      const response: User[] = await client.get("/user/");
       return response;
     },
     editUser: async (request: EditUser) => {
-      const response: User = await client.put(`/users`, request);
-      return response;
-    },
-    createUser: async (request: CreateUser) => {
-      const response: User = await client.post(`/users`, request);
+      const { id, ...updates } = request;
+      const response: User = await client.put("/user/", { id, ...updates });
       return response;
     },
     getSessionUser: async () => {
-      const response: User = await client.get("/users/me");
+      const response: User = await client.get("/user/me");
       return response;
     },
+    getMyTable: async () => {
+      return client.get("/user/me/table");
+    },
+    searchUsers: async (
+      q: string,
+    ): Promise<
+      { id: number; name: string; email: string; is_registered: boolean }[]
+    > => {
+      return client.get(`/user/search?q=${encodeURIComponent(q)}`);
+    },
   },
+
+  admin: {
+    listRegistrations: async (): Promise<User[]> => {
+      return client.get("/admin/registrations");
+    },
+    getRegistration: async (userId: number): Promise<User> => {
+      return client.get(`/admin/registrations/${userId}`);
+    },
+    confirmPayment: async (userId: number, phase?: number): Promise<void> => {
+      const suffix = phase ? `?phase=${phase}` : "";
+      return client.post(
+        `/admin/registrations/${userId}/confirm_payment${suffix}`,
+        {},
+      );
+    },
+    sendPaymentReminder: async (userId: number): Promise<void> => {
+      return client.post(`/admin/registrations/${userId}/payment-reminder`, {});
+    },
+    updateRegistration: async (
+      userId: number,
+      updates: Partial<User>,
+    ): Promise<void> => {
+      return client.patch(`/admin/registrations/${userId}`, updates);
+    },
+    createRegistration: async (
+      body: AdminCreateRegistrationBody,
+    ): Promise<User> => {
+      return client.post("/admin/registrations", body);
+    },
+    editRegistration: async (
+      userId: number,
+      body: AdminEditRegistrationBody,
+    ): Promise<User> => {
+      return client.put(`/admin/registrations/${userId}`, body);
+    },
+    deleteRegistration: async (userId: number): Promise<void> => {
+      return client.delete(`/admin/registrations/${userId}`);
+    },
+    listAuthentikUsers: async (
+      query?: string,
+    ): Promise<AuthentikUserResult[]> => {
+      const url = query
+        ? `/admin/authentik/users?query=${encodeURIComponent(query)}`
+        : "/admin/authentik/users";
+      return client.get(url);
+    },
+    rejectPaymentProof: async (
+      userId: number,
+      phase: number,
+    ): Promise<void> => {
+      return client.delete(
+        `/admin/registrations/${userId}/payment-proof?phase=${phase}`,
+      );
+    },
+    uploadPaymentProof: async (
+      userId: number,
+      phase: number,
+      file: File,
+    ): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(
+        `/admin/registrations/${userId}/payment-proof?phase=${phase}`,
+        formData,
+      );
+    },
+
+    // Table Management
+    createTable: async (request: {
+      name: string;
+      seats: number;
+    }): Promise<Table> => {
+      return client.post(
+        `/admin/tables/create?name=${encodeURIComponent(request.name)}&seats=${
+          request.seats
+        }`,
+        {},
+      );
+    },
+    deleteTable: async (tableId: number): Promise<void> => {
+      return client.delete(`/admin/tables/${tableId}`);
+    },
+    addMemberToTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<Table> => {
+      return client.post(`/admin/tables/${tableId}/members/${userId}`, {});
+    },
+    moveMemberToTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<Table> => {
+      return client.post(`/admin/tables/${tableId}/members/${userId}/move`, {});
+    },
+    removeMemberFromTable: async (
+      tableId: number,
+      userId: number,
+    ): Promise<void> => {
+      return client.delete(`/admin/tables/${tableId}/members/${userId}`);
+    },
+  },
+
   time: {
     getTimeSlots: async () => {
-      const response: TimeSlots = await client.get(`/slots`);
+      const response: TimeSlots = await client.get("/time_slots/");
       return response;
     },
     editTimeSlots: async (request: EditTimeSlots) => {
-      const response: TimeSlots = await client.put(`/slots`, request);
+      const response: TimeSlots = await client.patch("/admin/time", request);
       return response;
     },
   },
+
   limits: {
     getLimits: async () => {
-      const response: Limits = await client.get(`/limits`);
+      const response: Limits = await client.get("/limits");
       return response;
     },
-    editTimeSlots: async (request: EditLimits) => {
-      const response: Limits = await client.put(`/limits`, request);
+    editLimits: async (request: EditLimits) => {
+      const response: Limits = await client.put("/limits", request);
       return response;
     },
   },
+
   vote: {
     listCategories: async () => {
-      const response: Vote[] = await client.get("/votes/list");
+      const response: Vote[] = await client.get("/voting/categories");
       return response;
     },
     getCategory: async (id: string | number) => {
-      const response: Vote = await client.get(`/votes/${id}`);
+      const response: Vote = await client.get(`/voting/${id}`);
       return response;
     },
     createCategory: async (request: VoteCategoryCreate) => {
-      const response: Vote = await client.post("/votes/new", request);
+      const response: Vote = await client.post("/voting/new", request);
       return response;
     },
     editVote: async (id: string | number, request: VoteCategoryEdit) => {
-      const response: Vote = await client.put(`/votes/${id}/edit`, request);
+      const response: Vote = await client.put(`/voting/${id}/edit`, request);
       return response;
     },
     castVote: async (id: string | number, request: VoteCategoryCast) => {
-      const response: Vote = await client.put(`/votes/${id}/cast`, request);
+      const response: Vote = await client.post(
+        `/voting/categories/${id}/vote`,
+        request,
+      );
       return response;
     },
     uploadOptionPhoto: async (
@@ -171,23 +379,102 @@ const GalaService = {
       const formData = new FormData();
       formData.append("image", file);
       const response: Vote = await client.put(
-        `/votes/${categoryId}/options/${optionIndex}/photo`,
+        `/voting/${categoryId}/options/${optionIndex}/photo`,
         formData,
       );
       return response;
     },
     deleteCategory: async (id: string | number) => {
-      const response = await client.delete(`/votes/${id}`);
-      return response;
+      return client.delete(`/voting/${id}`);
     },
     deleteOptionPhoto: async (
       categoryId: string | number,
       optionIndex: number,
     ) => {
-      const response = await client.delete(
-        `/votes/${categoryId}/options/${optionIndex}/photo`,
+      return client.delete(
+        `/voting/${categoryId}/options/${optionIndex}/photo`,
       );
-      return response;
+    },
+  },
+
+  registration: {
+    getStatus: async (): Promise<User> => {
+      return client.get("/registration/status");
+    },
+    updateStep: async (
+      step: number,
+      data: Record<string, unknown>,
+    ): Promise<User> => {
+      return client.post(`/registration/step/${step}`, data);
+    },
+    uploadPaymentProof: async (
+      file: File,
+      phase: 1 | 2 = 1,
+    ): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return client.post(
+        `/registration/payment-proof?phase=${phase}`,
+        formData,
+      );
+    },
+  },
+
+  config: {
+    getConfig: async (): Promise<Record<string, unknown>> => {
+      return client.get("/config");
+    },
+    updateConfig: async (
+      data: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> => {
+      return client.put("/admin/config", data);
+    },
+  },
+
+  permissions: {
+    getMyPermissions: async (): Promise<ManagerPermissionsResponse> => {
+      return client.get("/admin/managers/me");
+    },
+    listManagers: async (): Promise<Manager[]> => {
+      return client.get("/admin/managers");
+    },
+    setManagerPermissions: async (
+      managerId: number,
+      permissions: ManagerPermissionKey[],
+      name: string,
+      email: string,
+    ): Promise<Manager> => {
+      return client.put(`/admin/managers/${managerId}/permissions`, {
+        permissions,
+        name,
+        email,
+      });
+    },
+  },
+
+  homepage: {
+    uploadDJPhoto: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/dj/photo", formData);
+    },
+    deleteDJPhoto: async (): Promise<void> => {
+      return client.delete("/admin/homepage/dj/photo");
+    },
+    uploadGalleryPreview: async (file: File): Promise<{ url: string }> => {
+      const formData = new FormData();
+      formData.append("image", file);
+      return client.put("/admin/homepage/gallery/preview", formData);
+    },
+    assignBus: async (userId: number, busId: string | null): Promise<void> => {
+      return client.patch(`/admin/registrations/${userId}/bus`, {
+        bus_id: busId,
+      });
+    },
+    autoAssignBuses: async (
+      strategy: "year" | "order",
+    ): Promise<{ assigned: number }> => {
+      return client.post("/admin/buses/auto-assign", { strategy });
     },
   },
 };

@@ -34,7 +34,7 @@ async def edit_category(
     form_data: VoteCategoryEditForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Edits an existing vote category"""
     try:

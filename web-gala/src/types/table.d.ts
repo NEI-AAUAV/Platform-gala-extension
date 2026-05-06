@@ -4,4 +4,7 @@ type Table = {
   head: number | null;
   seats: number;
   persons: Person[];
+  photo_url?: string | null;
+  invite_token?: string | null;
+  invites?: number[];
 };

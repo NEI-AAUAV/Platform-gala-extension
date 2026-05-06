@@ -1,0 +1,25 @@
+NEI-AAUAv — Jantar de Gala
+
+PEDIDO DE ENTRADA NA MESA
+
+Olá, {{name}}!
+
+O teu pedido para entrar na mesa foi enviado com sucesso.
+O responsável da mesa irá confirmar a tua entrada.
+
+--------------------------------------------------------------------------------
+DETALHES DA MESA
+--------------------------------------------------------------------------------
+Mesa:    {{table}}
+Estado:  Aguarda confirmação do responsável
+
+--------------------------------------------------------------------------------
+
+Receberás um email quando o responsável da mesa confirmar a tua entrada.
+Para dúvidas, contacta-nos em nei@aauav.pt.
+
+Cumprimentos,
+A Comissão de Gala — NEI-AAUAv
+
+© 2026 NEI-AAUAv | Aveiro, Portugal | nei@aauav.pt
+A apoiar os estudantes desde 2013.

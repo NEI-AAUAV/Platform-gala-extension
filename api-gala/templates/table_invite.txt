@@ -1,0 +1,9 @@
+Olá {{ name }},
+
+Recebeste um convite para te juntares à mesa "{{ table }}" no Jantar de Gala de Engenharia Informática.
+
+Acede à plataforma para aceitar ou rejeitar o convite:
+{{ PUBLIC_URL }}/gala/table
+
+A Comissão de Gala
+NEI-AAUAV

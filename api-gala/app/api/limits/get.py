@@ -16,7 +16,7 @@ router = APIRouter()
 async def get_limits(
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> Limits:
     """Gets the current limits"""
     return await fetch_limits(db)

@@ -1,270 +1,324 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { useForm, FormProvider, SubmitHandler } from "react-hook-form";
-import { faCaretDown, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
-import Input from "@/components/Input";
-import Select from "@/components/Select";
+import { Navigate, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useUserStore } from "@/stores/useUserStore";
-import Button from "@/components/Button";
-import useUserCreate from "@/hooks/userHooks/useUserCreate";
+import useLoginLink from "@/hooks/useLoginLink";
+import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
+import { useWizardState, BusOption } from "@/hooks/useWizardState";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import { formatDateTimePT } from "@/utils/formatDate";
+import GalaService from "@/services/GalaService";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
+import StepIndicator from "./StepIndicator";
+import Step1EventInfo from "./steps/Step1EventInfo";
+import Step2PersonalData from "./steps/Step2PersonalData";
+import Step3Logistics from "./steps/Step3Logistics";
+import Step4Payment from "./steps/Step4Payment";
+import Step5Table from "./steps/Step5Table";
+import Step6Confirm from "./steps/Step6Confirm";
 
-type FormValues = {
-  matriculation: number | null;
-  nmec: number | null;
-  has_payed: boolean | null;
+const BUS_OPTION_MAP: Record<string, BusOption> = {
+  ROUND_TRIP: "round_trip",
+  ONE_WAY: "one_way",
+  NONE: "none",
+};
+
+const BUS_OPTION_REVERSE: Record<BusOption, string> = {
+  round_trip: "ROUND_TRIP",
+  one_way: "ONE_WAY",
+  none: "NONE",
 };
 
 export default function Register() {
+  const { sessionLoading, sub } = useUserStore();
+  const loginLink = useLoginLink();
   const navigate = useNavigate();
-
-  const [selected, setSelected] = useState<number | null>(null);
-  const [error, setError] = useState<boolean>(false);
-
-  const { sessionUser, isLoading, mutate: galaUserRefetch } = useSessionUser();
+  const { config } = useRegistrationConfig();
+  const { time } = useTime();
+  const { mutate: mutateSession } = useSessionUser();
+  const { data, update, reset } = useWizardState(sub ? String(sub) : undefined);
+  const [syncing, setSyncing] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading) galaUserRefetch();
-  }, []);
+    if (sub === undefined) return;
+    GalaService.registration
+      .getStatus()
+      .then((status) => {
+        if (status) {
+          update({
+            nmec: String(status.nmec || ""),
+            year:
+              ((status as unknown as Record<string, unknown>).matriculation as
+                | number
+                | null) ?? null,
+            bus:
+              BUS_OPTION_MAP[
+                ((status as unknown as Record<string, unknown>)
+                  .bus_option as string) ?? "NONE"
+              ] ?? "none",
+            meal:
+              ((status as unknown as Record<string, unknown>)
+                .meal_option as string) || "",
+            allergies:
+              ((status as unknown as Record<string, unknown>)
+                .food_allergies as string) || "",
+            phone:
+              ((status as unknown as Record<string, unknown>)
+                .phone as string) || "",
+            phasedPayment:
+              ((status as unknown as Record<string, unknown>)
+                .phased_payment as boolean) ?? false,
+            companions:
+              ((status as unknown as Record<string, unknown>)
+                .companions as []) || [],
+            currentStep: status.registration_step || 1,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [sub]);
 
-  const { sessionLoading, sub } = useUserStore((state) => ({
-    sessionLoading: state.sessionLoading,
-    sub: state.sub,
-  }));
+  if (!sessionLoading && sub === undefined) {
+    return <Navigate to={loginLink} />;
+  }
 
-  const methods = useForm<FormValues>({
-    values: {
-      matriculation: sessionUser?.matriculation ?? null,
-      nmec: sessionUser?.nmec ?? null,
-      has_payed: sessionUser?.has_payed ?? false,
-    },
-  });
+  const registrationStatus = time?.registrationStatus;
+  if (time && registrationStatus === TimeStatus.OPENING) {
+    const opensAt = formatDateTimePT(time.registrationStart);
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <p className="font-gala text-xl font-bold text-white/80">
+            Inscrições ainda não abertas
+          </p>
+          <p className="mt-2 text-sm text-white/40">
+            As inscrições abrem a {opensAt}.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const options: [JSX.Element, number | null][] = [
-    [<>1º Ano</>, 1],
-    [<>2º Ano</>, 2],
-    [<>3º Ano</>, 3],
-    [<>4º Ano</>, 4],
-    [<>5º Ano ou mais</>, 5],
-    [<>Outro (p.e. ex-alunos)</>, null],
-  ];
+  if (time && registrationStatus === TimeStatus.CLOSED) {
+    const closedAt = formatDateTimePT(time.registrationEnd);
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <p className="font-gala text-xl font-bold text-white/80">
+            Inscrições encerradas
+          </p>
+          <p className="mt-2 text-sm text-white/40">
+            O prazo de inscrições terminou a {closedAt}.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const formSubmit: SubmitHandler<FormValues> = async (data) => {
-    try {
-      const user = await useUserCreate({
-        nmec: data.nmec,
-        matriculation: data.matriculation,
+  const { currentStep } = data;
+  const maxReached = data.currentStep;
+
+  const goTo = (step: number) => update({ currentStep: step });
+  const back = () => update({ currentStep: Math.max(currentStep - 1, 1) });
+
+  const syncCurrentStep = async () => {
+    if (currentStep === 2) {
+      await GalaService.registration.updateStep(2, {
+        nmec: Number(data.nmec),
+        matriculation: data.year,
+        companions: data.companions,
       });
-      galaUserRefetch(user);
-    } catch (error) {
-      setError(true);
-      console.error(error);
-      return;
+    } else if (currentStep === 3) {
+      await GalaService.registration.updateStep(3, {
+        bus_option: BUS_OPTION_REVERSE[data.bus] ?? "NONE",
+        meal_option: data.meal,
+        food_allergies: data.allergies || "",
+        companions: data.companions,
+      });
+    } else if (currentStep === 4) {
+      await GalaService.registration.updateStep(4, {
+        phased_payment: data.phasedPayment,
+      });
+    } else if (currentStep === 5) {
+      if (data.tableRole === "invited" && data.tableId) {
+        await GalaService.table.acceptInvite(Number(data.tableId), {});
+      } else {
+        await GalaService.registration.updateStep(5, {
+          table_id: data.tableId,
+          table_name: data.tableName,
+        });
+      }
     }
-    navigate("/");
   };
 
-  const inGala = !!sessionUser?.nmec;
+  const next = async () => {
+    setStepError(null);
+    setSyncing(true);
+    try {
+      await syncCurrentStep();
+      update({ currentStep: Math.min(currentStep + 1, 6) });
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })
+        ?.response?.data?.detail;
+      setStepError(detail || "Erro ao guardar dados. Tenta novamente.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    setStepError(null);
+    setSyncing(true);
+    try {
+      await GalaService.registration.updateStep(6, {});
+      await mutateSession();
+      reset();
+      navigate("/profile");
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })
+        ?.response?.data?.detail;
+      setStepError(detail || "Erro ao concluir inscrição. Tenta novamente.");
+      setSyncing(false);
+    }
+  };
+
+  let containerWidth = "max-w-3xl";
+  if (currentStep === 5) containerWidth = "max-w-7xl";
+  else if (currentStep === 1) containerWidth = "max-w-5xl";
 
   return (
-    <div className="p-xl-0 mx-auto max-w-xl p-4 text-justify">
-      {!sessionLoading && sub === undefined && <Navigate to="/" />}
-      <h1 className="mb-8 mt-16 text-center text-3xl font-bold">Inscrição</h1>
-      <div className="[&_b]:font-semibold [&_p]:mt-3">
-        <p>
-          O jantar terá um custo de <b>38€ (inclui transporte)</b> onde poderás
-          contar com:
-        </p>
-        <ul className="list-inside list-disc pl-6">
-          <li>Entradas</li>
-          <li>Sopa</li>
-          <li>
-            Pratos Principais:
-            <ul className="list-inside list-decimal pl-6">
-              <li>Carne : Arroz de Pato</li>
-              <li>Vegetariano/Vegan : Tofu com legumes salteados</li>
-            </ul>
-          </li>
-          <li>Sobremesa</li>
-          <li>AfterParty (Bar aberto)</li>
-        </ul>
-        <p>
-          O pagamento realiza-se por <b>MB Way</b> para os números da respetiva
-          matrículas.
-        </p>
-        <p>
-          Após a submissão do formulário tens <b>48h</b> para realizar o
-          pagamento com a seguinte descrição{" "}
-          <b>{'"Pagamento Jantar de Gala de <Nome> - <Nmec>"'}</b> e enviar o
-          comprovativo para{" "}
-          <a
-            href="mailto:galacomissao.nei@gmail.com"
-            className="link-hover link font-semibold"
-          >
-            galacomissao.nei@gmail.com
-          </a>{" "}
-          com o mesmo assunto.
-        </p>
-        <p>Pagamento:</p>
-        <table className="ml-6">
-          {[
-            ["1ª", "967 892 167", "Sara Almeida"],
-            ["2ª", "916 162 223", "Roberto Castro"],
-            ["3ª", "934 656 375", "Marta Inácio"],
-            ["4ª", "925 097 774", "Renato Dias"],
-            ["5ª+", "927 144 824", "Tiago Gomes"],
-          ].map(([year, number, name]) => (
-            <tr>
-              <th className="w-14 text-left font-mono">{year}</th>
-              <td className="w-32 font-mono">{number}</td>
-              <td>({name})</td>
-            </tr>
-          ))}
-        </table>
-        <p>
-          Caso não o faças dentro do prazo, a tua inscrição fica sem efeito.
-        </p>
-        <p>
-          O pagamento do jantar dos acompanhantes deve ser realizada juntamente
-          do pagamento normal (mesma transferência)
-        </p>
-        <p>Na eventualidade de não compareceres, não serás reembolsado.</p>
-        <p>
-          Inscreve-te até dia <b>16 de junho (15h)</b>.{" "}
-          <b>Inscrições Limitadas</b>
-        </p>
-        <p>
-          Qualquer dúvida não hesites!!! <br />
-          Insta:{" "}
-          <a
-            href="https://www.instagram.com/jantardegalaei/"
-            className="link-hover link font-semibold"
-          >
-            @jantardegalaei
-          </a>{" "}
-          <br />
-          Email:{" "}
-          <a
-            href="mailto:galacomissao.nei@gmail.com"
-            className="link-hover link font-semibold"
-          >
-            galacomissao.nei@gmail.com
-          </a>{" "}
-          /{" "}
-          <a
-            href="mailto:neiaauav@gmail.com"
-            className="link-hover link font-semibold"
-          >
-            neiaauav@gmail.com
-          </a>
-        </p>
-      </div>
-      <FormProvider {...methods}>
-        <form
-          className="mt-5 flex flex-col items-center"
-          noValidate
-          onSubmit={methods.handleSubmit(formSubmit)}
+    <div className="min-h-screen pb-24 pt-28">
+      <div className={`mx-auto px-4 ${containerWidth}`}>
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10 flex flex-col items-center gap-3 text-center"
         >
-          <div className="my-6 w-full">
-            Número Mecanográfico <br />
-            <Input
-              className="w-full px-4 py-1"
-              placeholder="nmec"
-              {...methods.register("nmec", {
-                required: "Este campo é obrigatório",
-                pattern: {
-                  value: /^[0-9]+$/,
-                  message: "O número mecanográfico deve conter apenas números",
-                },
-              })}
-              disabled={inGala}
-            />
-            {methods.formState.errors.nmec && (
-              <p className="text-red-500">
-                {methods.formState.errors.nmec.message}
-              </p>
-            )}
-          </div>
-          <div className="my-6 w-full">
-            Estado do Pagamento <br />
-            <div className="rounded-3xl border border-light-gold bg-gray-100 px-4 py-1">
-              {!methods.getValues().has_payed ? (
-                <>
-                  <FontAwesomeIcon
-                    className="opacity-30"
-                    icon={faCircleCheck}
-                  />{" "}
-                  Por confirmar
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon
-                    className="text-[#198754]"
-                    icon={faCircleCheck}
-                  />{" "}
-                  Pago
-                </>
+          <span className="text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-light-gold/40">
+            Núcleo de Estudantes de Informática
+          </span>
+          <h1 className="font-gala text-3xl font-bold text-light-gold sm:text-4xl">
+            Inscrição — Jantar de Gala
+          </h1>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-12"
+        >
+          <StepIndicator
+            current={currentStep}
+            onStepClick={goTo}
+            maxReached={maxReached}
+          />
+        </motion.div>
+
+        <div className="border-white/8 bg-white/3 rounded-2xl border p-6 backdrop-blur-sm sm:p-8">
+          <StepTitle step={currentStep} />
+
+          {stepError && (
+            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {stepError}
+            </div>
+          )}
+
+          <AnimatePresence mode="wait">
+            <div key={currentStep}>
+              {currentStep === 1 && (
+                <Step1EventInfo config={config} onNext={next} />
+              )}
+              {currentStep === 2 && (
+                <Step2PersonalData
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                  syncing={syncing}
+                />
+              )}
+              {currentStep === 3 && (
+                <Step3Logistics
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
+              )}
+              {currentStep === 4 && (
+                <Step4Payment
+                  config={config}
+                  data={data}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
+              )}
+              {currentStep === 5 && (
+                <Step5Table
+                  config={config}
+                  data={data}
+                  userId={sub}
+                  onUpdate={update}
+                  onNext={next}
+                  onBack={back}
+                />
+              )}
+              {currentStep === 6 && (
+                <Step6Confirm
+                  config={config}
+                  data={data}
+                  onBack={back}
+                  onFinish={handleFinish}
+                  syncing={syncing}
+                />
               )}
             </div>
-          </div>
-          <div className="my-6 w-full">
-            Matrícula <br />
-            <Select
-              onChange={(e) => {
-                methods.setValue("matriculation", e ?? null);
-              }}
-              title={
-                <>
-                  {options.find(
-                    ([, v]) => v === methods.getValues().matriculation,
-                  )?.[0] || "Escolhe a tua Matrícula "}
-                  <FontAwesomeIcon
-                    className="ml-auto ui-open:rotate-180"
-                    icon={faCaretDown}
-                  />
-                </>
-              }
-              selected={selected}
-              setSelected={setSelected}
-              options={options}
-              disabled={inGala}
-            />
-          </div>
-          {!inGala && <Button submit>Efetuar inscrição</Button>}
-          {error && (
-            <p className="text-center text-red-500">
-              As inscrições atingiram o limite
-            </p>
-          )}
-        </form>
-      </FormProvider>
-      <h1 className="mb-8 mt-20 text-center text-3xl font-bold">
-        Para os Finalistas
-      </h1>
-      <p>
-        Caro(a) finalista,
-        <br />
-        Parabéns pela conclusão desta etapa importante!
-        <br />
-        Deste mais um passo na longa caminhada que ainda tens à tua frente.
-        <br />
-        Mas nós não queremos que fiques esquecido!
-        <br />
-        Desta forma gostariamos que preenchesses o seguinte forms de modo a
-        podermos preparar-te um miminho!
-      </p>
-      <div className="text-center">
-        <Link
-          to="https://forms.gle/CcSHMJWnC56HUSLh9"
-          target="_blank"
-          rel="noopener noreferrer"
-          type="button"
-        >
-          <Button className="mb-32 mt-5">Aceder Formulário</Button>
-        </Link>
+          </AnimatePresence>
+        </div>
+
+        <p className="mt-4 text-center text-[0.6rem] uppercase tracking-widest text-white/20">
+          Passo {currentStep} de 6
+        </p>
       </div>
+    </div>
+  );
+}
+
+const STEP_TITLES: Record<number, { title: string; sub: string }> = {
+  1: {
+    title: "Informações do Evento",
+    sub: "Conhece todos os detalhes antes de te inscreveres.",
+  },
+  2: {
+    title: "Dados Pessoais & Acompanhantes",
+    sub: "Confirma os teus dados e adiciona quem te acompanha.",
+  },
+  3: { title: "Logística", sub: "Transporte e preferências de refeição." },
+  4: {
+    title: "Pagamento",
+    sub: "Instruções de pagamento e envio de comprovativos.",
+  },
+  5: {
+    title: "Escolha de Mesa",
+    sub: "Reserva o teu lugar ou cria uma nova mesa para os teus amigos.",
+  },
+  6: {
+    title: "Confirmação Final",
+    sub: "Revê os teus dados e conclui a inscrição.",
+  },
+};
+
+function StepTitle({ step }: Readonly<{ step: number }>) {
+  const { title, sub } = STEP_TITLES[step] ?? { title: "", sub: "" };
+  return (
+    <div className="border-white/8 mb-6 border-b pb-5">
+      <h2 className="font-gala text-xl font-bold text-white/90">{title}</h2>
+      <p className="mt-1 text-sm text-white/40">{sub}</p>
     </div>
   );
 }

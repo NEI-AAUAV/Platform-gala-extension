@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Pagamento confirmado{% endblock %}
+
+{% block content %}
+  <!-- Hero (verde — sucesso) -->
+  <div class="band green">
+    <p class="band-label">Pagamento Confirmado</p>
+    <p class="band-title">Olá, {{name}}!</p>
+    <p class="band-sub">O teu pagamento foi verificado e a tua inscrição está agora completa. Até breve no Jantar de Gala!</p>
+  </div>
+
+  <!-- Detalhes -->
+  <div class="sec">
+    <p class="sec-label">Detalhes da Inscrição</p>
+    <div class="card">
+      <div class="row"><span class="rl">Nome</span><span class="rv">{{name}}</span></div>
+      <div class="row"><span class="rl">Nº Mecanográfico</span><span class="rv">{{nmec}}</span></div>
+      <div class="row"><span class="rl">Modalidade de Pagamento</span><span class="rv g">{% if phased_payment %}Faseado{% else %}Integral{% endif %}</span></div>
+      <div class="row"><span class="rl">Estado do Pagamento</span><span class="rv green">&#10003; Confirmado</span></div>
+    </div>
+  </div>
+
+  <hr/>
+  <p class="notice">A tua inscrição está concluída. Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
+{% endblock %}

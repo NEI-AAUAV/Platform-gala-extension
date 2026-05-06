@@ -6,7 +6,7 @@ import ErrorBoundary from "@/pages/ErrorBoundary";
 
 import { useUserStore, UserState } from "@/stores/useUserStore";
 
-const ADMIN_SCOPES = new Set(["admin", "manager-jantar-gala"]);
+const ADMIN_SCOPES = new Set(["admin", "manager-jantar-gala", "manager-gala"]);
 
 function ProtectedRoute({
   children,
@@ -49,15 +49,13 @@ const routes = [
           const { default: Reserve } = await import("@/pages/Reserve");
           return { Component: Reserve };
         },
-        children: [
-          {
-            path: "/reserve/:tableId",
-            async lazy() {
-              const { default: Reserve } = await import("@/pages/Reserve");
-              return { Component: Reserve };
-            },
-          },
-        ],
+      },
+      {
+        path: "/reserve/:tableId",
+        async lazy() {
+          const { default: Reserve } = await import("@/pages/Reserve");
+          return { Component: Reserve };
+        },
       },
       {
         path: "/vote",
@@ -90,6 +88,13 @@ const routes = [
         async lazy() {
           const { default: Register } = await import("@/pages/Register");
           return { Component: Register };
+        },
+      },
+      {
+        path: "/profile",
+        async lazy() {
+          const { default: Profile } = await import("@/pages/Profile");
+          return { Component: Profile };
         },
       },
       {

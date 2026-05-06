@@ -44,7 +44,7 @@ async def test_list_users_unauthorized(settings: Settings, client: AsyncClient) 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_list_users(settings: Settings, client: AsyncClient, db: DBType) -> None:
@@ -89,7 +89,7 @@ async def test_edit_user_unauthorized(settings: Settings, client: AsyncClient) -
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_user_not_found(settings: Settings, client: AsyncClient) -> None:
@@ -104,7 +104,7 @@ async def test_edit_user_not_found(settings: Settings, client: AsyncClient) -> N
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_user(settings: Settings, client: AsyncClient, db: DBType) -> None:
