@@ -8,7 +8,7 @@ interface Props {
 }
 
 const emptyCompanion = (): Companion => ({
-  id: Math.random().toString(36).slice(2, 11),
+  id: crypto.randomUUID(),
   name: "",
   meal: "",
   allergies: "",
