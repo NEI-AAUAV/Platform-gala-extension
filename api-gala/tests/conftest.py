@@ -67,7 +67,7 @@ def mock_manager_auth() -> AuthData:
                     email="manager@ua.pt", scopes=["manager-gala"])
 
 
-TEST_BASE_URL = "http://test"
+TEST_BASE_URL = "https://test"
 
 
 @pytest.fixture

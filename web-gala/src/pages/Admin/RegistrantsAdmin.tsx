@@ -367,13 +367,3 @@ export default function RegistrantsAdmin() {
     </div>
   );
 }
-uccess={() => {
-              closeForm();
-              load();
-            }}
-          />
-        )}
-      </dialog>
-    </div>
-  );
-}
