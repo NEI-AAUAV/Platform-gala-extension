@@ -242,7 +242,9 @@ export default function Step5Table({
             placeholder="Ex: Os Fixolas, Mesa A, ..."
             maxLength={20}
             value={data.tableName || ""}
-            onChange={(e) => onUpdate({ tableName: e.target.value || undefined })}
+            onChange={(e) =>
+              onUpdate({ tableName: e.target.value || undefined })
+            }
             className="border-white/15 rounded-lg border bg-[#1c1c1e] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-light-gold/50"
           />
         </motion.div>
@@ -389,9 +391,11 @@ function TableCard({
   if (canSelect) {
     cursorStyles = "cursor-pointer";
     if (isSelected) {
-      containerStyles = "border-light-gold bg-light-gold/10 ring-1 ring-light-gold";
+      containerStyles =
+        "border-light-gold bg-light-gold/10 ring-1 ring-light-gold";
     } else {
-      containerStyles = "border-white/20 bg-white/10 hover:border-light-gold/40 hover:bg-light-gold/5";
+      containerStyles =
+        "border-white/20 bg-white/10 hover:border-light-gold/40 hover:bg-light-gold/5";
     }
   } else {
     containerStyles = "border-white/5 bg-white/2 opacity-40";

@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBell,
-  faCheck,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBell, faCheck } from "@fortawesome/free-solid-svg-icons";
 import useTables from "@/hooks/tableHooks/useTables";
 import useLimits from "@/hooks/useLimits";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
@@ -259,4 +256,3 @@ function EmptySlot({ slotNumber }: Readonly<{ slotNumber: number }>) {
     </div>
   );
 }
-

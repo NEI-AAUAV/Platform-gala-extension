@@ -138,7 +138,10 @@ function PaymentContactsEditor({
         };
         const rowKey = `${c.name}-${c.phone}-${i}`;
         return (
-          <div key={rowKey} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
+          <div
+            key={rowKey}
+            className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2"
+          >
             {(["year", "phone", "name"] as const).map((field) => (
               <input
                 key={field}
@@ -541,32 +544,53 @@ export default function RegistrationAdmin() {
         <div ref={ref("emails")}>
           <Section title="10. Notificações por E-mail">
             <p className="mb-4 text-xs text-white/40">
-              Escolha quais os e-mails automáticos que o sistema deve enviar aos utilizadores.
+              Escolha quais os e-mails automáticos que o sistema deve enviar aos
+              utilizadores.
             </p>
             <div className="flex flex-col gap-4">
               <Toggle
                 enabled={emailConfig.registration_confirmed}
-                onChange={(v) => { updateEmails({ registration_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                onChange={(v) => {
+                  updateEmails({ registration_confirmed: v });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                }}
                 label="Confirmação de Inscrição (Submissão inicial)"
               />
               <Toggle
                 enabled={emailConfig.payment_confirmed}
-                onChange={(v) => { updateEmails({ payment_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                onChange={(v) => {
+                  updateEmails({ payment_confirmed: v });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                }}
                 label="Confirmação de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.payment_rejected}
-                onChange={(v) => { updateEmails({ payment_rejected: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                onChange={(v) => {
+                  updateEmails({ payment_rejected: v });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                }}
                 label="Rejeição de Comprovativo de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.table_invite}
-                onChange={(v) => { updateEmails({ table_invite: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                onChange={(v) => {
+                  updateEmails({ table_invite: v });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                }}
                 label="Convite para Mesa"
               />
               <Toggle
                 enabled={emailConfig.table_confirmed}
-                onChange={(v) => { updateEmails({ table_confirmed: v }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+                onChange={(v) => {
+                  updateEmails({ table_confirmed: v });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                }}
                 label="Confirmação de Entrada em Mesa"
               />
             </div>
@@ -579,8 +603,8 @@ export default function RegistrationAdmin() {
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
-              <span className="font-semibold text-white/60">imagens e PDF</span>.
-              Validação aplicada no backend.
+              <span className="font-semibold text-white/60">imagens e PDF</span>
+              . Validação aplicada no backend.
             </p>
           </Section>
         </div>

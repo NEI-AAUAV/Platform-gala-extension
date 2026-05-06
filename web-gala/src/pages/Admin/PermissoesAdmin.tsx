@@ -31,7 +31,7 @@ function PermissionToggle({
         aria-checked={enabled}
         aria-label={label}
         className={[
-          "relative h-5 w-9 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-dark-gold/50",
+          "relative h-5 w-9 rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-dark-gold/50",
           enabled ? "bg-dark-gold" : "bg-white/15",
         ].join(" ")}
         onClick={() => onChange(!enabled)}
@@ -89,7 +89,7 @@ function ManagerRow({
   };
 
   const hasChanges =
-    [...perms].sort((a, b) => a.localeCompare(b)).join() !== 
+    [...perms].sort((a, b) => a.localeCompare(b)).join() !==
     [...manager.permissions].sort((a, b) => a.localeCompare(b)).join();
 
   return (

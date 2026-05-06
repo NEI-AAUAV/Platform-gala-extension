@@ -62,51 +62,57 @@ export default function RegistrantsAdmin() {
   const stats = useMemo(() => computeStats(users), [users]);
 
   const filtered = useMemo(() => {
+    const matchesSearch = (u: User, q: string) => {
+      const lowerQ = q.toLowerCase();
+      return (
+        u.name.toLowerCase().includes(lowerQ) ||
+        u.email.toLowerCase().includes(lowerQ) ||
+        String(u.nmec).includes(lowerQ)
+      );
+    };
+
+    const matchesPayment = (u: User, filter: string) => {
+      if (filter === "all") return true;
+
+      const hasReviewProof =
+        (!u.payment_phase1_confirmed && Boolean(u.payment_proof_url)) ||
+        (u.phased_payment &&
+          !u.payment_phase2_confirmed &&
+          Boolean(u.payment_proof_url_phase2));
+      const partiallyPaid =
+        u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
+
+      switch (filter) {
+        case "paid":
+          return u.has_payed;
+        case "partial":
+          return partiallyPaid;
+        case "proof":
+          return !u.has_payed && hasReviewProof;
+        case "expired":
+          return u.payment_expired;
+        case "pending":
+          return (
+            !u.has_payed &&
+            !hasReviewProof &&
+            !partiallyPaid &&
+            !u.payment_expired
+          );
+        default:
+          return true;
+      }
+    };
+
+    const matchesTable = (u: User, filter: string) => {
+      if (filter === "with") return u.table_id !== null;
+      if (filter === "without") return u.table_id === null;
+      return true;
+    };
+
     return users.filter((u) => {
-      // 1. Search Filter
-      if (search) {
-        const q = search.toLowerCase();
-        const matchesSearch =
-          u.name.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q) ||
-          String(u.nmec).includes(q);
-        if (!matchesSearch) return false;
-      }
-
-      // 2. Payment Filter
-      if (paymentFilter !== "all") {
-        const hasReviewProof =
-          (!u.payment_phase1_confirmed && Boolean(u.payment_proof_url)) ||
-          (u.phased_payment &&
-            !u.payment_phase2_confirmed &&
-            Boolean(u.payment_proof_url_phase2));
-        const partiallyPaid =
-          u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
-
-        switch (paymentFilter) {
-          case "paid":
-            if (!u.has_payed) return false;
-            break;
-          case "partial":
-            if (!partiallyPaid) return false;
-            break;
-          case "proof":
-            if (u.has_payed || !hasReviewProof) return false;
-            break;
-          case "expired":
-            if (!u.payment_expired) return false;
-            break;
-          case "pending":
-            if (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
-              return false;
-            break;
-        }
-      }
-
-      // 3. Table Filter
-      if (tableFilter === "with" && u.table_id === null) return false;
-      if (tableFilter === "without" && u.table_id !== null) return false;
-
+      if (search && !matchesSearch(u, search)) return false;
+      if (!matchesPayment(u, paymentFilter)) return false;
+      if (!matchesTable(u, tableFilter)) return false;
       return true;
     });
   }, [users, search, paymentFilter, tableFilter]);
@@ -184,7 +190,7 @@ export default function RegistrantsAdmin() {
     if (!selectedUser) return;
     try {
       if (tableId) {
-        if (!selectedUser.table_id) {
+        if (selectedUser.table_id === null) {
           // Add to new table
           await GalaService.admin.addMemberToTable(
             Number(tableId),
@@ -322,7 +328,8 @@ export default function RegistrantsAdmin() {
 
       {filtered.length < users.length && (
         <p className="text-right text-[0.6rem] text-white/20">
-          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"} (de {users.length})
+          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"} (de{" "}
+          {users.length})
         </p>
       )}
 

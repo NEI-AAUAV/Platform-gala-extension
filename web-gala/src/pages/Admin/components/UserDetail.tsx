@@ -64,13 +64,13 @@ function ProofRow({
     }
   };
 
-  const statusColor = confirmed
-    ? "text-emerald-400/75"
-    : url
-    ? "text-yellow-400/70"
-    : "text-white/25";
+  const getStatusInfo = () => {
+    if (confirmed) return { color: "text-emerald-400/75", label: "Validado" };
+    if (url) return { color: "text-yellow-400/70", label: "Por rever" };
+    return { color: "text-white/25", label: "Não enviado" };
+  };
 
-  const statusLabel = confirmed ? "Validado" : url ? "Por rever" : "Não enviado";
+  const { color: statusColor, label: statusLabel } = getStatusInfo();
 
   const isPdf = url?.toLowerCase().includes("pdf");
 
@@ -79,7 +79,9 @@ function ProofRow({
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-xs text-white/60">{label}</span>
-          <span className={["text-[0.6rem] font-semibold", statusColor].join(" ")}>
+          <span
+            className={["text-[0.6rem] font-semibold", statusColor].join(" ")}
+          >
             {statusLabel}
           </span>
         </div>
@@ -91,9 +93,7 @@ function ProofRow({
               rel="noreferrer"
               className="flex items-center gap-1.5 rounded-full border border-dark-gold/40 px-3 py-1 text-[0.6rem] font-bold text-dark-gold transition hover:bg-dark-gold/10"
             >
-              <FontAwesomeIcon
-                icon={isPdf ? faExternalLinkAlt : faEye}
-              />
+              <FontAwesomeIcon icon={isPdf ? faExternalLinkAlt : faEye} />
               Ver
             </a>
             <button

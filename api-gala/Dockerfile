@@ -22,6 +22,8 @@ RUN poetry lock --no-update 2>/dev/null || poetry lock && \
 
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8004
 ENV HOST=0.0.0.0
-CMD python -m uvicorn app.main:app --host $HOST --port 8004
+CMD ["./entrypoint.sh"]

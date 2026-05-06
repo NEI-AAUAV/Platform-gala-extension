@@ -834,7 +834,7 @@ class AutoAssignBusBody(BaseModel):
 
 @router.post(
     "/buses/auto-assign",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+    responses={**auth_responses, 400: {"description": "No buses configured"}, 403: {"description": ERROR_FORBIDDEN}}
 )
 async def auto_assign_buses(
     body: AutoAssignBusBody,
@@ -888,7 +888,12 @@ def _validate_image(image: UploadFile, data: bytes) -> str:
 
 @router.put(
     "/homepage/dj/photo",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 503: {"description": "Storage not configured"}}
+    responses={
+        **auth_responses,
+        400: {"description": "Invalid image or size"},
+        403: {"description": ERROR_FORBIDDEN},
+        503: {"description": "Storage not configured"}
+    }
 )
 async def upload_dj_photo(
     image: Annotated[UploadFile, File(...)],

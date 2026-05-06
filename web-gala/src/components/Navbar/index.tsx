@@ -78,8 +78,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden items-center gap-8 md:flex">
-          </div>
+          <div className="hidden items-center gap-8 md:flex" />
 
           {/* Desktop auth */}
           <div className="hidden items-center gap-4 md:flex">
@@ -189,8 +188,7 @@ export default function Navbar() {
               </div>
 
               {/* Nav links */}
-              <nav className="flex flex-col gap-1 px-3 py-4">
-              </nav>
+              <nav className="flex flex-col gap-1 px-3 py-4" />
 
               {/* Divider */}
               <div className="border-white/8 mx-5 border-t" />

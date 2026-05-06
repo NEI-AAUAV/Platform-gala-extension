@@ -4,7 +4,6 @@ import {
   mockTimeSlots,
   mockAuth,
   mockRegisteredUser,
-  mockUnregisteredUser,
   mockManagerPermissions,
   mockManagerList,
 } from './helpers';

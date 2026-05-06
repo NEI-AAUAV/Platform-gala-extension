@@ -373,7 +373,6 @@ export default function HomepageAdmin() {
           </>
         )}
       </Section>
-
     </div>
   );
 }

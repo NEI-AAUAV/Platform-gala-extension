@@ -82,11 +82,17 @@ export default function Profile() {
 
   // Derive registration status and proof from backend data (source of truth)
   let registrationStatus: RegistrationStatus = "pending_payment";
-  if (sessionUser?.payment_expired || sessionUser?.registration_active === false) {
+  if (
+    sessionUser?.payment_expired ||
+    sessionUser?.registration_active === false
+  ) {
     registrationStatus = "cancelled";
   } else if (sessionUser?.has_payed) {
     registrationStatus = "confirmed";
-  } else if (sessionUser?.phased_payment && sessionUser?.payment_phase1_confirmed) {
+  } else if (
+    sessionUser?.phased_payment &&
+    sessionUser?.payment_phase1_confirmed
+  ) {
     registrationStatus = "partially_paid";
   }
   const proofName = sessionUser?.payment_proof_url ?? null;
