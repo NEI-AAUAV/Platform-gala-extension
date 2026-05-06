@@ -3,7 +3,8 @@ import {
   mockGlobalConfig,
   mockTimeSlots,
   mockAuth,
-  mockSessionUser,
+  mockRegisteredUser,
+  mockUnregisteredUser,
   mockManagerPermissions,
   mockManagerList,
 } from './helpers';
@@ -26,7 +27,7 @@ async function mockCommonAdminRoutes(page: Parameters<typeof mockGlobalConfig>[0
 test.describe('Admin Panel as Admin', () => {
   test.beforeEach(async ({ page }) => {
     await mockAuth(page, 'admin');
-    await mockSessionUser(page, true);
+    await mockRegisteredUser(page);
     await mockManagerPermissions(page, [], true);
     await mockManagerList(page, ADMIN_MANAGERS);
     await mockCommonAdminRoutes(page);
@@ -67,7 +68,7 @@ test.describe('Admin Panel as Admin', () => {
 test.describe('Admin Panel as Manager-Gala (registration + tables)', () => {
   test.beforeEach(async ({ page }) => {
     await mockAuth(page, 'manager-gala');
-    await mockSessionUser(page, true);
+    await mockRegisteredUser(page);
     await mockManagerPermissions(page, ['registration', 'tables'], false);
     await mockCommonAdminRoutes(page);
   });
@@ -92,7 +93,7 @@ test.describe('Admin Panel as Manager-Gala (registration + tables)', () => {
 test.describe('Admin Panel as Manager-Gala (no permissions)', () => {
   test.beforeEach(async ({ page }) => {
     await mockAuth(page, 'manager-gala');
-    await mockSessionUser(page, true);
+    await mockRegisteredUser(page);
     await mockManagerPermissions(page, [], false);
   });
 
@@ -105,7 +106,7 @@ test.describe('Admin Panel as Manager-Gala (no permissions)', () => {
 test.describe('Admin Panel as Manager-Gala (categories only)', () => {
   test.beforeEach(async ({ page }) => {
     await mockAuth(page, 'manager-gala');
-    await mockSessionUser(page, true);
+    await mockRegisteredUser(page);
     await mockManagerPermissions(page, ['categories'], false);
     await page.route('**/api/gala/v1/voting/categories', async (route) => {
       await route.fulfill({ json: [] });

@@ -160,7 +160,7 @@ async def upload_payment_proof(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     file: Annotated[UploadFile, File(...)],
-    phase: int = Query(default=1, ge=1, le=2),
+    phase: Annotated[int, Query(ge=1, le=2)] = 1,
 ):
     """Uploads a payment proof file to R2 storage. Use phase=1 or phase=2."""
     config = await ConfigService.get_config(db)

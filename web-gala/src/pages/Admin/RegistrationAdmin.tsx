@@ -136,8 +136,9 @@ function PaymentContactsEditor({
             ),
           );
         };
+        const rowKey = `${c.name}-${c.phone}-${i}`;
         return (
-          <div key={i} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
+          <div key={rowKey} className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2">
             {(["year", "phone", "name"] as const).map((field) => (
               <input
                 key={field}

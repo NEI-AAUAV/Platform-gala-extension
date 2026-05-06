@@ -565,6 +565,35 @@ async def admin_create_registration(
     return user
 
 
+def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, Any]) -> Dict[str, Any]:
+    update_data: Dict[str, Any] = {}
+    for field in ["name", "email", "nmec", "phone", "bus_option", "meal_option", "food_allergies", "phased_payment"]:
+        if (val := getattr(body, field)) is not None:
+            if field == "name": val = val.strip()
+            elif field == "email": val = val.strip().lower()
+            update_data[field] = val
+
+    if body.matriculation is not None:
+        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
+    elif body.matriculation == 0:
+        update_data["matriculation"] = None
+
+    if body.has_payed is not None:
+        update_data.update({
+            "has_payed": body.has_payed,
+            "payment_phase1_confirmed": body.has_payed,
+            "payment_phase2_confirmed": body.has_payed if user_dict.get("phased_payment") else False
+        })
+        if body.has_payed:
+            update_data.update({"registration_active": True, "payment_expired": False})
+
+    if body.companions is not None:
+        update_data["companions"] = [Companion.parse_obj(c).dict() for c in body.companions]
+        update_data["companion_emails"] = [c.email for c in body.companions if c.email]
+
+    return update_data
+
+
 @router.put(
     "/registrations/{user_id}",
     response_model=User,
@@ -584,30 +613,7 @@ async def admin_edit_registration(
     if not user_dict:
         raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
-    update_data: Dict[str, Any] = {}
-    for field in ["name", "email", "nmec", "phone", "bus_option", "meal_option", "food_allergies", "phased_payment"]:
-        if (val := getattr(body, field)) is not None:
-            if field == "name": val = val.strip()
-            elif field == "email": val = val.strip().lower()
-            update_data[field] = val
-
-    if body.matriculation is not None:
-        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
-    elif body.matriculation == 0:  # explicit clear
-        update_data["matriculation"] = None
-    
-    if body.has_payed is not None:
-        update_data.update({
-            "has_payed": body.has_payed,
-            "payment_phase1_confirmed": body.has_payed,
-            "payment_phase2_confirmed": body.has_payed if user_dict.get("phased_payment") else False
-        })
-        if body.has_payed:
-            update_data.update({"registration_active": True, "payment_expired": False})
-
-    if body.companions is not None:
-        update_data["companions"] = [Companion.parse_obj(c).dict() for c in body.companions]
-        update_data["companion_emails"] = [c.email for c in body.companions if c.email]
+    update_data = _prepare_update_data(body, user_dict)
 
     if update_data:
         await user_coll.update_one({"_id": user_id}, {"$set": update_data})
@@ -932,7 +938,12 @@ async def delete_dj_photo(
 
 @router.put(
     "/homepage/gallery/preview",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 503: {"description": "Storage not configured"}}
+    responses={
+        **auth_responses,
+        400: {"description": "Invalid file type or size"},
+        403: {"description": ERROR_FORBIDDEN},
+        503: {"description": "Storage or upload failure"}
+    }
 )
 async def upload_gallery_preview(
     image: Annotated[UploadFile, File(...)],

@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml poetry.lock ./
 
 # Regenerate lock if stale, then install all dependency groups
-RUN poetry lock --no-update 2>/dev/null || poetry lock
-RUN poetry install --no-root
+RUN poetry lock --no-update 2>/dev/null || poetry lock && \
+    poetry install --no-root
 
 COPY . .
 

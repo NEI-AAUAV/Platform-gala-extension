@@ -18,8 +18,6 @@ test.describe('Gala Home Page', () => {
 
     const logo = page.locator('img[alt="NEI Logo"]').first();
     await expect(logo).toBeVisible();
-
-    const header = page.locator('header');
   });
 
   test('should show login and registration buttons for unauthenticated users', async ({ page }) => {

@@ -72,6 +72,8 @@ function ProofRow({
 
   const statusLabel = confirmed ? "Validado" : url ? "Por rever" : "Não enviado";
 
+  const isPdf = url?.toLowerCase().includes("pdf");
+
   return (
     <div className="bg-white/4 flex flex-col gap-2 rounded-lg px-3 py-2">
       <div className="flex items-center justify-between">
@@ -90,9 +92,7 @@ function ProofRow({
               className="flex items-center gap-1.5 rounded-full border border-dark-gold/40 px-3 py-1 text-[0.6rem] font-bold text-dark-gold transition hover:bg-dark-gold/10"
             >
               <FontAwesomeIcon
-                icon={
-                  url?.toLowerCase().includes("pdf") ? faExternalLinkAlt : faEye
-                }
+                icon={isPdf ? faExternalLinkAlt : faEye}
               />
               Ver
             </a>

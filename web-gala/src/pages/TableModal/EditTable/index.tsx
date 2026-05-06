@@ -332,7 +332,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                 setError({ ...error, name: false });
                 if (val === table.name) return;
 
-                useTableEdit(table._id, { name: val })
+                GalaService.table.editTable(table._id, { name: val })
                   .then(() => {
                     toast.success("Nome guardado.");
                     mutate();

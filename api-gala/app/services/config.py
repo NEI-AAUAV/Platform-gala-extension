@@ -39,7 +39,7 @@ class ConfigService:
     async def update_config(db: DBType, config: GlobalConfig) -> GlobalConfig:
         collection = GlobalConfig.get_collection(db)
         config_dict = config.dict(by_alias=True)
-        config_id = config_dict.pop("_id", CONFIG_ID)
+        config_dict.pop("_id", CONFIG_ID)
         await collection.update_one(
             {"_id": CONFIG_ID},
             {"$set": config_dict},

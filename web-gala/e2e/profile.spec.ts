@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { mockGlobalConfig, mockTimeSlots, mockAuth, mockSessionUser } from './helpers';
+import { mockGlobalConfig, mockTimeSlots, mockAuth, mockRegisteredUser } from './helpers';
 
 test.describe('Profile System', () => {
   test.beforeEach(async ({ page }) => {
     await mockAuth(page, 'user');
-    await mockSessionUser(page, true);
+    await mockRegisteredUser(page);
     await mockGlobalConfig(page);
     await mockTimeSlots(page);
 

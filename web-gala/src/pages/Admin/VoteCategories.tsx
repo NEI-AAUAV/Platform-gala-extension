@@ -516,7 +516,7 @@ function CategoryRow({
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
-            key={i}
+            key={`${option}-${i}`}
             className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
           >
             {/* Current photo preview (not editable directly in edit mode string array, but stays visible) */}

@@ -83,16 +83,24 @@ export default function RegistrantsAdmin() {
         const partiallyPaid =
           u.phased_payment && u.payment_phase1_confirmed && !u.has_payed;
 
-        if (paymentFilter === "paid" && !u.has_payed) return false;
-        if (paymentFilter === "partial" && !partiallyPaid) return false;
-        if (paymentFilter === "proof" && (u.has_payed || !hasReviewProof))
-          return false;
-        if (paymentFilter === "expired" && !u.payment_expired) return false;
-        if (
-          paymentFilter === "pending" &&
-          (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
-        )
-          return false;
+        switch (paymentFilter) {
+          case "paid":
+            if (!u.has_payed) return false;
+            break;
+          case "partial":
+            if (!partiallyPaid) return false;
+            break;
+          case "proof":
+            if (u.has_payed || !hasReviewProof) return false;
+            break;
+          case "expired":
+            if (!u.payment_expired) return false;
+            break;
+          case "pending":
+            if (u.has_payed || hasReviewProof || partiallyPaid || u.payment_expired)
+              return false;
+            break;
+        }
       }
 
       // 3. Table Filter
@@ -312,10 +320,9 @@ export default function RegistrantsAdmin() {
         openDetail={openDetail}
       />
 
-      {filtered.length > 0 && (
+      {filtered.length < users.length && (
         <p className="text-right text-[0.6rem] text-white/20">
-          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"}{" "}
-          {filtered.length !== users.length && `(de ${users.length})`}
+          {filtered.length} inscrito{filtered.length === 1 ? "" : "s"} (de {users.length})
         </p>
       )}
 
@@ -351,6 +358,16 @@ export default function RegistrantsAdmin() {
             userToEdit={formUser}
             onClose={closeForm}
             onSuccess={() => {
+              closeForm();
+              load();
+            }}
+          />
+        )}
+      </dialog>
+    </div>
+  );
+}
+uccess={() => {
               closeForm();
               load();
             }}

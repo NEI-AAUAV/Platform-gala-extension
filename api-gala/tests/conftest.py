@@ -67,10 +67,13 @@ def mock_manager_auth() -> AuthData:
                     email="manager@ua.pt", scopes=["manager-gala"])
 
 
+TEST_BASE_URL = "http://test"
+
+
 @pytest.fixture
 async def async_client(mock_auth_data: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
     _make_client_overrides(mock_auth_data, test_db)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url=TEST_BASE_URL) as ac:
         yield ac
     _clear_client_overrides()
 
@@ -78,7 +81,7 @@ async def async_client(mock_auth_data: AuthData, test_db) -> AsyncGenerator[Asyn
 @pytest.fixture
 async def async_client_admin(mock_admin_auth: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
     _make_client_overrides(mock_admin_auth, test_db)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url=TEST_BASE_URL) as ac:
         yield ac
     _clear_client_overrides()
 
@@ -86,6 +89,6 @@ async def async_client_admin(mock_admin_auth: AuthData, test_db) -> AsyncGenerat
 @pytest.fixture
 async def async_client_manager(mock_manager_auth: AuthData, test_db) -> AsyncGenerator[AsyncClient, None]:
     _make_client_overrides(mock_manager_auth, test_db)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url=TEST_BASE_URL) as ac:
         yield ac
     _clear_client_overrides()

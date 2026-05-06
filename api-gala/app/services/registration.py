@@ -146,9 +146,8 @@ class RegistrationService:
             target_id = int(table_id)
             if user.table_id != target_id:
                 await RegistrationService._join_table_via_invite(db, user, target_id, user_id)
-        elif table_id in ("none", "null"):
-            if user.table_id:
-                await TableService.leave_table(db, user_id)
+        elif table_id in ("none", "null") and user.table_id:
+            await TableService.leave_table(db, user_id)
 
     @staticmethod
     def _apply_step_data(step: int, data: Dict[str, Any], update_data: Dict[str, Any]) -> None:

@@ -24,10 +24,14 @@ function PermissionToggle({
   readonly onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2">
-      <div
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={enabled}
+        aria-label={label}
         className={[
-          "relative h-5 w-9 rounded-full transition-colors",
+          "relative h-5 w-9 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-dark-gold/50",
           enabled ? "bg-dark-gold" : "bg-white/15",
         ].join(" ")}
         onClick={() => onChange(!enabled)}
@@ -38,9 +42,9 @@ function PermissionToggle({
             enabled ? "translate-x-4" : "translate-x-0.5",
           ].join(" ")}
         />
-      </div>
+      </button>
       <span className="text-sm text-white/70">{label}</span>
-    </label>
+    </div>
   );
 }
 

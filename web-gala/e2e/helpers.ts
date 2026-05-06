@@ -2,12 +2,12 @@ import { Page } from '@playwright/test';
 
 function base64url(obj: object): string {
   const json = JSON.stringify(obj);
-  const bytes = Array.from(json).map((c) => c.charCodeAt(0));
-  const binary = String.fromCharCode(...bytes);
+  const bytes = Array.from(json).map((c) => c.codePointAt(0)!);
+  const binary = String.fromCodePoint(...bytes);
   return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '');
 }
 
 function makeJwt(payload: object): string {
@@ -71,36 +71,36 @@ export async function mockManagerList(page: Page, managers: object[] = []) {
   });
 }
 
-export async function mockSessionUser(page: Page, isRegistered: boolean) {
-  if (isRegistered) {
-    await page.route('**/api/gala/v1/user/me', async (route) => {
-      await route.fulfill({
-        json: {
-          _id: 1,
-          name: 'Test',
-          surname: 'User',
-          email: 'user@ua.pt',
-          nmec: 12345,
-          matriculation: 2,
-          bus_option: 'NONE',
-          meal_option: 'NOR',
-          food_allergies: '',
-          has_payed: false,
-          phased_payment: false,
-          payment_proof_url: null,
-          payment_proof_url_phase2: null,
-          companions: [],
-          bus_assignment: null,
-          registration_step: 6,
-          phone: null,
-        }
-      });
+export async function mockRegisteredUser(page: Page) {
+  await page.route('**/api/gala/v1/user/me', async (route) => {
+    await route.fulfill({
+      json: {
+        _id: 1,
+        name: 'Test',
+        surname: 'User',
+        email: 'user@ua.pt',
+        nmec: 12345,
+        matriculation: 2,
+        bus_option: 'NONE',
+        meal_option: 'NOR',
+        food_allergies: '',
+        has_payed: false,
+        phased_payment: false,
+        payment_proof_url: null,
+        payment_proof_url_phase2: null,
+        companions: [],
+        bus_assignment: null,
+        registration_step: 6,
+        phone: null,
+      }
     });
-  } else {
-    await page.route('**/api/gala/v1/user/me', async (route) => {
-      await route.fulfill({ status: 404, json: { detail: 'Not registered' } });
-    });
-  }
+  });
+}
+
+export async function mockUnregisteredUser(page: Page) {
+  await page.route('**/api/gala/v1/user/me', async (route) => {
+    await route.fulfill({ status: 404, json: { detail: 'Not registered' } });
+  });
 }
 
 export async function mockGlobalConfig(page: Page) {
@@ -119,8 +119,8 @@ export async function mockGlobalConfig(page: Page) {
           voting_start: '2020-01-01T00:00:00',
           voting_end: '2030-01-01T00:00:00',
         },
-        prices: { total_price: 35.0, phased_payment_enabled: false },
-        bus: { enabled: true, price_round_trip: 5.0, price_one_way: 3.0, capacity: 50 },
+        prices: { total_price: 35, phased_payment_enabled: false },
+        bus: { enabled: true, price_round_trip: 5, price_one_way: 3, capacity: 50 },
         meals: [
           { id: '1', name: 'Carne', description: 'Bife', is_active: true },
           { id: '2', name: 'Veg', description: 'Tofu', is_active: true }

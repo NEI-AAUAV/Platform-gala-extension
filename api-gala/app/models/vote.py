@@ -41,7 +41,7 @@ class VoteListing(BaseModel):
     options: List[str]
     photo_paths: List[str] = Field(default_factory=list)
     scores: List[int]
-    already_voted: Optional[int]
+    already_voted: Optional[int] = None
     
     # Phase state for frontend
     nomination_open: bool
