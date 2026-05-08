@@ -184,7 +184,7 @@ async def test_list_registrations_manager_with_permission(async_client_manager: 
     test_db.manager_permissions.find_one = AsyncMock(return_value=MANAGER_DOC)
     cursor_mock = MagicMock()
     cursor_mock.to_list = AsyncMock(return_value=[])
-    test_db.users.find = MagicMock(return_value=cursor_mock)
+    test_db.user.find = MagicMock(return_value=cursor_mock)
 
     resp = await async_client_manager.get("/api/gala/v1/admin/registrations")
     assert resp.status_code == 200
@@ -205,7 +205,7 @@ async def test_export_registrations_manager_with_permission(async_client_manager
     test_db.manager_permissions.find_one = AsyncMock(return_value=MANAGER_DOC)
     cursor_mock = MagicMock()
     cursor_mock.to_list = AsyncMock(return_value=[])
-    test_db.users.find = MagicMock(return_value=cursor_mock)
+    test_db.user.find = MagicMock(return_value=cursor_mock)
 
     resp = await async_client_manager.get("/api/gala/v1/admin/export/registrations")
     assert resp.status_code == 200
@@ -228,7 +228,7 @@ async def test_bus_assign_manager_with_permission(async_client_manager: AsyncCli
     )
     update_result = MagicMock()
     update_result.matched_count = 0
-    test_db.users.update_one = AsyncMock(return_value=update_result)
+    test_db.user.update_one = AsyncMock(return_value=update_result)
 
     resp = await async_client_manager.patch(
         "/api/gala/v1/admin/registrations/1/bus",
@@ -255,7 +255,7 @@ async def test_config_access_manager_with_homepage_permission(async_client_manag
     test_db.manager_permissions.find_one = AsyncMock(
         return_value={**MANAGER_DOC, "permissions": ["homepage"]}
     )
-    test_db.global_config.find_one = AsyncMock(return_value=None)
+    test_db.config.find_one = AsyncMock(return_value=None)
 
     resp = await async_client_manager.get("/api/gala/v1/admin/config")
     assert resp.status_code in [200, 404, 500]

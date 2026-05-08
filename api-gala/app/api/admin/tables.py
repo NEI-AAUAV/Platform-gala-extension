@@ -23,26 +23,7 @@ async def admin_create_table(
 ) -> Table:
     """Create a new empty table."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
-    
-    collection = Table.get_collection(db)
-    new_id = await TableService._get_next_id(db)
-    
-    import secrets
-    import string
-    invite_token = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
-    
-    table = Table(
-        id=new_id,
-        name=name,
-        photo_url=None,
-        invite_token=invite_token,
-        head=None,
-        seats=seats,
-        persons=[]
-    )
-    
-    await collection.insert_one(table.dict(by_alias=True))
-    return table
+    return await TableService.create_empty_table(db, name, seats)
 
 @router.delete("/{table_id}", responses={**auth_responses, 404: {"description": "Table not found"}})
 async def admin_delete_table(
@@ -52,19 +33,8 @@ async def admin_delete_table(
 ) -> Any:
     """Delete an existing table."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
-    
-    collection = Table.get_collection(db)
-    user_coll = User.get_collection(db)
-    
-    table_dict = await collection.find_one({"_id": table_id})
-    if not table_dict:
+    if not await TableService.delete_table(db, table_id):
         raise HTTPException(status_code=404, detail="Table not found")
-        
-    # Unset table_id for all users in this table
-    await user_coll.update_many({"table_id": table_id}, {"$unset": {"table_id": ""}})
-    
-    # Delete table
-    await collection.delete_one({"_id": table_id})
     return {"message": "Table deleted successfully"}
 
 @router.post("/{table_id}/members/{user_id}", responses={**auth_responses, 400: {"description": "Bad Request"}})

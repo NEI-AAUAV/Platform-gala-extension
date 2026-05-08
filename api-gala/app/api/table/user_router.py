@@ -77,22 +77,6 @@ async def join_table(
     return table
 
 
-@router.delete(
-    "/{table_id}/leave",
-    responses={**auth_responses}
-)
-async def leave_table_named(
-    table_id: int,
-    db: Annotated[DBType, Depends(get_db)],
-    auth: Annotated[AuthData, Depends(api_nei_auth)]
-):
-    """Leaves the current table."""
-    # Note: user_router in table directory usually shouldn't conflict with main table router
-    # but we should be careful with /table/{id}/leave vs /table/leave
-    await TableService.leave_table(db, auth.sub)
-    return {"status": "success"}
-
-
 @router.post(
     "/{table_id}/photo",
     responses={

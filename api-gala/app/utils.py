@@ -1,6 +1,13 @@
+import secrets
+import string
 from datetime import date
 from typing import Set, TypeVar, Callable, Type
 from pydantic import BaseModel
+
+
+def generate_invite_token(length: int = 8) -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 _C = TypeVar("_C", bound=BaseModel)
 

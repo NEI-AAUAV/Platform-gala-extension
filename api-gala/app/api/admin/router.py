@@ -17,13 +17,14 @@ from app.models.table import Companion
 from app.models.manager_permissions import ManagerPermission
 from app.services.config import ConfigService
 from app.services.export import ExportService
-from app.services.vote import VoteService
+from app.services.admin_vote import AdminVoteService
 from app.services.manager_permissions import ManagerPermissionsService
 from app.services.registration import RegistrationService
 from app.services.table import TableService
 from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
+from app.api.time_slots.edit import TimeSlotsEditForm
 
 
 router = APIRouter()
@@ -137,6 +138,8 @@ async def confirm_payment(
         {"$set": update_data},
         return_document=True,
     )
+    if user_dict is None:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     user = User.parse_obj(user_dict)
     
@@ -216,10 +219,18 @@ async def reject_payment_proof(
     user_coll = User.get_collection(db)
     field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
     confirmed_field = "payment_phase1_confirmed" if phase == 1 else "payment_phase2_confirmed"
-    
+
+    current = await user_coll.find_one({"_id": user_id})
+    if not current:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+    current_user = User.parse_obj(current)
+
+    # Rejecting phase 2 on a non-phased user must not clear has_payed (phase 1 remains valid)
+    new_has_payed = False if (phase == 1 or current_user.phased_payment) else current_user.has_payed
+
     user_dict = await user_coll.find_one_and_update(
         {"_id": user_id},
-        {"$set": {"has_payed": False, field: None, confirmed_field: False}},
+        {"$set": {"has_payed": new_has_payed, field: None, confirmed_field: False}},
         return_document=True,
     )
     if not user_dict:
@@ -300,18 +311,40 @@ async def get_registration(
     return User.parse_obj(user_dict)
 
 
+class AdminPatchRegistrationBody(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    nmec: Optional[int] = None
+    phone: Optional[str] = None
+    bus_option: Optional[str] = None
+    meal_option: Optional[str] = None
+    food_allergies: Optional[str] = None
+    phased_payment: Optional[bool] = None
+    has_payed: Optional[bool] = None
+    registration_step: Optional[int] = None
+    is_registered: Optional[bool] = None
+    registration_active: Optional[bool] = None
+    payment_expired: Optional[bool] = None
+
+    class Config:
+        extra = "forbid"
+
+
 @router.patch(
     "/registrations/{user_id}",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+    responses={**auth_responses, 400: {"description": "No fields to update"}, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def update_registration_admin(
     user_id: int,
-    updates: Dict[str, Any],
+    body: AdminPatchRegistrationBody,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Manually updates registration data for a specific user."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    updates = body.dict(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": updates})
     if result.matched_count == 0:
@@ -573,10 +606,10 @@ def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, A
             elif field == "email": val = val.strip().lower()
             update_data[field] = val
 
-    if body.matriculation is not None:
-        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
-    elif body.matriculation == 0:
+    if body.matriculation == 0:
         update_data["matriculation"] = None
+    elif body.matriculation is not None:
+        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
 
     if body.has_payed is not None:
         update_data.update({
@@ -707,7 +740,7 @@ async def admin_merge_nominees(
 ):
     """Merges multiple nominee names into one target name."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await VoteService.merge_nominees(db, category_id, body.target_name, body.source_names)
+    success = await AdminVoteService.merge_nominees(db, category_id, body.target_name, body.source_names)
     if not success:
         raise HTTPException(status_code=400, detail="Merge failed")
     return {"status": "success"}
@@ -728,7 +761,7 @@ async def admin_finalize_nominations(
 ):
     """Finalizes nominations for a category, selecting the top 4."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await VoteService.finalize_nominations(db, category_id)
+    success = await AdminVoteService.finalize_nominations(db, category_id)
     if not success:
         raise HTTPException(status_code=400, detail="Finalization failed")
     return {"status": "success"}
@@ -793,13 +826,14 @@ async def get_time_slots(
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}}
 )
 async def update_time_slots(
-    updates: Dict[str, Any],
+    body: TimeSlotsEditForm,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Updates the event time slots."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
+    updates = body.dict(by_alias=True, exclude_unset=True)
     await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
     return TimeSlots.parse_obj(result)

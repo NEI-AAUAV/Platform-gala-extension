@@ -54,17 +54,9 @@ async def get_registration_status(
     await sync_email_based_registrations(db, auth.sub, auth.email)
     await RegistrationService.apply_payment_deadline_policy(db)
 
-    user = await RegistrationService.get_user_registration(db, auth.sub)
-    if not user:
-        user_coll = User.get_collection(db)
-        user = User(
-            id=auth.sub,
-            nmec=auth.nmec or 0,
-            email=auth.email,
-            name=f"{auth.name} {auth.surname}",
-            registration_step=1
-        )
-        await user_coll.insert_one(user.dict(by_alias=True))
+    user = await RegistrationService.get_or_create_user_registration(
+        db, auth.sub, auth.email, f"{auth.name} {auth.surname}", auth.nmec
+    )
     return user
 
 
@@ -108,17 +100,9 @@ async def update_registration_step(
     if step < 6:
         await _require_registration_open(db)
 
-    existing = await RegistrationService.get_user_registration(db, auth.sub)
-    if not existing:
-        user_coll = User.get_collection(db)
-        new_user = User(
-            id=auth.sub,
-            nmec=auth.nmec or 0,
-            email=auth.email,
-            name=f"{auth.name} {auth.surname}",
-            registration_step=1
-        )
-        await user_coll.insert_one(new_user.dict(by_alias=True))
+    await RegistrationService.get_or_create_user_registration(
+        db, auth.sub, auth.email, f"{auth.name} {auth.surname}", auth.nmec
+    )
 
     try:
         user = await RegistrationService.update_step(db, auth.sub, step, data)

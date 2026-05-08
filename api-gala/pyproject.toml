@@ -39,6 +39,7 @@ types-python-jose = "^3.3.4.7"
 
 [tool.pytest.ini_options]
 pythonpath = [".", "app"]
+asyncio_mode = "auto"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]

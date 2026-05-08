@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 from httpx import AsyncClient
@@ -8,40 +7,44 @@ from app.core.db import get_db, get_client
 from app.api.auth import api_nei_auth, AuthData
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
 COLLECTIONS = [
-    "users",
-    "global_config",
+    "user",
+    "config",
     "time_slots",
-    "vote_categories",
-    "vote_cast",
-    "table_groups",
+    "vote_category",
+    "table",
     "manager_permissions",
+    "limits",
+    "registration",
 ]
 
 
+def _make_collection_mock() -> MagicMock:
+    mock = MagicMock()
+    for method in ("find_one", "insert_one", "update_one", "delete_one",
+                   "find_one_and_update", "insert_many", "delete_many",
+                   "count_documents"):
+        setattr(mock, method, AsyncMock())
+    mock.find = MagicMock()
+    return mock
+
+
 @pytest.fixture(scope="session")
-async def test_db():
+def test_db():
     db = MagicMock()
     for name in COLLECTIONS:
-        setattr(db, name, AsyncMock())
+        setattr(db, name, _make_collection_mock())
     # Route db["collection_name"] → db.collection_name so get_collection() works
     db.__getitem__ = MagicMock(side_effect=lambda key: getattr(db, key))
-    yield db
+    return db
 
 
 def _make_client_overrides(auth_data: AuthData, test_db: MagicMock) -> None:
     mock_client = MagicMock()
     mock_client.close = MagicMock()
     app.dependency_overrides[api_nei_auth] = lambda: auth_data
-    app.dependency_overrides[get_client] = lambda settings: mock_client
-    app.dependency_overrides[get_db] = lambda settings, client: test_db
+    app.dependency_overrides[get_client] = lambda: mock_client
+    app.dependency_overrides[get_db] = lambda: test_db
 
 
 def _clear_client_overrides() -> None:
