@@ -138,7 +138,7 @@ async def test_join_via_invite_not_in_invite_list_raises():
 
     user = User.parse_obj(_user_doc())
     table_doc = _table_doc(invites=[])  # user not invited
-    db, user_coll, table_coll = _make_db(table_finds=(table_doc,))
+    db, _, table_coll = _make_db(table_finds=(table_doc,))
 
     with pytest.raises(ValueError, match="convite"):
         await TableService.join_via_invite(db, user, target_id=1)
@@ -181,7 +181,7 @@ async def test_sync_companions_updates_table_when_user_assigned():
     from app.services.table import TableService
 
     user_doc = _user_doc(table_id=3)
-    db, user_coll, table_coll = _make_db(user_finds=(user_doc,))
+    db, _, table_coll = _make_db(user_finds=(user_doc,))
     companions = [{"name": "Alice", "dish": "NOR", "allergies": ""}]
 
     await TableService.sync_companions(db, user_id=1, companions=companions)

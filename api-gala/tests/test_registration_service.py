@@ -83,7 +83,6 @@ async def test_get_or_create_returns_existing_without_inserting():
 async def test_get_or_create_inserts_when_not_found():
     from app.services.registration import RegistrationService
 
-    new_doc = _user_doc(registration_step=1)
     # first find_one (existence check) → None; insert succeeds
     db, user_coll = _make_db(None)
     user = await RegistrationService.get_or_create_user_registration(
@@ -323,6 +322,6 @@ async def test_update_step_6_marks_registered():
     updated_doc = _user_doc(registration_step=6, is_registered=True)
     db, user_coll = _make_db(user_doc, updated_doc)
 
-    result = await RegistrationService.update_step(db, user_id=1, step=6, data={})
+    await RegistrationService.update_step(db, user_id=1, step=6, data={})
     update_call = user_coll.update_one.call_args
     assert update_call[0][1]["$set"].get("is_registered") is True

@@ -122,7 +122,7 @@ async def test_join_table_rejects_unregistered_user():
     """find_one returns None → ValueError before any table lookup."""
     from app.services.table import TableService
 
-    db, user_coll, table_coll = _make_db(user_doc=None)
+    db, _, table_coll = _make_db(user_doc=None)
     with pytest.raises(ValueError, match="registration"):
         await TableService.join_table(db, user_id=99, table_id=10)
     table_coll.find_one.assert_not_called()
@@ -142,7 +142,7 @@ async def test_leave_table_deletes_when_last_person():
     # After $pull the table has no persons
     table_doc_after = {"_id": 10, "name": "T", "seats": 10, "head": 1, "persons": [], "invites": []}
 
-    db, user_coll, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
+    db, _, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
 
     result = await TableService.leave_table(db, user_id=1)
     assert result is True
@@ -161,7 +161,7 @@ async def test_leave_table_reassigns_head():
     remaining_person = {"id": 2, "allergies": "", "dish": "NOR", "confirmed": True, "companions": []}
     table_doc_after = {"_id": 10, "name": "T", "seats": 10, "head": 1, "persons": [remaining_person], "invites": []}
 
-    db, user_coll, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
+    db, _, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
 
     result = await TableService.leave_table(db, user_id=1)
     assert result is True
@@ -181,7 +181,7 @@ async def test_leave_table_no_crash_on_empty_persons_list():
     # Simulate the race: table already emptied by someone else before we re-fetch
     table_doc_after = {"_id": 10, "name": "T", "seats": 10, "head": 1, "persons": [], "invites": []}
 
-    db, user_coll, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
+    db, _, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc_after)
 
     # Must not raise
     result = await TableService.leave_table(db, user_id=1)
