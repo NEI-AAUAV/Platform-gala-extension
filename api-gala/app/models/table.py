@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, PositiveInt, Field
+from pydantic import BaseModel, PositiveInt, Field, validator
 from app.models import BaseDocument
 
 
@@ -14,6 +14,23 @@ class Companion(BaseModel):
     dish: Optional[DishType] = None
     allergies: str = ""
     email: Optional[str] = None  # For future account linking
+
+    @validator("dish", pre=True)
+    def normalize_dish(cls, value):
+        if value in (None, "", "NONE"):
+            return None
+        if isinstance(value, str):
+            normalized = value.strip().upper()
+            mapping = {
+                "NOR": DishType.NORMAL,
+                "NORMAL": DishType.NORMAL,
+                "CARNE": DishType.NORMAL,
+                "VEG": DishType.VEGETARIAN,
+                "VEGETARIAN": DishType.VEGETARIAN,
+                "VEGETARIANO": DishType.VEGETARIAN,
+            }
+            return mapping.get(normalized, None)
+        return value
 
 
 class TablePerson(BaseModel):

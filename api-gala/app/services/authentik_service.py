@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import re
 from typing import List, Optional
 import httpx
 
@@ -141,7 +142,8 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
     from app.models.user import User
 
     user_coll = User.get_collection(db)
-    email_lower = email.strip().lower()
+    email_normalized = email.strip()
+    email_lower = email_normalized.lower()
 
     # Case 1: admin created a registration with this email (no real account)
     phantom = await user_coll.find_one(
@@ -163,10 +165,17 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
 
     # Case 2: User is a companion in someone else's registration
     # I should find registrations where `companions.email` == email_lower
-    host = await user_coll.find_one({
-        "companions.email": email_lower,
-        "is_registered": True
-    })
+    # Be tolerant with casing/whitespace differences from previously saved companion emails.
+    email_pattern = re.escape(email_normalized)
+    host = await user_coll.find_one(
+        {
+            "is_registered": True,
+            "companions.email": {
+                "$regex": rf"^\s*{email_pattern}\s*$",
+                "$options": "i",
+            },
+        }
+    )
     
     if host:
         real_existing = await user_coll.find_one({"_id": authentik_user_id, "is_registered": True})
@@ -182,7 +191,7 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
                 {
                     "$set": update_data,
                     "$setOnInsert": {
-                        "email": email,
+                        "email": email_normalized,
                         "nmec": 0,
                         "name": "",
                         "registration_step": 6

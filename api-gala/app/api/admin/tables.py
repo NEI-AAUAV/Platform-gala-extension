@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from app.core.db.types import DBType
 from app.core.db import get_db
 from app.api.auth import api_nei_auth, AuthData, auth_responses
+from app.core.logging import logger
 from app.services.manager_permissions import ManagerPermissionsService, ManagerPermission
 from app.models.table import Table
 from app.models.user import User
@@ -59,6 +60,7 @@ async def admin_add_member(
             if user_dict:
                 user = User.parse_obj(user_dict)
                 table_name = table.name or f"Mesa {table.id}"
+                logger.info("Queueing admin add-member email for {}", user.email)
                 background_tasks.add_task(
                     send_email,
                     user.email,
@@ -99,6 +101,7 @@ async def admin_move_member(
             if user_dict:
                 user = User.parse_obj(user_dict)
                 table_name = table.name or f"Mesa {table.id}"
+                logger.info("Queueing admin move-member email for {}", user.email)
                 background_tasks.add_task(
                     send_email,
                     user.email,

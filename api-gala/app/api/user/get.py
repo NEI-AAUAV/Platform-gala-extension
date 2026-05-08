@@ -6,6 +6,7 @@ from app.core.db import DatabaseDep
 from app.core.config import SettingsDep
 from app.api.auth import AuthData, api_nei_auth, auth_responses, ScopeEnum
 from app.services.registration import RegistrationService
+from app.services.authentik_service import sync_email_based_registrations
 
 router = APIRouter()
 
@@ -37,6 +38,7 @@ async def get_self(
     auth: AuthData = Security(api_nei_auth),
 ) -> User:
     """Fetches the self user information"""
+    await sync_email_based_registrations(db, auth.sub, auth.email)
     await RegistrationService.apply_payment_deadline_policy(db)
     res = await User.get_collection(db).find_one({"_id": auth.sub})
 
