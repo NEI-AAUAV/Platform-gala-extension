@@ -17,7 +17,7 @@ from app.models.table import Companion
 from app.models.manager_permissions import ManagerPermission
 from app.services.config import ConfigService
 from app.services.export import ExportService
-from app.services.vote import VoteService
+from app.services.admin_vote import AdminVoteService
 from app.services.manager_permissions import ManagerPermissionsService
 from app.services.registration import RegistrationService
 from app.services.table import TableService
@@ -717,7 +717,7 @@ async def admin_merge_nominees(
 ):
     """Merges multiple nominee names into one target name."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await VoteService.merge_nominees(db, category_id, body.target_name, body.source_names)
+    success = await AdminVoteService.merge_nominees(db, category_id, body.target_name, body.source_names)
     if not success:
         raise HTTPException(status_code=400, detail="Merge failed")
     return {"status": "success"}
@@ -738,7 +738,7 @@ async def admin_finalize_nominations(
 ):
     """Finalizes nominations for a category, selecting the top 4."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await VoteService.finalize_nominations(db, category_id)
+    success = await AdminVoteService.finalize_nominations(db, category_id)
     if not success:
         raise HTTPException(status_code=400, detail="Finalization failed")
     return {"status": "success"}
