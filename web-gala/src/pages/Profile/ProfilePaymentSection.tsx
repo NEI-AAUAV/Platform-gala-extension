@@ -28,7 +28,11 @@ interface Props {
 function isDeadlinePassed(dateStr: string): boolean {
   if (!dateStr || dateStr === "A anunciar") return false;
   try {
-    return new Date() > new Date(dateStr);
+    const utcIso =
+      dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr)
+        ? dateStr
+        : dateStr + "Z";
+    return new Date() > new Date(utcIso);
   } catch {
     return false;
   }
@@ -45,7 +49,8 @@ export default function ProfilePaymentSection({
     : null;
   const contact =
     config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ??
-    config.paymentContacts[0];
+    config.paymentContacts[0] ??
+    null;
 
   const userChosePhased = sessionUser?.phased_payment ?? false;
   const phase2ProofName = sessionUser?.payment_proof_url_phase2 ?? null;

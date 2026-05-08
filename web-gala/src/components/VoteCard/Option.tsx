@@ -38,7 +38,7 @@ export default function Option({
         setValue(`votes.${catId}.option`, optionIdx);
       }}
     >
-      {catId && (
+      {catId != null && catId !== 0 && (
         <img
           src={
             photo_path.startsWith("http")
