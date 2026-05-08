@@ -4,6 +4,12 @@ from app.core.db.types import DBType
 from app.models.vote import VoteCategory, Nominee, Vote
 
 
+class NominationsClosedError(ValueError): ...
+class AlreadyNominatedError(ValueError): ...
+class VotingClosedError(ValueError): ...
+class AlreadyVotedError(ValueError): ...
+
+
 class VoteService:
     @staticmethod
     async def nominate(db: DBType, user_id: int, category_id: int, nominee_name: str) -> bool:
@@ -14,11 +20,11 @@ class VoteService:
 
         category = VoteCategory.parse_obj(category_dict)
         if not category.nomination_open:
-            raise ValueError("Nominations are closed for this category")
+            raise NominationsClosedError("Nominations are closed for this category")
 
         # Pre-flight check (advisory; the atomic write below is the real guard)
         if any(user_id in n.votes for n in category.nominations):
-            raise ValueError("You have already nominated someone in this category")
+            raise AlreadyNominatedError("You have already nominated someone in this category")
 
         # Case-insensitive match against existing nominees
         existing_name = next(
@@ -48,7 +54,7 @@ class VoteService:
             )
 
         if result.modified_count == 0:
-            raise ValueError("You have already nominated someone in this category")
+            raise AlreadyNominatedError("You have already nominated someone in this category")
         return True
 
     @staticmethod
@@ -73,7 +79,7 @@ class VoteService:
 
         category = VoteCategory.parse_obj(category_dict)
         if not category.voting_open:
-            raise ValueError("Voting is closed for this category")
+            raise VotingClosedError("Voting is closed for this category")
 
         if option_index < 0 or option_index >= len(category.options):
             raise ValueError("Invalid option index")
@@ -84,7 +90,7 @@ class VoteService:
             {"$push": {"votes": vote_obj.dict()}},
         )
         if result.modified_count == 0:
-            raise ValueError("You have already voted in this category")
+            raise AlreadyVotedError("You have already voted in this category")
         return True
 
     @staticmethod

@@ -6,7 +6,7 @@ from pydantic import BaseModel, NonNegativeInt
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.core.db import DatabaseDep
 from app.models.vote import VoteListing
-from app.services.vote import VoteService
+from app.services.vote import VoteService, VotingClosedError, AlreadyVotedError
 from ._utils import fetch_category, anonymize_category
 
 router = APIRouter(tags=["Voting"])
@@ -33,19 +33,14 @@ async def cast_vote(
     auth: Annotated[AuthData, Security(api_nei_auth)],
 ) -> VoteListing:
     """Casts a vote for a particular category."""
-    category = await fetch_category(category_id, db)
-    if form_data.option >= len(category.options):
-        raise HTTPException(status_code=400, detail="Not a valid option")
-
     try:
         await VoteService.vote(db, auth.sub, category_id, form_data.option)
+    except VotingClosedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except AlreadyVotedError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
-        detail = str(e)
-        if "closed" in detail:
-            raise HTTPException(status_code=403, detail=detail)
-        if "already voted" in detail:
-            raise HTTPException(status_code=409, detail=detail)
-        raise HTTPException(status_code=400, detail=detail)
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error casting vote: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

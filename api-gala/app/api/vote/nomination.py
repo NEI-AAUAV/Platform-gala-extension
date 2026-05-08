@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.core.db import DatabaseDep
-from app.services.vote import VoteService
+from app.services.vote import VoteService, NominationsClosedError
 
 router = APIRouter(tags=["Nominations"])
 
@@ -38,11 +38,10 @@ async def submit_nomination(
     try:
         await VoteService.nominate(db, auth.sub, category_id, form_data.name)
         return {"status": "success"}
+    except NominationsClosedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
-        detail = str(e)
-        if "closed" in detail:
-            raise HTTPException(status_code=403, detail=detail)
-        raise HTTPException(status_code=400, detail=detail)
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error submitting nomination: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
