@@ -322,7 +322,7 @@ export default function Step5Table({
           amigos pelo nome no teu perfil. Podes alterar a mesa mais tarde no teu
           perfil enquanto o período de mesas estiver aberto.{" "}
           <span className="text-white/60">
-            A escolha de mesa é opcional — podes concluir a inscrição e escolher
+            A escolha de mesa é opcional, podes concluir a inscrição e escolher
             depois.
           </span>
         </p>

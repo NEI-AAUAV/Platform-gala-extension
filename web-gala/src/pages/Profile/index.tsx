@@ -110,7 +110,7 @@ export default function Profile() {
           className="mb-8 flex flex-col items-center gap-3 text-center"
         >
           <span className="text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-light-gold/40">
-            Jantar de Gala — Perfil
+            Jantar de Gala - Perfil
           </span>
           <h1 className="font-gala text-3xl font-bold text-light-gold">
             O Meu Perfil

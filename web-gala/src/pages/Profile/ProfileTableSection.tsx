@@ -179,7 +179,7 @@ export default function ProfileTableSection() {
           {tableDeadlineLabel}
         </span>
         {tablePeriodClosed && (
-          <span className="ml-2 text-red-400/70">— Período encerrado</span>
+          <span className="ml-2 text-red-400/70">- Período encerrado</span>
         )}
       </p>
 

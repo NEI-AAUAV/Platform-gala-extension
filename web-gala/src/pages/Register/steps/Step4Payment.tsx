@@ -355,7 +355,7 @@ export default function Step4Payment({
       {!isComplete && (
         <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3">
           <p className="text-xs text-yellow-400/80">
-            Podes avançar sem enviar o comprovativo agora — poderás fazê-lo mais
+            Podes avançar sem enviar o comprovativo agora, poderás fazê-lo mais
             tarde no teu perfil, dentro do prazo indicado.
           </p>
         </div>

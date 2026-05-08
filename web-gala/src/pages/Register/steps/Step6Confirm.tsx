@@ -46,6 +46,7 @@ const getBusLabel = (bus: string) => {
 };
 
 const getSelectedTable = (tableId: string | null, tables: any[]) => {
+  if (!tableId || tableId === "none") return null;
   if (tableId === "new") return "Nova Mesa (A criar)";
   const tableObj = tables?.find((t) => String(t._id) === tableId);
   return tableObj?.name || `Mesa #${tableId}`;
@@ -199,22 +200,24 @@ export default function Step6Confirm({
         </div>
 
         {/* Table Summary */}
-        <div className="flex flex-col gap-3">
-          <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
-            Mesa Selecionada
-          </h3>
-          <div className="border-white/8 bg-white/4 flex items-center gap-4 rounded-xl border p-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-light-gold/10 text-light-gold">
-              <FontAwesomeIcon icon={faChair} />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-white/80">{selectedTable}</p>
-              <p className="text-[0.65rem] text-white/40">
-                {data.tableRole === "owner" ? "Head de Mesa" : "Membro"}
-              </p>
+        {selectedTable && (
+          <div className="flex flex-col gap-3">
+            <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
+              Mesa Selecionada
+            </h3>
+            <div className="border-white/8 bg-white/4 flex items-center gap-4 rounded-xl border p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-light-gold/10 text-light-gold">
+                <FontAwesomeIcon icon={faChair} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white/80">{selectedTable}</p>
+                <p className="text-[0.65rem] text-white/40">
+                  {data.tableRole === "owner" ? "Head de Mesa" : "Membro"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {renderCompanionsSummary()}
