@@ -12,6 +12,7 @@ from app.services.registration import RegistrationService
 from app.services.config import ConfigService
 from app.services.authentik_service import sync_email_based_registrations
 from app.utils import is_deadline_passed
+from app.core.logging import logger
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -131,6 +132,7 @@ async def update_registration_step(
         
         config = await ConfigService.get_config(db)
         if config.email_notifications.registration_confirmed:
+            logger.info("Queueing registration confirmation email for {}", user.email)
             background_tasks.add_task(
                 send_email,
                 user.email,
@@ -147,6 +149,8 @@ async def update_registration_step(
                 phased_payment=user.phased_payment,
                 companions=user.companions,
             )
+        else:
+            logger.info("Registration confirmation email disabled in config for {}", user.email)
 
     return user
 

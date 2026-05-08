@@ -179,6 +179,8 @@ async def invite_user(
     config = await ConfigService.get_config(db)
     if config.email_notifications.table_invite:
         table_name = table.name or f"Mesa {table.id}"
+        from app.core.logging import logger
+        logger.info("Queueing table invite email for {}", invited_user_email)
         background_tasks.add_task(
             send_email,
             invited_user_email,

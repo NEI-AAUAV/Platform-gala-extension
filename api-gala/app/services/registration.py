@@ -10,6 +10,34 @@ EXISTS = "$exists"
 
 class RegistrationService:
     @staticmethod
+    def _normalize_companions_payload(companions: Any) -> list:
+        if not isinstance(companions, list):
+            return []
+
+        normalized = []
+        for c in companions:
+            if not isinstance(c, dict):
+                continue
+            raw_dish = c.get("dish", c.get("meal"))
+            dish = None
+            if isinstance(raw_dish, str):
+                key = raw_dish.strip().upper()
+                if key in ("NOR", "NORMAL", "CARNE"):
+                    dish = "NOR"
+                elif key in ("VEG", "VEGETARIAN", "VEGETARIANO"):
+                    dish = "VEG"
+
+            normalized.append(
+                {
+                    "name": str(c.get("name", "")).strip(),
+                    "dish": dish,
+                    "allergies": str(c.get("allergies", "")).strip(),
+                    "email": str(c.get("email", "")).strip().lower() or None,
+                }
+            )
+        return normalized
+
+    @staticmethod
     async def get_user_registration(db: DBType, user_id: int) -> Optional[User]:
         collection = User.get_collection(db)
         user_dict = await collection.find_one({"_id": user_id})
@@ -157,13 +185,17 @@ class RegistrationService:
             if "nmec" in data:
                 update_data["nmec"] = data["nmec"]
             if "companions" in data:
-                update_data["companions"] = data["companions"]
+                update_data["companions"] = RegistrationService._normalize_companions_payload(
+                    data["companions"]
+                )
         elif step == 3:
             update_data["bus_option"] = BusOption(data.get("bus_option", "NONE"))
             update_data["meal_option"] = data.get("meal_option")
             update_data["food_allergies"] = data.get("food_allergies")
             if "companions" in data:
-                update_data["companions"] = data["companions"]
+                update_data["companions"] = RegistrationService._normalize_companions_payload(
+                    data["companions"]
+                )
         elif step == 4:
             if "payment_proof_url" in data:
                 update_data["payment_proof_url"] = data["payment_proof_url"]
@@ -190,7 +222,11 @@ class RegistrationService:
         await collection.update_one({"_id": user_id}, {"$set": update_data})
 
         if step in (2, 3) and "companions" in data:
-            await RegistrationService._sync_companions_in_table(db, user_id, data["companions"])
+            await RegistrationService._sync_companions_in_table(
+                db,
+                user_id,
+                update_data.get("companions", []),
+            )
 
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)

@@ -5,6 +5,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import useLoginLink from "@/hooks/useLoginLink";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { useWizardState, BusOption } from "@/hooks/useWizardState";
+import type { Companion } from "@/hooks/useWizardState";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import { formatDateTimePT } from "@/utils/formatDate";
 import GalaService from "@/services/GalaService";
@@ -28,6 +29,28 @@ const BUS_OPTION_REVERSE: Record<BusOption, string> = {
   one_way: "ONE_WAY",
   none: "NONE",
 };
+
+function normalizeCompanionsFromApi(raw: unknown): Companion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((c) => {
+    const item = c as Record<string, unknown>;
+    return {
+      name: String(item.name ?? ""),
+      email: item.email ? String(item.email) : "",
+      meal: String(item.meal ?? item.dish ?? ""),
+      allergies: String(item.allergies ?? ""),
+    };
+  });
+}
+
+function companionsToApi(companions: Companion[]) {
+  return companions.map((c) => ({
+    name: c.name,
+    email: c.email || undefined,
+    dish: c.meal || null,
+    allergies: c.allergies || "",
+  }));
+}
 
 export default function Register() {
   const { sessionLoading, sub } = useUserStore();
@@ -70,8 +93,9 @@ export default function Register() {
               ((status as unknown as Record<string, unknown>)
                 .phased_payment as boolean) ?? false,
             companions:
-              ((status as unknown as Record<string, unknown>)
-                .companions as []) || [],
+              normalizeCompanionsFromApi(
+                (status as unknown as Record<string, unknown>).companions,
+              ),
             currentStep: status.registration_step || 1,
           });
         }
@@ -127,14 +151,15 @@ export default function Register() {
       await GalaService.registration.updateStep(2, {
         nmec: Number(data.nmec),
         matriculation: data.year,
-        companions: data.companions,
+        phone: data.phone?.trim() || "",
+        companions: companionsToApi(data.companions),
       });
     } else if (currentStep === 3) {
       await GalaService.registration.updateStep(3, {
         bus_option: BUS_OPTION_REVERSE[data.bus] ?? "NONE",
         meal_option: data.meal,
         food_allergies: data.allergies || "",
-        companions: data.companions,
+        companions: companionsToApi(data.companions),
       });
     } else if (currentStep === 4) {
       await GalaService.registration.updateStep(4, {

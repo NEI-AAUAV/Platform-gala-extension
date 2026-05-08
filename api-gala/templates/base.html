@@ -5,53 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}{% endblock %} — Jantar de Gala</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background-color:#0a0a0a;font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#ffffff;padding:32px 16px}
-    .w{max-width:600px;margin:0 auto}
-    .hdr{padding-bottom:24px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:32px;display:flex;align-items:center;gap:12px}
-    .hdr img{height:32px;width:auto}
-    .hdr-txt{font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.55)}
-    .band{background:linear-gradient(135deg,rgba(197,134,118,.14) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.18);border-left:3px solid #C58676;padding:20px 24px;margin-bottom:28px}
-    .band-label{font-size:8px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:8px}
-    .band.green{background:linear-gradient(135deg,rgba(52,211,153,.12) 0%,rgba(16,185,129,.06) 100%);border:1px solid rgba(52,211,153,.2);border-left:3px solid #34d399}
-    .band.green .band-label{color:rgba(52,211,153,.6)}
-    .band.green .band-title{color:#34d399}
-    .band.accepted{border-left:3px solid #F7BBAC}
-    .band-title{font-size:22px;font-weight:700;color:#F7BBAC;line-height:1.25}
-    .band-sub{margin-top:6px;font-size:12px;color:rgba(255,255,255,.4);font-weight:400}
-    .sec{margin-bottom:22px}
-    .sec-label{font-size:8px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.45);margin-bottom:10px}
-    .card{border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)}
-    .row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.05);gap:16px}
+    body{background:#0a0a0a;font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#ffffff;padding:24px 12px}
+    .w{max-width:640px;margin:0 auto;background:#111111;border:1px solid rgba(247,187,172,.18);border-radius:14px;padding:24px}
+    .hdr{padding-bottom:18px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:24px}
+    .brand{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#F7BBAC}
+    .brand strong{color:#ffffff;font-weight:800;letter-spacing:0}
+    .band{background:linear-gradient(140deg,rgba(197,134,118,.16) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.25);border-left:5px solid #C58676;border-radius:10px;padding:18px 18px;margin-bottom:22px}
+    .band-label{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#F7BBAC;margin-bottom:6px}
+    .band-title{font-size:22px;font-weight:800;color:#F7BBAC;line-height:1.2}
+    .band-sub{margin-top:8px;font-size:16px;line-height:1.55;color:rgba(255,255,255,.82)}
+    .band.green{background:linear-gradient(140deg,rgba(25,135,84,.20) 0%,rgba(25,135,84,.08) 100%);border:1px solid rgba(25,135,84,.35);border-left:5px solid #198754}
+    .band.green .band-label{color:#86efac}
+    .band.green .band-title{color:#86efac}
+    .sec{margin-bottom:18px}
+    .sec-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F7BBAC;margin-bottom:8px}
+    .card{border:1px solid rgba(247,187,172,.15);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
+    .row{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);gap:12px}
     .row:last-child{border-bottom:none}
-    .rl{font-size:11px;color:rgba(255,255,255,.35);white-space:nowrap}
-    .rv{font-size:11px;font-weight:600;color:rgba(255,255,255,.75);text-align:right}
+    .rl{font-size:14px;color:rgba(255,255,255,.62);white-space:nowrap}
+    .rv{font-size:14px;font-weight:600;color:#ffffff;text-align:right}
     .rv.g{color:#F7BBAC}
-    .rv.green{color:#34d399}
-    .comp-card{border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);padding:12px 16px;margin-bottom:8px}
-    .comp-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:3px}
-    .comp-meta{font-size:10px;color:rgba(255,255,255,.35)}
-    hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:28px 0}
-    .notice{font-size:11px;color:rgba(255,255,255,.3);line-height:1.7;font-style:italic;padding:0 4px}
-    .ftr{margin-top:36px;padding-top:24px;border-top:1px solid rgba(247,187,172,.1)}
-    .ftr-grid{display:table;width:100%;margin-bottom:20px}
-    .ftr-col{display:table-cell;vertical-align:top;width:33.33%;padding-right:14px}
+    .rv.green{color:#86efac}
+    .comp-card{border:1px solid rgba(247,187,172,.14);background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+    .comp-name{font-size:14px;font-weight:600;color:#ffffff;margin-bottom:2px}
+    .comp-meta{font-size:12px;color:rgba(255,255,255,.65)}
+    hr{border:none;border-top:1px solid rgba(247,187,172,.15);margin:22px 0}
+    .notice{font-size:13px;color:rgba(255,255,255,.75);line-height:1.7;font-style:italic}
+    a{color:#F7BBAC;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .ftr{margin-top:28px;padding-top:18px;border-top:1px solid rgba(247,187,172,.15)}
+    .ftr-grid{display:table;width:100%;margin-bottom:16px}
+    .ftr-col{display:table-cell;vertical-align:top;width:33.33%;padding-right:10px}
     .ftr-col:last-child{padding-right:0}
-    .ftr-col-title{font-size:8px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(247,187,172,.4);margin-bottom:10px}
-    .ftr-link{display:block;font-size:10px;color:rgba(255,255,255,.28);text-decoration:none;margin-bottom:6px}
-    .ftr-bottom{border-top:1px solid rgba(255,255,255,.05);padding-top:14px;display:flex;align-items:center;justify-content:space-between}
-    .ftr-copy{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.18)}
+    .ftr-col-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F7BBAC;margin-bottom:8px}
+    .ftr-link{display:block;font-size:14px;color:rgba(255,255,255,.85);text-decoration:none;margin-bottom:6px}
+    .ftr-bottom{border-top:1px solid rgba(247,187,172,.12);padding-top:12px}
+    .ftr-copy{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.58);margin-bottom:4px}
     {% block style %}{% endblock %}
   </style>
 </head>
-<body>
-<div class="w">
+<body style="margin:0;padding:24px 12px;background:#0a0a0a;color:#ffffff;">
+<div class="w" style="max-width:640px;margin:0 auto;background:#111111;border:1px solid rgba(247,187,172,.18);border-radius:14px;padding:24px;">
 
   <!-- Header -->
   <div class="hdr">
-    <img src="{{PUBLIC_URL}}/gala/nei-logo-horizontal.png" alt="NEI-AAUAv"/>
-    <span class="hdr-txt">Jantar de Gala</span>
+    <span class="brand"><strong>NEI-AAUAv</strong>  Jantar de Gala</span>
   </div>
 
   {% block content %}{% endblock %}

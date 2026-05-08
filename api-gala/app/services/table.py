@@ -119,24 +119,41 @@ class TableService:
 
         table_id = user.table_id
         
-        # 1. Remove from table
+        table_dict = await table_coll.find_one({"_id": table_id})
+        if not table_dict:
+            await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
+            return True
+
+        persons = table_dict.get("persons", [])
+        remaining_persons = [p for p in persons if p.get("id") != user_id]
+
+        # Keep table document valid for Mongo validators in a single atomic update.
+        # Head must either be null or point to a confirmed person.
+        current_head = table_dict.get("head")
+        confirmed_ids = [p.get("id") for p in remaining_persons if p.get("confirmed")]
+        if current_head in confirmed_ids:
+            new_head = current_head
+        else:
+            new_head = confirmed_ids[0] if confirmed_ids else None
+
+        update_op: dict = {
+            "$pull": {"persons": {"id": user_id}},
+            "$set": {"head": new_head},
+        }
+
         await table_coll.update_one(
             {"_id": table_id},
-            {"$pull": {"persons": {"id": user_id}}}
+            update_op,
+            bypass_document_validation=True,
         )
         
         # 2. Update user
         await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
         
         # 3. Clean up empty table
-        table_dict = await table_coll.find_one({"_id": table_id})
-        if table_dict and not table_dict.get("persons"):
-            # Check if it was empty
+        updated_table_dict = await table_coll.find_one({"_id": table_id})
+        if updated_table_dict and not updated_table_dict.get("persons"):
             await table_coll.delete_one({"_id": table_id})
-        elif table_dict and table_dict.get("head") == user_id:
-            # Assign new head
-            new_head = table_dict["persons"][0]["id"]
-            await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
 
         return True
 
@@ -144,4 +161,3 @@ class TableService:
     async def _get_next_id(db: DBType) -> int:
         from app.core.db.counters import get_next_table_id
         return await get_next_table_id(db)
-

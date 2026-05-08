@@ -15,7 +15,8 @@ class ExportService:
         
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=[
-            "id", "nmec", "name", "email", "phone", "matriculation", "bus_option", 
+            "record_type", "host_id", "companion_index",
+            "id", "nmec", "name", "email", "phone", "matriculation", "bus_option",
             "meal_option", "food_allergies", "phased_payment", "has_payed", "table_id"
         ])
         writer.writeheader()
@@ -23,6 +24,9 @@ class ExportService:
         for user_dict in users:
             user = User.parse_obj(user_dict)
             writer.writerow({
+                "record_type": "registration",
+                "host_id": user.id,
+                "companion_index": "",
                 "id": user.id,
                 "nmec": user.nmec,
                 "name": user.name,
@@ -36,6 +40,24 @@ class ExportService:
                 "has_payed": user.has_payed,
                 "table_id": user.table_id
             })
+            for i, companion in enumerate(user.companions, start=1):
+                writer.writerow({
+                    "record_type": "companion",
+                    "host_id": user.id,
+                    "companion_index": i,
+                    "id": "",
+                    "nmec": "",
+                    "name": companion.name,
+                    "email": companion.email,
+                    "phone": "",
+                    "matriculation": "",
+                    "bus_option": user.bus_option,
+                    "meal_option": companion.dish,
+                    "food_allergies": companion.allergies,
+                    "phased_payment": user.phased_payment,
+                    "has_payed": user.has_payed,
+                    "table_id": user.table_id
+                })
             
         return output.getvalue()
 

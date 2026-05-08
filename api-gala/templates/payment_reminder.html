@@ -1,24 +1,26 @@
-<!doctype html>
-<html lang="pt">
-  <head>
-    <meta charset="utf-8">
-    <title>Lembrete de Pagamento — Jantar de Gala</title>
-  </head>
-  <body style="font-family: Arial, sans-serif; color: #111827;">
-    <p>Olá {{ name }},</p>
-    <p>Ainda não temos o teu pagamento do Jantar de Gala confirmado.</p>
+{% extends "base.html" %}
 
-    {% if phased_payment %}
-      <p><strong>Prazos:</strong></p>
-      <ul>
-        <li>Fase 1: {{ phase1_deadline or payment_deadline or "a anunciar" }}</li>
-        <li>Fase 2: {{ phase2_deadline or payment_deadline or "a anunciar" }}</li>
-      </ul>
-    {% else %}
-      <p><strong>Prazo:</strong> {{ payment_deadline or "a anunciar" }}</p>
-    {% endif %}
+{% block title %}Lembrete de Pagamento{% endblock %}
 
-    <p>Envia o comprovativo no teu perfil para que a inscrição possa ser validada.</p>
-    <p>Até já,<br />NEI-AAUAv</p>
-  </body>
-</html>
+{% block content %}
+  <div class="band">
+    <p class="band-label">Pagamento</p>
+    <p class="band-title">Lembrete de pagamento</p>
+    <p class="band-sub">Ola, {{name}}. Ainda nao temos o teu pagamento confirmado.</p>
+  </div>
+
+  <div class="sec">
+    <p class="sec-label">Prazos</p>
+    <div class="card">
+      {% if phased_payment %}
+      <div class="row"><span class="rl">Fase 1</span><span class="rv">{{phase1_deadline or payment_deadline or "A anunciar"}}</span></div>
+      <div class="row"><span class="rl">Fase 2</span><span class="rv">{{phase2_deadline or payment_deadline or "A anunciar"}}</span></div>
+      {% else %}
+      <div class="row"><span class="rl">Prazo</span><span class="rv">{{payment_deadline or "A anunciar"}}</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr/>
+  <p class="notice">Envia o comprovativo no teu perfil para validarmos a inscricao.</p>
+{% endblock %}

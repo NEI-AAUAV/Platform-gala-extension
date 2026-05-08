@@ -11,6 +11,7 @@ from app.services.table import TableService
 from app.services.storage import storage_client
 from app.services.config import ConfigService
 from app.api.table._utils import fetch_table, table_head_permissions
+from app.core.logging import logger
 
 
 router = APIRouter(tags=["User Tables"])
@@ -64,6 +65,7 @@ async def join_table(
         raise HTTPException(status_code=400, detail=str(e))
 
     table_name = table.name or f"Mesa {table.id}"
+    logger.info("Queueing table join email for {}", auth.email)
     background_tasks.add_task(
         send_email,
         auth.email,

@@ -1,29 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-PT">
-<head>
-    <meta charset="utf-8">
-    <title>Comprovativo de Pagamento Rejeitado</title>
-</head>
-<body style="font-family: sans-serif; color: #333; line-height: 1.6;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #d4af37;">Comprovativo de Pagamento Rejeitado</h2>
-        <p>Olá {{ name }},</p>
-        <p>O teu comprovativo de pagamento referente à Fase {{ phase }} do Jantar de Gala de Engenharia Informática foi <strong>rejeitado</strong>.</p>
-        <p>Por favor, acede novamente à plataforma e envia um comprovativo válido para que possamos validar a tua inscrição.</p>
-        
-        <p style="text-align: center; margin-top: 30px;">
-            <a href="{{ PUBLIC_URL }}/gala/reserve" style="background-color: #d4af37; color: #000; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Enviar Novo Comprovativo
-            </a>
-        </p>
+{% extends "base.html" %}
 
-        <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
-            Se tiveres alguma dúvida, contacta-nos respondendo a este email.
-        </p>
-        <p style="font-size: 0.9em; color: #666;">
-            A Comissão de Gala<br>
-            NEI-AAUAV
-        </p>
+{% block title %}Comprovativo Rejeitado{% endblock %}
+
+{% block content %}
+  <div class="band">
+    <p class="band-label">Pagamento</p>
+    <p class="band-title">Comprovativo rejeitado</p>
+    <p class="band-sub">Ola, {{name}}. O comprovativo da fase {{phase}} foi rejeitado.</p>
+  </div>
+
+  <div class="sec">
+    <p class="sec-label">Proximos Passos</p>
+    <div class="card">
+      <div class="row"><span class="rl">1</span><span class="rv">Verifica se o ficheiro esta legivel</span></div>
+      <div class="row"><span class="rl">2</span><span class="rv">Submete novamente o comprovativo na plataforma</span></div>
+      <div class="row"><span class="rl">3</span><span class="rv">Se precisares, responde a este email</span></div>
     </div>
-</body>
-</html>
+  </div>
+
+  <hr/>
+  <p class="notice">Assim que voltares a submeter, a comissao reavalia o pagamento.</p>
+{% endblock %}
