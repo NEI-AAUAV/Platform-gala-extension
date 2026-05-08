@@ -12,7 +12,6 @@ class ConfigService:
         if not config_dict:
             # Create default config if not exists
             default_config = GlobalConfig(
-                event_time="20:00 – 02:00",
                 prices={
                     "total_price": 35.0,
                     "phased_payment_enabled": True,

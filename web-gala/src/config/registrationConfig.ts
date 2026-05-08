@@ -13,7 +13,6 @@ export interface PaymentContact {
 }
 
 export interface RegistrationConfig {
-  eventTime: string;
   eventLocation: string;
   eventPrice: number;
   eventIncludes: string[];
@@ -38,7 +37,6 @@ export interface RegistrationConfig {
 }
 
 export const defaultConfig: RegistrationConfig = {
-  eventTime: "20:00 – 02:00",
   eventLocation: "A anunciar, Aveiro",
   eventPrice: 38,
   eventIncludes: [

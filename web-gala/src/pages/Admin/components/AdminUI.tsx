@@ -185,7 +185,7 @@ export function StringListEditor({
   return (
     <div className="flex flex-col gap-2">
       {items.map((item, i) => (
-        <div key={`${item}-${i}`} className="flex gap-2">
+        <div key={i} className="flex gap-2">
           <input
             type="text"
             value={item}

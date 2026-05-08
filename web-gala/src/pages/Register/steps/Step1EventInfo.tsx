@@ -1,7 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendarDay,
-  faClock,
   faLocationDot,
   faTag,
   faCheck,
@@ -70,7 +69,6 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
               label="Data"
               value={time?.galaStart ? formatDateTimePT(time.galaStart) : "A anunciar"}
             />
-            <InfoCard icon={faClock} label="Horário" value={config.eventTime} />
             <InfoCard
               icon={faLocationDot}
               label="Local"

@@ -137,10 +137,9 @@ function PaymentContactsEditor({
             ),
           );
         };
-        const rowKey = `${c.name}-${c.phone}-${i}`;
         return (
           <div
-            key={rowKey}
+            key={i}
             className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2"
           >
             {(["year", "phone", "name"] as const).map((field) => (
@@ -323,13 +322,6 @@ export default function RegistrationAdmin() {
         <div ref={ref("event")}>
           <Section title="2. Informações do Evento">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Horário">
-                <TextInput
-                  value={config.eventTime}
-                  onChange={(v) => save({ eventTime: v })}
-                  placeholder="Ex: 20:00 – 02:00"
-                />
-              </Field>
               <Field label="Local">
                 <TextInput
                   value={config.eventLocation}

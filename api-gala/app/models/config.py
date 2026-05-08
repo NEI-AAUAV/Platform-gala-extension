@@ -108,7 +108,6 @@ class GlobalConfig(BaseDocument):
     event_name: str = "Gala Dinner"
     event_location: str = ""
     event_description: str = ""
-    event_time: str = ""
     rules: List[str] = []
     items_included: List[str] = []
 
