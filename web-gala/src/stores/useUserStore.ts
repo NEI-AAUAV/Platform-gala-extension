@@ -62,6 +62,9 @@ const useUserStore = create<UserState>((set) => ({
   },
 
   logout: () => {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("gala-wizard-state"))
+      .forEach((k) => localStorage.removeItem(k));
     set(() => ({
       sessionLoading: false,
       image: undefined,

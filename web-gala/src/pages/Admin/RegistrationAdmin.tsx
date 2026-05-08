@@ -219,18 +219,27 @@ function SectionIndex({
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export default function RegistrationAdmin() {
-  const { config, updateConfig, resetConfig } = useRegistrationConfig();
+  const { config, updateConfig, resetConfig, saving } = useRegistrationConfig();
   const { emailConfig, updateEmails } = useHomepageConfig();
+  const toast = useAppToast();
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("dates");
 
   // Refs for each section div
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const saveAsync = async (promise: Promise<void>) => {
+    try {
+      await promise;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      toast.error("Erro ao guardar configuração.");
+    }
+  };
+
   const save = (updates: Parameters<typeof updateConfig>[0]) => {
-    updateConfig(updates);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    saveAsync(updateConfig(updates));
   };
 
   // Navigate to section by scrolling parent container
@@ -288,19 +297,21 @@ export default function RegistrationAdmin() {
             As alterações são guardadas automaticamente.
           </p>
           <div className="flex items-center gap-3">
-            {saved && (
+            {saving && (
+              <span className="text-xs font-semibold text-white/40">
+                A guardar...
+              </span>
+            )}
+            {!saving && saved && (
               <span className="text-xs font-semibold text-dark-gold/80">
                 ✓ Guardado
               </span>
             )}
             <button
               type="button"
-              onClick={() => {
-                resetConfig();
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2000);
-              }}
-              className="border-white/15 flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs text-white/40 transition hover:border-white/30 hover:text-white/70"
+              disabled={saving}
+              onClick={() => saveAsync(resetConfig())}
+              className="border-white/15 flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs text-white/40 transition hover:border-white/30 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <FontAwesomeIcon icon={faRotateLeft} className="text-[0.6rem]" />{" "}
               Repor defaults
@@ -536,47 +547,27 @@ export default function RegistrationAdmin() {
             <div className="flex flex-col gap-4">
               <Toggle
                 enabled={emailConfig.registration_confirmed}
-                onChange={(v) => {
-                  updateEmails({ registration_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ registration_confirmed: v }))}
                 label="Confirmação de Inscrição (Submissão inicial)"
               />
               <Toggle
                 enabled={emailConfig.payment_confirmed}
-                onChange={(v) => {
-                  updateEmails({ payment_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ payment_confirmed: v }))}
                 label="Confirmação de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.payment_rejected}
-                onChange={(v) => {
-                  updateEmails({ payment_rejected: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ payment_rejected: v }))}
                 label="Rejeição de Comprovativo de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.table_invite}
-                onChange={(v) => {
-                  updateEmails({ table_invite: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ table_invite: v }))}
                 label="Convite para Mesa"
               />
               <Toggle
                 enabled={emailConfig.table_confirmed}
-                onChange={(v) => {
-                  updateEmails({ table_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ table_confirmed: v }))}
                 label="Confirmação de Entrada em Mesa"
               />
             </div>

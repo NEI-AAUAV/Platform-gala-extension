@@ -94,7 +94,7 @@ function mapToBackendPatch(
 }
 
 export function useRegistrationConfig() {
-  const { raw, loading, fetch, save } = useConfigStore();
+  const { raw, loading, saving, fetch, save } = useConfigStore();
 
   useEffect(() => {
     fetch();
@@ -106,12 +106,12 @@ export function useRegistrationConfig() {
 
   const updateConfig = (updates: Partial<RegistrationConfig>) => {
     const next = { ...config, ...updates };
-    save(mapToBackendPatch(next, raw ?? {}));
+    return save(mapToBackendPatch(next, raw ?? {}));
   };
 
   const resetConfig = () => {
-    save(mapToBackendPatch(defaultConfig, raw ?? {}));
+    return save(mapToBackendPatch(defaultConfig, raw ?? {}));
   };
 
-  return { config, updateConfig, resetConfig, loading };
+  return { config, updateConfig, resetConfig, loading, saving };
 }
