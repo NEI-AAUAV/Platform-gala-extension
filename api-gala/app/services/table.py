@@ -146,6 +146,65 @@ class TableService:
         return True
 
     @staticmethod
+    async def join_via_invite(db: DBType, user: User, target_id: int) -> None:
+        if user.table_id:
+            await TableService.leave_table(db, user.id)
+        table_doc = await Table.get_collection(db).find_one({"_id": target_id})
+        if not (table_doc and user.id in (table_doc.get("invites") or [])):
+            raise ValueError("Não tens convite para essa mesa.")
+        person = TablePerson(
+            id=user.id,
+            allergies=user.food_allergies or "",
+            dish=DishType.NORMAL,
+            confirmed=True,
+            companions=user.companions,
+        )
+        await Table.get_collection(db).update_one(
+            {"_id": target_id},
+            {"$push": {"persons": person.dict()}, "$pull": {"invites": user.id}},
+        )
+        await User.get_collection(db).update_one(
+            {"_id": user.id}, {"$set": {"table_id": target_id}}
+        )
+
+    @staticmethod
+    async def sync_companions(db: DBType, user_id: int, companions: list) -> None:
+        user_dict = await User.get_collection(db).find_one({"_id": user_id})
+        if not user_dict or not user_dict.get("table_id"):
+            return
+        table_id = user_dict["table_id"]
+        await Table.get_collection(db).update_one(
+            {"_id": table_id, "persons.id": user_id},
+            {"$set": {"persons.$.companions": companions}},
+        )
+
+    @staticmethod
+    async def create_empty_table(db: DBType, name: str, seats: int) -> Table:
+        new_id = await TableService._get_next_id(db)
+        table = Table(
+            id=new_id,
+            name=name,
+            photo_url=None,
+            invite_token=generate_invite_token(),
+            head=None,
+            seats=seats,
+            persons=[],
+        )
+        await Table.get_collection(db).insert_one(table.dict(by_alias=True))
+        return table
+
+    @staticmethod
+    async def delete_table(db: DBType, table_id: int) -> bool:
+        collection = Table.get_collection(db)
+        if not await collection.find_one({"_id": table_id}):
+            return False
+        await User.get_collection(db).update_many(
+            {"table_id": table_id}, {"$unset": {"table_id": ""}}
+        )
+        await collection.delete_one({"_id": table_id})
+        return True
+
+    @staticmethod
     async def _get_next_id(db: DBType) -> int:
         from app.core.db.counters import get_next_table_id
         return await get_next_table_id(db)

@@ -4,6 +4,7 @@ from app.core.db.types import DBType
 from app.models.user import User, BusOption
 from app.services.config import ConfigService
 from app.services.storage import storage_client
+from app.services.table import TableService
 from app.utils import is_deadline_passed
 
 EXISTS = "$exists"
@@ -122,48 +123,19 @@ class RegistrationService:
                 raise ValueError("O prazo para escolha de mesa já passou.")
 
     @staticmethod
-    async def _join_table_via_invite(db: DBType, user: User, target_id: int, user_id: int) -> None:
-        from app.models.table import Table, TablePerson, DishType
-        if user.table_id:
-            from app.services.table import TableService
-            await TableService.leave_table(db, user_id)
-        table_doc = await Table.get_collection(db).find_one({"_id": target_id})
-        if table_doc and user_id in (table_doc.get("invites") or []):
-            person = TablePerson(
-                id=user_id,
-                allergies=user.food_allergies or "",
-                dish=DishType.NORMAL,
-                confirmed=True,
-                companions=user.companions,
-            )
-            await Table.get_collection(db).update_one(
-                {"_id": target_id},
-                {
-                    "$push": {"persons": person.dict()},
-                    "$pull": {"invites": user_id},
-                },
-            )
-            await User.get_collection(db).update_one(
-                {"_id": user_id}, {"$set": {"table_id": target_id}}
-            )
-        else:
-            raise ValueError("Não tens convite para essa mesa.")
-
-    @staticmethod
     async def _handle_step_5(db: DBType, user: User, user_id: int, data: Dict[str, Any]) -> None:
         if user.is_registered:
             await RegistrationService._check_table_deadline(db)
 
         table_id = data.get("table_id")
         table_name = data.get("table_name") or f"Mesa de {user.name}"
-        from app.services.table import TableService
 
         if table_id == "new" and not user.table_id:
             await TableService.create_table(db, user_id, table_name)
         elif table_id and table_id not in ("none", "null", "invited"):
             target_id = int(table_id)
             if user.table_id != target_id:
-                await RegistrationService._join_table_via_invite(db, user, target_id, user_id)
+                await TableService.join_via_invite(db, user, target_id)
         elif table_id in ("none", "null") and user.table_id:
             await TableService.leave_table(db, user_id)
 
@@ -208,22 +180,10 @@ class RegistrationService:
         await collection.update_one({"_id": user_id}, {"$set": update_data})
 
         if step in (2, 3) and "companions" in data:
-            await RegistrationService._sync_companions_in_table(db, user_id, data["companions"])
+            await TableService.sync_companions(db, user_id, data["companions"])
 
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)
-
-    @staticmethod
-    async def _sync_companions_in_table(db: DBType, user_id: int, companions: list) -> None:
-        from app.models.table import Table
-        user_dict = await User.get_collection(db).find_one({"_id": user_id})
-        if not user_dict or not user_dict.get("table_id"):
-            return
-        table_id = user_dict["table_id"]
-        await Table.get_collection(db).update_one(
-            {"_id": table_id, "persons.id": user_id},
-            {"$set": {"persons.$.companions": companions}},
-        )
 
     @staticmethod
     async def upload_payment_proof(db: DBType, user_id: int, file_data: bytes, content_type: str, phase: int = 1) -> str:
