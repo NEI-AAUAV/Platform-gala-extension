@@ -12,6 +12,7 @@ import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
+import { formatDatePT, formatTimePT } from "@/utils/formatDate";
 import homeBg from "@/assets/home-background.jpg";
 
 function EventPill({
@@ -186,6 +187,7 @@ export default function HeroSection() {
   const loginLink = useLoginLink();
   const { state, isLoading, mutate: galaUserRefetch } = useSessionUser();
   const { config } = useRegistrationConfig();
+  const { time } = useTime();
 
   useEffect(() => {
     if (!isLoading) galaUserRefetch();
@@ -250,10 +252,10 @@ export default function HeroSection() {
         >
           <EventPill
             icon={faCalendarDay}
-            text={config.eventDate || "Em breve"}
+            text={time?.galaStart ? formatDatePT(time.galaStart) : "Em breve"}
           />
           <span className="bg-white/15 h-3 w-px" />
-          <EventPill icon={faClock} text={config.eventTime || "—"} />
+          <EventPill icon={faClock} text={formatTimePT(time?.galaStart ?? null)} />
           <span className="bg-white/15 h-3 w-px" />
           <EventPill icon={faLocationDot} text={config.eventLocation || "—"} />
         </motion.div>

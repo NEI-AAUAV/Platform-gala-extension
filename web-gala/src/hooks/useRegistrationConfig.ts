@@ -16,7 +16,6 @@ function mapFromBackend(
   const contacts = (prices.contacts as Array<Record<string, string>>) ?? [];
 
   return {
-    eventDate: (backend.event_date as string) || "",
     eventTime: (backend.event_time as string) || "",
     eventLocation: (backend.event_location as string) || "",
     eventPrice: (prices.total_price as number) || 0,
@@ -62,7 +61,6 @@ function mapToBackendPatch(
   return {
     ...existing,
     event_location: config.eventLocation,
-    event_date: config.eventDate,
     event_time: config.eventTime,
     rules: config.eventRules,
     items_included: config.eventIncludes,

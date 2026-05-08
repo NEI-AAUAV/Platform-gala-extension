@@ -68,7 +68,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             <InfoCard
               icon={faCalendarDay}
               label="Data"
-              value={config.eventDate}
+              value={time?.galaStart ? formatDateTimePT(time.galaStart) : "A anunciar"}
             />
             <InfoCard icon={faClock} label="Horário" value={config.eventTime} />
             <InfoCard

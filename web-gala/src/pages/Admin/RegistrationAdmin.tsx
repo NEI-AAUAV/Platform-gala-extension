@@ -26,6 +26,7 @@ import {
   StringListEditor,
   INPUT_CLS,
 } from "./components/AdminUI";
+import { utcIsoToLocalInput, localInputToUtcIso } from "@/utils/datetime";
 
 // ─── Types (local) — TimeSlots and User are global ambient types from .d.ts ──
 
@@ -322,13 +323,6 @@ export default function RegistrationAdmin() {
         <div ref={ref("event")}>
           <Section title="2. Informações do Evento">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Data do evento">
-                <TextInput
-                  value={config.eventDate}
-                  onChange={(v) => save({ eventDate: v })}
-                  placeholder="Ex: 14 de junho de 2025"
-                />
-              </Field>
               <Field label="Horário">
                 <TextInput
                   value={config.eventTime}
@@ -638,8 +632,8 @@ function SystemDatesEditor() {
     if (!time) return;
     const initial: Partial<Record<keyof TimeSlots, string>> = {};
     for (const [field] of SYSTEM_DATE_FIELDS) {
-      initial[field] =
-        (time as unknown as Record<string, string>)[field]?.slice(0, 16) ?? "";
+      const iso = (time as unknown as Record<string, string>)[field];
+      initial[field] = iso ? utcIsoToLocalInput(iso) : "";
     }
     setEdits(initial);
     setDirty(false);
@@ -653,7 +647,10 @@ function SystemDatesEditor() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await GalaService.time.editTimeSlots(edits);
+      const utcEdits = Object.fromEntries(
+        Object.entries(edits).map(([k, v]) => [k, v ? localInputToUtcIso(v) : v]),
+      );
+      await GalaService.time.editTimeSlots(utcEdits);
       setDirty(false);
       toast.success("Datas guardadas.");
     } catch {

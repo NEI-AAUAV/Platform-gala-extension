@@ -15,17 +15,20 @@ type TimeExtended = TimeSlots & {
   galaStatus: number;
 };
 
-const getTimeStatus = (startTime: string, endTime: string) => {
-  const openDate = new Date(startTime);
-  const closeDate = new Date(endTime);
-  const currentDate = new Date();
-  currentDate.setHours(currentDate.getHours() - 1);
-  if (currentDate < openDate) {
-    return TimeStatus.OPENING;
-  }
-  if (currentDate >= openDate && currentDate <= closeDate) {
-    return TimeStatus.OPEN;
-  }
+const toUtc = (iso: string | null): Date | null => {
+  if (!iso) return null;
+  const utcIso =
+    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  return new Date(utcIso);
+};
+
+const getTimeStatus = (startTime: string | null, endTime: string | null) => {
+  const openDate = toUtc(startTime);
+  const closeDate = toUtc(endTime);
+  if (!openDate || !closeDate) return TimeStatus.CLOSED;
+  const now = new Date();
+  if (now < openDate) return TimeStatus.OPENING;
+  if (now >= openDate && now <= closeDate) return TimeStatus.OPEN;
   return TimeStatus.CLOSED;
 };
 

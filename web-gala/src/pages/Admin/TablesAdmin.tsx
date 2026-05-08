@@ -27,6 +27,7 @@ import {
   DateTimeInput,
   Section,
 } from "./components/AdminUI";
+import { utcIsoToLocalInput, localInputToUtcIso } from "@/utils/datetime";
 
 // ─── Period control ───────────────────────────────────────────────────────────
 
@@ -40,8 +41,8 @@ function PeriodEditor() {
 
   useEffect(() => {
     if (!time) return;
-    setOpeningTime(time.tablesStart?.slice(0, 16) ?? "");
-    setClosingTime(time.tablesEnd?.slice(0, 16) ?? "");
+    setOpeningTime(time.tablesStart ? utcIsoToLocalInput(time.tablesStart) : "");
+    setClosingTime(time.tablesEnd ? utcIsoToLocalInput(time.tablesEnd) : "");
     setDirty(false);
   }, [time]);
 
@@ -57,8 +58,8 @@ function PeriodEditor() {
     setSaving(true);
     try {
       await GalaService.time.editTimeSlots({
-        tablesStart: openingTime,
-        tablesEnd: closingTime,
+        tablesStart: openingTime ? localInputToUtcIso(openingTime) : undefined,
+        tablesEnd: closingTime ? localInputToUtcIso(closingTime) : undefined,
       });
       setDirty(false);
       toast.success("Período guardado.");
