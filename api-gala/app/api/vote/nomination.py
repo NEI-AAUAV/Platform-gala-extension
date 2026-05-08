@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, Security, Query
 from loguru import logger
 from pydantic import BaseModel
@@ -60,7 +60,7 @@ async def get_nomination_suggestions(
     q: Annotated[str, Query(..., min_length=2)],
     db: DatabaseDep,
     auth: Annotated[AuthData, Security(api_nei_auth)],
-    category_id: Optional[int] = None, 
+    category_id: Annotated[int, Query(...)],
 ):
     """
     Returns fuzzy-matched name suggestions for nominations.

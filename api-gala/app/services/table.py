@@ -15,6 +15,8 @@ class TableService:
         
         # 1. Check if user already in table
         user_dict = await user_coll.find_one({"_id": user_id})
+        if not user_dict:
+            raise ValueError("User must complete registration before creating a table.")
         user = User.parse_obj(user_dict)
         if user.table_id:
             raise ValueError("You are already in a table.")
@@ -61,6 +63,8 @@ class TableService:
         user_coll = User.get_collection(db)
         
         user_dict = await user_coll.find_one({"_id": user_id})
+        if not user_dict:
+            raise ValueError("User must complete registration before joining a table.")
         user = User.parse_obj(user_dict)
         if user.table_id:
             raise ValueError("You are already in a table.")
@@ -81,7 +85,9 @@ class TableService:
             raise ValueError("Table not found or invalid invite token.")
             
         table = Table.parse_obj(table_dict)
-        if len(table.persons) >= table.seats:
+        occupied = sum(1 + len(p.companions) for p in table.persons)
+        needed = 1 + len(user.companions)
+        if occupied + needed > table.seats:
             raise ValueError("Table is full.")
 
         person = TablePerson(
@@ -128,15 +134,15 @@ class TableService:
         # 2. Update user
         await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
         
-        # 3. Clean up empty table
+        # 3. Clean up empty table or reassign head
         table_dict = await table_coll.find_one({"_id": table_id})
-        if table_dict and not table_dict.get("persons"):
-            # Check if it was empty
-            await table_coll.delete_one({"_id": table_id})
-        elif table_dict and table_dict.get("head") == user_id:
-            # Assign new head
-            new_head = table_dict["persons"][0]["id"]
-            await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
+        if table_dict:
+            remaining = table_dict.get("persons") or []
+            if not remaining:
+                await table_coll.delete_one({"_id": table_id})
+            elif table_dict.get("head") == user_id and remaining:
+                new_head = remaining[0]["id"]
+                await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
 
         return True
 

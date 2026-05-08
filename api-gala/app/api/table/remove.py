@@ -25,6 +25,11 @@ async def common(
 ) -> Table:
     table = await fetch_table(table_id, db)
 
+    if uid == table.head and len(table.persons) > 1:
+        raise HTTPException(
+            status_code=400, detail="Table head cannot leave a non-empty table"
+        )
+
     update_cmd: dict[str, Any] = {
         "$pull": {
             "persons": {"id": uid},
