@@ -31,7 +31,7 @@ interface TokenPayload {
   scopes?: string[];
 }
 
-interface UserState extends TokenPayload {
+export interface UserState extends TokenPayload {
   sessionLoading: boolean;
   theme?: string;
   token?: string;
@@ -62,6 +62,9 @@ const useUserStore = create<UserState>((set) => ({
   },
 
   logout: () => {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("gala-wizard-state"))
+      .forEach((k) => localStorage.removeItem(k));
     set(() => ({
       sessionLoading: false,
       image: undefined,

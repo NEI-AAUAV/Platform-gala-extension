@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8">
+    <title>Lembrete de Pagamento — Jantar de Gala</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; color: #111827;">
+    <p>Olá {{ name }},</p>
+    <p>Ainda não temos o teu pagamento do Jantar de Gala confirmado.</p>
+
+    {% if phased_payment %}
+      <p><strong>Prazos:</strong></p>
+      <ul>
+        <li>Fase 1: {{ phase1_deadline or payment_deadline or "a anunciar" }}</li>
+        <li>Fase 2: {{ phase2_deadline or payment_deadline or "a anunciar" }}</li>
+      </ul>
+    {% else %}
+      <p><strong>Prazo:</strong> {{ payment_deadline or "a anunciar" }}</p>
+    {% endif %}
+
+    <p>Envia o comprovativo no teu perfil para que a inscrição possa ser validada.</p>
+    <p>Até já,<br />NEI-AAUAv</p>
+  </body>
+</html>

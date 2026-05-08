@@ -30,6 +30,7 @@ class TableEditForm(BaseModel):
     responses={
         **auth_responses,
         404: {"description": "Table not found"},
+        500: {"description": "Something went wrong"},
     },
 )
 async def edit_table(

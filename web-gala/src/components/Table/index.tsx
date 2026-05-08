@@ -15,11 +15,11 @@ export default function Table({ table, className }: TableProps) {
       <h4 className="z-10 text-xl font-semibold">{name ?? "Mesa sem nome"}</h4>
       <h6 className="z-10 mb-6 text-sm font-light uppercase">
         {head !== null && <Avatar id={head} className="w-[15px]" />}{" "}
-        {neiUser?.name === undefined || neiUser?.surname === undefined
-          ? "Sem nome"
-          : `${neiUser.name} ${neiUser.surname}`}
+        {neiUser?.name || neiUser?.surname
+          ? [neiUser.name, neiUser.surname].filter(Boolean).join(" ")
+          : "Sem nome"}
       </h6>
-      <VisualTable table={table} />
+      <VisualTable table={table} alwaysVisible />
     </div>
   );
 }

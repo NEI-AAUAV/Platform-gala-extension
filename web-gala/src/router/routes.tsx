@@ -6,30 +6,29 @@ import ErrorBoundary from "@/pages/ErrorBoundary";
 
 import { useUserStore, UserState } from "@/stores/useUserStore";
 
+const ADMIN_SCOPES = new Set(["admin", "manager-jantar-gala", "manager-gala"]);
+
 function ProtectedRoute({
   children,
-  loggedIn = true,
-  redirect = "/auth/login",
-}: {
+  adminOnly = false,
+}: Readonly<{
   children: React.ReactNode;
-  loggedIn?: boolean;
-  redirect?: string;
-}) {
-  const { sessionLoading, token, scopes } = useUserStore((state: UserState) => state);
+  adminOnly?: boolean;
+}>) {
+  const { sessionLoading, token, scopes } = useUserStore(
+    (state: UserState) => state,
+  );
 
   if (sessionLoading) return null;
-  console.log(scopes);
-  if (!!token === loggedIn) {
-    // Optional: Check for specific scopes if needed
-    if (loggedIn && scopes && !scopes.includes("admin")) {
-      return <Navigate to="/" />;
-    }
-    return children;
-  } else {
-    return <Navigate to={redirect} />;
-  }
-}
 
+  if (!token) return <Navigate to="/" />;
+
+  if (adminOnly && !scopes?.some((s) => ADMIN_SCOPES.has(s))) {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
+}
 
 const routes = [
   {
@@ -50,21 +49,25 @@ const routes = [
           const { default: Reserve } = await import("@/pages/Reserve");
           return { Component: Reserve };
         },
-        children: [
-          {
-            path: "/reserve/:tableId",
-            async lazy() {
-              const { default: Reserve } = await import("@/pages/Reserve");
-              return { Component: Reserve };
-            },
-          },
-        ],
+      },
+      {
+        path: "/reserve/:tableId",
+        async lazy() {
+          const { default: Reserve } = await import("@/pages/Reserve");
+          return { Component: Reserve };
+        },
       },
       {
         path: "/vote",
         async lazy() {
           const { default: Vote } = await import("@/pages/Vote");
-          return { Component: Vote };
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Vote />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
@@ -73,7 +76,7 @@ const routes = [
           const { default: Admin } = await import("@/pages/Admin");
           return {
             Component: () => (
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <Admin />
               </ProtectedRoute>
             ),
@@ -85,6 +88,13 @@ const routes = [
         async lazy() {
           const { default: Register } = await import("@/pages/Register");
           return { Component: Register };
+        },
+      },
+      {
+        path: "/profile",
+        async lazy() {
+          const { default: Profile } = await import("@/pages/Profile");
+          return { Component: Profile };
         },
       },
       {

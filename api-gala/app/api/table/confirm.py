@@ -12,6 +12,7 @@ from app.models.table import Table
 from app.models.user import User
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.utils import NotFoundReCheck
+from app.services.config import ConfigService
 
 from ._utils import (
     sanitize_table,
@@ -36,6 +37,8 @@ class TableApprovalForm(BaseModel):
             "description": "The status of the table head cannot be changed or the person doesn't belong to the table"
         },
         404: {"description": "Table not found"},
+        409: {"description": "Table is full"},
+        500: {"description": "Something went wrong"},
     },
 )
 async def person_confirm_table(
@@ -107,7 +110,11 @@ async def person_confirm_table(
                 status_code=400, detail="The status of the table head cannot be changed"
             )
 
-        person = next(person for person in table.persons if person.id == form_data.uid)
+        person = next((p for p in table.persons if p.id == form_data.uid), None)
+        if person is None:
+            raise HTTPException(
+                status_code=400, detail="The person doesn't belong to the table"
+            )
 
         if table.seats - table.confirmed_seats() < 1 + len(person.companions):
             raise HTTPException(status_code=409, detail="Table is full")
@@ -138,14 +145,16 @@ async def person_confirm_table(
 
             table_name = head.name
 
-        background_tasks.add_task(
-            send_email,
-            user.email,
-            "Foste aceite na mesa",
-            settings=settings,
-            template="accepted",
-            name=user.name,
-            table=table_name,
-        )
+        config = await ConfigService.get_config(db)
+        if config.email_notifications.table_confirmed:
+            background_tasks.add_task(
+                send_email,
+                user.email,
+                "Foste aceite na mesa",
+                settings=settings,
+                template="accepted",
+                name=user.name,
+                table=table_name,
+            )
 
     return sanitize_table(auth, table)

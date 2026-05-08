@@ -11,6 +11,8 @@ import useNEIUser from "@/hooks/useNEIUser";
 import useTableConfirm from "@/hooks/tableHooks/useTableConfirm";
 import useTableUserRemove from "@/hooks/tableHooks/useTableUserRemove";
 import { FrangoIcon } from "@/assets/icons";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
 
 type RequesterProps = {
   person: Person;
@@ -54,9 +56,16 @@ const gridTemplate = {
 export default function Requester({ person, tableId, mutate }: RequesterProps) {
   const { neiUser } = useNEIUser(person.id);
   const rejectConfirmModalRef = useRef<HTMLDialogElement>(null);
+  const toast = useAppToast();
 
   async function acceptGuest(userId: number) {
-    await useTableConfirm(tableId, { uid: userId, confirm: true });
+    try {
+      await useTableConfirm(tableId, { uid: userId, confirm: true });
+      toast.success("Pedido aceite!");
+      mutate();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao aceitar pedido."));
+    }
   }
 
   function modalRejectConfirm() {
@@ -64,7 +73,13 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
   }
 
   async function rejectGuest(userId: number) {
-    await useTableUserRemove(tableId, userId);
+    try {
+      await useTableUserRemove(tableId, userId);
+      toast.success("Pedido rejeitado.");
+      mutate();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao rejeitar pedido."));
+    }
   }
 
   return (
@@ -76,10 +91,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
             <button
               type="button"
               className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-light-gold p-1"
-              onClick={async () => {
-                await acceptGuest(person.id);
-                mutate();
-              }}
+              onClick={() => acceptGuest(person.id)}
             >
               <FontAwesomeIcon icon={faCheck} />
             </button>
@@ -109,7 +121,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
               <span className="flex items-center gap-2">
                 {countNormal(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
+                    <span className="text-base-content/70 text-sm">
                       {countNormal(person)}
                     </span>
                     <FrangoIcon style={orange} />
@@ -117,7 +129,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
                 )}
                 {countVegetarians(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
+                    <span className="text-base-content/70 text-sm">
                       {countVegetarians(person)}
                     </span>
                     <FontAwesomeIcon icon={faSeedling} style={green} />
@@ -125,7 +137,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
                 )}
                 {countAllergies(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
+                    <span className="text-base-content/70 text-sm">
                       {countAllergies(person)}
                     </span>
                     <FontAwesomeIcon icon={faHandDots} style={red} />
@@ -147,10 +159,9 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
           <button
             type="button"
             className="border-r border-black/20 p-4 "
-            onClick={async () => {
+            onClick={() => {
               rejectConfirmModalRef.current!.close();
-              await rejectGuest(person.id);
-              mutate();
+              rejectGuest(person.id);
             }}
           >
             Sim

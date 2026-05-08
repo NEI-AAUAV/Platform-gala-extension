@@ -81,10 +81,15 @@ async def init_db(db: DBType) -> None:
     )
 
     time_slot = TimeSlots(
+        registrationStart=datetime(1970, 1, 1),
+        registrationEnd=datetime(1970, 1, 1),
+        nominationsStart=datetime(1970, 1, 1),
+        nominationsEnd=datetime(1970, 1, 1),
         votesStart=datetime(1970, 1, 1),
         votesEnd=datetime(1970, 1, 1),
         tablesStart=datetime(1970, 1, 1),
         tablesEnd=datetime(1970, 1, 1),
+        galaStart=datetime(1970, 1, 1),
     )
     await TimeSlots.get_collection(db).update_one(
         {"_id": TIME_SLOTS_ID}, {"$setOnInsert": time_slot.dict()}, upsert=True

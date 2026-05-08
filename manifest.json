@@ -5,12 +5,22 @@
     "port": "8004"
   },
   "web": {
-    "port": "3004"
+    "port": "3002"
   },
   "scopes": [
-    { "name": "manager-gala", "description": "Manage gala events" }
+    {
+      "name": "manager-gala",
+      "description": "Manage gala events"
+    }
   ],
   "nav": [
-    { "label": "Gala", "href": "/gala", "requiresScopes": ["manager-gala", "admin"] }
+    {
+      "label": "Gala",
+      "href": "/gala",
+      "requiresScopes": [
+        "manager-gala",
+        "admin"
+      ]
+    }
   ]
 }

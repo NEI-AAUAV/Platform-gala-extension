@@ -13,8 +13,7 @@ function cssCalcCoords(
   gap: string,
   ref: React.RefObject<HTMLDivElement>,
 ) {
-  if (ref.current === null) throw new Error("Ref is null");
-  const halfParentSize = ref.current.clientWidth / 2;
+  const halfParentSize = (ref.current?.clientWidth ?? 0) / 2;
   const minRadius = `${halfParentSize}px + 1.25rem`;
   return `calc(${axis} * (${minRadius} + ${gap}))`;
 }
@@ -24,7 +23,7 @@ export default function Seat({ angle, isTaken, isVisible, delay }: SeatProps) {
 
   const x = Math.cos(angle);
   const y = Math.sin(angle);
-  const gap = "1rem";
+  const gap = "0.6rem";
 
   const style = isVisible
     ? {
@@ -45,7 +44,7 @@ export default function Seat({ angle, isTaken, isVisible, delay }: SeatProps) {
       ref={parentRef}
     >
       <div
-        className={classNames("aspect-square w-10 rounded-full border-2", {
+        className={classNames("aspect-square w-4 rounded-full border-2", {
           "border-light-gold": !isTaken,
           "border-dark-gold bg-dark-gold": isTaken,
         })}

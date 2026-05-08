@@ -3,14 +3,12 @@ import GalaService from "@/services/GalaService";
 import useSessionUser, { State } from "../userHooks/useSessionUser";
 
 export default function useTables() {
-  const {
-    sessionUser,
-    state,
-    isLoading: isUserLoading,
-    isError,
-  } = useSessionUser();
+  const { state, isLoading: isUserLoading } = useSessionUser();
+
+  const key = isUserLoading ? null : `/table/list/${state}`;
+
   const { data, error, isLoading, mutate } = useSWR<Table[]>(
-    () => (isUserLoading && !isError ? null : ["/table/list", sessionUser]),
+    key,
     () =>
       state === State.NONE
         ? GalaService.table.listTablesPublic()

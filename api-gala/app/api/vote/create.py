@@ -1,20 +1,28 @@
-from typing import Annotated, List
+from typing import List
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
 from app.core.db import DatabaseDep
-from app.core.db.counters import getNextVoteCategoryId
+from app.core.db.counters import get_next_vote_category_id
 from app.models.vote import VoteCategory
 
 router = APIRouter()
 
 
 class VoteCategoryCreateForm(BaseModel):
-    category: Annotated[str, Field(min_length=3)]
-    options: Annotated[List[str], Field(min_items=2)]
+    category: str = Field(..., min_length=3)
+    options: List[str] = Field(..., min_items=2)
+    photo_paths: List[str] = Field(..., min_items=2)
+
+    @validator("photo_paths")
+    def validate_lengths(cls, photo_paths, values):
+        options = values.get("options", [])
+        if len(options) != len(photo_paths):
+            raise ValueError("options and photo_paths must have the same length")
+        return photo_paths
 
 
 @router.post(
@@ -24,18 +32,23 @@ class VoteCategoryCreateForm(BaseModel):
         409: {
             "description": "A vote category with the same (or similar) name already exists"
         },
+        500: {"description": "Something went wrong"},
     },
 )
 async def create_category(
     form_data: VoteCategoryCreateForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
-    id = await getNextVoteCategoryId(db)
+    category_id = await get_next_vote_category_id(db)
     category = VoteCategory(
-        _id=id, category=form_data.category, options=form_data.options, votes=[]
+        _id=category_id,
+        category=form_data.category,
+        options=form_data.options,
+        photo_paths=form_data.photo_paths,
+        votes=[],
     )
 
     try:

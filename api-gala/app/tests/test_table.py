@@ -157,7 +157,7 @@ async def test_list_tables_sanitize_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_list_tables_sanitize_manager(
@@ -288,7 +288,7 @@ async def test_get_table_sanitize_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_get_table_sanitize_manager(
@@ -335,7 +335,7 @@ async def test_new_table_unauthorized(settings: Settings, client: AsyncClient) -
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_table(settings: Settings, client: AsyncClient, db: DBType) -> None:
@@ -454,7 +454,7 @@ async def test_edit_table_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_table_manager(
@@ -877,7 +877,7 @@ async def test_confirm_table_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_confirm_table_manager(
@@ -1187,7 +1187,7 @@ async def test_transfer_table_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_transfer_table_manager(
@@ -1594,7 +1594,7 @@ async def test_remove_table_head(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(sub=0, scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_remove_table_manager(

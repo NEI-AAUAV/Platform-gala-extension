@@ -15,17 +15,24 @@ async def fetch_category(category_id: int, db: DBType) -> VoteCategory:
 
 
 def anonymize_category(category: VoteCategory, auth: AuthData) -> VoteListing:
-    already_voted = False
+    already_voted = None
     scores = [0] * len(category.options)
 
     for vote in category.votes:
         scores[vote.option] += 1
-        already_voted |= vote.uid == auth.sub
+        if vote.uid == auth.sub:
+            already_voted = vote.option
+
+    already_nominated = any(auth.sub in n.votes for n in category.nominations)
 
     return VoteListing(
         _id=category.id,
         category=category.category,
         options=category.options,
+        photo_paths=category.photo_paths,
         scores=scores,
         already_voted=already_voted,
+        nomination_open=category.nomination_open,
+        voting_open=category.voting_open,
+        already_nominated=already_nominated,
     )

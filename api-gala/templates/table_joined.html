@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido de entrada na mesa{% endblock %}
+
+{% block content %}
+  <!-- Hero -->
+  <div class="band">
+    <p class="band-label">Pedido de Entrada na Mesa</p>
+    <p class="band-title">Olá, {{name}}!</p>
+    <p class="band-sub">O teu pedido para entrar na mesa foi enviado com sucesso. O responsável da mesa irá confirmar a tua entrada.</p>
+  </div>
+
+  <!-- Detalhes da Mesa -->
+  <div class="sec">
+    <p class="sec-label">Detalhes da Mesa</p>
+    <div class="card">
+      <div class="row"><span class="rl">Mesa</span><span class="rv g">{{table}}</span></div>
+      <div class="row"><span class="rl">Estado</span><span class="rv" style="color:rgba(252,165,0,.85)">Aguarda confirmação do responsável</span></div>
+    </div>
+  </div>
+
+  <hr/>
+  <p class="notice">Receberás um email quando o responsável da mesa confirmar a tua entrada. Para dúvidas, contacta-nos em <a href="mailto:nei@aauav.pt" style="color:rgba(247,187,172,.6);text-decoration:none">nei@aauav.pt</a>.</p>
+{% endblock %}

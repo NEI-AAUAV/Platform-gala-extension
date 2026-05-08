@@ -1,448 +1,438 @@
-/* eslint-disable react/no-array-index-key */
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable jsx-a11y/control-has-associated-label */
-// import {  useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import {
-//   faSeedling,
-// } from "@fortawesome/free-solid-svg-icons";
-// import classNames from "classnames";
-
-// import { FrangoIcon } from "@/assets/icons";
-// import Input from "@/components/Input";
-// import useTime from "@/hooks/timeHooks/useTime";
-// import useTimeEdit from "@/hooks/timeHooks/useTimeEdit";
-// import useTables from "@/hooks/tableHooks/useTables";
-// import useLimits from "@/hooks/useLimits";
-// import GalaService from "@/services/GalaService";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEye,
+  faEyeSlash,
+  faRotateRight,
+  faClipboardList,
+  faChair,
+  faTrophy,
+  faChartBar,
+  faHouse,
+  faShieldHalved,
+  faBars,
+  faXmark,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 import VoteResults from "@/components/VoteCard/VoteResults";
+import VoteCategories from "./VoteCategories";
+import TablesAdmin from "./TablesAdmin";
+import RegistrationAdmin from "./RegistrationAdmin";
+import HomepageAdmin from "./HomepageAdmin";
+import PermissoesAdmin from "./PermissoesAdmin";
+import RegistrantsAdmin from "./RegistrantsAdmin";
+import { useConfigStore } from "@/stores/useConfigStore";
+import { useManagerPermissions } from "@/hooks/useManagerPermissions";
+import { ManagerPermissionKey } from "@/services/GalaService";
 
-// const orange = { color: "#DD8500" };
-// const green = { color: "#198754" };
-// const red = { color: "#DC3545" };
+type Tab =
+  | "registration"
+  | "inscritos"
+  | "tables"
+  | "categories"
+  | "results"
+  | "homepage"
+  | "permissoes";
 
-// const iconMap = new Map([
-//   ["NOR", <FrangoIcon style={orange} />],
-//   ["VEG", <FontAwesomeIcon icon={faSeedling} style={green} />],
-// ]);
+type TabDefinition = {
+  id: Tab;
+  label: string;
+  icon: typeof faClipboardList;
+  description: string;
+  permission?: ManagerPermissionKey;
+  adminOnly?: boolean;
+};
 
-// type InfoProps = {
-//   title: string;
-//   values: number[];
-// };
+const ALL_TABS: TabDefinition[] = [
+  {
+    id: "registration",
+    label: "Configurações",
+    icon: faClipboardList,
+    description: "Datas, preços, refeições e limites",
+    permission: "registration",
+  },
+  {
+    id: "inscritos",
+    label: "Inscritos",
+    icon: faUsers,
+    description: "Gestão de inscritos, mesas e autocarros",
+    permission: "registration",
+  },
+  {
+    id: "tables",
+    label: "Mesas",
+    icon: faChair,
+    description: "Período, limites e visão geral de mesas",
+    permission: "tables",
+  },
+  {
+    id: "categories",
+    label: "Categorias",
+    icon: faTrophy,
+    description: "Gerir categorias de votação",
+    permission: "categories",
+  },
+  {
+    id: "results",
+    label: "Resultados",
+    icon: faChartBar,
+    description: "Resultados e contagens de votos",
+    permission: "categories",
+  },
+  {
+    id: "homepage",
+    label: "Homepage",
+    icon: faHouse,
+    description: "Conteúdo visível na página inicial",
+    permission: "homepage",
+  },
+  {
+    id: "permissoes",
+    label: "Permissões",
+    icon: faShieldHalved,
+    description: "Gerir managers e acessos",
+    adminOnly: true,
+  },
+];
 
-// function Info({ title, values }: InfoProps) {
-//   return (
-//     <div className="rounded-lg bg-base-200 p-2 px-4 shadow">
-//       <div className="mx-auto flex items-center justify-between max-xs:max-w-[18rem]">
-//         <div className="w-full text-sm font-medium text-gray-500 max-xs:flex max-xs:justify-between">
-//           <span className="max-sm:hidden">Total de </span>
-//           <span>{title}</span>
-//           <div className="whitespace-nowrap text-xl text-gray-900 [&_b]:before:font-medium [&_b]:before:content-['_/_'] first:[&_b]:before:content-none">
-//             {values.map((v, idx) => (
-//               <b key={idx}>{v}</b>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
+  registration: "/register",
+  homepage: "/",
+  categories: "/vote",
+  results: "/vote",
+  tables: "/reserve",
+};
 
-// interface TimeSlotsProps {
-//   start: "tablesStart" | "votesStart";
-//   end: "tablesEnd" | "votesEnd";
-// }
-
-// function TimeSlots({ start, end }: TimeSlotsProps) {
-//   const { time } = useTime();
-//   const [notDirty, setNotDirty] = useState(false);
-//   const [openingTime, setOpeningTime] = useState<string | undefined>();
-//   const [closingTime, setClosingTime] = useState<string | undefined>();
-
-//   useEffect(() => {
-//     setOpeningTime(time?.[start].slice(0, 16));
-//     setClosingTime(time?.[end].slice(0, 16));
-//   }, [time]);
-
-//   useEffect(() => {
-//     setNotDirty(
-//       (time?.[start].startsWith(openingTime || "") &&
-//         time?.[end].startsWith(closingTime || "")) ??
-//         false,
-//     );
-//   }, [openingTime, closingTime]);
-
-//   const handleOpeningTimeChange = (
-//     event: React.ChangeEvent<HTMLInputElement>,
-//   ) => {
-//     setOpeningTime(event.target.value);
-//   };
-
-//   const handleClosingTimeChange = (
-//     event: React.ChangeEvent<HTMLInputElement>,
-//   ) => {
-//     setClosingTime(event.target.value);
-//   };
-
-//   const handleSubmit = () => {
-//     if (!time) return;
-//     useTimeEdit({ [start]: openingTime, [end]: closingTime }).then((res) => {
-//       setNotDirty(
-//         (res[start].startsWith(openingTime || "") &&
-//           res[end].startsWith(closingTime || "")) ??
-//           false,
-//       );
-//       time[start] = openingTime || "";
-//       time[end] = closingTime || "";
-//     });
-//   };
-
-//   const timeSlotsStatus = useCallback(() => {
-//     if (!openingTime || !closingTime) return "";
-//     const openDate = new Date(openingTime);
-//     const closeDate = new Date(closingTime);
-//     const currentDate = new Date();
-//     currentDate.setHours(currentDate.getHours() - 1);
-//     if (currentDate < openDate) {
-//       return "Por abrir";
-//     }
-//     if (currentDate >= openDate && currentDate <= closeDate) {
-//       return "Aberto";
-//     }
-//     return "Fechado";
-//   }, [openingTime, closingTime]);
-
-//   return (
-//     <form className="flex flex-col gap-2">
-//       <label className="flex items-center justify-between gap-2">
-//         <span>Abrir</span>
-//         <Input
-//           type="datetime-local"
-//           className="input-sm"
-//           value={openingTime}
-//           onChange={handleOpeningTimeChange}
-//         />
-//       </label>
-//       <label className="flex items-center justify-between gap-2">
-//         <span>Fechar</span>
-//         <Input
-//           type="datetime-local"
-//           className="input-sm"
-//           value={closingTime}
-//           onChange={handleClosingTimeChange}
-//         />
-//       </label>
-//       <div className="flex items-center justify-between">
-//         <span className="text-sm font-bold text-gray-500">
-//           {timeSlotsStatus()}
-//         </span>
-//         <button
-//           className="btn-primary btn-sm btn rounded-full normal-case"
-//           onClick={handleSubmit}
-//           disabled={notDirty}
-//           type="button"
-//         >
-//           Alterar abertura
-//         </button>
-//       </div>
-//     </form>
-//   );
-// }
-
-// function AddTable() {
-//   const [tableSize, setTableSize] = useState<number | undefined>();
-
-//   function addTable() {
-//     if (!tableSize) return;
-//     GalaService.table.createTable({ seats: tableSize }).then(() => {
-//       window.location.pathname = "/gala/reserve";
-//     });
-//   }
-
-//   return (
-//     <div className="w-50 relative mx-auto h-fit xs:ml-auto xs:mr-0">
-//       <Input
-//         className="input-sm w-full pr-36"
-//         type="number"
-//         min={1}
-//         placeholder="Nº Lugares"
-//         onChange={(e) =>
-//           setTableSize(parseInt(e.target.value, 10) || undefined)
-//         }
-//         value={tableSize || ""}
-//       />
-//       <button
-//         className="btn-primary btn-sm btn absolute right-0 top-0 mt-[2px] whitespace-nowrap rounded-full normal-case"
-//         type="button"
-//         onClick={addTable}
-//       >
-//         Adicionar mesa
-//       </button>
-//     </div>
-//   );
-// }
-
-// function RegistrationLimit() {
-//   const { limits, refresh } = useLimits();
-//   const [maxRegistrations, setMaxRegistrations] = useState<number>(0);
-
-//   useEffect(() => {
-//     if (!limits) return;
-//     setMaxRegistrations(limits.maxRegistrations);
-//   }, [limits]);
-
-//   function updateMaxRegistrations() {
-//     if (limits?.maxRegistrations === maxRegistrations) return;
-//     GalaService.limits.editTimeSlots({ maxRegistrations });
-//     refresh();
-//   }
-
-//   return (
-//     <div className="w-50 relative mx-auto h-fit xs:ml-auto xs:mr-0">
-//       <Input
-//         className="input-sm w-full pr-24"
-//         type="number"
-//         min={1}
-//         placeholder="Máximo inscrições"
-//         onChange={(e) => {
-//           const num = parseInt(e.target.value, 10);
-//           if (num === null) return;
-//           setMaxRegistrations(num);
-//         }}
-//         value={maxRegistrations}
-//       />
-//       <button
-//         className="btn-primary btn-sm btn absolute right-0 top-0 mt-[2px] whitespace-nowrap rounded-full normal-case"
-//         type="button"
-//         onClick={updateMaxRegistrations}
-//       >
-//         Atualizar
-//       </button>
-//     </div>
-//   );
-// }
-
-// function ControlCardInner() {
-//   return (
-//     <>
-//       <div className="flex basis-0 flex-col">
-//         <h2 className="mb-4 font-bold">Reservar Lugar</h2>
-//         <TimeSlots start="tablesStart" end="tablesEnd" />
-//       </div>
-//       <div className="flex basis-0 flex-col">
-//         <h2 className="mb-4 font-bold">Votar</h2>
-//         <TimeSlots start="votesStart" end="votesEnd" />
-//       </div>
-//       <div className="flex basis-0 flex-col">
-//         <h2 className="mb-4 font-bold">Mesas</h2>
-//         <AddTable />
-//       </div>
-//       <div className="flex basis-0 flex-col">
-//         <h2 className="mb-4 font-bold">Máximo inscrições</h2>
-//         <RegistrationLimit />
-//       </div>
-//     </>
-//   );
-// }
+const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
+  registration: {
+    title: "Configurações do Jantar",
+    sub: "Datas, preços, refeições, pagamento e limites.",
+  },
+  inscritos: {
+    title: "Gestão de Inscritos",
+    sub: "Estatísticas, inscritos, confirmação de pagamentos, mesas e autocarros.",
+  },
+  tables: {
+    title: "Mesas e Reservas",
+    sub: "Período de escolha, limites e visão geral das mesas criadas.",
+  },
+  categories: {
+    title: "Categorias de Votação",
+    sub: "Gerir as categorias disponíveis para votação.",
+  },
+  results: {
+    title: "Resultados de Votação",
+    sub: "Ver contagens e aprovar a publicação de resultados.",
+  },
+  homepage: {
+    title: "Conteúdo da Homepage",
+    sub: "Controla o que aparece na página inicial do evento.",
+  },
+  permissoes: {
+    title: "Permissões de Managers",
+    sub: "Controla quem tem acesso ao painel de administração e a que secções.",
+  },
+};
 
 export default function Admin() {
-  // const [controlCardOpen, setControlCardOpen] = useState(false);
-  // const [users, setUsers] = useState<User[]>([]);
-  // const confirmPaymentModalRef = useRef<HTMLDialogElement>(null);
-  // const navigate = useNavigate();
-  // const selectedUser = useRef<number | null>(null);
-  // const { tables } = useTables();
+  const { isAdmin, permissions, loading, error } = useManagerPermissions();
+  const [activeTab, setActiveTab] = useState<Tab | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { raw } = useConfigStore();
 
-  // useEffect(() => {
-  //   GalaService.user.listUsers().then((data) => {
-  //     setUsers(data);
-  //   });
-  // }, []);
+  const visibleTabs = ALL_TABS.filter((tab) => {
+    if (tab.adminOnly) return isAdmin;
+    if (isAdmin) return true;
+    return tab.permission ? permissions.has(tab.permission) : false;
+  });
 
-  // const persons: Person[] = tables.reduce((acc: Person[], table) => {
-  //   return acc.concat(table.persons);
-  // }, []);
+  useEffect(() => {
+    if (loading || activeTab) return;
+    if (visibleTabs.length > 0) setActiveTab(visibleTabs[0].id);
+  }, [loading, visibleTabs, activeTab]);
 
-  // const usersExtended: UserExtended[] = users.map((u) => {
-  //   const match = persons.find((p) => p.id === u._id);
-  //   return { companions: [], ...u, ...match } as UserExtended;
-  // });
+  const previewRoute = activeTab ? PREVIEW_ROUTES[activeTab] ?? "/" : "/";
 
-  // function modalConfirmPayment(id: number) {
-  //   selectedUser.current = id;
-  //   confirmPaymentModalRef.current!.showModal();
-  // }
+  const reload = useCallback(() => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.location.reload();
+    }
+  }, []);
 
-  // const sumOfAllCompanions = persons.reduce(
-  //   (sum, p) => sum + (p.companions.length ?? 0),
-  //   0,
-  // );
+  useEffect(() => {
+    if (!previewOpen) return;
+    const timer = setTimeout(reload, 1500);
+    return () => clearTimeout(timer);
+  }, [raw, previewOpen, reload]);
 
-  // const sumOfAllVegetarians = persons.reduce(
-  //   (sum, p) =>
-  //     sum +
-  //     (p.dish === "VEG" ? 1 : 0) +
-  //     (p.companions.filter((c: Companion) => c.dish === "VEG").length ?? 0),
-  //   0,
-  // );
+  // Close mobile sidebar on tab change
+  const handleTabChange = (id: Tab) => {
+    setActiveTab(id);
+    setSidebarOpen(false);
+  };
 
-  // const sumOfAllPayments = users.reduce(
-  //   (sum, u) => sum + (u.has_payed ? 1 : 0),
-  //   0,
-  // );
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
+
+  const hasPreview = activeTab !== null && activeTab in PREVIEW_ROUTES;
+  const sectionMeta = activeTab ? SECTION_TITLES[activeTab] : null;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center pt-20 text-sm text-white/30">
+        A carregar...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center pt-20">
+        <p className="text-sm text-red-400/60">
+          Erro ao carregar permissões. Tenta recarregar a página.
+        </p>
+      </div>
+    );
+  }
+
+  if (visibleTabs.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center pt-20">
+        <p className="text-sm text-white/40">
+          Sem permissões de acesso ao painel de administração.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-7xl">
-      {/* Info cards for statistics */}
-      {/* <div className="flex gap-3 max-xs:flex-col xs:gap-4 xs:[&_*]:basis-60">
-        <Info
-          title="Reservas / Inscritos"
-          values={[
-            persons.length + sumOfAllCompanions,
-            users.length + sumOfAllCompanions,
-          ]}
-        />
-        <Info title="Vegetarianos" values={[sumOfAllVegetarians]} />
-        <Info title="Pagamentos" values={[sumOfAllPayments, users.length]} />
-      </div> */}
+    <div className="min-h-screen pt-20">
+      <div className="flex h-[calc(100vh-5rem)]">
+        {/* ── Mobile sidebar backdrop ── */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
-      {/* Control card */}
-      {/* <div
-        className={classNames(
-          "relative mt-6 grid grid-cols-[repeat(auto-fit,_minmax(18rem,18rem))] justify-center gap-x-20 gap-y-10 bg-base-200 shadow",
-          !controlCardOpen
-            ? "mb-6 ml-auto w-fit rounded-full bg-black/70 p-[1.45rem] text-white backdrop-blur hover:bg-neutral-focus"
-            : "mb-10 rounded-lg p-4",
-        )}
-      >
-        {controlCardOpen && <ControlCardInner />}
-        <button
-          className="absolute right-2 top-2 h-8 w-8 leading-none"
-          type="button"
-          onClick={() => setControlCardOpen(!controlCardOpen)}
+        {/* ── Sidebar ── */}
+        {/* Desktop: always visible. Mobile: slide-in drawer */}
+        <aside
+          className={[
+            // Mobile: fixed full-height drawer
+            "border-white/8 fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r bg-[#0a0a0a] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
+            sidebarOpen
+              ? "flex translate-x-0"
+              : "hidden -translate-x-full lg:flex",
+          ].join(" ")}
         >
-          <FontAwesomeIcon icon={controlCardOpen ? faXmark : faEllipsis} />
-        </button>
-      </div> */}
+          {/* Sidebar header */}
+          <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
+            <span className="font-gala text-[0.6rem] font-bold uppercase tracking-[0.3em] text-white/30">
+              Admin
+            </span>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60 lg:hidden"
+            >
+              <FontAwesomeIcon icon={faXmark} className="text-xs" />
+            </button>
+          </div>
 
-      {/* Table */}
-      {/* <div className="overflow-x-auto">
-        <table className="mx-auto table w-full leading-[1rem] [&_*]:py-1 [&_*]:text-[0.8rem]">
-          <thead>
-            <tr className="border-b-2 border-primary [&_th]:bg-transparent">
-              <th className="!bg-base-100">NMec</th>
-              <th>Email</th>
-              <th>Nome</th>
-              <th>Matrícula</th>
-              <th>Prato</th>
-              <th>Estado do Pagamento</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usersExtended.map((user: UserExtended) => [
-              <tr
-                key={user._id}
-                className="group [&_td]:hover:bg-[#F9F2E8] [&_th]:hover:bg-[#F9F2E8]"
-              >
-                <th>{user.nmec}</th>
-                <td>{user.email}</td>
-                <td>{user.name}</td>
-                <td>
-                  {user.matriculation ? `${user.matriculation}º ano` : "Outro"}
-                </td>
-                <td>
-                  <div className="flex items-center gap-3">
-                    {iconMap.get(user.dish)}
-                    {user.allergies && (
-                      <FontAwesomeIcon style={red} icon={faHandDots} />
-                    )}
-                    <span>{user.allergies}</span>
+          {/* Nav items */}
+          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-3">
+            {visibleTabs.map(({ id, label, icon, description }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => handleTabChange(id)}
+                  className={[
+                    "group flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all",
+                    isActive
+                      ? "bg-dark-gold/12 text-dark-gold"
+                      : "text-white/50 hover:bg-white/5 hover:text-white/80",
+                  ].join(" ")}
+                >
+                  <FontAwesomeIcon
+                    icon={icon}
+                    className={[
+                      "mt-0.5 w-4 shrink-0 text-sm transition-colors",
+                      isActive
+                        ? "text-dark-gold"
+                        : "text-white/25 group-hover:text-white/50",
+                    ].join(" ")}
+                  />
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-gala text-sm font-semibold leading-tight">
+                      {label}
+                    </span>
+                    <span
+                      className={[
+                        "text-[0.6rem] leading-snug",
+                        isActive ? "text-dark-gold/60" : "text-white/25",
+                      ].join(" ")}
+                    >
+                      {description}
+                    </span>
                   </div>
-                </td>
-                <td>
-                  {user.has_payed ? (
-                    <div className="flex items-center gap-3">
-                      <FontAwesomeIcon style={green} icon={faCircleCheck} />
-                      Pago
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <FontAwesomeIcon
-                        className="text-primary"
-                        icon={faCheck}
-                      />
-                      A aguardar
-                      <button
-                        className="btn-primary btn-xs btn mr-3 rounded-full normal-case opacity-0 group-hover:opacity-100"
-                        onClick={() => modalConfirmPayment(user._id)}
-                        type="button"
-                      >
-                        Confirmar
-                      </button>
-                    </div>
+                  {isActive && (
+                    <div className="ml-auto h-4 w-0.5 shrink-0 self-center rounded-full bg-dark-gold" />
                   )}
-                </td>
-              </tr>,
-              ...user.companions.map((c, idx) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <tr key={`c${idx}`}>
-                  <th />
-                  <td />
-                  <td />
-                  <td />
-                  <td>
-                    <div className="flex items-center gap-3">
-                      {iconMap.get(c.dish)}
-                      {c.allergies && (
-                        <FontAwesomeIcon style={red} icon={faHandDots} />
-                      )}
-                      <span>{c.allergies}</span>
-                    </div>
-                  </td>
-                  <td />
-                </tr>
-              )),
-            ])}
-          </tbody>
-        </table>
-      </div>
-      <dialog
-        className="overflow-hidden rounded-3xl p-0 backdrop:bg-black backdrop:opacity-50"
-        ref={confirmPaymentModalRef}
-      >
-        <h2 className="border-b border-black/20 p-8">
-          Tens a certeza que queres confirmar o pagamento?
-        </h2>
-        <div className="grid grid-cols-2">
-          <button
-            type="button"
-            className="border-r border-black/20 p-4 "
-            onClick={async () => {
-              confirmPaymentModalRef.current!.close();
-              if (selectedUser.current === null) return;
-              await GalaService.user.editUser({
-                id: selectedUser.current,
-                has_payed: true,
-              });
-              navigate(0);
-            }}
-          >
-            Sim
-          </button>
-          <button
-            type="button"
-            className="p-4"
-            onClick={() => confirmPaymentModalRef.current!.close()}
-          >
-            Não
-          </button>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* ── Main content area ── */}
+        <div className="flex flex-1 flex-col overflow-hidden transition-all duration-500">
+          {/* Top bar (mobile hamburger + preview toggle) */}
+          <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
+            {/* Mobile: hamburger */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex items-center gap-2.5 font-gala text-sm font-semibold text-white/60 transition hover:text-white/90 lg:hidden"
+            >
+              <FontAwesomeIcon icon={faBars} className="text-sm" />
+              {sectionMeta?.title ?? "Menu"}
+            </button>
+
+            {/* Desktop: section title */}
+            <div className="hidden lg:block">
+              {sectionMeta && (
+                <div>
+                  <h1 className="font-gala text-lg font-bold leading-tight text-dark-gold">
+                    {sectionMeta.title}
+                  </h1>
+                  <p className="text-white/35 mt-0.5 text-xs">
+                    {sectionMeta.sub}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Preview toggle */}
+            {hasPreview && (
+              <button
+                onClick={() => setPreviewOpen((o) => !o)}
+                className={[
+                  "flex items-center gap-2 rounded-full border px-4 py-1.5 font-gala text-xs font-semibold transition-all",
+                  previewOpen
+                    ? "border-light-gold/50 bg-light-gold/10 text-light-gold"
+                    : "border-white/15 text-white/40 hover:border-white/30 hover:text-white/70",
+                ].join(" ")}
+              >
+                <FontAwesomeIcon
+                  icon={previewOpen ? faEyeSlash : faEye}
+                  className="text-[0.7rem]"
+                />
+                {previewOpen ? "Fechar preview" : "Ver preview"}
+              </button>
+            )}
+          </div>
+
+          {/* Content + optional preview */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Scrollable content */}
+            <div
+              className={[
+                "flex-1 overflow-y-auto transition-all duration-500",
+                previewOpen ? "hidden md:block md:w-1/2" : "w-full",
+              ].join(" ")}
+            >
+              <div className="mx-auto w-full max-w-5xl px-4 py-8 lg:px-8">
+                {/* Mobile section title */}
+                {sectionMeta && (
+                  <div className="mb-6 lg:hidden">
+                    <h1 className="font-gala text-xl font-bold text-dark-gold">
+                      {sectionMeta.title}
+                    </h1>
+                    <p className="text-white/35 mt-1 text-xs">
+                      {sectionMeta.sub}
+                    </p>
+                  </div>
+                )}
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab ?? "empty"}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {activeTab === "registration" && <RegistrationAdmin />}
+                    {activeTab === "inscritos" && <RegistrantsAdmin />}
+                    {activeTab === "tables" && <TablesAdmin />}
+                    {activeTab === "categories" && (
+                      <div className="mx-auto max-w-3xl">
+                        <VoteCategories />
+                      </div>
+                    )}
+                    {activeTab === "results" && (
+                      <div className="mx-auto max-w-3xl">
+                        <VoteResults />
+                      </div>
+                    )}
+                    {activeTab === "homepage" && (
+                      <div className="mx-auto max-w-3xl">
+                        <HomepageAdmin />
+                      </div>
+                    )}
+                    {activeTab === "permissoes" && (
+                      <div className="mx-auto max-w-3xl">
+                        <PermissoesAdmin />
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Live preview pane */}
+            {previewOpen && (
+              <div className="md:border-white/8 flex w-full flex-col bg-black md:w-1/2 md:border-l">
+                <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-2">
+                  <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/30">
+                    Preview — {previewRoute}
+                  </span>
+                  <button
+                    onClick={reload}
+                    title="Recarregar preview"
+                    className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"
+                  >
+                    <FontAwesomeIcon icon={faRotateRight} className="text-xs" />
+                  </button>
+                </div>
+                <iframe
+                  key={activeTab}
+                  ref={iframeRef}
+                  src={previewRoute}
+                  className="w-full flex-1 border-0"
+                  title="Preview"
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </dialog>
- */}
-      {/* Vote Results */}
-      <VoteResults />
+      </div>
     </div>
   );
 }

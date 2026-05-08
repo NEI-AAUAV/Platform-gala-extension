@@ -12,6 +12,8 @@ import Button from "@/components/Button";
 import useNEIUser from "@/hooks/useNEIUser";
 import GuestList from "@/components/TableModal/GuestList";
 import useTableReserve from "@/hooks/tableHooks/useTableReserve";
+import { useAppToast } from "@/components/ui/Toast";
+import { extractApiError } from "@/utils/apiError";
 
 type RequestJoinTableProps = {
   table: Table;
@@ -41,11 +43,17 @@ export default function RequestJoinTable({
     },
   });
   const navigate = useNavigate();
+  const toast = useAppToast();
 
   const formSubmit: SubmitHandler<FormValues> = async (data) => {
-    await useTableReserve(table._id, data);
-    mutate();
-    navigate("/reserve");
+    try {
+      await useTableReserve(table._id, data);
+      toast.success("Pedido de entrada enviado!");
+      mutate();
+      navigate("/reserve");
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao pedir entrada na mesa."));
+    }
   };
 
   return (

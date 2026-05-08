@@ -1,12 +1,26 @@
-Olá {{name}}!
+NEI-AAUAv — Jantar de Gala
+================================================================================
 
-Foste aceite na mesa "{{table}}"
+ACEITE NA MESA
+
+Olá, {{name}}!
+
+O responsável da mesa confirmou a tua participação.
+O teu lugar está reservado!
+
+--------------------------------------------------------------------------------
+DETALHES DA MESA
+--------------------------------------------------------------------------------
+Mesa:    {{table}}
+Estado:  ✓ Confirmado
 
 --------------------------------------------------------------------------------
 
-Estás a receber este email porque te inscreveste no jantar de gala.
-
---------------------------------------------------------------------------------
+Para dúvidas, contacta-nos em nei@aauav.pt.
 
 Cumprimentos,
-A comissão de gala
+A Comissão de Gala — NEI-AAUAv
+
+================================================================================
+© 2026 NEI-AAUAv | Aveiro, Portugal | nei@aauav.pt
+A apoiar os estudantes desde 2013.

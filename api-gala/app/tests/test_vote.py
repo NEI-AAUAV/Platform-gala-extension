@@ -17,7 +17,11 @@ from ._utils import (
 )
 
 test_category = VoteCategory(
-    _id=0, category="GOOD", options=["Option 1", "Option 2"], votes=[]
+    _id=0,
+    category="GOOD",
+    options=["Option 1", "Option 2"],
+    photo_paths=["", ""],
+    votes=[],
 )
 
 
@@ -85,7 +89,7 @@ async def test_list_categories_scores(
     assert len(body) == 1
 
     category = VoteListing(**body[0])
-    assert not category.already_voted
+    assert category.already_voted is None
     assert category.scores == [2, 3]
 
 
@@ -111,7 +115,7 @@ async def test_list_categories_already_voted(
     assert len(body) == 1
 
     category = VoteListing(**body[0])
-    assert category.already_voted
+    assert category.already_voted is not None
     assert category.scores == [0, 1]
 
 
@@ -185,7 +189,7 @@ async def test_get_category_scores(
     assert category.id == test_category.id
     assert category.category == test_category.category
     assert category.options == test_category.options
-    assert not category.already_voted
+    assert category.already_voted is None
     assert category.scores == [2, 3]
 
 
@@ -212,7 +216,7 @@ async def test_get_category_already_voted(
     assert category.id == test_category.id
     assert category.category == test_category.category
     assert category.options == test_category.options
-    assert category.already_voted
+    assert category.already_voted is not None
     assert category.scores == [0, 1]
 
 
@@ -236,7 +240,9 @@ async def test_new_category_logged_out(settings: Settings, client: AsyncClient) 
 async def test_new_category_unauthorized(
     settings: Settings, client: AsyncClient
 ) -> None:
-    form = VoteCategoryCreateForm(category="GOOD", options=["Option 1", "Option 2"])
+    form = VoteCategoryCreateForm(
+        category="GOOD", options=["Option 1", "Option 2"], photo_paths=["", ""]
+    )
     response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
     assert response.status_code == 403
 
@@ -244,13 +250,15 @@ async def test_new_category_unauthorized(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_category(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
-    form = VoteCategoryCreateForm(category="GOOD", options=["Option 1", "Option 2"])
+    form = VoteCategoryCreateForm(
+        category="GOOD", options=["Option 1", "Option 2"], photo_paths=["", ""]
+    )
     response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
     assert response.status_code == 200
     body = response.json()
@@ -269,7 +277,7 @@ async def test_new_category(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_new_category_same_name(
@@ -278,7 +286,9 @@ async def test_new_category_same_name(
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     form = VoteCategoryCreateForm(
-        category=test_category.category, options=["Option 1", "Option 2"]
+        category=test_category.category,
+        options=["Option 1", "Option 2"],
+        photo_paths=["", ""],
     )
     response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
     assert response.status_code == 409
@@ -287,10 +297,10 @@ async def test_new_category_same_name(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
-async def test_new_category_ICU_equality(
+async def test_new_category_icu_equality(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
@@ -299,7 +309,9 @@ async def test_new_category_ICU_equality(
     assert test_category.category != new_category
 
     form = VoteCategoryCreateForm(
-        category=new_category, options=["Option 1", "Option 2"]
+        category=new_category,
+        options=["Option 1", "Option 2"],
+        photo_paths=["", ""],
     )
     response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
     assert response.status_code == 409
@@ -339,7 +351,7 @@ async def test_edit_category_unauthorized(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category_not_found(settings: Settings, client: AsyncClient) -> None:
@@ -353,7 +365,7 @@ async def test_edit_category_not_found(settings: Settings, client: AsyncClient) 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category(
@@ -389,7 +401,7 @@ async def test_edit_category(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(scopes=[ScopeEnum.MANAGER_JANTAR_GALA])],
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
 async def test_edit_category_same_name(
@@ -466,7 +478,7 @@ async def test_cast_vote(settings: Settings, client: AsyncClient, db: DBType) ->
     assert response.status_code == 200
     listing = VoteListing(**response.json())
 
-    assert listing.already_voted
+    assert listing.already_voted is not None
     assert listing.scores == [1, 0]
 
     db_res = await VoteCategory.get_collection(db).find_one({"_id": test_category.id})

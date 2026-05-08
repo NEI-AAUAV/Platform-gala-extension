@@ -2,13 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import Router from "./router";
 import { refreshToken } from "@/services/client";
+import { ToastProvider } from "@/components/ui/Toast";
 import "./index.css";
 
 // Attempt to load the user session, if any
 refreshToken();
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Router />
+    <ToastProvider>
+      <Router />
+    </ToastProvider>
   </React.StrictMode>,
 );

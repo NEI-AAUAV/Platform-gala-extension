@@ -22,9 +22,11 @@ class VoteCategoryEditForm(VoteCategoryCreateForm):
     "/{category_id}/edit",
     responses={
         **auth_responses,
+        404: {"description": "Vote not found"},
         409: {
             "description": "A vote category with the same (or similar) name already exists"
         },
+        500: {"description": "Something went wrong"},
     },
 )
 async def edit_category(
@@ -32,7 +34,7 @@ async def edit_category(
     form_data: VoteCategoryEditForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_JANTAR_GALA]),
+    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Edits an existing vote category"""
     try:

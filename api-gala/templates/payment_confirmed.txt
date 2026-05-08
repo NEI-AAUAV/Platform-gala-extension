@@ -1,0 +1,27 @@
+NEI-AAUAv — Jantar de Gala
+
+PAGAMENTO CONFIRMADO
+
+Olá, {{name}}!
+
+O teu pagamento foi verificado e a tua inscrição está agora completa.
+Até breve no Jantar de Gala!
+
+--------------------------------------------------------------------------------
+DETALHES DA INSCRIÇÃO
+--------------------------------------------------------------------------------
+Nome:                     {{name}}
+Nº Mecanográfico:         {{nmec}}
+Modalidade de Pagamento:  {% if phased_payment %}Faseado{% else %}Integral{% endif %}
+Estado do Pagamento:      ✓ Confirmado
+
+--------------------------------------------------------------------------------
+
+A tua inscrição está concluída.
+Para dúvidas, contacta-nos em nei@aauav.pt.
+
+Cumprimentos,
+A Comissão de Gala — NEI-AAUAv
+
+© 2026 NEI-AAUAv | Aveiro, Portugal | nei@aauav.pt
+A apoiar os estudantes desde 2013.

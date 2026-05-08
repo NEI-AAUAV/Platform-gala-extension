@@ -8,21 +8,27 @@ export const TimeStatus = {
 };
 
 type TimeExtended = TimeSlots & {
-  tablesStatus: number;
+  registrationStatus: number;
+  nominationsStatus: number;
   votesStatus: number;
+  tablesStatus: number;
+  galaStatus: number;
 };
 
-const getTimeStatus = (startTime: string, endTime: string) => {
-  const openDate = new Date(startTime);
-  const closeDate = new Date(endTime);
-  const currentDate = new Date();
-  currentDate.setHours(currentDate.getHours() - 1);
-  if (currentDate < openDate) {
-    return TimeStatus.OPENING;
-  }
-  if (currentDate >= openDate && currentDate <= closeDate) {
-    return TimeStatus.OPEN;
-  }
+const toUtc = (iso: string | null): Date | null => {
+  if (!iso) return null;
+  const utcIso =
+    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  return new Date(utcIso);
+};
+
+const getTimeStatus = (startTime: string | null, endTime: string | null) => {
+  const openDate = toUtc(startTime);
+  const closeDate = toUtc(endTime);
+  if (!openDate || !closeDate) return TimeStatus.OPENING;
+  const now = new Date();
+  if (now < openDate) return TimeStatus.OPENING;
+  if (now >= openDate && now <= closeDate) return TimeStatus.OPEN;
   return TimeStatus.CLOSED;
 };
 
@@ -30,15 +36,27 @@ export default function useTime() {
   const [time, setTime] = useState<TimeExtended>();
 
   useEffect(() => {
-    (async () => {
-      const response = await GalaService.time.getTimeSlots();
-      const tablesStatus = getTimeStatus(
-        response.tablesStart,
-        response.tablesEnd,
-      );
-      const votesStatus = getTimeStatus(response.votesStart, response.votesEnd);
-      setTime({ ...response, tablesStatus, votesStatus });
-    })();
+    GalaService.time
+      .getTimeSlots()
+      .then((response) => {
+        setTime({
+          ...response,
+          registrationStatus: getTimeStatus(
+            response.registrationStart,
+            response.registrationEnd,
+          ),
+          nominationsStatus: getTimeStatus(
+            response.nominationsStart,
+            response.nominationsEnd,
+          ),
+          votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
+          tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
+          galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),
+        });
+      })
+      .catch(() => {
+        // time_slots not initialised yet — leave time as undefined
+      });
   }, []);
 
   return { time };
