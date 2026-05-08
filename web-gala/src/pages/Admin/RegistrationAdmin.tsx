@@ -139,7 +139,7 @@ function PaymentContactsEditor({
         };
         return (
           <div
-            key={i}
+            key={c.id ?? i}
             className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2"
           >
             {(["year", "phone", "name"] as const).map((field) => (
@@ -165,7 +165,10 @@ function PaymentContactsEditor({
       <button
         type="button"
         onClick={() =>
-          onChange([...contacts, { year: "", phone: "", name: "" }])
+          onChange([
+            ...contacts,
+            { id: `contact-new-${Date.now()}`, year: "", phone: "", name: "" },
+          ])
         }
         className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"
       >
@@ -580,8 +583,7 @@ export default function RegistrationAdmin() {
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
-              <span className="font-semibold text-white/60">imagens e PDF</span>
-              . Validação aplicada no backend.
+              <span className="font-semibold text-white/60">imagens e PDF</span>. Validação aplicada no backend.
             </p>
           </Section>
         </div>

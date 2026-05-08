@@ -38,7 +38,8 @@ function mapFromBackend(
     ibanHolder: (prices.holder as string) || "",
     paymentDescription: (prices.description_template as string) || "",
     paymentContacts: contacts.map(
-      (c): PaymentContact => ({
+      (c, i): PaymentContact => ({
+        id: `contact-${i}-${c.year}`,
         name: c.name,
         year: c.year,
         phone: c.phone,
@@ -72,7 +73,7 @@ function mapToBackendPatch(
       iban: config.ibanNumber,
       holder: config.ibanHolder,
       description_template: config.paymentDescription,
-      contacts: config.paymentContacts,
+      contacts: config.paymentContacts.map(({ id: _, ...c }) => c),
     },
     bus: {
       ...(existing.bus as Record<string, unknown>),

@@ -74,14 +74,14 @@ export default function Register() {
                 .companions as []) || [],
             tableId:
               ((status as unknown as Record<string, unknown>)
-                .table_id as number | null) != null
-                ? String((status as unknown as Record<string, unknown>).table_id)
-                : null,
+                .table_id as number | null) === null
+                ? null
+                : String((status as unknown as Record<string, unknown>).table_id),
             tableRole:
               ((status as unknown as Record<string, unknown>)
-                .table_id as number | null) != null
-                ? "member"
-                : null,
+                .table_id as number | null) === null
+                ? null
+                : "member",
             currentStep: status.registration_step || 1,
           });
         }

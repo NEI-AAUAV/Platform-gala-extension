@@ -268,7 +268,7 @@ export default function HeroSection() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2"
       >
         <div className="flex flex-col items-center gap-2">
           <span className="font-gala text-[0.55rem] uppercase tracking-[0.3em] text-white/25">

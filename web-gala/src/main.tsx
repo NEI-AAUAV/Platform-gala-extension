@@ -8,7 +8,7 @@ import "./index.css";
 // Attempt to load the user session, if any
 refreshToken();
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ToastProvider>
       <Router />

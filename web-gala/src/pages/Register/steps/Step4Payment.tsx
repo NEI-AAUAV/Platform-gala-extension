@@ -87,6 +87,11 @@ export default function Step4Payment({
   const hasPhase1 = !!data.paymentProofPhase1;
   const hasPhase2 = !!data.paymentProofPhase2;
   const isComplete = userChosePhased ? hasPhase1 && hasPhase2 : hasPhase1;
+  const nextButtonLabel = syncing
+    ? "A guardar..."
+    : isComplete
+      ? "Continuar → Escolher Mesa"
+      : "Avançar sem comprovativo →";
 
   const renderPaymentMethods = () => {
     let yearLabel = "1";
@@ -375,11 +380,7 @@ export default function Step4Payment({
           disabled={syncing}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {syncing
-            ? "A guardar..."
-            : isComplete
-              ? "Continuar → Escolher Mesa"
-              : "Avançar sem comprovativo →"}
+          {nextButtonLabel}
         </button>
       </div>
     </motion.div>

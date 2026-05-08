@@ -7,6 +7,7 @@ export interface MealOption {
 }
 
 export interface PaymentContact {
+  id?: string;
   year: string;
   name: string;
   phone: string;
