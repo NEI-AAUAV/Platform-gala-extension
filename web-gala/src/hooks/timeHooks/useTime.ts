@@ -25,7 +25,7 @@ const toUtc = (iso: string | null): Date | null => {
 const getTimeStatus = (startTime: string | null, endTime: string | null) => {
   const openDate = toUtc(startTime);
   const closeDate = toUtc(endTime);
-  if (!openDate || !closeDate) return TimeStatus.CLOSED;
+  if (!openDate || !closeDate) return TimeStatus.OPENING;
   const now = new Date();
   if (now < openDate) return TimeStatus.OPENING;
   if (now >= openDate && now <= closeDate) return TimeStatus.OPEN;

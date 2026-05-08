@@ -24,6 +24,7 @@ interface Props {
   readonly onUpdate: (updates: Partial<WizardData>) => void;
   readonly onNext: () => void;
   readonly onBack: () => void;
+  readonly syncing?: boolean;
 }
 
 const DEFAULT_SEATS = 10;
@@ -96,6 +97,7 @@ export default function Step5Table({
   onUpdate,
   onNext,
   onBack,
+  syncing,
 }: Readonly<Props>) {
   const { tables, isLoading } = useTables();
   const { limits } = useLimits();
@@ -353,10 +355,10 @@ export default function Step5Table({
           <button
             type="button"
             onClick={handleNext}
-            disabled={!canContinue}
+            disabled={!canContinue || syncing}
             className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Rever Dados →
+            {syncing ? "A guardar..." : "Rever Dados →"}
           </button>
         </div>
       </div>

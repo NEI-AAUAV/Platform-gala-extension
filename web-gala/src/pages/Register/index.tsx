@@ -257,6 +257,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 4 && (
@@ -266,6 +267,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 5 && (
@@ -276,6 +278,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 6 && (

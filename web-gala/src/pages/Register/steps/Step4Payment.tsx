@@ -29,6 +29,7 @@ interface Props {
   readonly onUpdate: (updates: Partial<WizardData>) => void;
   readonly onNext: () => void;
   readonly onBack: () => void;
+  readonly syncing?: boolean;
 }
 
 export default function Step4Payment({
@@ -37,6 +38,7 @@ export default function Step4Payment({
   onUpdate,
   onNext,
   onBack,
+  syncing,
 }: Readonly<Props>) {
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -370,11 +372,14 @@ export default function Step4Payment({
         </button>
         <button
           onClick={onNext}
-          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+          disabled={syncing}
+          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isComplete
-            ? "Continuar → Escolher Mesa"
-            : "Avançar sem comprovativo →"}
+          {syncing
+            ? "A guardar..."
+            : isComplete
+              ? "Continuar → Escolher Mesa"
+              : "Avançar sem comprovativo →"}
         </button>
       </div>
     </motion.div>

@@ -336,12 +336,13 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                   .editTable(table._id, { name: val })
                   .then(() => {
                     toast.success("Nome guardado.");
+                    titleRef.current!.readOnly = true;
                     mutate();
                   })
-                  .catch((e) =>
-                    toast.error(extractApiError(e, "Erro ao guardar nome.")),
-                  );
-                titleRef.current!.readOnly = true;
+                  .catch((e) => {
+                    toast.error(extractApiError(e, "Erro ao guardar nome."));
+                    titleRef.current!.readOnly = false;
+                  });
               }}
             />
             <button

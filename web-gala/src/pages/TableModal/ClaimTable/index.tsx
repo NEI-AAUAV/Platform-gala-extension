@@ -29,15 +29,19 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
     setNameError(null);
     setSubmitting(true);
     try {
-      // Use the reserve endpoint to claim the empty table (first person becomes head automatically)
       await GalaService.table.reserveTable(table._id, {
         dish: "NOR",
         allergies: "",
         companions: [],
       });
-      // Now set the name
-      await GalaService.table.editTable(table._id, { name: trimmed });
-      toast.success("Mesa criada com sucesso!");
+      try {
+        await GalaService.table.editTable(table._id, { name: trimmed });
+        toast.success("Mesa criada com sucesso!");
+      } catch {
+        toast.error(
+          "Mesa criada, mas não foi possível definir o nome. Edita-o depois.",
+        );
+      }
       mutate();
       navigate("/reserve");
     } catch (e) {
