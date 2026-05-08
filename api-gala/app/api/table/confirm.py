@@ -110,7 +110,11 @@ async def person_confirm_table(
                 status_code=400, detail="The status of the table head cannot be changed"
             )
 
-        person = next(person for person in table.persons if person.id == form_data.uid)
+        person = next((p for p in table.persons if p.id == form_data.uid), None)
+        if person is None:
+            raise HTTPException(
+                status_code=400, detail="The person doesn't belong to the table"
+            )
 
         if table.seats - table.confirmed_seats() < 1 + len(person.companions):
             raise HTTPException(status_code=409, detail="Table is full")

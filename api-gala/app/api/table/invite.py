@@ -76,6 +76,11 @@ async def accept_invite(
         raise HTTPException(status_code=400, detail="User not found")
     user = User.parse_obj(user_dict)
 
+    if not user.is_registered:
+        raise HTTPException(status_code=400, detail="You must complete registration before accepting a table invite")
+    if not user.registration_active:
+        raise HTTPException(status_code=400, detail="Your registration is not active")
+
     person = TablePerson(
         id=auth.sub,
         allergies=user.food_allergies or body.allergies,
@@ -84,14 +89,34 @@ async def accept_invite(
         companions=user.companions,
     )
 
+    # Advisory pre-checks above; capacity and invite membership are re-enforced atomically below
     updated = await Table.get_collection(db).find_one_and_update(
-        {"_id": table_id},
+        {
+            "_id": table_id,
+            "invites": auth.sub,
+            "$expr": {
+                "$lt": [
+                    {
+                        "$sum": {
+                            "$map": {
+                                "input": "$persons",
+                                "as": "p",
+                                "in": {"$add": [1, {"$size": "$$p.companions"}]},
+                            }
+                        }
+                    },
+                    "$seats",
+                ]
+            },
+        },
         {
             "$push": {"persons": person.dict()},
             "$pull": {"invites": auth.sub},
         },
         return_document=ReturnDocument.AFTER,
     )
+    if updated is None:
+        raise HTTPException(status_code=400, detail="Table is full or invite is no longer valid")
 
     await User.get_collection(db).update_one(
         {"_id": auth.sub}, {"$set": {"table_id": table_id}}

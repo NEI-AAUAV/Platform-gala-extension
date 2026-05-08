@@ -12,7 +12,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
 import AcceptPending from "./AcceptPending";
-import useTableEdit from "@/hooks/tableHooks/useTableEdit";
 import Avatar from "@/components/Avatar";
 import useTableLeave from "@/hooks/tableHooks/useTableLeave";
 import { useAppToast } from "@/components/ui/Toast";
@@ -282,9 +281,7 @@ function PhotoUpload({
 
 export default function EditTable({ table, mutate }: EditTableProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const [error, setError] = useState(
-    {} as { name?: boolean; server?: boolean },
-  );
+  const [error, setError] = useState<{ name?: boolean; server?: boolean }>({});
   const navigate = useNavigate();
   const toast = useAppToast();
 
@@ -336,12 +333,13 @@ export default function EditTable({ table, mutate }: EditTableProps) {
                   .editTable(table._id, { name: val })
                   .then(() => {
                     toast.success("Nome guardado.");
+                    titleRef.current!.readOnly = true;
                     mutate();
                   })
-                  .catch((e) =>
-                    toast.error(extractApiError(e, "Erro ao guardar nome.")),
-                  );
-                titleRef.current!.readOnly = true;
+                  .catch((e) => {
+                    toast.error(extractApiError(e, "Erro ao guardar nome."));
+                    titleRef.current!.readOnly = false;
+                  });
               }}
             />
             <button

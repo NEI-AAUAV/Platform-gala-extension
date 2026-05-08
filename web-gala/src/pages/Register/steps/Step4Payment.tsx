@@ -29,6 +29,7 @@ interface Props {
   readonly onUpdate: (updates: Partial<WizardData>) => void;
   readonly onNext: () => void;
   readonly onBack: () => void;
+  readonly syncing?: boolean;
 }
 
 export default function Step4Payment({
@@ -37,6 +38,7 @@ export default function Step4Payment({
   onUpdate,
   onNext,
   onBack,
+  syncing,
 }: Readonly<Props>) {
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -85,6 +87,8 @@ export default function Step4Payment({
   const hasPhase1 = !!data.paymentProofPhase1;
   const hasPhase2 = !!data.paymentProofPhase2;
   const isComplete = userChosePhased ? hasPhase1 && hasPhase2 : hasPhase1;
+  const phaseLabel = isComplete ? "Continuar → Escolher Mesa" : "Avançar sem comprovativo →";
+  const nextButtonLabel = syncing ? "A guardar..." : phaseLabel;
 
   const renderPaymentMethods = () => {
     let yearLabel = "1";
@@ -355,7 +359,7 @@ export default function Step4Payment({
       {!isComplete && (
         <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3">
           <p className="text-xs text-yellow-400/80">
-            Podes avançar sem enviar o comprovativo agora — poderás fazê-lo mais
+            Podes avançar sem enviar o comprovativo agora, poderás fazê-lo mais
             tarde no teu perfil, dentro do prazo indicado.
           </p>
         </div>
@@ -370,11 +374,10 @@ export default function Step4Payment({
         </button>
         <button
           onClick={onNext}
-          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+          disabled={syncing}
+          className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isComplete
-            ? "Continuar → Escolher Mesa"
-            : "Avançar sem comprovativo →"}
+          {nextButtonLabel}
         </button>
       </div>
     </motion.div>

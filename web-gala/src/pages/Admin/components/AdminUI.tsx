@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
@@ -173,6 +173,12 @@ export function Section({
   );
 }
 
+type Row = { id: string; value: string };
+
+let _rowCounter = 0;
+const newRow = (value = ""): Row => ({ id: `row-${_rowCounter++}`, value });
+const toRows = (values: string[]): Row[] => values.map((v) => newRow(v));
+
 export function StringListEditor({
   items,
   onChange,
@@ -182,24 +188,41 @@ export function StringListEditor({
   readonly onChange: (v: string[]) => void;
   readonly placeholder?: string;
 }) {
+  const [rows, setRows] = useState<Row[]>(() => toRows(items));
+  const prevItems = useRef(items);
+
+  useEffect(() => {
+    if (prevItems.current === items) return;
+    prevItems.current = items;
+    const current = rows.map((r) => r.value);
+    const differs =
+      current.length !== items.length || current.some((v, i) => v !== items[i]);
+    if (differs) setRows(toRows(items));
+  }, [items, rows]);
+
+  const update = (next: Row[]) => {
+    setRows(next);
+    onChange(next.map((r) => r.value));
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      {items.map((item, i) => (
-        <div key={`${item}-${i}`} className="flex gap-2">
+      {rows.map((row, i) => (
+        <div key={row.id} className="flex gap-2">
           <input
             type="text"
-            value={item}
+            value={row.value}
             onChange={(e) => {
-              const next = [...items];
-              next[i] = e.target.value;
-              onChange(next);
+              const next = [...rows];
+              next[i] = { ...row, value: e.target.value };
+              update(next);
             }}
             placeholder={placeholder}
             className={`flex-1 ${INPUT_CLS}`}
           />
           <button
             type="button"
-            onClick={() => onChange(items.filter((_, idx) => idx !== i))}
+            onClick={() => update(rows.filter((_, idx) => idx !== i))}
             className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
           >
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
@@ -208,7 +231,7 @@ export function StringListEditor({
       ))}
       <button
         type="button"
-        onClick={() => onChange([...items, ""])}
+        onClick={() => update([...rows, newRow()])}
         className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"
       >
         <FontAwesomeIcon icon={faPlus} /> Adicionar

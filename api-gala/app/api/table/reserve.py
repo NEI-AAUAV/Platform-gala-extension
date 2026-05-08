@@ -112,5 +112,8 @@ async def reserve_table(
 
         raise HTTPException(status_code=500, detail="Something went wrong")
 
+    await User.get_collection(db).update_one(
+        {"_id": auth_data.sub}, {"$set": {"table_id": table_id}}
+    )
     table = Table.parse_obj(res)
     return sanitize_table(auth_data, table)

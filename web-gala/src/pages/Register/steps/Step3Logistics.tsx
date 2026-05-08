@@ -16,6 +16,7 @@ interface Props {
   readonly onUpdate: (updates: Partial<WizardData>) => void;
   readonly onNext: () => void;
   readonly onBack: () => void;
+  readonly syncing?: boolean;
 }
 
 const BUS_OPTIONS: {
@@ -44,6 +45,7 @@ export default function Step3Logistics({
   onUpdate,
   onNext,
   onBack,
+  syncing,
 }: Readonly<Props>) {
   const updateCompanion = (i: number, patch: Partial<Companion>) => {
     const next = data.companions.map((c, idx) =>
@@ -104,10 +106,10 @@ export default function Step3Logistics({
         </button>
         <button
           onClick={handleNext}
-          disabled={!allMealsSelected}
+          disabled={!allMealsSelected || syncing}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Continuar → Pagamento
+          {syncing ? "A guardar..." : "Continuar → Pagamento"}
         </button>
       </div>
     </motion.div>

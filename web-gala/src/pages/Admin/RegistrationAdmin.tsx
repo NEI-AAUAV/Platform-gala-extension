@@ -26,6 +26,7 @@ import {
   StringListEditor,
   INPUT_CLS,
 } from "./components/AdminUI";
+import { utcIsoToLocalInput, localInputToUtcIso } from "@/utils/datetime";
 
 // ─── Types (local) — TimeSlots and User are global ambient types from .d.ts ──
 
@@ -136,10 +137,9 @@ function PaymentContactsEditor({
             ),
           );
         };
-        const rowKey = `${c.name}-${c.phone}-${i}`;
         return (
           <div
-            key={rowKey}
+            key={c.id ?? i}
             className="grid grid-cols-[4rem_1fr_1fr_2.5rem] gap-2"
           >
             {(["year", "phone", "name"] as const).map((field) => (
@@ -165,7 +165,10 @@ function PaymentContactsEditor({
       <button
         type="button"
         onClick={() =>
-          onChange([...contacts, { year: "", phone: "", name: "" }])
+          onChange([
+            ...contacts,
+            { id: `contact-new-${Date.now()}`, year: "", phone: "", name: "" },
+          ])
         }
         className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"
       >
@@ -219,18 +222,27 @@ function SectionIndex({
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 export default function RegistrationAdmin() {
-  const { config, updateConfig, resetConfig } = useRegistrationConfig();
+  const { config, updateConfig, resetConfig, saving } = useRegistrationConfig();
   const { emailConfig, updateEmails } = useHomepageConfig();
+  const toast = useAppToast();
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState("dates");
 
   // Refs for each section div
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const saveAsync = async (promise: Promise<void>) => {
+    try {
+      await promise;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      toast.error("Erro ao guardar configuração.");
+    }
+  };
+
   const save = (updates: Parameters<typeof updateConfig>[0]) => {
-    updateConfig(updates);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    saveAsync(updateConfig(updates));
   };
 
   // Navigate to section by scrolling parent container
@@ -288,19 +300,21 @@ export default function RegistrationAdmin() {
             As alterações são guardadas automaticamente.
           </p>
           <div className="flex items-center gap-3">
-            {saved && (
+            {saving && (
+              <span className="text-xs font-semibold text-white/40">
+                A guardar...
+              </span>
+            )}
+            {!saving && saved && (
               <span className="text-xs font-semibold text-dark-gold/80">
                 ✓ Guardado
               </span>
             )}
             <button
               type="button"
-              onClick={() => {
-                resetConfig();
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2000);
-              }}
-              className="border-white/15 flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs text-white/40 transition hover:border-white/30 hover:text-white/70"
+              disabled={saving}
+              onClick={() => saveAsync(resetConfig())}
+              className="border-white/15 flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs text-white/40 transition hover:border-white/30 hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <FontAwesomeIcon icon={faRotateLeft} className="text-[0.6rem]" />{" "}
               Repor defaults
@@ -322,20 +336,6 @@ export default function RegistrationAdmin() {
         <div ref={ref("event")}>
           <Section title="2. Informações do Evento">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Data do evento">
-                <TextInput
-                  value={config.eventDate}
-                  onChange={(v) => save({ eventDate: v })}
-                  placeholder="Ex: 14 de junho de 2025"
-                />
-              </Field>
-              <Field label="Horário">
-                <TextInput
-                  value={config.eventTime}
-                  onChange={(v) => save({ eventTime: v })}
-                  placeholder="Ex: 20:00 – 02:00"
-                />
-              </Field>
               <Field label="Local">
                 <TextInput
                   value={config.eventLocation}
@@ -550,47 +550,27 @@ export default function RegistrationAdmin() {
             <div className="flex flex-col gap-4">
               <Toggle
                 enabled={emailConfig.registration_confirmed}
-                onChange={(v) => {
-                  updateEmails({ registration_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ registration_confirmed: v }))}
                 label="Confirmação de Inscrição (Submissão inicial)"
               />
               <Toggle
                 enabled={emailConfig.payment_confirmed}
-                onChange={(v) => {
-                  updateEmails({ payment_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ payment_confirmed: v }))}
                 label="Confirmação de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.payment_rejected}
-                onChange={(v) => {
-                  updateEmails({ payment_rejected: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ payment_rejected: v }))}
                 label="Rejeição de Comprovativo de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.table_invite}
-                onChange={(v) => {
-                  updateEmails({ table_invite: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ table_invite: v }))}
                 label="Convite para Mesa"
               />
               <Toggle
                 enabled={emailConfig.table_confirmed}
-                onChange={(v) => {
-                  updateEmails({ table_confirmed: v });
-                  setSaved(true);
-                  setTimeout(() => setSaved(false), 2000);
-                }}
+                onChange={(v) => saveAsync(updateEmails({ table_confirmed: v }))}
                 label="Confirmação de Entrada em Mesa"
               />
             </div>
@@ -603,8 +583,7 @@ export default function RegistrationAdmin() {
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
-              <span className="font-semibold text-white/60">imagens e PDF</span>
-              . Validação aplicada no backend.
+              <span className="font-semibold text-white/60">imagens e PDF</span>. Validação aplicada no backend.
             </p>
           </Section>
         </div>
@@ -638,8 +617,8 @@ function SystemDatesEditor() {
     if (!time) return;
     const initial: Partial<Record<keyof TimeSlots, string>> = {};
     for (const [field] of SYSTEM_DATE_FIELDS) {
-      initial[field] =
-        (time as unknown as Record<string, string>)[field]?.slice(0, 16) ?? "";
+      const iso = (time as unknown as Record<string, string>)[field];
+      initial[field] = iso ? utcIsoToLocalInput(iso) : "";
     }
     setEdits(initial);
     setDirty(false);
@@ -653,7 +632,10 @@ function SystemDatesEditor() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await GalaService.time.editTimeSlots(edits);
+      const utcEdits = Object.fromEntries(
+        Object.entries(edits).map(([k, v]) => [k, v ? localInputToUtcIso(v) : v]),
+      );
+      await GalaService.time.editTimeSlots(utcEdits);
       setDirty(false);
       toast.success("Datas guardadas.");
     } catch {

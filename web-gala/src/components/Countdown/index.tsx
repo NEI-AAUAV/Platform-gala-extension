@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 
 type CountdownProps = {
-  readonly targetDate: string;
+  readonly targetDate: string | null;
   readonly onComplete?: () => void;
   readonly className?: string;
   readonly label?: string;
 };
+
+function toUtcMs(iso: string): number {
+  const utcIso =
+    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+  return +new Date(utcIso);
+}
 
 export default function Countdown({
   targetDate,
@@ -22,7 +28,11 @@ export default function Countdown({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = +new Date(targetDate) - Date.now();
+      if (!targetDate) {
+        setTimeLeft(null);
+        return;
+      }
+      const difference = toUtcMs(targetDate) - Date.now();
 
       if (difference > 0) {
         setTimeLeft({

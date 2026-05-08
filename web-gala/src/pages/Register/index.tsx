@@ -92,10 +92,20 @@ export default function Register() {
             phasedPayment:
               ((status as unknown as Record<string, unknown>)
                 .phased_payment as boolean) ?? false,
-            companions:
-              normalizeCompanionsFromApi(
-                (status as unknown as Record<string, unknown>).companions,
-              ),
+            companions: normalizeCompanionsFromApi(
+              (status as unknown as Record<string, unknown>).companions,
+            ),
+            tableId:
+              ((status as unknown as Record<string, unknown>).table_id as number | null) ===
+              null
+                ? null
+                : String((status as unknown as Record<string, unknown>).table_id),
+            tableRole:
+              ((status as unknown as Record<string, unknown>).table_id as number | null) ===
+              null
+                ? null
+                : "member",
+
             currentStep: status.registration_step || 1,
           });
         }
@@ -272,6 +282,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 4 && (
@@ -281,6 +292,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 5 && (
@@ -291,6 +303,7 @@ export default function Register() {
                   onUpdate={update}
                   onNext={next}
                   onBack={back}
+                  syncing={syncing}
                 />
               )}
               {currentStep === 6 && (

@@ -137,7 +137,7 @@ export function useHomepageConfig() {
       ...current,
       [section]: { ...current[section], ...updates },
     };
-    save({ homepage: next });
+    return save({ homepage: next });
   };
 
   const emailConfig: EmailNotificationsConfig = raw
@@ -146,7 +146,7 @@ export function useHomepageConfig() {
 
   const updateEmails = (updates: Partial<EmailNotificationsConfig>) => {
     const next = { ...emailConfig, ...updates };
-    save({ email_notifications: next });
+    return save({ email_notifications: next });
   };
 
   return { config, emailConfig, updateSection, updateEmails, loading };

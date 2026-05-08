@@ -16,8 +16,6 @@ function mapFromBackend(
   const contacts = (prices.contacts as Array<Record<string, string>>) ?? [];
 
   return {
-    eventDate: (backend.event_date as string) || "",
-    eventTime: (backend.event_time as string) || "",
     eventLocation: (backend.event_location as string) || "",
     eventPrice: (prices.total_price as number) || 0,
     eventIncludes: (backend.items_included as string[]) || [],
@@ -40,7 +38,8 @@ function mapFromBackend(
     ibanHolder: (prices.holder as string) || "",
     paymentDescription: (prices.description_template as string) || "",
     paymentContacts: contacts.map(
-      (c): PaymentContact => ({
+      (c, i): PaymentContact => ({
+        id: `contact-${i}-${c.year}`,
         name: c.name,
         year: c.year,
         phone: c.phone,
@@ -62,8 +61,6 @@ function mapToBackendPatch(
   return {
     ...existing,
     event_location: config.eventLocation,
-    event_date: config.eventDate,
-    event_time: config.eventTime,
     rules: config.eventRules,
     items_included: config.eventIncludes,
     prices: {
@@ -76,7 +73,7 @@ function mapToBackendPatch(
       iban: config.ibanNumber,
       holder: config.ibanHolder,
       description_template: config.paymentDescription,
-      contacts: config.paymentContacts,
+      contacts: config.paymentContacts.map(({ id: _, ...c }) => c),
     },
     bus: {
       ...(existing.bus as Record<string, unknown>),
@@ -98,7 +95,7 @@ function mapToBackendPatch(
 }
 
 export function useRegistrationConfig() {
-  const { raw, loading, fetch, save } = useConfigStore();
+  const { raw, loading, saving, fetch, save } = useConfigStore();
 
   useEffect(() => {
     fetch();
@@ -110,12 +107,12 @@ export function useRegistrationConfig() {
 
   const updateConfig = (updates: Partial<RegistrationConfig>) => {
     const next = { ...config, ...updates };
-    save(mapToBackendPatch(next, raw ?? {}));
+    return save(mapToBackendPatch(next, raw ?? {}));
   };
 
   const resetConfig = () => {
-    save(mapToBackendPatch(defaultConfig, raw ?? {}));
+    return save(mapToBackendPatch(defaultConfig, raw ?? {}));
   };
 
-  return { config, updateConfig, resetConfig, loading };
+  return { config, updateConfig, resetConfig, loading, saving };
 }

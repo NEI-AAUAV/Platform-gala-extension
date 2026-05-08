@@ -4,6 +4,7 @@ import GalaService from "@/services/GalaService";
 interface ConfigStore {
   raw: Record<string, unknown> | null;
   loading: boolean;
+  saving: boolean;
   fetch: () => Promise<void>;
   save: (patch: Record<string, unknown>) => Promise<void>;
 }
@@ -11,6 +12,7 @@ interface ConfigStore {
 export const useConfigStore = create<ConfigStore>((set, get) => ({
   raw: null,
   loading: false,
+  saving: false,
 
   fetch: async () => {
     if (get().loading) return;
@@ -24,11 +26,18 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   },
 
   save: async (patch: Record<string, unknown>) => {
-    const current = get().raw ?? {};
-    const merged = deepMerge(current, patch);
-    set({ raw: merged });
-    const updated = await GalaService.config.updateConfig(merged);
-    set({ raw: updated });
+    const previous = get().raw ?? {};
+    const merged = deepMerge(previous, patch);
+    set({ raw: merged, saving: true });
+    try {
+      const updated = await GalaService.config.updateConfig(merged);
+      set({ raw: updated });
+    } catch (e) {
+      set({ raw: previous });
+      throw e;
+    } finally {
+      set({ saving: false });
+    }
   },
 }));
 

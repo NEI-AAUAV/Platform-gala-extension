@@ -11,7 +11,7 @@ class ExportService:
     async def export_registrations(db: DBType) -> str:
         user_coll = User.get_collection(db)
         users_cursor = user_coll.find({"is_registered": True})
-        users = await users_cursor.to_list(length=1000)
+        users = await users_cursor.to_list(None)
         
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=[
@@ -65,7 +65,7 @@ class ExportService:
     async def export_tables(db: DBType) -> str:
         table_coll = Table.get_collection(db)
         cursor = table_coll.find({})
-        tables = await cursor.to_list(length=1000)
+        tables = await cursor.to_list(None)
         
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=[
