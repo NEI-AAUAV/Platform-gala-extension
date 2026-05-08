@@ -120,7 +120,7 @@ async def test_payment_review_state_confirmed_phase1():
     from app.services.registration import RegistrationService
     from app.models.user import User
 
-    user = User.parse_obj(_user_doc(payment_phase1_confirmed=True, payment_proof_url="http://proof"))
+    user = User.parse_obj(_user_doc(payment_phase1_confirmed=True, payment_proof_url="https://proof"))
     assert RegistrationService.payment_review_state(user, phase=1) == "confirmed"
 
 
@@ -129,7 +129,7 @@ async def test_payment_review_state_review_phase1():
     from app.services.registration import RegistrationService
     from app.models.user import User
 
-    user = User.parse_obj(_user_doc(payment_proof_url="http://proof"))
+    user = User.parse_obj(_user_doc(payment_proof_url="https://proof"))
     assert RegistrationService.payment_review_state(user, phase=1) == "review"
 
 
@@ -147,7 +147,7 @@ async def test_payment_review_state_confirmed_phase2():
     from app.services.registration import RegistrationService
     from app.models.user import User
 
-    user = User.parse_obj(_user_doc(payment_phase2_confirmed=True, payment_proof_url_phase2="http://p2"))
+    user = User.parse_obj(_user_doc(payment_phase2_confirmed=True, payment_proof_url_phase2="https://p2"))
     assert RegistrationService.payment_review_state(user, phase=2) == "confirmed"
 
 
@@ -156,7 +156,7 @@ async def test_payment_review_state_review_phase2():
     from app.services.registration import RegistrationService
     from app.models.user import User
 
-    user = User.parse_obj(_user_doc(payment_proof_url_phase2="http://p2"))
+    user = User.parse_obj(_user_doc(payment_proof_url_phase2="https://p2"))
     assert RegistrationService.payment_review_state(user, phase=2) == "review"
 
 
