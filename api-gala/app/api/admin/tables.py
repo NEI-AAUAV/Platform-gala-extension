@@ -9,6 +9,7 @@ from app.models.table import Table
 from app.models.user import User
 from app.services.table import TableService
 from app.services.config import ConfigService
+from app.utils import generate_invite_token
 from app.core.email import send_email
 from app.core.config import SettingsDep
 
@@ -27,9 +28,7 @@ async def admin_create_table(
     collection = Table.get_collection(db)
     new_id = await TableService._get_next_id(db)
     
-    import secrets
-    import string
-    invite_token = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+    invite_token = generate_invite_token()
     
     table = Table(
         id=new_id,

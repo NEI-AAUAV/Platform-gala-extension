@@ -1,10 +1,9 @@
-import secrets
-import string
 from typing import Optional, List
 from app.core.db.types import DBType
 from app.models.table import Table, TablePerson, DishType
 from app.models.user import User
 from app.services.storage import storage_client
+from app.utils import generate_invite_token
 
 
 class TableService:
@@ -30,7 +29,7 @@ class TableService:
         # We need a new ID. Using standard counter or high number for now.
         new_id = await TableService._get_next_id(db)
         
-        invite_token = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        invite_token = generate_invite_token()
         
         person = TablePerson(
             id=user_id,
