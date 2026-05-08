@@ -132,7 +132,7 @@ class RegistrationService:
 
         if table_id == "new" and not user.table_id:
             await TableService.create_table(db, user_id, table_name)
-        elif table_id and table_id not in ("none", "null", "invited"):
+        elif table_id and table_id not in ("new", "none", "null", "invited"):
             target_id = int(table_id)
             if user.table_id != target_id:
                 await TableService.join_via_invite(db, user, target_id)

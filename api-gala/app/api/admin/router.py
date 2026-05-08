@@ -24,6 +24,7 @@ from app.services.table import TableService
 from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
+from app.api.time_slots.edit import TimeSlotsEditForm
 
 
 router = APIRouter()
@@ -310,18 +311,40 @@ async def get_registration(
     return User.parse_obj(user_dict)
 
 
+class AdminPatchRegistrationBody(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    nmec: Optional[int] = None
+    phone: Optional[str] = None
+    bus_option: Optional[str] = None
+    meal_option: Optional[str] = None
+    food_allergies: Optional[str] = None
+    phased_payment: Optional[bool] = None
+    has_payed: Optional[bool] = None
+    registration_step: Optional[int] = None
+    is_registered: Optional[bool] = None
+    registration_active: Optional[bool] = None
+    payment_expired: Optional[bool] = None
+
+    class Config:
+        extra = "forbid"
+
+
 @router.patch(
     "/registrations/{user_id}",
-    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+    responses={**auth_responses, 400: {"description": "No fields to update"}, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
 )
 async def update_registration_admin(
     user_id: int,
-    updates: Dict[str, Any],
+    body: AdminPatchRegistrationBody,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Manually updates registration data for a specific user."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+    updates = body.dict(exclude_none=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
     user_coll = User.get_collection(db)
     result = await user_coll.update_one({"_id": user_id}, {"$set": updates})
     if result.matched_count == 0:
@@ -803,13 +826,14 @@ async def get_time_slots(
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": "Time slots not found"}}
 )
 async def update_time_slots(
-    updates: Dict[str, Any],
+    body: TimeSlotsEditForm,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ):
     """Updates the event time slots."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
+    updates = body.dict(by_alias=True, exclude_unset=True)
     await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
     result = await collection.find_one({"_id": TIME_SLOTS_ID})
     return TimeSlots.parse_obj(result)
