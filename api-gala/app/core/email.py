@@ -1,6 +1,6 @@
 from typing import Any
 import aiosmtplib
-from ssl import create_default_context
+import ssl
 from email.utils import formatdate, make_msgid
 from email.message import EmailMessage
 from jinja2 import Environment, select_autoescape, FileSystemLoader
@@ -83,12 +83,18 @@ async def send_email(
     message.add_alternative(html_content, subtype="html", charset="utf-8")
     message["X-Mailer"] = "NEI Gala API"
 
+    tls_context = ssl.create_default_context()
+    tls_context.check_hostname = True
+    tls_context.verify_mode = ssl.CERT_REQUIRED
+    tls_context.minimum_version = ssl.TLSVersion.TLSv1_2
+
     smtp = aiosmtplib.SMTP(
         hostname=settings.EMAIL_SMTP_HOST,
         port=settings.EMAIL_SMTP_PORT,
         timeout=20,
         start_tls=True,
-        tls_context=create_default_context(),
+        validate_certs=True,
+        tls_context=tls_context,
     )
 
     try:
