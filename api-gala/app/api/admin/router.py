@@ -137,6 +137,8 @@ async def confirm_payment(
         {"$set": update_data},
         return_document=True,
     )
+    if user_dict is None:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
     user = User.parse_obj(user_dict)
     
@@ -216,10 +218,18 @@ async def reject_payment_proof(
     user_coll = User.get_collection(db)
     field = "payment_proof_url" if phase == 1 else "payment_proof_url_phase2"
     confirmed_field = "payment_phase1_confirmed" if phase == 1 else "payment_phase2_confirmed"
-    
+
+    current = await user_coll.find_one({"_id": user_id})
+    if not current:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+    current_user = User.parse_obj(current)
+
+    # Rejecting phase 2 on a non-phased user must not clear has_payed (phase 1 remains valid)
+    new_has_payed = False if (phase == 1 or current_user.phased_payment) else current_user.has_payed
+
     user_dict = await user_coll.find_one_and_update(
         {"_id": user_id},
-        {"$set": {"has_payed": False, field: None, confirmed_field: False}},
+        {"$set": {"has_payed": new_has_payed, field: None, confirmed_field: False}},
         return_document=True,
     )
     if not user_dict:
@@ -573,10 +583,10 @@ def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, A
             elif field == "email": val = val.strip().lower()
             update_data[field] = val
 
-    if body.matriculation is not None:
-        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
-    elif body.matriculation == 0:
+    if body.matriculation == 0:
         update_data["matriculation"] = None
+    elif body.matriculation is not None:
+        update_data["matriculation"] = Matriculation(__root__=body.matriculation).dict()
 
     if body.has_payed is not None:
         update_data.update({

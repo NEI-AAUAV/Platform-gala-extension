@@ -1,4 +1,5 @@
 from typing import Optional, Dict, Any
+from pymongo.errors import DuplicateKeyError
 from app.core.db.types import DBType
 from app.models.user import User, BusOption
 from app.services.config import ConfigService
@@ -16,6 +17,23 @@ class RegistrationService:
         if user_dict:
             return User.parse_obj(user_dict)
         return None
+
+    @staticmethod
+    async def get_or_create_user_registration(
+        db: DBType, user_id: int, email: str, name: str, nmec: Optional[int]
+    ) -> User:
+        user = await RegistrationService.get_user_registration(db, user_id)
+        if user:
+            return user
+        new_user = User(id=user_id, nmec=nmec or 0, email=email, name=name, registration_step=1)
+        try:
+            await User.get_collection(db).insert_one(new_user.dict(by_alias=True))
+            return new_user
+        except DuplicateKeyError:
+            user = await RegistrationService.get_user_registration(db, user_id)
+            if user:
+                return user
+            raise RuntimeError(f"Failed to create or fetch registration for user {user_id}")
 
     @staticmethod
     def payment_review_state(user: User, phase: int) -> str:
