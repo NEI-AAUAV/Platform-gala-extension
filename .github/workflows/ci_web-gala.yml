@@ -1,0 +1,89 @@
+name: Test web-gala
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ci_web-gala.yml"
+      - "web-gala/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ci_web-gala.yml"
+      - "web-gala/**"
+  workflow_dispatch:
+
+jobs:
+  lint-and-build:
+    name: Lint & TypeScript build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: web-gala/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('web-gala/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        working-directory: web-gala
+        run: yarn install --frozen-lockfile --network-timeout 100000
+
+      - name: Lint
+        working-directory: web-gala
+        run: yarn lint
+
+      - name: TypeScript build
+        working-directory: web-gala
+        run: yarn build
+
+  e2e:
+    name: Playwright e2e
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: web-gala/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('web-gala/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        working-directory: web-gala
+        run: yarn install --frozen-lockfile --network-timeout 100000
+
+      - name: Install Playwright browsers
+        working-directory: web-gala
+        run: yarn playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: web-gala
+        run: yarn playwright test --project=chromium
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web-gala/playwright-report/
+          retention-days: 7
