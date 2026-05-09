@@ -303,38 +303,36 @@ export default function UserDetail({
             Acompanhantes ({user.companions.length})
           </p>
           <div className="flex flex-col gap-1.5">
-            {user.companions.map((c, i) => (
-              (() => {
-                const companion = c as Companion & { meal?: string };
-                const companionDish = companion.dish || companion.meal || "—";
-                const companionAllergies = companion.allergies || "—";
-                return (
-              <div
-                key={`${c.name}-${i}`}
-                className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
-              >
-                <span className="text-white/40">#{i + 1}</span>
-                <span className="min-w-0 flex-1 truncate text-white/85">
-                  {c.name || "Sem nome"}
-                </span>
-                {c.email && (
-                  <span className="min-w-0 flex-1 truncate text-xs text-white/45">
-                    {c.email}
+            {user.companions.map((c, i) => {
+              const companion = c as Companion & { meal?: string };
+              const companionDish = companion.dish || companion.meal || "—";
+              const companionAllergies = companion.allergies || "—";
+              return (
+                <div
+                  key={c.name || i}
+                  className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                >
+                  <span className="text-white/40">#{i + 1}</span>
+                  <span className="min-w-0 flex-1 truncate text-white/85">
+                    {c.name || "Sem nome"}
                   </span>
-                )}
-                <span className="flex items-center gap-1">
-                  {dishIcon.get(companionDish)}
-                </span>
-                <span className="text-xs text-white/65">
-                  Prato: {companionDish}
-                </span>
-                <span className="text-xs text-red-400/70">
-                  Alergias: {companionAllergies}
-                </span>
-              </div>
-                );
-              })()
-            ))}
+                  {c.email && (
+                    <span className="min-w-0 flex-1 truncate text-xs text-white/45">
+                      {c.email}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    {dishIcon.get(companionDish)}
+                  </span>
+                  <span className="text-xs text-white/65">
+                    Prato: {companionDish}
+                  </span>
+                  <span className="text-xs text-red-400/70">
+                    Alergias: {companionAllergies}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

@@ -53,7 +53,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
   };
 
   useEffect(() => {
-    if (votes.length <= 1) return;
+    if (votes.length <= 1) return undefined;
     startAutoPlay();
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -100,6 +100,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
         {votes.map((vote, idx) => (
           <button
             key={vote._id}
+            type="button"
             onClick={() => handleSelect(idx)}
             className={[
               "rounded-full border px-4 py-1.5 font-gala text-xs font-semibold transition-all duration-300",
@@ -153,7 +154,7 @@ function CategoryNominees({
       <ul className="flex flex-col gap-2">
         {nominees.map((name, i) => (
           <li
-            key={name + i}
+            key={name}
             className="border-white/6 bg-white/3 flex items-center gap-3 rounded-xl border px-4 py-2.5"
           >
             <span className="font-gala text-xs font-bold text-light-gold/40">

@@ -86,7 +86,7 @@ export default function Step6Confirm({
           Acompanhantes ({data.companions.length})
         </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {data.companions.map((c, i) => {
+          {data.companions.map((c) => {
             const meal =
               config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
             return (

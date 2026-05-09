@@ -40,6 +40,7 @@ export default function TimelineSection() {
             {phases.map((phase, idx) => (
               <button
                 key={phase.id}
+                type="button"
                 onClick={() => setSelectedPhase(phase.id)}
                 className={`group relative overflow-hidden rounded-xl border p-6 text-left transition-all duration-500 ${
                   selectedPhase === phase.id

@@ -32,7 +32,9 @@ export function formatTimePT(isoString: string | null): string {
   if (!isoString) return "—";
   const d = toUtcDate(isoString);
   if (Number.isNaN(d.getTime()) || d.getFullYear() <= 1970) return "—";
-  return `${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}`;
+  return `${String(d.getHours()).padStart(2, "0")}h${String(
+    d.getMinutes(),
+  ).padStart(2, "0")}`;
 }
 
 export function formatDateTimePT(isoString: string): string {

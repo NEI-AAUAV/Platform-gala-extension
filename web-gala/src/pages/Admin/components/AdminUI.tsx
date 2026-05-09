@@ -18,9 +18,9 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+      <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
         {label}
-      </label>
+      </p>
       {children}
     </div>
   );
@@ -175,8 +175,8 @@ export function Section({
 
 type Row = { id: string; value: string };
 
-let _rowCounter = 0;
-const newRow = (value = ""): Row => ({ id: `row-${_rowCounter++}`, value });
+let rowCounter = 0;
+const newRow = (value = ""): Row => ({ id: `row-${rowCounter++}`, value });
 const toRows = (values: string[]): Row[] => values.map((v) => newRow(v));
 
 export function StringListEditor({

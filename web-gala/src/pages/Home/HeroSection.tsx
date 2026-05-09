@@ -255,7 +255,10 @@ export default function HeroSection() {
             text={time?.galaStart ? formatDatePT(time.galaStart) : "Em breve"}
           />
           <span className="bg-white/15 h-3 w-px" />
-          <EventPill icon={faClock} text={formatTimePT(time?.galaStart ?? null)} />
+          <EventPill
+            icon={faClock}
+            text={formatTimePT(time?.galaStart ?? null)}
+         />
           <span className="bg-white/15 h-3 w-px" />
           <EventPill icon={faLocationDot} text={config.eventLocation || "—"} />
         </motion.div>
