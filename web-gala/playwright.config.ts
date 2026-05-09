@@ -12,9 +12,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:5173/gala/",
+    baseURL: "http://localhost/gala/",
     trace: "on-first-retry",
     viewport: { width: 1280, height: 720 },
+    reducedMotion: "reduce",
   },
   projects: [
     {
@@ -34,9 +35,4 @@ export default defineConfig({
         ]
       : []),
   ],
-  webServer: {
-    command: "npm run dev",
-    port: 5173,
-    reuseExistingServer: true,
-  },
 });

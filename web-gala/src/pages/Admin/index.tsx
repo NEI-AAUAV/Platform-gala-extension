@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEye,
@@ -136,6 +136,7 @@ const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
 };
 
 export default function Admin() {
+  const prefersReducedMotion = useReducedMotion();
   const { isAdmin, permissions, loading, error } = useManagerPermissions();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -380,7 +381,7 @@ export default function Admin() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
                   >
                     {activeTab === "registration" && <RegistrationAdmin />}
                     {activeTab === "inscritos" && <RegistrantsAdmin />}

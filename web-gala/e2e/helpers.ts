@@ -92,6 +92,8 @@ export async function mockRegisteredUser(page: Page) {
         bus_assignment: null,
         registration_step: 6,
         phone: null,
+        is_registered: true,
+        table_id: null,
       }
     });
   });
@@ -158,4 +160,20 @@ export async function mockTimeSlots(page: Page) {
 
 export function createAuthState(_role: 'unauth' | 'user' | 'admin' | 'manager-gala', _isRegistered: boolean = false) {
   return { cookies: [], origins: [] };
+}
+
+export async function disableAnimations(page: Page) {
+  await page.addInitScript(() => {
+    const mql = (query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    });
+    Object.defineProperty(globalThis, 'matchMedia', { writable: true, value: mql });
+  });
 }

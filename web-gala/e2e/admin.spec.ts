@@ -6,6 +6,7 @@ import {
   mockRegisteredUser,
   mockManagerPermissions,
   mockManagerList,
+  disableAnimations,
 } from './helpers';
 
 const ADMIN_MANAGERS = [
@@ -23,8 +24,16 @@ async function mockCommonAdminRoutes(page: Parameters<typeof mockGlobalConfig>[0
   });
 }
 
+// Scoped to the sidebar nav and anchored to the start of button text to avoid
+// matching buttons whose descriptions happen to contain the label word (e.g.
+// "Inscritos" description contains "mesas e autocarros").
+function navTab(page: Parameters<typeof mockGlobalConfig>[0], label: string) {
+  return page.locator('nav').locator('button').filter({ hasText: new RegExp(`^${label}`) });
+}
+
 test.describe('Admin Panel as Admin', () => {
   test.beforeEach(async ({ page }) => {
+    await disableAnimations(page);
     await mockAuth(page, 'admin');
     await mockRegisteredUser(page);
     await mockManagerPermissions(page, [], true);
@@ -35,30 +44,30 @@ test.describe('Admin Panel as Admin', () => {
   test('shows all tabs including Permissões', async ({ page }) => {
     await page.goto('./admin');
 
-    await expect(page.locator('button:has-text("Inscrições")')).toBeVisible();
-    await expect(page.locator('button:has-text("Mesas")')).toBeVisible();
-    await expect(page.locator('button:has-text("Categorias")')).toBeVisible();
-    await expect(page.locator('button:has-text("Resultados")')).toBeVisible();
-    await expect(page.locator('button:has-text("Homepage")')).toBeVisible();
-    await expect(page.locator('button:has-text("Autocarros")')).toBeVisible();
-    await expect(page.locator('button:has-text("Permissões")')).toBeVisible();
+    await expect(navTab(page, 'Configurações')).toBeVisible();
+    await expect(navTab(page, 'Inscritos')).toBeVisible();
+    await expect(navTab(page, 'Mesas')).toBeVisible();
+    await expect(navTab(page, 'Categorias')).toBeVisible();
+    await expect(navTab(page, 'Resultados')).toBeVisible();
+    await expect(navTab(page, 'Homepage')).toBeVisible();
+    await expect(navTab(page, 'Permissões')).toBeVisible();
   });
 
   test('navigates between tabs', async ({ page }) => {
     await page.goto('./admin');
 
-    await page.click('button:has-text("Categorias")');
-    await expect(page.locator('text=Gestão de Categorias')).toBeVisible();
+    await navTab(page, 'Categorias').click();
+    await expect(page.locator('h1:has-text("Categorias de Votação")').first()).toBeVisible();
 
-    await page.click('button:has-text("Homepage")');
-    await expect(page.locator('text=Conteúdo da Homepage')).toBeVisible();
+    await navTab(page, 'Homepage').click();
+    await expect(page.locator('h1:has-text("Conteúdo da Homepage")').first()).toBeVisible();
   });
 
   test('Permissões tab lists managers with toggles', async ({ page }) => {
     await page.goto('./admin');
 
-    await page.click('button:has-text("Permissões")');
-    await expect(page.locator('text=Permissões de Managers')).toBeVisible();
+    await navTab(page, 'Permissões').click();
+    await expect(page.locator('h1:has-text("Permissões de Managers")').first()).toBeVisible();
     await expect(page.locator('text=Manager Gala')).toBeVisible();
     await expect(page.locator('text=manager@ua.pt')).toBeVisible();
   });
@@ -75,17 +84,17 @@ test.describe('Admin Panel as Manager-Gala (registration + tables)', () => {
   test('shows only permitted tabs, no Permissões tab', async ({ page }) => {
     await page.goto('./admin');
 
-    await expect(page.locator('button:has-text("Inscrições")')).toBeVisible();
-    await expect(page.locator('button:has-text("Mesas")')).toBeVisible();
-    await expect(page.locator('button:has-text("Categorias")')).not.toBeVisible();
-    await expect(page.locator('button:has-text("Homepage")')).not.toBeVisible();
-    await expect(page.locator('button:has-text("Autocarros")')).not.toBeVisible();
-    await expect(page.locator('button:has-text("Permissões")')).not.toBeVisible();
+    await expect(navTab(page, 'Configurações')).toBeVisible();
+    await expect(navTab(page, 'Inscritos')).toBeVisible();
+    await expect(navTab(page, 'Mesas')).toBeVisible();
+    await expect(navTab(page, 'Categorias')).not.toBeVisible();
+    await expect(navTab(page, 'Homepage')).not.toBeVisible();
+    await expect(navTab(page, 'Permissões')).not.toBeVisible();
   });
 
   test('lands on first permitted tab', async ({ page }) => {
     await page.goto('./admin');
-    await expect(page.locator('text=Configuração das Inscrições')).toBeVisible();
+    await expect(page.locator('h1:has-text("Configurações do Jantar")').first()).toBeVisible();
   });
 });
 
@@ -115,9 +124,10 @@ test.describe('Admin Panel as Manager-Gala (categories only)', () => {
   test('shows only Categorias and Resultados tabs', async ({ page }) => {
     await page.goto('./admin');
 
-    await expect(page.locator('button:has-text("Categorias")')).toBeVisible();
-    await expect(page.locator('button:has-text("Resultados")')).toBeVisible();
-    await expect(page.locator('button:has-text("Inscrições")')).not.toBeVisible();
-    await expect(page.locator('button:has-text("Mesas")')).not.toBeVisible();
+    await expect(navTab(page, 'Categorias')).toBeVisible();
+    await expect(navTab(page, 'Resultados')).toBeVisible();
+    await expect(navTab(page, 'Configurações')).not.toBeVisible();
+    await expect(navTab(page, 'Inscritos')).not.toBeVisible();
+    await expect(navTab(page, 'Mesas')).not.toBeVisible();
   });
 });
