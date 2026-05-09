@@ -27,7 +27,7 @@ function ProtectedRoute({
     return <Navigate to="/" />;
   }
 
-  return <>{children}</>;
+  return children;
 }
 
 const routes = [

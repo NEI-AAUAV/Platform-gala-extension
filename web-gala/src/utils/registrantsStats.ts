@@ -28,7 +28,10 @@ export function computeStats(users: User[]): RegistrantsStats {
     totalCompanions += companionCount;
 
     for (const c of u.companions ?? []) {
-      const companionMeal = (c as Companion & { meal?: string }).dish || (c as Companion & { meal?: string }).meal || "—";
+      const companionMeal =
+        (c as Companion & { meal?: string }).dish ||
+        (c as Companion & { meal?: string }).meal ||
+        "—";
       byMeal[companionMeal] = (byMeal[companionMeal] ?? 0) + 1;
       byBusOption[u.bus_option] = (byBusOption[u.bus_option] ?? 0) + 1;
     }

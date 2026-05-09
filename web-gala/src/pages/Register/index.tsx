@@ -98,13 +98,17 @@ export default function Register() {
               (status as unknown as Record<string, unknown>).companions,
             ),
             tableId:
-              ((status as unknown as Record<string, unknown>).table_id as number | null) ===
-              null
+              ((status as unknown as Record<string, unknown>).table_id as
+                | number
+                | null) === null
                 ? null
-                : String((status as unknown as Record<string, unknown>).table_id),
+                : String(
+                    (status as unknown as Record<string, unknown>).table_id,
+                  ),
             tableRole:
-              ((status as unknown as Record<string, unknown>).table_id as number | null) ===
-              null
+              ((status as unknown as Record<string, unknown>).table_id as
+                | number
+                | null) === null
                 ? null
                 : "member",
 

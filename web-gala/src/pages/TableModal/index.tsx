@@ -137,6 +137,7 @@ export default function TableModal({ tableId, onClose }: TableModalProps) {
       {onClose ? (
         <button
           type="button"
+          aria-label="Fechar modal"
           className="absolute inset-0 -z-10"
           onClick={onClose}
         />

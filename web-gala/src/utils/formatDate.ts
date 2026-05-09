@@ -17,7 +17,7 @@ function toUtcDate(isoString: string): Date {
   const utcIso =
     isoString.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(isoString)
       ? isoString
-      : isoString + "Z";
+      : `${isoString}Z`;
   return new Date(utcIso);
 }
 

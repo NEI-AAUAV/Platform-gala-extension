@@ -410,6 +410,7 @@ function TableCard({
 
   return (
     <button
+      type="button"
       onClick={() => canSelect && !isFull && onSelect()}
       disabled={(isFull && !isSelected) || (!canSelect && !isSelected)}
       className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all ${containerStyles} ${cursorStyles}`}

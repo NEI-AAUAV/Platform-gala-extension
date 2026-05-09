@@ -91,7 +91,7 @@ export default function Step6Confirm({
               config.mealOptions.find((m) => m.id === c.meal)?.label ?? "—";
             return (
               <div
-                key={`${c.name}-${i}`}
+                key={c.id}
                 className="border-white/8 bg-white/4 flex items-start gap-3 rounded-xl border p-4"
               >
                 <div className="bg-white/6 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
@@ -210,7 +210,9 @@ export default function Step6Confirm({
                 <FontAwesomeIcon icon={faChair} />
               </div>
               <div>
-                <p className="text-sm font-bold text-white/80">{selectedTable}</p>
+                <p className="text-sm font-bold text-white/80">
+                  {selectedTable}
+                </p>
                 <p className="text-[0.65rem] text-white/40">
                   {data.tableRole === "owner" ? "Head de Mesa" : "Membro"}
                 </p>
@@ -252,12 +254,14 @@ export default function Step6Confirm({
 
       <div className="mt-4 flex items-center justify-between">
         <button
+          type="button"
           onClick={onBack}
           className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
         <button
+          type="button"
           onClick={onFinish}
           disabled={syncing}
           className="flex items-center gap-2 border border-light-gold/60 bg-gradient-to-r from-dark-gold/80 to-light-gold/80 px-10 py-3 font-gala text-sm font-bold text-black transition-all hover:from-dark-gold hover:to-light-gold disabled:opacity-60"

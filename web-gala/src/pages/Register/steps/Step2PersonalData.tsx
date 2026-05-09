@@ -142,12 +142,14 @@ export default function Step2PersonalData({
 
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={onBack}
           className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
         <button
+          type="button"
           onClick={handleNext}
           disabled={syncing}
           className="flex items-center gap-2 border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:opacity-60"
