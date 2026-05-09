@@ -15,7 +15,7 @@ export default defineConfig({
     baseURL: "http://localhost/gala/",
     trace: "on-first-retry",
     viewport: { width: 1280, height: 720 },
-    reducedMotion: "reduce",
+    contextOptions: { reducedMotion: "reduce" },
   },
   projects: [
     {

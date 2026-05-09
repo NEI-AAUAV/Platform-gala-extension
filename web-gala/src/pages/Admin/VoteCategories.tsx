@@ -213,7 +213,6 @@ function CreateCategoryForm({
 
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: any) {
-      console.error(err);
       setStatus("error");
 
       let errorMsg = "Erro ao criar categoria.";
@@ -327,8 +326,6 @@ function CategoryRow({
       toast.success("A categoria foi removida com sucesso.");
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao apagar categoria.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -368,8 +365,6 @@ function CategoryRow({
       setIsEditing(false);
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao editar categoria.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -391,8 +386,6 @@ function CategoryRow({
       toast.success(`Foto da opção ${optionIndex + 1} carregada!`);
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao carregar imagem.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -418,8 +411,6 @@ function CategoryRow({
       toast.success("A foto foi removida.");
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao remover imagem.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -636,13 +627,14 @@ function CategoryRow({
 export default function VoteCategories() {
   const [categories, setCategories] = useState<Vote[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useAppToast();
 
   const refresh = () => {
     setLoading(true);
     GalaService.vote
       .listCategories()
       .then((data) => setCategories(data))
-      .catch(console.error)
+      .catch(() => toast.error("Erro ao carregar categorias."))
       .finally(() => setLoading(false));
   };
 

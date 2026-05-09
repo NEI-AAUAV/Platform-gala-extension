@@ -3,18 +3,17 @@ import GalaService from "@/services/GalaService";
 
 function VoteResults() {
   const [data, setData] = React.useState<Vote[]>([]);
+  const [fetchError, setFetchError] = React.useState(false);
 
   useEffect(() => {
-    // Function to fetch data
     const fetchData = () => {
       GalaService.vote
         .listCategories()
         .then((res) => {
           setData(res);
+          setFetchError(false);
         })
-        .catch((err) => {
-          console.error(err);
-        });
+        .catch(() => setFetchError(true));
     };
 
     // Fetch data initially
@@ -30,6 +29,11 @@ function VoteResults() {
   return (
     <div className="flex flex-col items-center py-20">
       <h1 className="mb-4 text-3xl font-bold text-dark-gold">Vote Results</h1>
+      {fetchError && (
+        <p className="mb-4 text-sm text-red-400/70">
+          Erro ao carregar resultados. A tentar novamente...
+        </p>
+      )}
       <table className="my-20 w-full overflow-hidden rounded-lg  text-center text-light-gold">
         <thead className="bg-dark-gold text-black">
           <tr>
