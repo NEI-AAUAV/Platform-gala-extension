@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         working-directory: api-gala
         run: |
-          poetry lock --no-update
+          poetry lock
           poetry install --no-interaction --no-root
 
       - name: Run tests
