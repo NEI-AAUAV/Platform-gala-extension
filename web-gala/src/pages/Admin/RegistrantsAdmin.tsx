@@ -136,12 +136,8 @@ export default function RegistrantsAdmin() {
   const handleDelete = async () => {
     if (!selectedUser) return;
     // eslint-disable-next-line no-restricted-globals, no-alert
-    if (
-      !confirm(
-        `Tem a certeza que deseja eliminar a inscrição de ${selectedUser.name}? Esta ação não pode ser desfeita.`,
-      )
-    )
-      return;
+    const confirmed = confirm(`Tem a certeza que deseja eliminar a inscrição de ${selectedUser.name}? Esta ação não pode ser desfeita.`);
+    if (!confirmed) return;
     try {
       await GalaService.admin.deleteRegistration(selectedUser._id);
       toast.success("Inscrição eliminada com sucesso.");
@@ -248,12 +244,8 @@ export default function RegistrantsAdmin() {
   const handleRejectProof = async (phase: number) => {
     if (!selectedUser) return;
     // eslint-disable-next-line no-restricted-globals, no-alert
-    if (
-      !confirm(
-        `Tem a certeza que deseja rejeitar o comprovativo (fase ${phase}) e notificar o utilizador por email?`,
-      )
-    )
-      return;
+    const confirmed = confirm(`Tem a certeza que deseja rejeitar o comprovativo (fase ${phase}) e notificar o utilizador por email?`);
+    if (!confirmed) return;
     try {
       await GalaService.admin.rejectPaymentProof(selectedUser._id, phase);
       toast.success("Comprovativo rejeitado com sucesso.");
