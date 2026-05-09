@@ -30,15 +30,17 @@ const BUS_OPTION_REVERSE: Record<BusOption, string> = {
   none: "NONE",
 };
 
+const toStr = (v: unknown): string => (typeof v === "string" ? v : "");
+
 function normalizeCompanionsFromApi(raw: unknown): Companion[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((c) => {
     const item = c as Record<string, unknown>;
     return {
-      name: String(item.name ?? ""),
-      email: item.email ? String(item.email) : "",
-      meal: String(item.meal ?? item.dish ?? ""),
-      allergies: String(item.allergies ?? ""),
+      name: toStr(item.name),
+      email: toStr(item.email),
+      meal: toStr(item.meal) || toStr(item.dish),
+      allergies: toStr(item.allergies),
     };
   });
 }

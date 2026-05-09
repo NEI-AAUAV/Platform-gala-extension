@@ -56,12 +56,12 @@ export function computeStats(users: User[]): RegistrantsStats {
     ).length,
     withTable: users.reduce(
       (acc, u) =>
-        acc + (u.table_id !== null ? 1 + (u.companions?.length ?? 0) : 0),
+        acc + (u.table_id === null ? 0 : 1 + (u.companions?.length ?? 0)),
       0,
     ),
     withBus: users.reduce(
       (acc, u) =>
-        acc + (u.bus_option !== "NONE" ? 1 + (u.companions?.length ?? 0) : 0),
+        acc + (u.bus_option === "NONE" ? 0 : 1 + (u.companions?.length ?? 0)),
       0,
     ),
     byYear,
