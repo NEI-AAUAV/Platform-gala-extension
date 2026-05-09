@@ -9,7 +9,7 @@ export default function VoteCard({ vote }: Props) {
     <div className="flex flex-col gap-4 rounded-xl border border-dark-gold bg-black/20 p-4 backdrop-blur-md">
       <div
         id="header"
-        className="text-base-200 flex flex-row items-center gap-3"
+        className="flex flex-row items-center gap-3 text-base-200"
       >
         <div id="title" className="flex-1 text-center">
           <h2 className="font-gala text-sm font-light text-neutral-400">

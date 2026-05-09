@@ -550,17 +550,23 @@ export default function RegistrationAdmin() {
             <div className="flex flex-col gap-4">
               <Toggle
                 enabled={emailConfig.registration_confirmed}
-                onChange={(v) => saveAsync(updateEmails({ registration_confirmed: v }))}
+                onChange={(v) =>
+                  saveAsync(updateEmails({ registration_confirmed: v }))
+                }
                 label="Confirmação de Inscrição (Submissão inicial)"
               />
               <Toggle
                 enabled={emailConfig.payment_confirmed}
-                onChange={(v) => saveAsync(updateEmails({ payment_confirmed: v }))}
+                onChange={(v) =>
+                  saveAsync(updateEmails({ payment_confirmed: v }))
+                }
                 label="Confirmação de Pagamento"
               />
               <Toggle
                 enabled={emailConfig.payment_rejected}
-                onChange={(v) => saveAsync(updateEmails({ payment_rejected: v }))}
+                onChange={(v) =>
+                  saveAsync(updateEmails({ payment_rejected: v }))
+                }
                 label="Rejeição de Comprovativo de Pagamento"
               />
               <Toggle
@@ -570,7 +576,9 @@ export default function RegistrationAdmin() {
               />
               <Toggle
                 enabled={emailConfig.table_confirmed}
-                onChange={(v) => saveAsync(updateEmails({ table_confirmed: v }))}
+                onChange={(v) =>
+                  saveAsync(updateEmails({ table_confirmed: v }))
+                }
                 label="Confirmação de Entrada em Mesa"
               />
             </div>
@@ -583,7 +591,8 @@ export default function RegistrationAdmin() {
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
-              <span className="font-semibold text-white/60">imagens e PDF</span>. Validação aplicada no backend.
+              <span className="font-semibold text-white/60">imagens e PDF</span>
+              . Validação aplicada no backend.
             </p>
           </Section>
         </div>
@@ -633,7 +642,10 @@ function SystemDatesEditor() {
     setSaving(true);
     try {
       const utcEdits = Object.fromEntries(
-        Object.entries(edits).map(([k, v]) => [k, v ? localInputToUtcIso(v) : v]),
+        Object.entries(edits).map(([k, v]) => [
+          k,
+          v ? localInputToUtcIso(v) : v,
+        ]),
       );
       await GalaService.time.editTimeSlots(utcEdits);
       setDirty(false);

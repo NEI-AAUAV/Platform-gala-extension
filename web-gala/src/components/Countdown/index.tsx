@@ -9,7 +9,7 @@ type CountdownProps = {
 
 function toUtcMs(iso: string): number {
   const utcIso =
-    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
   return +new Date(utcIso);
 }
 

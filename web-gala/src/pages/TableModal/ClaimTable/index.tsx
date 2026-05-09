@@ -82,6 +82,7 @@ export default function ClaimTable({ table, mutate }: ClaimTableProps) {
 
         {/* Table name input */}
         <div className="space-y-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor="table-name"
             className="text-[0.65rem] font-bold uppercase tracking-widest text-white/30"

@@ -313,18 +313,18 @@ export default function UserDetail({
                   className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
                 >
                   <span className="text-white/40">#{i + 1}</span>
-                  <span className="min-w-0 flex-1 truncate text-white/85">
+                  <span className="text-white/85 min-w-0 flex-1 truncate">
                     {c.name || "Sem nome"}
                   </span>
                   {c.email && (
-                    <span className="min-w-0 flex-1 truncate text-xs text-white/45">
+                    <span className="text-white/45 min-w-0 flex-1 truncate text-xs">
                       {c.email}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
                     {dishIcon.get(companionDish)}
                   </span>
-                  <span className="text-xs text-white/65">
+                  <span className="text-white/65 text-xs">
                     Prato: {companionDish}
                   </span>
                   <span className="text-xs text-red-400/70">

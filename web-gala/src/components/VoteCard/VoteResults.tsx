@@ -47,8 +47,8 @@ function VoteResults() {
               <td className="border-r border-dark-gold p-2">{item.category}</td>
               <td className="border-r border-dark-gold p-2">
                 <ul className="divide-y divide-dark-gold">
-                  {item.options.map((option, index) => (
-                    <li key={`${item._id}-option-${index}`} className="py-1">
+                  {item.options.map((option) => (
+                    <li key={`${item._id}-option-${option}`} className="py-1">
                       {option}
                     </li>
                   ))}
@@ -57,7 +57,10 @@ function VoteResults() {
               <td className="p-2">
                 <ul className="divide-y divide-dark-gold">
                   {item.scores.map((score, index) => (
-                    <li key={`${item._id}-score-${index}`} className="py-1">
+                    <li
+                      key={`${item._id}-score-${item.options[index]}`}
+                      className="py-1"
+                    >
                       {score}
                     </li>
                   ))}

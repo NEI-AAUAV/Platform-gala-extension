@@ -234,6 +234,7 @@ function FormSection({
       </h3>
       <div className="border-white/8 bg-white/4 flex flex-col gap-5 rounded-xl border p-5">
         <div className="flex flex-col gap-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor="nmec-input"
             className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"
@@ -284,6 +285,7 @@ function FormSection({
         </div>
 
         <div className="flex flex-col gap-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor="phone-input"
             className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"
