@@ -13,6 +13,8 @@ import {
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
+import { useUserStore } from "@/stores/useUserStore";
+import type { UserState } from "@/stores/useUserStore";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -40,6 +42,7 @@ export default function Step4Payment({
   onBack,
   syncing,
 }: Readonly<Props>) {
+  const { name: userName } = useUserStore((s: UserState) => s);
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement>(null);
@@ -94,8 +97,8 @@ export default function Step4Payment({
 
   const renderPaymentMethods = () => {
     let yearLabel = "1";
-    if (data.matriculation) {
-      yearLabel = data.matriculation >= 5 ? "5" : String(data.matriculation);
+    if (data.year) {
+      yearLabel = data.year >= 5 ? "5" : String(data.year);
     }
     const contact =
       config.paymentContacts.find((c) => c.year.startsWith(yearLabel)) ??
@@ -189,7 +192,7 @@ export default function Step4Payment({
           </span>
           <span className="text-xs italic text-white/80">
             {config.paymentDescription
-              .replace("<Nome>", data.name || "Teu Nome")
+              .replace("<Nome>", userName || "Teu Nome")
               .replace("<Nmec>", data.nmec ? String(data.nmec) : "Teu Nmec")}
           </span>
         </div>

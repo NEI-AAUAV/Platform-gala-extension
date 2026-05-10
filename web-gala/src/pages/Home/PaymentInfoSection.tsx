@@ -30,10 +30,10 @@ export default function PaymentInfoSection({
     phase2Deadline,
     eventPrice,
   } = registrationConfig;
-  const registrationOpenDate = time
+  const registrationOpenDate = time?.registrationStart
     ? formatDateTimePT(time.registrationStart)
     : "A anunciar";
-  const registrationCloseDate = time
+  const registrationCloseDate = time?.registrationEnd
     ? formatDateTimePT(time.registrationEnd)
     : "A anunciar";
 

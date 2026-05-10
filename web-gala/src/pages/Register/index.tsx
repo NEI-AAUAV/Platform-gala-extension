@@ -125,7 +125,7 @@ export default function Register() {
 
   const registrationStatus = time?.registrationStatus;
   if (time && registrationStatus === TimeStatus.OPENING) {
-    const opensAt = formatDateTimePT(time.registrationStart);
+    const opensAt = time.registrationStart ? formatDateTimePT(time.registrationStart) : "brevemente";
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
@@ -141,7 +141,7 @@ export default function Register() {
   }
 
   if (time && registrationStatus === TimeStatus.CLOSED) {
-    const closedAt = formatDateTimePT(time.registrationEnd);
+    const closedAt = time.registrationEnd ? formatDateTimePT(time.registrationEnd) : "";
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">

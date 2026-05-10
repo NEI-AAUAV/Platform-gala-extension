@@ -42,10 +42,10 @@ function InfoCard({
 
 export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
   const { time } = useTime();
-  const registrationOpen = time
+  const registrationOpen = time?.registrationStart
     ? formatDateTimePT(time.registrationStart)
     : "A anunciar";
-  const registrationClose = time
+  const registrationClose = time?.registrationEnd
     ? formatDateTimePT(time.registrationEnd)
     : "A anunciar";
 

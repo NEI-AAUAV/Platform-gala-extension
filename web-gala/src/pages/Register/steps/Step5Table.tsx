@@ -295,8 +295,8 @@ export default function Step5Table({
               <TableCard
                 key={slotKey}
                 table={table}
-                isSelected={isCurrent}
-                canSelect={canSelect}
+                isSelected={!!isCurrent}
+                canSelect={!!canSelect}
                 isOwner={!!isOwner}
                 isInvited={isInvited}
                 onSelect={() => handleSelectTable(table._id)}
