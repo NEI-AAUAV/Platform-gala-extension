@@ -28,9 +28,23 @@ type FormValues = {
   votes: FormVotes;
 };
 
+function resolveVoteError(reason: unknown): string {
+  if (typeof reason === "object" && reason !== null) {
+    const r = reason as { response?: { status?: number; data?: { detail?: string } } };
+    const status = r.response?.status;
+    if (status === 403) return "A votação ainda não está aberta para esta categoria.";
+    if (status === 409) return "Já votaste nesta categoria.";
+    const detail = r.response?.data?.detail;
+    if (typeof detail === "string") return detail;
+  }
+  return "Erro desconhecido. Tenta novamente.";
+}
+
 export default function Vote() {
   const { state } = useSessionUser();
-  const { votes, mutate } = useVotes();
+  const { votes: allVotes, mutate } = useVotes();
+  const votes = allVotes.filter((v: Vote) => v.voting_open && v.options.length > 0);
+  const hasVotingCategories = votes.length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -82,9 +96,15 @@ export default function Vote() {
       );
 
       const successful = results.filter((r) => r.status === "fulfilled").length;
-      const failed = results.filter((r) => r.status === "rejected").length;
+      const rejections = results.filter(
+        (r): r is PromiseRejectedResult => r.status === "rejected",
+      );
 
-      if (failed === 0) {
+      const errorMessage = rejections.length > 0
+        ? resolveVoteError(rejections[0].reason)
+        : null;
+
+      if (rejections.length === 0) {
         setFeedback({
           type: "success",
           message: `${successful} ${
@@ -92,17 +112,17 @@ export default function Vote() {
           } com sucesso!`,
         });
       } else if (successful > 0) {
+        const suffix = errorMessage ? `. ${errorMessage}` : ".";
         setFeedback({
           type: "error",
           message: `${successful} ${
             successful === 1 ? "voto submetido" : "votos submetidos"
-          } com sucesso, mas ${failed} falharam.`,
+          } com sucesso, mas ${rejections.length} falharam${suffix}`,
         });
       } else {
         setFeedback({
           type: "error",
-          message:
-            "Ocorreu um erro ao submeter os seus votos. Por favor tente novamente.",
+          message: errorMessage ?? "Ocorreu um erro ao submeter os votos.",
         });
       }
 
@@ -135,7 +155,7 @@ export default function Vote() {
               <VoteCard key={vote._id} vote={vote} />
             ))}
           </div>
-          {state === State.REGISTERED && (
+          {state === State.REGISTERED && hasVotingCategories && (
             <div className="sticky bottom-0 z-10 mx-auto mt-5 max-w-md justify-center px-4 pb-10 pt-5 font-gala">
               <Button
                 className={classNames(

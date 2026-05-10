@@ -418,6 +418,17 @@ const GalaService = {
       );
       return response;
     },
+    nominate: async (id: string | number, name: string): Promise<void> => {
+      await client.post(`/voting/categories/${id}/nominate`, { name });
+    },
+    getSuggestions: async (
+      id: string | number,
+      query: string,
+    ): Promise<string[]> => {
+      return client.get(
+        `/voting/nominees/suggest?category_id=${id}&q=${encodeURIComponent(query)}`,
+      );
+    },
     uploadOptionPhoto: async (
       categoryId: string | number,
       optionIndex: number,

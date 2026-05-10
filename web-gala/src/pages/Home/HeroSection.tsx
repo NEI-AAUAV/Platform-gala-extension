@@ -141,7 +141,7 @@ function HeroContent({
         )}
         {isNominationsOpen && (
           <Link
-            to="/vote"
+            to="/nominate"
             className="border border-white/20 px-10 py-4 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white active:scale-95"
           >
             Nomear

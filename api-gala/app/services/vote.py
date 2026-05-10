@@ -22,9 +22,25 @@ class VoteService:
         if not category.nomination_open:
             raise NominationsClosedError("Nominations are closed for this category")
 
-        # Pre-flight check (advisory; the atomic write below is the real guard)
-        if any(user_id in n.votes for n in category.nominations):
-            raise AlreadyNominatedError("You have already nominated someone in this category")
+        # If the user already nominated, remove their vote from the current nominee first.
+        existing_nominee = next(
+            (n for n in category.nominations if user_id in n.votes), None
+        )
+        if existing_nominee:
+            if len(existing_nominee.votes) == 1:
+                # Last voter — remove the nominee entirely
+                await collection.update_one(
+                    {"_id": category_id},
+                    {"$pull": {"nominations": {"name": existing_nominee.name}}},
+                )
+            else:
+                await collection.update_one(
+                    {"_id": category_id, "nominations.name": existing_nominee.name},
+                    {"$pull": {"nominations.$.votes": user_id}},
+                )
+            # Reload after mutation
+            category_dict = await collection.find_one({"_id": category_id})
+            category = VoteCategory.parse_obj(category_dict)
 
         # Case-insensitive match against existing nominees
         existing_name = next(

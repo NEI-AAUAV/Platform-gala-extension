@@ -60,9 +60,9 @@ export default function Navigation({ className }: NavigationProps) {
             <Link
               className={classNames(
                 "block px-3 py-2 transition-colors hover:text-light-gold",
-                location.startsWith("/vote") && "text-light-gold",
+                location.startsWith("/nominate") && "text-light-gold",
               )}
-              to="/vote"
+              to="/nominate"
             >
               <FontAwesomeIcon icon={faAward} className="mr-2" /> Nomeações
             </Link>
