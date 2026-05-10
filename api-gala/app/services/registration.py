@@ -1,13 +1,19 @@
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from pymongo.errors import DuplicateKeyError
 from app.core.db.types import DBType
 from app.models.user import User, BusOption
+from app.models.table import Table
 from app.services.config import ConfigService
 from app.services.storage import storage_client
 from app.services.table import TableService
 from app.utils import is_deadline_passed
+import app.queries.table as table_queries
 
 EXISTS = "$exists"
+
+_DEADLINE_POLICY_TTL_SECONDS = 300
+_deadline_policy_last_run: Optional[datetime] = None
 
 
 class RegistrationService:
@@ -38,6 +44,23 @@ class RegistrationService:
                 }
             )
         return normalized
+
+    @staticmethod
+    async def count_registered_attendees(db: DBType) -> int:
+        """Returns confirmed registrations + their confirmed companions across all tables."""
+        registrations = await User.get_collection(db).count_documents({"is_registered": True})
+        query = (
+            await Table.get_collection(db)
+            .aggregate(
+                [
+                    {"$project": {"count": {"$sum": table_queries.num_confirmed_companions}}},
+                    {"$group": {"_id": None, "total": {"$sum": "$count"}}},
+                ]
+            )
+            .to_list(None)
+        )
+        companions = query[0]["total"] if query else 0
+        return registrations + companions
 
     @staticmethod
     async def get_user_registration(db: DBType, user_id: int) -> Optional[User]:
@@ -77,6 +100,15 @@ class RegistrationService:
     @staticmethod
     async def apply_payment_deadline_policy(db: DBType) -> None:
         """Marks registrations inactive when the relevant payment deadline passed without proof."""
+        global _deadline_policy_last_run
+        now = datetime.now(tz=timezone.utc)
+        if (
+            _deadline_policy_last_run is not None
+            and (now - _deadline_policy_last_run).total_seconds() < _DEADLINE_POLICY_TTL_SECONDS
+        ):
+            return
+        _deadline_policy_last_run = now
+
         try:
             config = await ConfigService.get_config(db)
         except Exception:

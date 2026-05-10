@@ -65,16 +65,18 @@ async def join_table(
         raise HTTPException(status_code=400, detail=str(e))
 
     table_name = table.name or f"Mesa {table.id}"
-    logger.info("Queueing table join email for {}", auth.email)
-    background_tasks.add_task(
-        send_email,
-        auth.email,
-        f"Pedido de entrada na mesa \"{table_name}\"",
-        settings=settings,
-        template="table_joined",
-        name=f"{auth.name} {auth.surname}",
-        table=table_name,
-    )
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.table_joined:
+        logger.info("Queueing table join email for {}", auth.email)
+        background_tasks.add_task(
+            send_email,
+            auth.email,
+            f"Pedido de entrada na mesa \"{table_name}\"",
+            settings=settings,
+            template="table_joined",
+            name=f"{auth.name} {auth.surname}",
+            table=table_name,
+        )
 
     return table
 

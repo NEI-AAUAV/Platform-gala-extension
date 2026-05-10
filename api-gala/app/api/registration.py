@@ -11,6 +11,8 @@ from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 from app.services.registration import RegistrationService
 from app.services.config import ConfigService
 from app.services.authentik_service import sync_email_based_registrations
+from app.api.limits.util import fetch_limits
+from app.services.storage import storage_client
 from app.utils import is_deadline_passed
 from app.core.logging import logger
 
@@ -75,6 +77,11 @@ async def initialize_registration(
 ):
     """Initializes or updates basic registration info (NMEC and Matriculation/Year)."""
     await _require_registration_open(db)
+
+    limits = await fetch_limits(db)
+    total = await RegistrationService.count_registered_attendees(db)
+    if total >= limits.maxRegistrations:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="As inscrições estão encerradas.")
 
     if "year" in data and "matriculation" not in data:
         data["matriculation"] = data["year"]
@@ -160,6 +167,12 @@ async def upload_payment_proof(
         deadline = prices.phase1_deadline if prices.phased_payment_enabled and prices.phase1_deadline else config.payment_deadline_date
     else:
         deadline = prices.phase2_deadline if prices.phase2_deadline else config.payment_deadline_date
+
+    if not storage_client.enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="O armazenamento de ficheiros não está configurado."
+        )
 
     if deadline and is_deadline_passed(deadline):
         raise HTTPException(
