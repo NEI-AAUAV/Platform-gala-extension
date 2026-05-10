@@ -723,6 +723,21 @@ async def admin_delete_registration(
     return {"status": "success"}
 
 
+@router.get(
+    "/voting/categories",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+)
+async def admin_list_vote_categories(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+) -> List[VoteCategory]:
+    """Lists all vote categories with full admin data including nominations."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    collection = VoteCategory.get_collection(db)
+    result = await collection.find().to_list(None)
+    return [VoteCategory.parse_obj(r) for r in result]
+
+
 class MergeNomineesBody(BaseModel):
     target_name: str
     source_names: List[str]
