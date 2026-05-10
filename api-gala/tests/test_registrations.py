@@ -26,13 +26,13 @@ async def test_get_registration_status(async_client: AsyncClient, test_db, mock_
 async def test_update_registration_step(async_client: AsyncClient, test_db, mock_registration_user):
     test_db.user.find_one.return_value = mock_registration_user
     test_db.time_slots.find_one.return_value = {
-        "registrationStart": "2020-01-01T00:00:00Z",
+        "registrationStart": "2026-01-02T00:00:00Z",
         "registrationEnd": "2030-01-01T00:00:00Z",
-        "nominationsStart": "2020-01-01T00:00:00Z",
+        "nominationsStart": "2026-01-02T00:00:00Z",
         "nominationsEnd": "2030-01-01T00:00:00Z",
-        "votesStart": "2020-01-01T00:00:00Z",
+        "votesStart": "2026-01-02T00:00:00Z",
         "votesEnd": "2030-01-01T00:00:00Z",
-        "tablesStart": "2020-01-01T00:00:00Z",
+        "tablesStart": "2026-01-02T00:00:00Z",
         "tablesEnd": "2030-01-01T00:00:00Z",
         "galaStart": "2030-12-31T00:00:00Z",
     }

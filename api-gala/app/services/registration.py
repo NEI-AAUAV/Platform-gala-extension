@@ -212,7 +212,7 @@ class RegistrationService:
         await collection.update_one({"_id": user_id}, {"$set": update_data})
 
         if step in (2, 3) and "companions" in data:
-            await RegistrationService._sync_companions_in_table(
+            await TableService.sync_companions(
                 db,
                 user_id,
                 update_data.get("companions", []),

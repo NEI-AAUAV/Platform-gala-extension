@@ -29,19 +29,21 @@ async def _require_registration_open(db: DBType) -> None:
 
     reg_start = ts.registration_start
     reg_end = ts.registration_end
-    if reg_start.tzinfo is None:
-        reg_start = reg_start.replace(tzinfo=timezone.utc)
-    if reg_end.tzinfo is None:
-        reg_end = reg_end.replace(tzinfo=timezone.utc)
 
-    # 1970 sentinel means "not configured" — allow through
-    if reg_start.year <= 1970 and reg_end.year <= 1970:
+    if reg_start is None and reg_end is None:
         return
 
-    if reg_start.year > 1970 and now < reg_start:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="As inscrições ainda não estão abertas.")
-    if reg_end.year > 1970 and now > reg_end:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="O prazo de inscrições já terminou.")
+    if reg_start is not None:
+        if reg_start.tzinfo is None:
+            reg_start = reg_start.replace(tzinfo=timezone.utc)
+        if now < reg_start:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="As inscrições ainda não estão abertas.")
+
+    if reg_end is not None:
+        if reg_end.tzinfo is None:
+            reg_end = reg_end.replace(tzinfo=timezone.utc)
+        if now > reg_end:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="O prazo de inscrições já terminou.")
 
 
 @router.get("/status", response_model=User, responses={**auth_responses})

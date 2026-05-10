@@ -141,10 +141,9 @@ class TableService:
         else:
             new_head = confirmed_ids[0] if confirmed_ids else None
 
-        update_op: dict = {
-            "$pull": {"persons": {"id": user_id}},
-            "$set": {"head": new_head},
-        }
+        update_op: dict = {"$pull": {"persons": {"id": user_id}}}
+        if remaining_persons:
+            update_op["$set"] = {"head": new_head}
 
         await table_coll.update_one(
             {"_id": table_id},
