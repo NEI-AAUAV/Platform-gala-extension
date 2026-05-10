@@ -42,7 +42,11 @@ export default function Step4Payment({
   onBack,
   syncing,
 }: Readonly<Props>) {
-  const { name: userName } = useUserStore((s: UserState) => s);
+  const { name: firstName, surname } = useUserStore((s: UserState) => s);
+  const userName = [firstName, surname]
+    .filter(Boolean)
+    .join(" ")
+    .replaceAll(/\b\w/g, (c) => c.toUpperCase());
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement>(null);
@@ -118,12 +122,15 @@ export default function Step4Payment({
                   {contact.name} ({contact.year})
                 </span>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-white/80">
+                  <a
+                    href={`tel:${contact.phone.replaceAll(" ", "")}`}
+                    className="font-mono text-sm text-white/80 underline-offset-2 hover:text-light-gold hover:underline"
+                  >
                     {contact.phone}
-                  </span>
+                  </a>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard.writeText(contact.phone)}
+                    onClick={() => navigator.clipboard.writeText(contact.phone.replaceAll(" ", ""))}
                     className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
                   >
                     <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
@@ -187,13 +194,31 @@ export default function Step4Payment({
           )}
 
         <div className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/5 p-4">
-          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-            Assunto / Descritivo
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+              Assunto / Descritivo
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const desc = config.paymentDescription
+                  .replace("<Nome>", userName || "")
+                  .replace("<Nmec>", data.nmec ? String(data.nmec) : "");
+                navigator.clipboard.writeText(desc);
+              }}
+              className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+            >
+              <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
+              COPIAR
+            </button>
+          </div>
           <span className="text-xs italic text-white/80">
             {config.paymentDescription
               .replace("<Nome>", userName || "Teu Nome")
               .replace("<Nmec>", data.nmec ? String(data.nmec) : "Teu Nmec")}
+          </span>
+          <span className="text-[0.6rem] text-white/25">
+            {config.paymentDescription}
           </span>
         </div>
       </div>
