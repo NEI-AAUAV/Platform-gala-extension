@@ -1,4 +1,4 @@
-from datetime import MAXYEAR, MINYEAR, datetime
+from datetime import MAXYEAR, datetime
 from typing import List
 from app.models.time_slots import TIME_SLOTS_ID, TimeSlots
 
@@ -19,10 +19,12 @@ async def create_test_user(*, id: int, db: DBType) -> None:
 
 
 async def mark_open_timeslot(*, db: DBType) -> None:
+    # Dates must be > _EPOCH (2026-01-01) or epoch_to_none converts them to None.
+    # Start in the past (2026-01-02), end far in the future.
     time_slot = TimeSlots(
-        votesStart=datetime(MINYEAR, 1, 1),
+        votesStart=datetime(2026, 1, 2),
         votesEnd=datetime(MAXYEAR, 12, 31),
-        tablesStart=datetime(MINYEAR, 1, 1),
+        tablesStart=datetime(2026, 1, 2),
         tablesEnd=datetime(MAXYEAR, 12, 31),
     )
     await TimeSlots.get_collection(db).update_one(
@@ -31,11 +33,12 @@ async def mark_open_timeslot(*, db: DBType) -> None:
 
 
 async def mark_closed_timeslot(*, db: DBType) -> None:
+    # Both dates > epoch but end already passed → period is closed.
     time_slot = TimeSlots(
-        votesStart=datetime(MINYEAR, 1, 1),
-        votesEnd=datetime(MINYEAR, 1, 1),
-        tablesStart=datetime(MINYEAR, 1, 1),
-        tablesEnd=datetime(MINYEAR, 1, 1),
+        votesStart=datetime(2026, 1, 2),
+        votesEnd=datetime(2026, 1, 3),
+        tablesStart=datetime(2026, 1, 2),
+        tablesEnd=datetime(2026, 1, 3),
     )
     await TimeSlots.get_collection(db).update_one(
         {"_id": TIME_SLOTS_ID}, {"$set": time_slot.dict()}, upsert=True

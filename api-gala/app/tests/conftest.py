@@ -104,6 +104,10 @@ async def client(
     app.dependency_overrides[get_settings] = override_get_settings
     if auth_data:
         app.dependency_overrides[api_nei_auth] = pass_trough_auth
+    else:
+        def unauthenticated(security_scopes: SecurityScopes) -> AuthData:
+            raise HTTPException(status_code=401)
+        app.dependency_overrides[api_nei_auth] = unauthenticated
 
     async with LifespanManager(app):
         async with AsyncClient(
