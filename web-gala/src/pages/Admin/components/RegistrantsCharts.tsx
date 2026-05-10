@@ -24,7 +24,7 @@ export default function RegistrantsCharts({
                 key={yr}
                 label={yr}
                 value={n}
-                max={stats.total}
+                max={stats.totalPersons}
                 color="bg-dark-gold/60"
               />
             ))}
@@ -40,7 +40,7 @@ export default function RegistrantsCharts({
               key={meal}
               label={meal}
               value={n}
-              max={stats.total}
+              max={stats.totalPersons}
               color="bg-light-gold/50"
             />
           ))}
@@ -56,7 +56,7 @@ export default function RegistrantsCharts({
               key={opt}
               label={BUS_LABEL[opt] ?? opt}
               value={n}
-              max={stats.total}
+              max={stats.totalPersons}
               color="bg-blue-400/40"
             />
           ))}

@@ -1,26 +1,22 @@
-<!DOCTYPE html>
-<html lang="pt-PT">
-<head>
-    <meta charset="utf-8">
-    <title>Convite para Mesa</title>
-</head>
-<body style="font-family: sans-serif; color: #333; line-height: 1.6;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #d4af37;">Foste convidado para a mesa "{{ table }}"</h2>
-        <p>Olá {{ name }},</p>
-        <p>Recebeste um convite para te juntares à mesa <strong>{{ table }}</strong> no Jantar de Gala de Engenharia Informática</p>
-        <p>Acede à plataforma para aceitar ou rejeitar o convite.</p>
-        
-        <p style="text-align: center; margin-top: 30px;">
-            <a href="{{ PUBLIC_URL }}/gala/table" style="background-color: #d4af37; color: #000; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Ver Convites
-            </a>
-        </p>
+{% extends "base.html" %}
 
-        <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
-            A Comissão de Gala<br>
-            NEI-AAUAV
-        </p>
+{% block title %}Convite de Mesa{% endblock %}
+
+{% block content %}
+  <div class="band accepted">
+    <p class="band-label">Mesa</p>
+    <p class="band-title">Foste convidado para a mesa "{{table}}"</p>
+    <p class="band-sub">Ola, {{name}}. Recebeste um convite para te juntares a esta mesa no Jantar de Gala.</p>
+  </div>
+
+  <div class="sec">
+    <p class="sec-label">Acao Recomendada</p>
+    <div class="card">
+      <div class="row"><span class="rl">Convite</span><span class="rv">Pendente de resposta</span></div>
+      <div class="row"><span class="rl">Onde</span><span class="rv">Area de mesas na plataforma</span></div>
     </div>
-</body>
-</html>
+  </div>
+
+  <hr/>
+  <p class="notice">Entra na plataforma para aceitar ou rejeitar o convite.</p>
+{% endblock %}

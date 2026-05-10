@@ -9,6 +9,7 @@
     "plugin:import/typescript",
     "plugin:prettier/recommended"
   ],
+  "ignorePatterns": ["e2e/**", "playwright.config.ts"],
   "overrides": [],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -16,14 +17,24 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint", "prettier"],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
-    "react/react-in-jsx-scope": ["off"],
-    "react/jsx-props-no-spreading": ["warn"],
-    "react/jsx-uses-react": ["off"],
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-uses-react": "off",
+    "react/jsx-props-no-spreading": "warn",
+    "react/require-default-props": "off",
+    "@typescript-eslint/no-use-before-define": [
+      "error",
+      { "functions": false, "classes": false, "variables": true }
+    ],
     "no-shadow": "off",
+    "@typescript-eslint/no-shadow": "off",
+    "no-restricted-syntax": "off",
     "import/extensions": ["off", "never", { "ignorePackages": true }],
+    "import/prefer-default-export": "off",
     "no-underscore-dangle": "off",
-    "no-plusplus": "off"
+    "no-plusplus": "off",
+    "no-param-reassign": ["error", { "props": false }],
+    "prefer-promise-reject-errors": "off"
   }
 }

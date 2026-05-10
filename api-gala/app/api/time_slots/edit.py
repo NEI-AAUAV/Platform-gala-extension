@@ -23,6 +23,8 @@ def _ensure_utc(dt: datetime) -> datetime:
 
 
 def _validate_period(start_val, end_val, order_msg):
+    if start_val is None or end_val is None:
+        return
     start_val = _ensure_utc(start_val)
     end_val = _ensure_utc(end_val)
     if start_val > end_val:
@@ -52,6 +54,8 @@ async def edit_time_slots(
     now = datetime.now(tz=timezone.utc)
 
     def _check_not_past(val: datetime, msg: str) -> None:
+        if val is None:
+            return
         if not allow_past and _ensure_utc(val) < now:
             raise HTTPException(status_code=400, detail=msg)
 

@@ -4,7 +4,7 @@ import TriangleBackground from "@/components/TriangleBackground";
 
 export default function Layout() {
   return (
-    <div className="text-base-content/70 relative min-h-screen overflow-x-hidden bg-[#050505]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#050505] text-base-content/70">
       <TriangleBackground />
       <Navbar />
       <div className="relative z-10">

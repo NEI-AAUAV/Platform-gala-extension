@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEye,
@@ -136,6 +136,7 @@ const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
 };
 
 export default function Admin() {
+  const prefersReducedMotion = useReducedMotion();
   const { isAdmin, permissions, loading, error } = useManagerPermissions();
   const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -163,7 +164,7 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (!previewOpen) return;
+    if (!previewOpen) return undefined;
     const timer = setTimeout(reload, 1500);
     return () => clearTimeout(timer);
   }, [raw, previewOpen, reload]);
@@ -248,6 +249,7 @@ export default function Admin() {
               Admin
             </span>
             <button
+              type="button"
               onClick={() => setSidebarOpen(false)}
               className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60 lg:hidden"
             >
@@ -262,6 +264,7 @@ export default function Admin() {
               return (
                 <button
                   key={id}
+                  type="button"
                   onClick={() => handleTabChange(id)}
                   className={[
                     "group flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all",
@@ -307,6 +310,7 @@ export default function Admin() {
           <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
             {/* Mobile: hamburger */}
             <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
               className="flex items-center gap-2.5 font-gala text-sm font-semibold text-white/60 transition hover:text-white/90 lg:hidden"
             >
@@ -331,6 +335,7 @@ export default function Admin() {
             {/* Preview toggle */}
             {hasPreview && (
               <button
+                type="button"
                 onClick={() => setPreviewOpen((o) => !o)}
                 className={[
                   "flex items-center gap-2 rounded-full border px-4 py-1.5 font-gala text-xs font-semibold transition-all",
@@ -376,7 +381,7 @@ export default function Admin() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
                   >
                     {activeTab === "registration" && <RegistrationAdmin />}
                     {activeTab === "inscritos" && <RegistrantsAdmin />}
@@ -414,6 +419,7 @@ export default function Admin() {
                     Preview — {previewRoute}
                   </span>
                   <button
+                    type="button"
                     onClick={reload}
                     title="Recarregar preview"
                     className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"

@@ -12,7 +12,7 @@ function ProtectedRoute({
   children,
   adminOnly = false,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactElement;
   adminOnly?: boolean;
 }>) {
   const { sessionLoading, token, scopes } = useUserStore(
@@ -27,7 +27,7 @@ function ProtectedRoute({
     return <Navigate to="/" />;
   }
 
-  return <>{children}</>;
+  return children;
 }
 
 const routes = [

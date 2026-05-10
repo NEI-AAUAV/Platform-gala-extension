@@ -12,6 +12,7 @@ from app.services.registration import RegistrationService
 from app.services.config import ConfigService
 from app.services.authentik_service import sync_email_based_registrations
 from app.utils import is_deadline_passed
+from app.core.logging import logger
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -28,19 +29,21 @@ async def _require_registration_open(db: DBType) -> None:
 
     reg_start = ts.registration_start
     reg_end = ts.registration_end
-    if reg_start.tzinfo is None:
-        reg_start = reg_start.replace(tzinfo=timezone.utc)
-    if reg_end.tzinfo is None:
-        reg_end = reg_end.replace(tzinfo=timezone.utc)
 
-    # 1970 sentinel means "not configured" — allow through
-    if reg_start.year <= 1970 and reg_end.year <= 1970:
+    if reg_start is None and reg_end is None:
         return
 
-    if reg_start.year > 1970 and now < reg_start:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="As inscrições ainda não estão abertas.")
-    if reg_end.year > 1970 and now > reg_end:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="O prazo de inscrições já terminou.")
+    if reg_start is not None:
+        if reg_start.tzinfo is None:
+            reg_start = reg_start.replace(tzinfo=timezone.utc)
+        if now < reg_start:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="As inscrições ainda não estão abertas.")
+
+    if reg_end is not None:
+        if reg_end.tzinfo is None:
+            reg_end = reg_end.replace(tzinfo=timezone.utc)
+        if now > reg_end:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="O prazo de inscrições já terminou.")
 
 
 @router.get("/status", response_model=User, responses={**auth_responses})
@@ -115,6 +118,7 @@ async def update_registration_step(
         
         config = await ConfigService.get_config(db)
         if config.email_notifications.registration_confirmed:
+            logger.info("Queueing registration confirmation email for {}", user.email)
             background_tasks.add_task(
                 send_email,
                 user.email,
@@ -131,6 +135,8 @@ async def update_registration_step(
                 phased_payment=user.phased_payment,
                 companions=user.companions,
             )
+        else:
+            logger.info("Registration confirmation email disabled in config for {}", user.email)
 
     return user
 

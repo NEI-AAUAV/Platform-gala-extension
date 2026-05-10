@@ -13,6 +13,8 @@ import {
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
+import { useUserStore } from "@/stores/useUserStore";
+import type { UserState } from "@/stores/useUserStore";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -40,6 +42,7 @@ export default function Step4Payment({
   onBack,
   syncing,
 }: Readonly<Props>) {
+  const { name: userName } = useUserStore((s: UserState) => s);
   const [uploading, setUploading] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement>(null);
@@ -87,13 +90,15 @@ export default function Step4Payment({
   const hasPhase1 = !!data.paymentProofPhase1;
   const hasPhase2 = !!data.paymentProofPhase2;
   const isComplete = userChosePhased ? hasPhase1 && hasPhase2 : hasPhase1;
-  const phaseLabel = isComplete ? "Continuar → Escolher Mesa" : "Avançar sem comprovativo →";
+  const phaseLabel = isComplete
+    ? "Continuar → Escolher Mesa"
+    : "Avançar sem comprovativo →";
   const nextButtonLabel = syncing ? "A guardar..." : phaseLabel;
 
   const renderPaymentMethods = () => {
     let yearLabel = "1";
-    if (data.matriculation) {
-      yearLabel = data.matriculation >= 5 ? "5" : String(data.matriculation);
+    if (data.year) {
+      yearLabel = data.year >= 5 ? "5" : String(data.year);
     }
     const contact =
       config.paymentContacts.find((c) => c.year.startsWith(yearLabel)) ??
@@ -117,6 +122,7 @@ export default function Step4Payment({
                     {contact.phone}
                   </span>
                   <button
+                    type="button"
                     onClick={() => navigator.clipboard.writeText(contact.phone)}
                     className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
                   >
@@ -152,6 +158,7 @@ export default function Step4Payment({
                       {config.ibanNumber}
                     </span>
                     <button
+                      type="button"
                       onClick={() =>
                         navigator.clipboard.writeText(config.ibanNumber)
                       }
@@ -185,7 +192,7 @@ export default function Step4Payment({
           </span>
           <span className="text-xs italic text-white/80">
             {config.paymentDescription
-              .replace("<Nome>", data.name || "Teu Nome")
+              .replace("<Nome>", userName || "Teu Nome")
               .replace("<Nmec>", data.nmec ? String(data.nmec) : "Teu Nmec")}
           </span>
         </div>
@@ -367,12 +374,14 @@ export default function Step4Payment({
 
       <div className="flex items-center justify-between pt-4">
         <button
+          type="button"
           onClick={onBack}
           className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
         <button
+          type="button"
           onClick={onNext}
           disabled={syncing}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
@@ -419,6 +428,7 @@ function PhaseCard({
         Deadline: <span className="text-white/60">{deadline}</span>
       </p>
       <button
+        type="button"
         onClick={onUpload}
         disabled={uploading}
         className={[

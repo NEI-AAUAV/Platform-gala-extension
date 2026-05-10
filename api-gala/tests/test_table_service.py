@@ -1,6 +1,6 @@
 """Unit tests for TableService — covers capacity calculation and leave_table fixes."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock
 
 
 def _make_db(*, user_doc=None, table_doc=None):
@@ -166,7 +166,11 @@ async def test_leave_table_reassigns_head():
     result = await TableService.leave_table(db, user_id=1)
     assert result is True
     table_coll.delete_one.assert_not_called()
-    table_coll.update_one.assert_called_with({"_id": 10}, {"$set": {"head": 2}})
+    table_coll.update_one.assert_called_with(
+        {"_id": 10},
+        {"$pull": {"persons": {"id": 1}}, "$set": {"head": 2}},
+        bypass_document_validation=True,
+    )
 
 
 @pytest.mark.asyncio

@@ -33,6 +33,7 @@ export default function StepIndicator({
         return (
           <div key={step.n} className="flex items-center">
             <button
+              type="button"
               onClick={() => isClickable && onStepClick(step.n)}
               disabled={!isClickable}
               className="flex flex-col items-center gap-1.5 disabled:cursor-not-allowed"

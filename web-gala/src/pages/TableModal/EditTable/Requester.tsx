@@ -121,7 +121,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
               <span className="flex items-center gap-2">
                 {countNormal(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-base-content/70 text-sm">
+                    <span className="text-sm text-base-content/70">
                       {countNormal(person)}
                     </span>
                     <FrangoIcon style={orange} />
@@ -129,7 +129,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
                 )}
                 {countVegetarians(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-base-content/70 text-sm">
+                    <span className="text-sm text-base-content/70">
                       {countVegetarians(person)}
                     </span>
                     <FontAwesomeIcon icon={faSeedling} style={green} />
@@ -137,7 +137,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
                 )}
                 {countAllergies(person) > 0 && (
                   <span className="flex items-center gap-2">
-                    <span className="text-base-content/70 text-sm">
+                    <span className="text-sm text-base-content/70">
                       {countAllergies(person)}
                     </span>
                     <FontAwesomeIcon icon={faHandDots} style={red} />

@@ -107,8 +107,7 @@ export default function Vote() {
       }
 
       mutate();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setFeedback({
         type: "error",
         message: "Ocorreu um erro inesperado ao submeter os votos.",
@@ -124,6 +123,7 @@ export default function Vote() {
 
   return (
     <>
+      {/* eslint-disable-next-line react/jsx-props-no-spreading */}
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)}>
           <h2 className="pt-20 text-center text-[3rem] font-bold sm:text-[4rem]">

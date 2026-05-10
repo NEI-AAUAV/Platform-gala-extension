@@ -26,7 +26,7 @@ test_user = User(
 
 @pytest.mark.asyncio
 async def test_list_users_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/users")
+    response = await client.get(f"{settings.API_V1_STR}/user/")
     assert response.status_code == 401
 
 
@@ -37,7 +37,7 @@ async def test_list_users_logged_out(settings: Settings, client: AsyncClient) ->
     indirect=["client"],
 )
 async def test_list_users_unauthorized(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/users")
+    response = await client.get(f"{settings.API_V1_STR}/user/")
     assert response.status_code == 403
 
 
@@ -53,7 +53,7 @@ async def test_list_users(settings: Settings, client: AsyncClient, db: DBType) -
     test_user2.id = 2
     await User.get_collection(db).insert_one(test_user2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/users")
+    response = await client.get(f"{settings.API_V1_STR}/user/")
 
     assert response.status_code == 200
     body = response.json()
@@ -71,7 +71,7 @@ async def test_list_users(settings: Settings, client: AsyncClient, db: DBType) -
 
 @pytest.mark.asyncio
 async def test_edit_user_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.put(f"{settings.API_V1_STR}/users")
+    response = await client.put(f"{settings.API_V1_STR}/user/")
     assert response.status_code == 401
 
 
@@ -82,7 +82,7 @@ async def test_edit_user_logged_out(settings: Settings, client: AsyncClient) -> 
     indirect=["client"],
 )
 async def test_edit_user_unauthorized(settings: Settings, client: AsyncClient) -> None:
-    response = await client.put(f"{settings.API_V1_STR}/users")
+    response = await client.put(f"{settings.API_V1_STR}/user/")
     assert response.status_code == 403
 
 
@@ -95,7 +95,7 @@ async def test_edit_user_unauthorized(settings: Settings, client: AsyncClient) -
 async def test_edit_user_not_found(settings: Settings, client: AsyncClient) -> None:
     form = UserEditForm(id=test_user.id, has_payed=not test_user.has_payed)
     response = await client.put(
-        f"{settings.API_V1_STR}/users",
+        f"{settings.API_V1_STR}/user/",
         json=form.dict(exclude_unset=True),
     )
     assert response.status_code == 404
@@ -111,7 +111,7 @@ async def test_edit_user(settings: Settings, client: AsyncClient, db: DBType) ->
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
     form = UserEditForm(id=test_user.id, has_payed=not test_user.has_payed)
     response = await client.put(
-        f"{settings.API_V1_STR}/users",
+        f"{settings.API_V1_STR}/user/",
         json=form.dict(exclude_unset=True),
     )
     assert response.status_code == 200
@@ -139,7 +139,7 @@ async def test_edit_user(settings: Settings, client: AsyncClient, db: DBType) ->
 
 @pytest.mark.asyncio
 async def test_create_user_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.post(f"{settings.API_V1_STR}/users")
+    response = await client.post(f"{settings.API_V1_STR}/user/")
     assert response.status_code == 401
 
 
@@ -151,7 +151,7 @@ async def test_create_user_logged_out(settings: Settings, client: AsyncClient) -
 )
 async def test_create_user(settings: Settings, client: AsyncClient, db: DBType) -> None:
     form = UserCreateForm(nmec=100000)
-    response = await client.post(f"{settings.API_V1_STR}/users", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/user/", json=form.dict())
     assert response.status_code == 200
     user_res = User(**response.json())
     assert user_res.nmec == form.nmec
@@ -174,7 +174,7 @@ async def test_create_user_repeated(
 ) -> None:
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
     form = UserCreateForm(nmec=100000)
-    response = await client.post(f"{settings.API_V1_STR}/users", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/user/", json=form.dict())
     assert response.status_code == 409
 
 
@@ -185,7 +185,7 @@ async def test_create_user_repeated(
 
 @pytest.mark.asyncio
 async def test_get_user_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/users/me")
+    response = await client.get(f"{settings.API_V1_STR}/user/me")
     assert response.status_code == 401
 
 
@@ -196,7 +196,7 @@ async def test_get_user_logged_out(settings: Settings, client: AsyncClient) -> N
     indirect=["client"],
 )
 async def test_get_user_not_created(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/users/me")
+    response = await client.get(f"{settings.API_V1_STR}/user/me")
     assert response.status_code == 404
 
 
@@ -208,7 +208,7 @@ async def test_get_user_not_created(settings: Settings, client: AsyncClient) -> 
 )
 async def test_get_user(settings: Settings, client: AsyncClient, db: DBType) -> None:
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
-    response = await client.get(f"{settings.API_V1_STR}/users/me")
+    response = await client.get(f"{settings.API_V1_STR}/user/me")
     print(response.json())
     assert response.status_code == 200
     assert response.json() == test_user.dict(by_alias=True)

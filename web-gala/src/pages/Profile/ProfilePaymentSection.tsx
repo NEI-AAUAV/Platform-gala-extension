@@ -31,7 +31,7 @@ function isDeadlinePassed(dateStr: string): boolean {
     const utcIso =
       dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr)
         ? dateStr
-        : dateStr + "Z";
+        : `${dateStr}Z`;
     return new Date() > new Date(utcIso);
   } catch {
     return false;

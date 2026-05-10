@@ -147,6 +147,7 @@ async def person_confirm_table(
 
         config = await ConfigService.get_config(db)
         if config.email_notifications.table_confirmed:
+            logger.info("Queueing table confirmation email for {}", user.email)
             background_tasks.add_task(
                 send_email,
                 user.email,

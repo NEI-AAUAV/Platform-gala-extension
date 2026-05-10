@@ -13,15 +13,14 @@ import { useUserStore } from "@/stores/useUserStore";
 import NEIService from "@/services/NEIService";
 
 async function handleLogout() {
-  const { end_session_url } = await NEIService.logout().catch(() => ({
-    end_session_url: null,
-  }));
+  const { end_session_url: endSessionUrl } = await NEIService.logout().catch(
+    () => ({
+      end_session_url: null,
+    }),
+  );
   useUserStore.getState().logout();
-  globalThis.location.replace(end_session_url ?? "/");
+  globalThis.location.replace(endSessionUrl ?? "/");
 }
-
-const navLinkClass =
-  "relative font-gala text-[0.8rem] font-semibold uppercase tracking-widest text-white/60 transition-colors duration-200 hover:text-light-gold after:absolute after:bottom-[-4px] after:left-0 after:h-[1px] after:w-0 after:bg-light-gold after:transition-all after:duration-300 hover:after:w-full";
 
 export default function Navbar() {
   const { token, sessionLoading, name, surname, scopes } = useUserStore();
@@ -123,6 +122,7 @@ export default function Navbar() {
                   {displayName || "Perfil"}
                 </Link>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="font-gala text-[0.8rem] font-semibold text-white/40 transition-colors hover:text-red-400"
                 >
@@ -134,6 +134,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
+            type="button"
             className="flex h-10 w-10 items-center justify-center border border-light-gold/30 text-light-gold transition-colors hover:border-light-gold md:hidden"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
@@ -179,6 +180,7 @@ export default function Navbar() {
                   className="h-10 w-auto"
                 />
                 <button
+                  type="button"
                   onClick={closeMenu}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/50 transition-colors hover:border-white/25 hover:text-white/80"
                   aria-label="Fechar menu"
@@ -254,6 +256,7 @@ export default function Navbar() {
                     )}
 
                     <button
+                      type="button"
                       onClick={() => {
                         closeMenu();
                         handleLogout();

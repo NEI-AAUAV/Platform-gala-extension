@@ -32,6 +32,15 @@ class TimeSlots(BaseDocument):
     def epoch_to_none(cls, v: Optional[datetime]) -> Optional[datetime]:
         if v is None:
             return None
+        if isinstance(v, str):
+            if not v:
+                return None
+            try:
+                parsed = datetime.fromisoformat(v.replace("Z", "+00:00"))
+            except ValueError:
+                return v
+            dt = parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+            return None if dt <= _EPOCH else v
         dt = v if v.tzinfo else v.replace(tzinfo=timezone.utc)
         return None if dt <= _EPOCH else v
 

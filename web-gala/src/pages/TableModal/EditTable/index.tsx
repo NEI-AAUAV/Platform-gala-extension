@@ -381,6 +381,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
           <PhotoUpload table={table} mutate={mutate} />
 
           <button
+            type="button"
             className="w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
             onClick={async () => {
               try {

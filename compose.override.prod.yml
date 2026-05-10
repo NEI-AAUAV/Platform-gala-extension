@@ -9,6 +9,12 @@ services:
       context: extensions/gala/api-gala
       dockerfile: Dockerfile.prod
     environment:
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-True}
+      EMAIL_SENDER_ADDRESS: ${EMAIL_SENDER_ADDRESS}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
       MONGO_SERVER: db_mongo
       MONGO_PASSWORD: ${MONGO_PASSWORD}
       JWT_PUBLIC_KEY_PATH: /jwt.key.pub

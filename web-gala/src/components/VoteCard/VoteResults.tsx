@@ -3,18 +3,17 @@ import GalaService from "@/services/GalaService";
 
 function VoteResults() {
   const [data, setData] = React.useState<Vote[]>([]);
+  const [fetchError, setFetchError] = React.useState(false);
 
   useEffect(() => {
-    // Function to fetch data
     const fetchData = () => {
       GalaService.vote
         .listCategories()
         .then((res) => {
           setData(res);
+          setFetchError(false);
         })
-        .catch((err) => {
-          console.error(err);
-        });
+        .catch(() => setFetchError(true));
     };
 
     // Fetch data initially
@@ -30,6 +29,11 @@ function VoteResults() {
   return (
     <div className="flex flex-col items-center py-20">
       <h1 className="mb-4 text-3xl font-bold text-dark-gold">Vote Results</h1>
+      {fetchError && (
+        <p className="mb-4 text-sm text-red-400/70">
+          Erro ao carregar resultados. A tentar novamente...
+        </p>
+      )}
       <table className="my-20 w-full overflow-hidden rounded-lg  text-center text-light-gold">
         <thead className="bg-dark-gold text-black">
           <tr>
@@ -47,8 +51,8 @@ function VoteResults() {
               <td className="border-r border-dark-gold p-2">{item.category}</td>
               <td className="border-r border-dark-gold p-2">
                 <ul className="divide-y divide-dark-gold">
-                  {item.options.map((option, index) => (
-                    <li key={`${item._id}-option-${index}`} className="py-1">
+                  {item.options.map((option) => (
+                    <li key={`${item._id}-option-${option}`} className="py-1">
                       {option}
                     </li>
                   ))}
@@ -57,7 +61,10 @@ function VoteResults() {
               <td className="p-2">
                 <ul className="divide-y divide-dark-gold">
                   {item.scores.map((score, index) => (
-                    <li key={`${item._id}-score-${index}`} className="py-1">
+                    <li
+                      key={`${item._id}-score-${item.options[index]}`}
+                      className="py-1"
+                    >
                       {score}
                     </li>
                   ))}

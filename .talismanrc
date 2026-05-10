@@ -1,0 +1,8 @@
+fileignoreconfig:
+- filename: web-gala/src/pages/Admin/VoteCategories.tsx
+  checksum: 0dd437aed985f57bd4565ab84447dcbff689d145620e35704162dc8cb8ff2254
+- filename: web-gala/src/pages/Admin/components/UserDetail.tsx
+  checksum: b9510c1e34cc3cea49e4dc5bb4515050824e03877d4e1aae11bb5f21f66d591d
+- filename: web-gala/src/components/VoteCard/VoteResults.tsx
+  checksum: 9f17257af57770e8ccc0f81658a4ebe12e0acadc1a1036176f2299f834252b29
+version: "1.0"

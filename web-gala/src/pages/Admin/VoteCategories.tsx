@@ -194,16 +194,13 @@ function CreateCategoryForm({
       });
 
       // Upload photos for each option that has one
-      for (let i = 0; i < options.length; i++) {
-        const opt = options[i];
-        if (opt.photo) {
-          await GalaService.vote.uploadOptionPhoto(
-            newCategory._id,
-            i,
-            opt.photo,
-          );
-        }
-      }
+      await Promise.all(
+        options.map((opt, i) =>
+          opt.photo
+            ? GalaService.vote.uploadOptionPhoto(newCategory._id, i, opt.photo)
+            : Promise.resolve(),
+        ),
+      );
 
       setStatus("success");
       toast.success("Categoria criada com sucesso! 🎉");
@@ -216,7 +213,6 @@ function CreateCategoryForm({
 
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: any) {
-      console.error(err);
       setStatus("error");
 
       let errorMsg = "Erro ao criar categoria.";
@@ -249,11 +245,12 @@ function CreateCategoryForm({
 
       {/* Category name */}
       <div className="flex flex-col gap-1">
-        <label className="flex flex-col gap-1">
+        <label htmlFor="category-name" className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
             Nome da Categoria
           </span>
           <input
+            id="category-name"
             type="text"
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
@@ -329,8 +326,6 @@ function CategoryRow({
       toast.success("A categoria foi removida com sucesso.");
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao apagar categoria.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -370,8 +365,6 @@ function CategoryRow({
       setIsEditing(false);
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao editar categoria.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -393,8 +386,6 @@ function CategoryRow({
       toast.success(`Foto da opção ${optionIndex + 1} carregada!`);
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao carregar imagem.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -420,8 +411,6 @@ function CategoryRow({
       toast.success("A foto foi removida.");
       refresh();
     } catch (err: any) {
-      console.error(err);
-
       let errorMsg = "Erro ao remover imagem.";
       if (err?.response?.data?.detail) {
         const { detail } = err.response.data;
@@ -460,6 +449,7 @@ function CategoryRow({
                 Tem a certeza?
               </span>
               <button
+                type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="rounded-full bg-red-500/20 px-3 py-1 text-xs text-red-500 hover:bg-red-500/40"
@@ -467,6 +457,7 @@ function CategoryRow({
                 {isDeleting ? "A apagar..." : "Sim, apagar"}
               </button>
               <button
+                type="button"
                 onClick={() => setIsConfirmingDelete(false)}
                 disabled={isDeleting}
                 className="rounded-full bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
@@ -479,6 +470,7 @@ function CategoryRow({
               {/* Edit Action */}
               {isEditing ? (
                 <button
+                  type="button"
                   title="Guardar"
                   onClick={handleSaveEdit}
                   disabled={isSaving}
@@ -491,6 +483,7 @@ function CategoryRow({
                 </button>
               ) : (
                 <button
+                  type="button"
                   title="Editar Categoria"
                   onClick={() => setIsEditing(true)}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
@@ -501,6 +494,7 @@ function CategoryRow({
 
               {/* Trash Action */}
               <button
+                type="button"
                 title="Apagar Categoria"
                 onClick={() => setIsConfirmingDelete(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/60 transition hover:bg-red-500/20 hover:text-red-400"
@@ -516,7 +510,7 @@ function CategoryRow({
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
-            key={`${option}-${i}`}
+            key={`${vote._id}-option-${option}`}
             className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
           >
             {/* Current photo preview (not editable directly in edit mode string array, but stays visible) */}
@@ -568,12 +562,14 @@ function CategoryRow({
             {/* Upload photo button (hidden in edit mode to avoid confusion) */}
             {!isEditing && (
               <label
+                htmlFor={`photo-upload-${i}`}
                 title="Substituir foto"
                 className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold"
               >
                 <FontAwesomeIcon icon={faCloudUploadAlt} className="mr-1" />
                 Foto
                 <input
+                  id={`photo-upload-${i}`}
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
@@ -631,13 +627,14 @@ function CategoryRow({
 export default function VoteCategories() {
   const [categories, setCategories] = useState<Vote[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useAppToast();
 
   const refresh = () => {
     setLoading(true);
     GalaService.vote
       .listCategories()
       .then((data) => setCategories(data))
-      .catch(console.error)
+      .catch(() => toast.error("Erro ao carregar categorias."))
       .finally(() => setLoading(false));
   };
 

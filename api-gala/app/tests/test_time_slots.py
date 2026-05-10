@@ -27,7 +27,7 @@ test_time_slots = TimeSlots(
 async def test_get_time_slots_logged_out(
     settings: Settings, client: AsyncClient
 ) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/slots/")
+    response = await client.get(f"{settings.API_V1_STR}/time_slots/")
     assert response.status_code == 200
 
 
@@ -44,7 +44,7 @@ async def test_get_time_slots(
         {"_id": TIME_SLOTS_ID}, {"$set": test_time_slots.dict()}, upsert=True
     )
 
-    response = await client.get(f"{settings.API_V1_STR}/slots/")
+    response = await client.get(f"{settings.API_V1_STR}/time_slots/")
     assert response.status_code == 200
     time_slots_res = TimeSlots(**response.json())
     assert time_slots_res == test_time_slots
@@ -64,7 +64,7 @@ async def test_edit_time_slots_logged_out(
         tablesEnd=datetime(MAXYEAR, 1, 2),
     )
     response = await client.put(
-        f"{settings.API_V1_STR}/slots/",
+        f"{settings.API_V1_STR}/time_slots/",
         json=json.loads(form.json(exclude_unset=True)),
     )
     assert response.status_code == 401
@@ -84,7 +84,7 @@ async def test_edit_time_slots_unauthorized(
         tablesEnd=datetime(MAXYEAR, 1, 2),
     )
     response = await client.put(
-        f"{settings.API_V1_STR}/slots/",
+        f"{settings.API_V1_STR}/time_slots/",
         json=json.loads(form.json(exclude_unset=True)),
     )
     assert response.status_code == 403
@@ -108,22 +108,22 @@ async def test_edit_time_slots(
         tablesEnd=datetime(MAXYEAR, 1, 2),
     )
     response = await client.put(
-        f"{settings.API_V1_STR}/slots/",
+        f"{settings.API_V1_STR}/time_slots/",
         json=json.loads(form.json(exclude_unset=True)),
     )
     assert response.status_code == 200
     time_slots = TimeSlots(**response.json())
 
-    assert time_slots.tablesStart == datetime(MAXYEAR, 1, 1)
-    assert time_slots.tablesEnd == datetime(MAXYEAR, 1, 2)
+    assert time_slots.tables_start == datetime(MAXYEAR, 1, 1)
+    assert time_slots.tables_end == datetime(MAXYEAR, 1, 2)
 
     db_res = await TimeSlots.get_collection(db).find_one({"_id": TIME_SLOTS_ID})
     assert db_res is not None
     db_time_slots_res = TimeSlots(**db_res)
 
     test_time_slots_mod = test_time_slots.copy()
-    test_time_slots_mod.tablesStart = datetime(MAXYEAR, 1, 1)
-    test_time_slots_mod.tablesEnd = datetime(MAXYEAR, 1, 2)
+    test_time_slots_mod.tables_start = datetime(MAXYEAR, 1, 1)
+    test_time_slots_mod.tables_end = datetime(MAXYEAR, 1, 2)
 
     assert time_slots == test_time_slots_mod
     assert test_time_slots_mod == db_time_slots_res
@@ -147,7 +147,7 @@ async def test_edit_time_slots_end_before_start(
         tablesEnd=datetime(MAXYEAR, 1, 1),
     )
     response = await client.put(
-        f"{settings.API_V1_STR}/slots/",
+        f"{settings.API_V1_STR}/time_slots/",
         json=json.loads(form.json(exclude_unset=True)),
     )
     assert response.status_code == 400

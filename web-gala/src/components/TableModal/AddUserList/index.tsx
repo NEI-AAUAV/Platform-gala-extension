@@ -39,7 +39,7 @@ export default function AddUserList({
         />
       ))}
       <button
-        className="bg-base-100 disabled:text-base-content/10 sticky bottom-0 mt-2 p-2"
+        className="sticky bottom-0 mt-2 bg-base-100 p-2 disabled:text-base-content/10"
         type="button"
         disabled={fields.length >= freeSeats - 1}
         onClick={() => {

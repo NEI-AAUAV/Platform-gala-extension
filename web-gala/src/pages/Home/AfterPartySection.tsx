@@ -55,7 +55,7 @@ function DrinksList({ drinks }: { readonly drinks: string[] }) {
       <div className="flex flex-wrap justify-center gap-3">
         {drinks.map((drink, i) => (
           <motion.div
-            key={drink + i}
+            key={drink}
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}

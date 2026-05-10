@@ -142,12 +142,14 @@ export default function Step2PersonalData({
 
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={onBack}
           className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
         >
           ← Voltar
         </button>
         <button
+          type="button"
           onClick={handleNext}
           disabled={syncing}
           className="flex items-center gap-2 border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:opacity-60"
@@ -232,6 +234,7 @@ function FormSection({
       </h3>
       <div className="border-white/8 bg-white/4 flex flex-col gap-5 rounded-xl border p-5">
         <div className="flex flex-col gap-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor="nmec-input"
             className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"
@@ -282,6 +285,7 @@ function FormSection({
         </div>
 
         <div className="flex flex-col gap-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor="phone-input"
             className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/50"

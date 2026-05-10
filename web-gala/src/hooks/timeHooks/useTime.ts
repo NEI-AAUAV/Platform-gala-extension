@@ -18,7 +18,7 @@ type TimeExtended = TimeSlots & {
 const toUtc = (iso: string | null): Date | null => {
   if (!iso) return null;
   const utcIso =
-    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + "Z";
+    iso.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(iso) ? iso : `${iso}Z`;
   return new Date(utcIso);
 };
 

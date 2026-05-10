@@ -41,7 +41,9 @@ function PeriodEditor() {
 
   useEffect(() => {
     if (!time) return;
-    setOpeningTime(time.tablesStart ? utcIsoToLocalInput(time.tablesStart) : "");
+    setOpeningTime(
+      time.tablesStart ? utcIsoToLocalInput(time.tablesStart) : "",
+    );
     setClosingTime(time.tablesEnd ? utcIsoToLocalInput(time.tablesEnd) : "");
     setDirty(false);
   }, [time]);
@@ -322,6 +324,7 @@ function TableAdminCard({
   };
 
   const handleDeleteTable = async () => {
+    // eslint-disable-next-line no-restricted-globals, no-alert
     if (!confirm("Tem a certeza que deseja eliminar esta mesa?")) return;
     try {
       await GalaService.admin.deleteTable(table._id);
@@ -387,7 +390,6 @@ function TableAdminCard({
                 {editingName ? (
                   <div className="flex items-center gap-2">
                     <input
-                      autoFocus
                       value={nameValue}
                       maxLength={20}
                       onChange={(e) => setNameValue(e.target.value)}
@@ -829,6 +831,7 @@ export default function TablesAdmin() {
             <button
               type="button"
               onClick={async () => {
+                // eslint-disable-next-line no-alert
                 const name = prompt("Nome da mesa:");
                 if (!name) return;
                 try {

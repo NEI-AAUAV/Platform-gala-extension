@@ -165,6 +165,7 @@ export default function Profile() {
           ).map(({ id, label: tabLabel }) => (
             <button
               key={id}
+              type="button"
               onClick={() => setActiveTab(id)}
               className={[
                 "rounded-full px-5 py-2 font-gala text-sm font-semibold transition-all",

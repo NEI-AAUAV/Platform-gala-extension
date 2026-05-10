@@ -7,6 +7,7 @@ from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
 from app.services.storage import storage_client
 from app.services.authentik_service import fetch_all_users, AuthentikUser
 from app.core.config import SettingsDep
+from app.core.logging import logger
 from app.core.db import get_db
 from app.core.db.types import DBType
 from app.core.db.counters import get_next_id
@@ -145,6 +146,7 @@ async def confirm_payment(
     
     config = await ConfigService.get_config(db)
     if user.has_payed and config.email_notifications.payment_confirmed:
+        logger.info("Queueing payment confirmed email for {}", user.email)
         background_tasks.add_task(
             send_email,
             user.email,
@@ -183,6 +185,7 @@ async def send_payment_reminder(
         raise HTTPException(status_code=400, detail="Payment already confirmed")
 
     config = await ConfigService.get_config(db)
+    logger.info("Queueing payment reminder email for {}", user.email)
     background_tasks.add_task(
         send_email,
         user.email,
@@ -240,6 +243,7 @@ async def reject_payment_proof(
     
     config = await ConfigService.get_config(db)
     if config.email_notifications.payment_rejected:
+        logger.info("Queueing payment rejected email for {}", user.email)
         background_tasks.add_task(
             send_email,
             user.email,
@@ -577,7 +581,7 @@ async def admin_create_registration(
     if config.email_notifications.registration_confirmed:
         bus_labels = {"ROUND_TRIP": "Autocarro (Ida e Volta)", "ONE_WAY": "Autocarro (Apenas Ida)", "NONE": "Deslocação própria"}
         year_label = f"{user.matriculation.__root__}º Ano" if user.matriculation else "Alumni / Outro"
-        
+        logger.info("Queueing admin registration confirmation email for {}", user.email)
         background_tasks.add_task(
             send_email,
             user.email,

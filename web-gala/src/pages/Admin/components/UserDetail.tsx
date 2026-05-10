@@ -204,6 +204,17 @@ export default function UserDetail({
   readonly onRejectProof: (phase: number) => void;
   readonly onAssignTable: (tableId: string | null) => void;
 }) {
+  const fallbackPhone =
+    user.phone?.trim() ||
+    (user as User & { phone_number?: string; contact_phone?: string })
+      .phone_number ||
+    (user as User & { phone_number?: string; contact_phone?: string })
+      .contact_phone ||
+    "—";
+  const fallbackAllergies =
+    user.food_allergies ||
+    (user as User & { allergies?: string }).allergies ||
+    "—";
   const isPartiallyPaid =
     user.phased_payment && user.payment_phase1_confirmed && !user.has_payed;
 
@@ -264,7 +275,7 @@ export default function UserDetail({
           }
         />
         <DetailRow label="Email" value={user.email} />
-        <DetailRow label="Telefone" value={user.phone ?? "—"} />
+        <DetailRow label="Telefone" value={fallbackPhone} />
         <DetailRow
           label="Autocarro"
           value={BUS_LABEL[user.bus_option] ?? user.bus_option}
@@ -278,7 +289,7 @@ export default function UserDetail({
           <div className="col-span-2">
             <DetailRow
               label="Alergias"
-              value={user.food_allergies}
+              value={fallbackAllergies}
               icon={<FontAwesomeIcon icon={faHandDots} style={red} />}
             />
           </div>
@@ -292,22 +303,36 @@ export default function UserDetail({
             Acompanhantes ({user.companions.length})
           </p>
           <div className="flex flex-col gap-1.5">
-            {user.companions.map((c, i) => (
-              <div
-                key={`${c.name}-${i}`}
-                className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
-              >
-                <span className="text-white/40">#{i + 1}</span>
-                <span className="flex items-center gap-1">
-                  {dishIcon.get(c.dish)}
-                </span>
-                {c.allergies && (
-                  <span className="flex items-center gap-1 text-xs text-red-400/70">
-                    <FontAwesomeIcon icon={faHandDots} /> {c.allergies}
+            {user.companions.map((c, i) => {
+              const companion = c as Companion & { meal?: string };
+              const companionDish = companion.dish || companion.meal || "—";
+              const companionAllergies = companion.allergies || "—";
+              return (
+                <div
+                  key={c.name || i}
+                  className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                >
+                  <span className="text-white/40">#{i + 1}</span>
+                  <span className="text-white/85 min-w-0 flex-1 truncate">
+                    {c.name || "Sem nome"}
                   </span>
-                )}
-              </div>
-            ))}
+                  {c.email && (
+                    <span className="text-white/45 min-w-0 flex-1 truncate text-xs">
+                      {c.email}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    {dishIcon.get(companionDish)}
+                  </span>
+                  <span className="text-white/65 text-xs">
+                    Prato: {companionDish}
+                  </span>
+                  <span className="text-xs text-red-400/70">
+                    Alergias: {companionAllergies}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

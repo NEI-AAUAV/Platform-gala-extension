@@ -22,6 +22,7 @@ test_category = VoteCategory(
     options=["Option 1", "Option 2"],
     photo_paths=["", ""],
     votes=[],
+    voting_open=True,
 )
 
 
@@ -34,7 +35,7 @@ test_category = VoteCategory(
 async def test_list_categories_logged_out(
     settings: Settings, client: AsyncClient
 ) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/votes/list")
+    response = await client.get(f"{settings.API_V1_STR}/voting/categories")
     assert response.status_code == 401
 
 
@@ -53,7 +54,7 @@ async def test_list_categories(
     test_category2.id += 1
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/list")
+    response = await client.get(f"{settings.API_V1_STR}/voting/categories")
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
@@ -82,7 +83,7 @@ async def test_list_categories_scores(
     ]
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/list")
+    response = await client.get(f"{settings.API_V1_STR}/voting/categories")
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
@@ -108,7 +109,7 @@ async def test_list_categories_already_voted(
     ]
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/list")
+    response = await client.get(f"{settings.API_V1_STR}/voting/categories")
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
@@ -126,7 +127,7 @@ async def test_list_categories_already_voted(
 
 @pytest.mark.asyncio
 async def test_get_category_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/votes/1")
+    response = await client.get(f"{settings.API_V1_STR}/voting/1")
     assert response.status_code == 401
 
 
@@ -137,7 +138,7 @@ async def test_get_category_logged_out(settings: Settings, client: AsyncClient) 
     indirect=["client"],
 )
 async def test_get_category_not_found(settings: Settings, client: AsyncClient) -> None:
-    response = await client.get(f"{settings.API_V1_STR}/votes/1")
+    response = await client.get(f"{settings.API_V1_STR}/voting/1")
     assert response.status_code == 404
 
 
@@ -152,7 +153,7 @@ async def test_get_category(
 ) -> None:
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/{test_category.id}")
+    response = await client.get(f"{settings.API_V1_STR}/voting/{test_category.id}")
     assert response.status_code == 200
     body = response.json()
 
@@ -181,7 +182,7 @@ async def test_get_category_scores(
     ]
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/{test_category2.id}")
+    response = await client.get(f"{settings.API_V1_STR}/voting/{test_category2.id}")
     assert response.status_code == 200
     body = response.json()
 
@@ -208,7 +209,7 @@ async def test_get_category_already_voted(
     ]
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
-    response = await client.get(f"{settings.API_V1_STR}/votes/{test_category2.id}")
+    response = await client.get(f"{settings.API_V1_STR}/voting/{test_category2.id}")
     assert response.status_code == 200
     body = response.json()
 
@@ -227,7 +228,7 @@ async def test_get_category_already_voted(
 
 @pytest.mark.asyncio
 async def test_new_category_logged_out(settings: Settings, client: AsyncClient) -> None:
-    response = await client.post(f"{settings.API_V1_STR}/votes/new")
+    response = await client.post(f"{settings.API_V1_STR}/voting/new")
     assert response.status_code == 401
 
 
@@ -243,7 +244,7 @@ async def test_new_category_unauthorized(
     form = VoteCategoryCreateForm(
         category="GOOD", options=["Option 1", "Option 2"], photo_paths=["", ""]
     )
-    response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/voting/new", json=form.dict())
     assert response.status_code == 403
 
 
@@ -259,7 +260,7 @@ async def test_new_category(
     form = VoteCategoryCreateForm(
         category="GOOD", options=["Option 1", "Option 2"], photo_paths=["", ""]
     )
-    response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/voting/new", json=form.dict())
     assert response.status_code == 200
     body = response.json()
 
@@ -290,7 +291,7 @@ async def test_new_category_same_name(
         options=["Option 1", "Option 2"],
         photo_paths=["", ""],
     )
-    response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/voting/new", json=form.dict())
     assert response.status_code == 409
 
 
@@ -313,7 +314,7 @@ async def test_new_category_icu_equality(
         options=["Option 1", "Option 2"],
         photo_paths=["", ""],
     )
-    response = await client.post(f"{settings.API_V1_STR}/votes/new", json=form.dict())
+    response = await client.post(f"{settings.API_V1_STR}/voting/new", json=form.dict())
     assert response.status_code == 409
 
 
@@ -326,7 +327,7 @@ async def test_new_category_icu_equality(
 async def test_edit_category_logged_out(
     settings: Settings, client: AsyncClient
 ) -> None:
-    response = await client.put(f"{settings.API_V1_STR}/votes/1/edit")
+    response = await client.put(f"{settings.API_V1_STR}/voting/1/edit")
     assert response.status_code == 401
 
 
@@ -342,7 +343,7 @@ async def test_edit_category_unauthorized(
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
     form = VoteCategoryEditForm(category=test_category.category + "2")
     response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/edit",
+        f"{settings.API_V1_STR}/voting/{test_category.id}/edit",
         json=form.dict(exclude_unset=True),
     )
     assert response.status_code == 403
@@ -357,7 +358,7 @@ async def test_edit_category_unauthorized(
 async def test_edit_category_not_found(settings: Settings, client: AsyncClient) -> None:
     form = VoteCategoryEditForm(category=test_category.category + "2")
     response = await client.put(
-        f"{settings.API_V1_STR}/votes/1/edit", json=form.dict(exclude_unset=True)
+        f"{settings.API_V1_STR}/voting/1/edit", json=form.dict(exclude_unset=True)
     )
     assert response.status_code == 404
 
@@ -378,7 +379,7 @@ async def test_edit_category(
 
     form = VoteCategoryEditForm(category=new_name)
     response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/edit",
+        f"{settings.API_V1_STR}/voting/{test_category.id}/edit",
         json=form.dict(exclude_unset=True),
     )
     assert response.status_code == 200
@@ -415,7 +416,7 @@ async def test_edit_category_same_name(
 
     form = VoteCategoryEditForm(category=test_category.category)
     response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category2.id}/edit",
+        f"{settings.API_V1_STR}/voting/{test_category2.id}/edit",
         json=form.dict(exclude_unset=True),
     )
     assert response.status_code == 409
@@ -436,7 +437,7 @@ async def test_cast_vote_logged_out(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    response = await client.put(f"{settings.API_V1_STR}/votes/1/cast")
+    response = await client.post(f"{settings.API_V1_STR}/voting/categories/1/vote")
     assert response.status_code == 401
 
 
@@ -452,11 +453,11 @@ async def test_cast_vote_no_user(
     await mark_open_timeslot(db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
     form = VoteForm(option=0)
-    response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/cast",
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
-    assert response.status_code == 400
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -471,8 +472,8 @@ async def test_cast_vote(settings: Settings, client: AsyncClient, db: DBType) ->
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     form = VoteForm(option=0)
-    response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/cast",
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
     assert response.status_code == 200
@@ -509,8 +510,8 @@ async def test_cast_vote_already_voted(
     await VoteCategory.get_collection(db).insert_one(test_category2.dict(by_alias=True))
 
     form = VoteForm(option=0)
-    response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category2.id}/cast",
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{test_category2.id}/vote",
         json=form.dict(),
     )
     assert response.status_code == 409
@@ -535,8 +536,8 @@ async def test_cast_vote_bad_option(
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     form = VoteForm(option=len(test_category.options))
-    response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/cast",
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
     assert response.status_code == 400
@@ -561,8 +562,8 @@ async def test_cast_vote_time_slot_closed(
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     form = VoteForm(option=0)
-    response = await client.put(
-        f"{settings.API_V1_STR}/votes/{test_category.id}/cast",
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
     assert response.status_code == 409

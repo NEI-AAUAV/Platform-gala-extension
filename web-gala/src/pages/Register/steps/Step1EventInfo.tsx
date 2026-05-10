@@ -42,10 +42,10 @@ function InfoCard({
 
 export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
   const { time } = useTime();
-  const registrationOpen = time
+  const registrationOpen = time?.registrationStart
     ? formatDateTimePT(time.registrationStart)
     : "A anunciar";
-  const registrationClose = time
+  const registrationClose = time?.registrationEnd
     ? formatDateTimePT(time.registrationEnd)
     : "A anunciar";
 
@@ -67,7 +67,11 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             <InfoCard
               icon={faCalendarDay}
               label="Data"
-              value={time?.galaStart ? formatDateTimePT(time.galaStart) : "A anunciar"}
+              value={
+                time?.galaStart
+                  ? formatDateTimePT(time.galaStart)
+                  : "A anunciar"
+              }
             />
             <InfoCard
               icon={faLocationDot}
@@ -162,6 +166,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
 
       <div className="flex justify-end">
         <button
+          type="button"
           onClick={onNext}
           className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
         >

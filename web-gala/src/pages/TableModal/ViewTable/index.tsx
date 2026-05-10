@@ -157,6 +157,7 @@ export default function ViewTable({
           if (inTable) {
             return (
               <button
+                type="button"
                 className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
                 onClick={async () => {
                   await useTableLeave(table._id);

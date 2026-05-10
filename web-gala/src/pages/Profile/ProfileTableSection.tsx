@@ -157,7 +157,7 @@ export default function ProfileTableSection() {
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = buildSlots(tables, maxCount);
   const tablePeriodClosed = time?.tablesStatus === TimeStatus.CLOSED;
-  const tableDeadlineLabel = time
+  const tableDeadlineLabel = time?.tablesEnd
     ? formatDateTimePT(time.tablesEnd)
     : "A anunciar";
 

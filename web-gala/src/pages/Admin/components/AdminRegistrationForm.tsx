@@ -70,7 +70,7 @@ export default function AdminRegistrationForm({
   useEffect(() => {
     if (userToEdit || !useExisting || searchQuery.length < 3) {
       setUsers([]);
-      return;
+      return undefined;
     }
 
     setSearching(true);
@@ -182,16 +182,24 @@ export default function AdminRegistrationForm({
         {!userToEdit && (
           <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-4">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+              <label
+                htmlFor="use-existing-yes"
+                className="flex cursor-pointer items-center gap-2 text-sm text-white/80"
+              >
                 <input
+                  id="use-existing-yes"
                   type="radio"
                   checked={useExisting}
                   onChange={() => setUseExisting(true)}
                 />{" "}
                 Conta Authentik Existente
               </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+              <label
+                htmlFor="use-existing-no"
+                className="flex cursor-pointer items-center gap-2 text-sm text-white/80"
+              >
                 <input
+                  id="use-existing-no"
                   type="radio"
                   checked={!useExisting}
                   onChange={() => setUseExisting(false)}
@@ -202,9 +210,13 @@ export default function AdminRegistrationForm({
 
             {useExisting ? (
               <div className="mt-2 flex flex-col gap-1.5">
-                <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+                <label
+                  htmlFor="search-authentik"
+                  className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+                >
                   <span>Procurar Utilizador Authentik (Nome ou Email)</span>
                   <input
+                    id="search-authentik"
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -245,9 +257,13 @@ export default function AdminRegistrationForm({
             ) : (
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+                  <label
+                    htmlFor="create-name"
+                    className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+                  >
                     <span>Nome Completo</span>
                     <input
+                      id="create-name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -257,9 +273,13 @@ export default function AdminRegistrationForm({
                   </label>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+                  <label
+                    htmlFor="create-email"
+                    className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+                  >
                     <span>Email</span>
                     <input
+                      id="create-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -276,9 +296,13 @@ export default function AdminRegistrationForm({
         {userToEdit && (
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+              <label
+                htmlFor="edit-name"
+                className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+              >
                 <span>Nome</span>
                 <input
+                  id="edit-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -288,9 +312,13 @@ export default function AdminRegistrationForm({
               </label>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+              <label
+                htmlFor="edit-email"
+                className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+              >
                 <span>Email</span>
                 <input
+                  id="edit-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -304,9 +332,13 @@ export default function AdminRegistrationForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+            <label
+              htmlFor="field-nmec"
+              className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+            >
               <span>NMec</span>
               <input
+                id="field-nmec"
                 type="number"
                 value={nmec}
                 onChange={(e) => setNmec(e.target.value)}
@@ -315,9 +347,13 @@ export default function AdminRegistrationForm({
             </label>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+            <label
+              htmlFor="field-matriculation"
+              className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+            >
               <span>Ano de Matrícula</span>
               <input
+                id="field-matriculation"
                 type="number"
                 min="1"
                 max="5"
@@ -329,9 +365,13 @@ export default function AdminRegistrationForm({
             </label>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+            <label
+              htmlFor="field-phone"
+              className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+            >
               <span>Telefone</span>
               <input
+                id="field-phone"
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -341,9 +381,13 @@ export default function AdminRegistrationForm({
           </div>
           {config.busEnabled && (
             <div className="flex flex-col gap-1.5">
-              <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+              <label
+                htmlFor="field-bus"
+                className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+              >
                 <span>Autocarro</span>
                 <select
+                  id="field-bus"
                   value={busOption}
                   onChange={(e) =>
                     setBusOption(
@@ -360,9 +404,13 @@ export default function AdminRegistrationForm({
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+            <label
+              htmlFor="field-meal"
+              className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+            >
               <span>Prato</span>
               <select
+                id="field-meal"
                 value={mealOption}
                 onChange={(e) => setMealOption(e.target.value)}
                 className={INPUT_CLS}
@@ -377,9 +425,13 @@ export default function AdminRegistrationForm({
             </label>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50">
+            <label
+              htmlFor="field-allergies"
+              className="flex flex-col gap-1.5 text-xs font-semibold uppercase text-white/50"
+            >
               <span>Alergias</span>
               <input
+                id="field-allergies"
                 type="text"
                 value={foodAllergies}
                 onChange={(e) => setFoodAllergies(e.target.value)}
@@ -394,16 +446,24 @@ export default function AdminRegistrationForm({
             Pagamento
           </p>
           <div className="flex items-center gap-4">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+            <label
+              htmlFor="has-payed"
+              className="flex cursor-pointer items-center gap-2 text-sm text-white/80"
+            >
               <input
+                id="has-payed"
                 type="checkbox"
                 checked={hasPayed}
                 onChange={(e) => setHasPayed(e.target.checked)}
               />{" "}
               Pagamento Confirmado
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+            <label
+              htmlFor="phased-payment"
+              className="flex cursor-pointer items-center gap-2 text-sm text-white/80"
+            >
               <input
+                id="phased-payment"
                 type="checkbox"
                 checked={phasedPayment}
                 onChange={(e) => setPhasedPayment(e.target.checked)}
