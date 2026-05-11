@@ -17,8 +17,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GalaService, {
   AdminVoteCategory,
   AdminNominee,
-  CategoryStatusUpdate,
 } from "@/services/GalaService";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import { useAppToast } from "@/components/ui/Toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -110,40 +110,6 @@ function OptionInput({
 }
 
 // ─── Phase Toggle ─────────────────────────────────────────────────────────────
-
-function PhaseToggle({
-  label,
-  active,
-  onToggle,
-  disabled,
-}: Readonly<{
-  label: string;
-  active: boolean;
-  onToggle: () => void;
-  disabled: boolean;
-}>) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={disabled}
-      className={[
-        "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50",
-        active
-          ? "border-dark-gold/60 bg-dark-gold/15 text-dark-gold"
-          : "border-white/15 bg-white/5 text-white/40 hover:border-white/30 hover:text-white/70",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "h-2 w-2 rounded-full transition-colors",
-          active ? "bg-dark-gold" : "bg-white/20",
-        ].join(" ")}
-      />
-      {label}
-    </button>
-  );
-}
 
 // ─── Nominations Panel ────────────────────────────────────────────────────────
 
@@ -505,7 +471,6 @@ function CategoryRow({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const [togglingPhase, setTogglingPhase] = useState<string | null>(null);
   const [showNominations, setShowNominations] = useState(false);
 
   const handleDelete = async () => {
@@ -587,19 +552,6 @@ function CategoryRow({
     }
   };
 
-  const handlePhaseToggle = async (update: CategoryStatusUpdate) => {
-    const key = Object.keys(update)[0];
-    setTogglingPhase(key);
-    try {
-      await GalaService.admin.updateCategoryStatus(vote._id, update);
-      refresh();
-    } catch {
-      toast.error("Erro ao atualizar fase.");
-    } finally {
-      setTogglingPhase(null);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/20 p-5">
       {/* Header */}
@@ -676,32 +628,6 @@ function CategoryRow({
             </>
           )}
         </div>
-      </div>
-
-      {/* Phase controls */}
-      <div className="flex flex-wrap gap-2">
-        <PhaseToggle
-          label="Nomeações"
-          active={vote.nomination_open}
-          disabled={togglingPhase === "nomination_open"}
-          onToggle={() =>
-            handlePhaseToggle({ nomination_open: !vote.nomination_open })
-          }
-        />
-        <PhaseToggle
-          label="Votação"
-          active={vote.voting_open}
-          disabled={togglingPhase === "voting_open"}
-          onToggle={() => handlePhaseToggle({ voting_open: !vote.voting_open })}
-        />
-        <PhaseToggle
-          label="Resultados"
-          active={vote.results_visible}
-          disabled={togglingPhase === "results_visible"}
-          onToggle={() =>
-            handlePhaseToggle({ results_visible: !vote.results_visible })
-          }
-        />
       </div>
 
       {/* Options list */}
@@ -849,9 +775,37 @@ function CategoryRow({
 
 // ─── Main VoteCategories Component ───────────────────────────────────────────
 
+type PhaseInfo = { label: string; color: string; dot: string };
+
+function resolvePhase(nominationsOpen: boolean, votingOpen: boolean): PhaseInfo {
+  if (nominationsOpen) {
+    return { label: "Nomeações abertas", color: "border-blue-500/30 bg-blue-500/5 text-blue-300", dot: "bg-blue-400" };
+  }
+  if (votingOpen) {
+    return { label: "Votação aberta", color: "border-dark-gold/30 bg-dark-gold/5 text-dark-gold", dot: "bg-dark-gold" };
+  }
+  return { label: "Fase fechada", color: "border-white/10 bg-white/5 text-white/40", dot: "bg-white/20" };
+}
+
+function PhaseBanner() {
+  const { time } = useTime();
+  const nominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;
+  const votingOpen = time?.votesStatus === TimeStatus.OPEN;
+  const phase = resolvePhase(nominationsOpen, votingOpen);
+
+  return (
+    <div className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold ${phase.color}`}>
+      <span className={`h-2 w-2 rounded-full ${phase.dot}`} />
+      Fase atual: {phase.label}
+    </div>
+  );
+}
+
 export default function VoteCategories() {
   const [categories, setCategories] = useState<AdminVoteCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resultsVisible, setResultsVisible] = useState(false);
+  const [togglingResults, setTogglingResults] = useState(false);
   const toast = useAppToast();
 
   const refresh = () => {
@@ -865,16 +819,54 @@ export default function VoteCategories() {
 
   useEffect(() => {
     refresh();
+    GalaService.config
+      .getConfig()
+      .then((cfg) => setResultsVisible((cfg as { results_visible?: boolean }).results_visible ?? false))
+      .catch(() => {});
   }, []);
+
+  const handleResultsToggle = async () => {
+    setTogglingResults(true);
+    try {
+      await GalaService.admin.setResultsVisibility(!resultsVisible);
+      setResultsVisible((v) => !v);
+      toast.success(resultsVisible ? "Resultados ocultados." : "Resultados visíveis para todos.");
+    } catch {
+      toast.error("Erro ao alterar visibilidade dos resultados.");
+    } finally {
+      setTogglingResults(false);
+    }
+  };
+
+  const resultsLabel = resultsVisible ? "Resultados visíveis" : "Resultados ocultos";
 
   return (
     <div className="flex flex-col gap-8">
       <CreateCategoryForm onSuccess={refresh} />
 
       <div className="flex flex-col gap-4">
-        <h2 className="border-b border-dark-gold/20 pb-2 font-gala text-2xl font-semibold text-white/90">
-          Categorias Existentes
-        </h2>
+        <div className="flex items-center justify-between border-b border-dark-gold/20 pb-2">
+          <h2 className="font-gala text-2xl font-semibold text-white/90">
+            Categorias Existentes
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleResultsToggle}
+              disabled={togglingResults}
+              className={[
+                "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50",
+                resultsVisible
+                  ? "border-green-500/40 bg-green-500/10 text-green-400"
+                  : "border-white/15 bg-white/5 text-white/40 hover:border-white/30 hover:text-white/70",
+              ].join(" ")}
+            >
+              <span className={`h-2 w-2 rounded-full ${resultsVisible ? "bg-green-400" : "bg-white/20"}`} />
+              {togglingResults ? "..." : resultsLabel}
+            </button>
+            <PhaseBanner />
+          </div>
+        </div>
         {(() => {
           if (loading) {
             return (

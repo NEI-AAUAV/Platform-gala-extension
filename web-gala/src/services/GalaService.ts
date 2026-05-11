@@ -59,18 +59,9 @@ export type AdminNominee = {
 export type AdminVoteCategory = {
   _id: number;
   category: string;
-  nomination_open: boolean;
-  voting_open: boolean;
-  results_visible: boolean;
   nominations: AdminNominee[];
   options: string[];
   photo_paths: string[];
-};
-
-export type CategoryStatusUpdate = {
-  nomination_open?: boolean;
-  voting_open?: boolean;
-  results_visible?: boolean;
 };
 
 export type MergeNomineesBody = {
@@ -355,12 +346,6 @@ const GalaService = {
     listVotingCategories: async (): Promise<AdminVoteCategory[]> => {
       return client.get("/admin/voting/categories");
     },
-    updateCategoryStatus: async (
-      categoryId: number,
-      body: CategoryStatusUpdate,
-    ): Promise<void> => {
-      return client.patch(`/admin/categories/${categoryId}/status`, body);
-    },
     finalizeNominations: async (categoryId: number): Promise<void> => {
       return client.post(`/admin/voting/categories/${categoryId}/finalize`, {});
     },
@@ -369,6 +354,9 @@ const GalaService = {
       body: MergeNomineesBody,
     ): Promise<void> => {
       return client.post(`/admin/voting/categories/${categoryId}/merge`, body);
+    },
+    setResultsVisibility: async (visible: boolean): Promise<void> => {
+      return client.patch(`/admin/voting/results-visibility?visible=${visible}`);
     },
   },
 

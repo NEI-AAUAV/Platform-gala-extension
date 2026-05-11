@@ -20,15 +20,10 @@ class Vote(BaseModel):
 class VoteCategory(BaseDocument):
     id: int = Field(alias="_id")
     category: str
-    
-    # Phase states
-    nomination_open: bool = False
-    voting_open: bool = False
-    results_visible: bool = False
-    
+
     # Nominations (free text)
     nominations: List[Nominee] = []
-    
+
     # Voting (once top 4 are fixed)
     options: List[str] = Field(default_factory=list)
     photo_paths: List[str] = Field(default_factory=list)
@@ -46,4 +41,5 @@ class VoteListing(BaseModel):
     # Phase state for frontend
     nomination_open: bool
     voting_open: bool
+    results_visible: bool = False
     already_nominated: bool = False

@@ -4,8 +4,10 @@ from loguru import logger
 from pydantic import BaseModel
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
+from app.api.time_slots.util import fetch_time_slots
+from app.api.vote._utils import is_nominations_open
 from app.core.db import DatabaseDep
-from app.services.vote import VoteService, NominationsClosedError
+from app.services.vote import VoteService
 
 router = APIRouter(tags=["Nominations"])
 
@@ -18,7 +20,7 @@ class NominationForm(BaseModel):
     "/categories/{category_id}/nominate",
     responses={
         **auth_responses,
-        400: {"description": "Invalid input or already nominated"},
+        400: {"description": "Invalid input"},
         403: {"description": "Nominations are closed"},
         500: {"description": "Internal server error"},
     }
@@ -29,17 +31,13 @@ async def submit_nomination(
     db: DatabaseDep,
     auth: Annotated[AuthData, Security(api_nei_auth)],
 ):
-    """
-    Submits a nomination for a particular category.
-    
-    - **category_id**: The ID of the category.
-    - **name**: The name of the person being nominated.
-    """
+    ts = await fetch_time_slots(db)
+    if not is_nominations_open(ts):
+        raise HTTPException(status_code=403, detail="Nominations are closed for this category")
+
     try:
         await VoteService.nominate(db, auth.sub, category_id, form_data.name)
         return {"status": "success"}
-    except NominationsClosedError as e:
-        raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -61,12 +59,6 @@ async def get_nomination_suggestions(
     auth: Annotated[AuthData, Security(api_nei_auth)],
     category_id: Annotated[int, Query(...)],
 ):
-    """
-    Returns fuzzy-matched name suggestions for nominations.
-    
-    - **category_id**: The ID of the category.
-    - **q**: The search query (min 2 characters).
-    """
     try:
         return await VoteService.get_suggestions(db, category_id, q)
     except Exception as e:

@@ -52,10 +52,6 @@ class AdminVoteService:
 
         await collection.update_one(
             {"_id": category_id},
-            {"$set": {
-                "options": [n.name for n in top_4],
-                "nomination_open": False,
-                "voting_open": True,
-            }}
+            {"$set": {"options": [n.name for n in top_4]}}
         )
         return True
