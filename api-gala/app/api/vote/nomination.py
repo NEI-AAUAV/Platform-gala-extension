@@ -67,6 +67,12 @@ async def get_nomination_suggestions(
     auth: Annotated[AuthData, Security(api_nei_auth)],
     category_id: Annotated[int, Query(...)],
 ):
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can access nominations")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can access nominations")
     try:
         return await VoteService.get_suggestions(db, category_id, q)
     except Exception as e:

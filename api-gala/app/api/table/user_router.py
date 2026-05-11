@@ -2,11 +2,14 @@ from typing import Annotated
 from pydantic import BaseModel
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File
 from app.api.auth import api_nei_auth, AuthData, ScopeEnum, auth_responses
+from app.api.time_slots.util import check_tables_open
 from app.core.config import SettingsDep
 from app.core.db import get_db
 from app.core.db.types import DBType
 from app.core.email import send_email
 from app.models.table import Table
+from app.models.time_slots import TimeSlots
+from app.models.user import User
 from app.services.table import TableService
 from app.services.storage import storage_client
 from app.services.config import ConfigService
@@ -34,8 +37,15 @@ async def create_table(
     body: TableCreateBody,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
+    _: Annotated[TimeSlots, Depends(check_tables_open)],
 ):
     """Creates a new table for the user."""
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can create tables")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can create tables")
     try:
         return await TableService.create_table(db, auth.sub, body.name, seats=body.seats)
     except ValueError as e:
@@ -57,8 +67,15 @@ async def join_table(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
+    _: Annotated[TimeSlots, Depends(check_tables_open)],
 ):
     """Joins a table using an invite token."""
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can join tables")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can join tables")
     try:
         table = await TableService.join_table(db, auth.sub, table_id=table_id, token=token)
     except ValueError as e:
