@@ -113,26 +113,19 @@ export function Toggle({
   readonly label: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!enabled)}
-      className="flex items-center gap-3"
+    <label
+      htmlFor="toggle-control"
+      className="flex cursor-pointer items-center gap-3"
     >
-      <div
-        className={[
-          "relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors",
-          enabled ? "bg-dark-gold/70" : "bg-white/15",
-        ].join(" ")}
-      >
-        <span
-          className={[
-            "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-            enabled ? "translate-x-4" : "translate-x-0.5",
-          ].join(" ")}
-        />
-      </div>
+      <input
+        id="toggle-control"
+        type="checkbox"
+        className="toggle-primary toggle toggle-sm"
+        checked={enabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <span className="text-sm text-white/60">{label}</span>
-    </button>
+    </label>
   );
 }
 

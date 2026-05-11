@@ -1808,7 +1808,7 @@ async def test_merge_table_empty(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client",
-    [auth_data(sub=0)],
+    [auth_data(sub=1)],
     indirect=["client"],
 )
 async def test_merge_table_without_space(

@@ -2,11 +2,14 @@ from typing import Annotated
 from pydantic import BaseModel
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File
 from app.api.auth import api_nei_auth, AuthData, ScopeEnum, auth_responses
+from app.api.time_slots.util import check_tables_open
 from app.core.config import SettingsDep
 from app.core.db import get_db
 from app.core.db.types import DBType
 from app.core.email import send_email
 from app.models.table import Table
+from app.models.time_slots import TimeSlots
+from app.models.user import User
 from app.services.table import TableService
 from app.services.storage import storage_client
 from app.services.config import ConfigService
@@ -27,15 +30,23 @@ class TableCreateBody(BaseModel):
     response_model=Table,
     responses={
         **auth_responses,
-        400: {"description": "Invalid input or limit reached"}
+        400: {"description": "Invalid input or limit reached"},
+        403: {"description": "Only gala registrants can create tables"},
     }
 )
 async def create_table(
     body: TableCreateBody,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
+    _: Annotated[TimeSlots, Depends(check_tables_open)],
 ):
     """Creates a new table for the user."""
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can create tables")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can create tables")
     try:
         return await TableService.create_table(db, auth.sub, body.name, seats=body.seats)
     except ValueError as e:
@@ -47,7 +58,8 @@ async def create_table(
     response_model=Table,
     responses={
         **auth_responses,
-        400: {"description": "Invalid token or table full"}
+        400: {"description": "Invalid token or table full"},
+        403: {"description": "Only gala registrants can join tables"},
     }
 )
 async def join_table(
@@ -57,24 +69,33 @@ async def join_table(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
+    _: Annotated[TimeSlots, Depends(check_tables_open)],
 ):
     """Joins a table using an invite token."""
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can join tables")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can join tables")
     try:
         table = await TableService.join_table(db, auth.sub, table_id=table_id, token=token)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     table_name = table.name or f"Mesa {table.id}"
-    logger.info("Queueing table join email for {}", auth.email)
-    background_tasks.add_task(
-        send_email,
-        auth.email,
-        f"Pedido de entrada na mesa \"{table_name}\"",
-        settings=settings,
-        template="table_joined",
-        name=f"{auth.name} {auth.surname}",
-        table=table_name,
-    )
+    config = await ConfigService.get_config(db)
+    if config.email_notifications.table_joined:
+        logger.info("Queueing table join email for {}", auth.email)
+        background_tasks.add_task(
+            send_email,
+            auth.email,
+            f"Pedido de entrada na mesa \"{table_name}\"",
+            settings=settings,
+            template="table_joined",
+            name=f"{auth.name} {auth.surname}",
+            table=table_name,
+        )
 
     return table
 

@@ -723,6 +723,21 @@ async def admin_delete_registration(
     return {"status": "success"}
 
 
+@router.get(
+    "/voting/categories",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
+)
+async def admin_list_vote_categories(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+) -> List[VoteCategory]:
+    """Lists all vote categories with full admin data including nominations."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    collection = VoteCategory.get_collection(db)
+    result = await collection.find().to_list(None)
+    return [VoteCategory.parse_obj(r) for r in result]
+
+
 class MergeNomineesBody(BaseModel):
     target_name: str
     source_names: List[str]
@@ -767,43 +782,28 @@ async def admin_finalize_nominations(
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     success = await AdminVoteService.finalize_nominations(db, category_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Finalization failed")
+        raise HTTPException(status_code=400, detail="Category not found or has no nominations to finalize")
     return {"status": "success"}
-
-
-class ToggleCategoryBody(BaseModel):
-    nomination_open: Optional[bool] = None
-    voting_open: Optional[bool] = None
-    results_visible: Optional[bool] = None
 
 
 @router.patch(
-    "/categories/{category_id}/status",
+    "/voting/results-visibility",
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}
 )
-async def admin_toggle_vote_category(
-    category_id: int,
-    body: ToggleCategoryBody,
+async def set_results_visibility(
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)],
+    visible: bool,
 ):
-    """Toggles various phases of a vote category."""
+    """Globally shows or hides vote results for all users."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-
-    update_data = {}
-    if body.nomination_open is not None:
-        update_data["nomination_open"] = body.nomination_open
-    if body.voting_open is not None:
-        update_data["voting_open"] = body.voting_open
-    if body.results_visible is not None:
-        update_data["results_visible"] = body.results_visible
-
-    if not update_data:
-        return {"status": "no change"}
-
-    collection = VoteCategory.get_collection(db)
-    await collection.update_one({"_id": category_id}, {"$set": update_data})
-    return {"status": "success"}
+    from app.models.config import GlobalConfig, CONFIG_ID
+    await GlobalConfig.get_collection(db).update_one(
+        {"_id": CONFIG_ID},
+        {"$set": {"results_visible": visible}},
+        upsert=True,
+    )
+    return {"results_visible": visible}
 
 
 @router.get(

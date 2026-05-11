@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import GalaService from "@/services/GalaService";
 
-export default function useTables() {
+export default function useVotes() {
   const { data, error, isLoading, mutate } = useSWR<Vote[]>(
     "/votes/list",
     () => GalaService.vote.listCategories(),

@@ -2,8 +2,10 @@ from typing import Any, List
 from fastapi import APIRouter, Security
 
 from app.api.auth import AuthData, ScopeEnum, api_nei_auth, auth_responses
+from app.api.time_slots.util import fetch_time_slots
 from app.core.db import DatabaseDep
 from app.models.vote import Vote, VoteCategory, VoteListing
+from app.services.config import ConfigService
 
 from ._utils import fetch_category, anonymize_category
 
@@ -22,12 +24,13 @@ async def list_categories(
     auth: AuthData = Security(api_nei_auth),
 ) -> List[VoteListing]:
     """Lists all vote categories"""
-    res = await VoteCategory.get_collection(db).find().to_list(None)
+    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
 
     def mapper(category_res: Any) -> VoteListing:
         category = VoteCategory(**category_res)
-        return anonymize_category(category, auth)
+        return anonymize_category(category, auth, ts, config.results_visible)
 
+    res = await VoteCategory.get_collection(db).find().to_list(None)
     return list(map(mapper, res))
 
 
@@ -42,8 +45,9 @@ async def get_category(
     auth: AuthData = Security(api_nei_auth),
 ) -> VoteListing:
     """Get a single vote category"""
+    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
     category = await fetch_category(category_id, db)
-    return anonymize_category(category, auth)
+    return anonymize_category(category, auth, ts, config.results_visible)
 
 
 @router.get(

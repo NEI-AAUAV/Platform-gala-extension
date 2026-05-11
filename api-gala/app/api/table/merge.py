@@ -11,9 +11,12 @@ from app.core.logging import logger
 from ._utils import (
     sanitize_table,
     fetch_table,
+    table_head_permissions,
 )
 
 router = APIRouter()
+
+_ERR_SOMETHING_WENT_WRONG = "_ERR_SOMETHING_WENT_WRONG"
 
 
 class TableMergeForm(BaseModel):
@@ -26,6 +29,7 @@ class TableMergeForm(BaseModel):
     "/{table_id}/merge",
     responses={
         **auth_responses,
+        403: {"description": "Not enough permissions"},
         404: {"description": "Table not found"},
         409: {
             "description": "<br>".join(
@@ -36,6 +40,7 @@ class TableMergeForm(BaseModel):
                 ]
             )
         },
+        500: {"description": "Internal error during merge operation"},
     },
 )
 async def merge_table(
@@ -58,6 +63,9 @@ async def merge_table(
 
     if table1.head is None or table2.head is None:
         raise HTTPException(status_code=409, detail="Cannot merge empty tables")
+
+    if not table_head_permissions(auth, table1) and not table_head_permissions(auth, table2):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
 
     if (
         not form_data.force_merge
@@ -87,7 +95,7 @@ async def merge_table(
             return_document=ReturnDocument.AFTER,
         )
         if res is None:
-            raise OperationFailure("Something went wrong")
+            raise OperationFailure(_ERR_SOMETHING_WENT_WRONG)
 
         res = await Table.get_collection(db).find_one_and_update(
             {"_id": table_id},
@@ -108,14 +116,11 @@ async def merge_table(
             return_document=ReturnDocument.AFTER,
         )
         if res is None:
-            # What if it goes wrong here? then we lose the data from the other table
-            # Oh well...
-            raise OperationFailure("Something went wrong")
+            raise OperationFailure(_ERR_SOMETHING_WENT_WRONG)
 
     except OperationFailure as e:
-        # Something went wrong - Do not check reason cause it should've work
         logger.error(e)
-        raise HTTPException(status_code=500, detail="Something went wrong")
+        raise HTTPException(status_code=500, detail=_ERR_SOMETHING_WENT_WRONG)
 
     table = Table.parse_obj(res)
     return sanitize_table(auth, table)

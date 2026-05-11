@@ -6,6 +6,7 @@ import {
   faCreditCard,
   faBuilding,
   faLock,
+  faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
@@ -47,6 +48,10 @@ export default function ProfilePaymentSection({
   const yearLabel = sessionUser?.matriculation
     ? String(sessionUser.matriculation)
     : null;
+  const fullName = [sessionUser?.name, sessionUser?.surname]
+    .filter(Boolean)
+    .join(" ")
+    .replaceAll(/\b\w/g, (c) => c.toUpperCase());
   const contact =
     config.paymentContacts.find((c) => c.year === `${yearLabel}ª`) ??
     config.paymentContacts[0] ??
@@ -72,10 +77,31 @@ export default function ProfilePaymentSection({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {(config.paymentMethod === "mbway" ||
           config.paymentMethod === "both") && (
-          <MBWayCard contact={contact} config={config} />
+          <MBWayCard
+            contact={contact}
+            description={config.paymentDescription
+              .replace("<Nome>", fullName)
+              .replace(
+                "<Nmec>",
+                sessionUser?.nmec ? String(sessionUser.nmec) : "",
+              )}
+            template={config.paymentDescription}
+            amount={userChosePhased ? config.phase1Price : config.eventPrice}
+          />
         )}
         {(config.paymentMethod === "iban" ||
-          config.paymentMethod === "both") && <IBANCard config={config} />}
+          config.paymentMethod === "both") && (
+          <IBANCard
+            config={config}
+            description={config.paymentDescription
+              .replace("<Nome>", fullName)
+              .replace(
+                "<Nmec>",
+                sessionUser?.nmec ? String(sessionUser.nmec) : "",
+              )}
+            template={config.paymentDescription}
+          />
+        )}
       </div>
 
       <div
@@ -117,11 +143,31 @@ export default function ProfilePaymentSection({
 
 function MBWayCard({
   contact,
-  config,
+  description,
+  template,
+  amount,
 }: Readonly<{
   contact: { year: string; name: string; phone: string } | undefined;
-  config: RegistrationConfig;
+  description: string;
+  template: string;
+  amount: number;
 }>) {
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedDesc, setCopiedDesc] = useState(false);
+
+  const copyPhone = () => {
+    if (!contact) return;
+    navigator.clipboard.writeText(contact.phone.replaceAll(" ", ""));
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const copyDesc = () => {
+    navigator.clipboard.writeText(description);
+    setCopiedDesc(true);
+    setTimeout(() => setCopiedDesc(false), 2000);
+  };
+
   return (
     <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
       <div className="flex items-center gap-3">
@@ -136,24 +182,58 @@ function MBWayCard({
             Contacto para a tua matrícula ({contact.year} ano):
           </p>
           <p className="text-sm font-semibold text-white/80">{contact.name}</p>
-          <p className="font-gala text-lg font-bold tracking-wider text-light-gold">
-            {contact.phone}
+          <div className="flex items-center justify-between">
+            <a
+              href={`tel:${contact.phone.replaceAll(" ", "")}`}
+              className="font-gala text-lg font-bold tracking-wider text-light-gold underline-offset-2 hover:underline"
+            >
+              {contact.phone}
+            </a>
+            <button
+              type="button"
+              onClick={copyPhone}
+              className="flex items-center gap-1 text-[0.6rem] font-semibold uppercase tracking-widest text-light-gold/60 hover:text-light-gold"
+            >
+              <FontAwesomeIcon icon={faCopy} className="text-[0.55rem]" />
+              {copiedPhone ? "Copiado ✓" : "Copiar"}
+            </button>
+          </div>
+          <p className="text-xs text-white/40">
+            Montante:{" "}
+            <span className="font-semibold text-white/70">{amount}€</span>
           </p>
         </div>
       )}
       <div className="border-white/6 bg-white/3 rounded-lg border px-4 py-3">
-        <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
-          Descrição do pagamento
-        </p>
-        <p className="mt-1 text-xs text-white/60">
-          {config.paymentDescription}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
+            Descrição do pagamento
+          </p>
+          <button
+            type="button"
+            onClick={copyDesc}
+            className="flex items-center gap-1 text-[0.6rem] font-semibold uppercase tracking-widest text-light-gold/60 hover:text-light-gold"
+          >
+            <FontAwesomeIcon icon={faCopy} className="text-[0.55rem]" />
+            {copiedDesc ? "Copiado ✓" : "Copiar"}
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-white/60">{description}</p>
+        <p className="mt-1 text-[0.6rem] text-white/25">{template}</p>
       </div>
     </div>
   );
 }
 
-function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
+function IBANCard({
+  config,
+  description,
+  template,
+}: Readonly<{
+  config: RegistrationConfig;
+  description: string;
+  template: string;
+}>) {
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -195,9 +275,8 @@ function IBANCard({ config }: Readonly<{ config: RegistrationConfig }>) {
         <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
           Descrição da transferência
         </p>
-        <p className="mt-1 text-xs text-white/60">
-          {config.paymentDescription}
-        </p>
+        <p className="mt-1 text-xs text-white/60">{description}</p>
+        <p className="mt-1 text-[0.6rem] text-white/25">{template}</p>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ async def test_get_time_slots_logged_out(
     settings: Settings, client: AsyncClient
 ) -> None:
     response = await client.get(f"{settings.API_V1_STR}/time_slots/")
-    assert response.status_code == 200
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio

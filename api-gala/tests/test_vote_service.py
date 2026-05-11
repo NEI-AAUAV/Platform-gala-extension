@@ -69,7 +69,8 @@ async def test_vote_duplicate_prevented_atomically():
 
 
 @pytest.mark.asyncio
-async def test_vote_closed_category():
+async def test_vote_service_does_not_enforce_time_window():
+    """Service ignores per-category voting_open flag; time enforcement is the API layer's job."""
     from app.services.vote import VoteService
 
     category = {
@@ -78,14 +79,15 @@ async def test_vote_closed_category():
         "options": ["Alice"],
         "nominations": [],
         "votes": [],
-        "voting_open": False,
+        "voting_open": False,   # stale per-category field; not read by VoteCategory model
         "nomination_open": False,
         "results_visible": False,
         "photo_paths": [],
     }
-    db, _ = _make_db(category)
-    with pytest.raises(ValueError, match="closed"):
-        await VoteService.vote(db, user_id=5, category_id=1, option_index=0)
+    db, coll = _make_db(category)
+    result = await VoteService.vote(db, user_id=5, category_id=1, option_index=0)
+    assert result is True
+    coll.update_one.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -165,8 +167,8 @@ async def test_nominate_adds_vote_to_existing_case_insensitive():
 
 
 @pytest.mark.asyncio
-async def test_nominate_duplicate_prevented_by_preflight():
-    """Pre-flight check stops the same user nominating again before reaching the DB."""
+async def test_nominate_allows_changing_existing_nomination():
+    """When a user already nominated, the service removes the old nomination and adds the new one."""
     from app.services.vote import VoteService
 
     category = {
@@ -181,9 +183,12 @@ async def test_nominate_duplicate_prevented_by_preflight():
         "photo_paths": [],
     }
     db, coll = _make_db(category)
-    with pytest.raises(ValueError, match="already nominated"):
-        await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
-    coll.update_one.assert_not_called()
+    result = await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
+    assert result is True
+    # First update removes old nomination; second adds the new one.
+    assert coll.update_one.call_count == 2
+    last_update = coll.update_one.call_args[0][1]
+    assert "nominations" in last_update.get("$push", {})
 
 
 @pytest.mark.asyncio
@@ -212,7 +217,8 @@ async def test_nominate_duplicate_prevented_atomically():
 
 
 @pytest.mark.asyncio
-async def test_nominate_closed():
+async def test_nominate_service_does_not_enforce_time_window():
+    """Service ignores per-category nomination_open flag; time enforcement is the API layer's job."""
     from app.services.vote import VoteService
 
     category = {
@@ -222,10 +228,11 @@ async def test_nominate_closed():
         "nominations": [],
         "votes": [],
         "voting_open": False,
-        "nomination_open": False,
+        "nomination_open": False,   # stale per-category field; not read by VoteCategory model
         "results_visible": False,
         "photo_paths": [],
     }
-    db, _ = _make_db(category)
-    with pytest.raises(ValueError, match="closed"):
-        await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
+    db, coll = _make_db(category)
+    result = await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
+    assert result is True
+    coll.update_one.assert_called_once()

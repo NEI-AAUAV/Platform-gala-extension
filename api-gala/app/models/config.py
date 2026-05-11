@@ -127,6 +127,7 @@ class GlobalConfig(BaseDocument):
 
     homepage: HomepageConfig = Field(default_factory=HomepageConfig)
     email_notifications: EmailNotificationsConfig = Field(default_factory=EmailNotificationsConfig)
+    results_visible: bool = False
 
     @classmethod
     def collection(cls) -> str:

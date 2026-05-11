@@ -8,9 +8,17 @@ import {
   faTrash,
   faEdit,
   faSave,
+  faChevronDown,
+  faChevronUp,
+  faObjectGroup,
+  faCheckDouble,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import GalaService from "@/services/GalaService";
+import GalaService, {
+  AdminVoteCategory,
+  AdminNominee,
+} from "@/services/GalaService";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import { useAppToast } from "@/components/ui/Toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,7 +61,6 @@ function OptionInput({
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
-      {/* Photo preview / upload trigger */}
       <button
         type="button"
         title="Carregar foto"
@@ -81,7 +88,6 @@ function OptionInput({
         />
       </button>
 
-      {/* Name input */}
       <input
         type="text"
         value={option.name}
@@ -90,7 +96,6 @@ function OptionInput({
         className="flex-1 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
       />
 
-      {/* Remove button */}
       <button
         type="button"
         disabled={!canRemove}
@@ -100,6 +105,180 @@ function OptionInput({
       >
         <FontAwesomeIcon icon={faXmark} />
       </button>
+    </div>
+  );
+}
+
+// ─── Phase Toggle ─────────────────────────────────────────────────────────────
+
+// ─── Nominations Panel ────────────────────────────────────────────────────────
+
+function NominationsPanel({
+  categoryId,
+  nominations,
+  refresh,
+}: Readonly<{
+  categoryId: number;
+  nominations: AdminNominee[];
+  refresh: () => void;
+}>) {
+  const toast = useAppToast();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [mergeTarget, setMergeTarget] = useState("");
+  const [isMerging, setIsMerging] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [confirmFinalize, setConfirmFinalize] = useState(false);
+
+  const sorted = [...nominations].sort(
+    (a, b) => b.votes.length - a.votes.length,
+  );
+
+  const toggleSelect = (name: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const handleMerge = async () => {
+    if (selected.size === 0) {
+      toast.warning("Seleciona pelo menos um nome para fundir.");
+      return;
+    }
+    const target = mergeTarget.trim() || [...selected][0];
+    setIsMerging(true);
+    try {
+      await GalaService.admin.mergeNominees(categoryId, {
+        target_name: target,
+        source_names: [...selected].filter((n) => n !== target),
+      });
+      toast.success("Nomes fundidos com sucesso.");
+      setSelected(new Set());
+      setMergeTarget("");
+      refresh();
+    } catch {
+      toast.error("Erro ao fundir nomes.");
+    } finally {
+      setIsMerging(false);
+    }
+  };
+
+  const handleFinalize = async () => {
+    setIsFinalizing(true);
+    try {
+      await GalaService.admin.finalizeNominations(categoryId);
+      toast.success(
+        "Nomeações finalizadas. Top 4 definido como opções de votação.",
+      );
+      setConfirmFinalize(false);
+      refresh();
+    } catch {
+      toast.error("Erro ao finalizar nomeações.");
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
+  if (nominations.length === 0) {
+    return (
+      <p className="py-2 text-center text-xs text-white/30">
+        Ainda não há nomeações nesta categoria.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Nominees list */}
+      <div className="flex flex-col gap-1">
+        {sorted.map((nominee) => (
+          <label
+            key={nominee.name}
+            htmlFor={`nominee-${nominee.name}`}
+            className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-white/5"
+          >
+            <input
+              id={`nominee-${nominee.name}`}
+              type="checkbox"
+              checked={selected.has(nominee.name)}
+              onChange={() => toggleSelect(nominee.name)}
+              className="h-3.5 w-3.5 accent-dark-gold"
+            />
+            <span className="flex-1 text-sm text-white/80">{nominee.name}</span>
+            <span className="text-white/35 text-xs">
+              {nominee.votes.length} voto{nominee.votes.length === 1 ? "" : "s"}
+            </span>
+          </label>
+        ))}
+      </div>
+
+      {/* Merge controls */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-3">
+          <FontAwesomeIcon
+            icon={faObjectGroup}
+            className="shrink-0 text-xs text-dark-gold/60"
+          />
+          <input
+            type="text"
+            value={mergeTarget}
+            onChange={(e) => setMergeTarget(e.target.value)}
+            placeholder={`Nome final (padrão: "${[...selected][0]}")`}
+            className="flex-1 rounded border border-white/10 bg-transparent px-2 py-1 text-xs text-white placeholder-white/25 outline-none focus:border-dark-gold/50"
+          />
+          <button
+            type="button"
+            onClick={handleMerge}
+            disabled={isMerging}
+            className="flex items-center gap-1.5 rounded-full bg-dark-gold/20 px-3 py-1 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/30 disabled:opacity-50"
+          >
+            {isMerging ? (
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faObjectGroup} />
+            )}
+            Fundir {selected.size}
+          </button>
+        </div>
+      )}
+
+      {/* Finalize button */}
+      <div className="border-t border-white/10 pt-3">
+        {confirmFinalize ? (
+          <div className="flex items-center gap-3">
+            <span className="flex-1 text-xs text-yellow-400/80">
+              Isto define o Top 4 como opções de votação e fecha as nomeações.
+              Irreversível.
+            </span>
+            <button
+              type="button"
+              onClick={handleFinalize}
+              disabled={isFinalizing}
+              className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-semibold text-yellow-400 hover:bg-yellow-500/30 disabled:opacity-50"
+            >
+              {isFinalizing ? "A finalizar..." : "Confirmar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmFinalize(false)}
+              className="hover:bg-white/15 rounded-full bg-white/10 px-3 py-1 text-xs text-white/60"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmFinalize(true)}
+            className="flex items-center gap-2 rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400"
+          >
+            <FontAwesomeIcon icon={faCheckDouble} />
+            Finalizar nomeações → Top 4
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -122,7 +301,6 @@ function CreateCategoryForm({
 
   useEffect(() => {
     return () => {
-      // NOTE: use ref to access latest state in cleanup
       optionsRef.current.forEach((opt) => {
         if (opt.previewUrl) URL.revokeObjectURL(opt.previewUrl);
       });
@@ -138,9 +316,7 @@ function CreateCategoryForm({
       const updated = [...prev];
       if (field === "photo" && value instanceof File) {
         const { previewUrl } = updated[index];
-        if (previewUrl) {
-          URL.revokeObjectURL(previewUrl);
-        }
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
         updated[index] = {
           ...updated[index],
           photo: value,
@@ -160,9 +336,7 @@ function CreateCategoryForm({
   const handleRemoveOption = (index: number) => {
     setOptions((prev) => {
       const { previewUrl } = prev[index];
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       return prev.filter((_, i) => i !== index);
     });
   };
@@ -193,7 +367,6 @@ function CreateCategoryForm({
         photo_paths: options.map(() => ""),
       });
 
-      // Upload photos for each option that has one
       await Promise.all(
         options.map((opt, i) =>
           opt.photo
@@ -210,20 +383,15 @@ function CreateCategoryForm({
         { id: crypto.randomUUID(), name: "" },
       ]);
       onSuccess();
-
       setTimeout(() => setStatus("idle"), 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
       let errorMsg = "Erro ao criar categoria.";
-      if (err?.response?.data?.detail) {
-        const { detail } = err.response.data;
-        errorMsg =
-          typeof detail === "string"
-            ? detail
-            : detail[0]?.msg || JSON.stringify(detail);
-      }
-
+      if (typeof detail === "string") errorMsg = detail;
+      else if (Array.isArray(detail) && detail[0]?.msg)
+        errorMsg = detail[0].msg;
       toast.error(errorMsg);
     }
   };
@@ -243,7 +411,6 @@ function CreateCategoryForm({
         Nova Categoria
       </h2>
 
-      {/* Category name */}
       <div className="flex flex-col gap-1">
         <label htmlFor="category-name" className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
@@ -260,7 +427,6 @@ function CreateCategoryForm({
         </label>
       </div>
 
-      {/* Options */}
       <div className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
           Opções (mín. 2)
@@ -285,7 +451,6 @@ function CreateCategoryForm({
         </button>
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={status === "uploading"}
@@ -306,18 +471,18 @@ function CreateCategoryForm({
 function CategoryRow({
   vote,
   refresh,
-}: Readonly<{ vote: Vote; refresh: () => void }>) {
+}: Readonly<{ vote: AdminVoteCategory; refresh: () => void }>) {
   const toast = useAppToast();
 
-  // Edit state
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(vote.category);
   const [editOptions, setEditOptions] = useState<string[]>([...vote.options]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Delete state
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const [showNominations, setShowNominations] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -325,17 +490,12 @@ function CategoryRow({
       await GalaService.vote.deleteCategory(vote._id);
       toast.success("A categoria foi removida com sucesso.");
       refresh();
-    } catch (err: any) {
-      let errorMsg = "Erro ao apagar categoria.";
-      if (err?.response?.data?.detail) {
-        const { detail } = err.response.data;
-        errorMsg =
-          typeof detail === "string"
-            ? detail
-            : detail[0]?.msg || JSON.stringify(detail);
-      }
-
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      const msg =
+        typeof detail === "string" ? detail : "Erro ao apagar categoria.";
+      toast.error(msg);
       setIsDeleting(false);
       setIsConfirmingDelete(false);
     }
@@ -364,17 +524,12 @@ function CategoryRow({
       toast.success("Alterações guardadas com sucesso! ✨");
       setIsEditing(false);
       refresh();
-    } catch (err: any) {
-      let errorMsg = "Erro ao editar categoria.";
-      if (err?.response?.data?.detail) {
-        const { detail } = err.response.data;
-        errorMsg =
-          typeof detail === "string"
-            ? detail
-            : detail[0]?.msg || JSON.stringify(detail);
-      }
-
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      const msg =
+        typeof detail === "string" ? detail : "Erro ao editar categoria.";
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -385,23 +540,16 @@ function CategoryRow({
       await GalaService.vote.uploadOptionPhoto(vote._id, optionIndex, file);
       toast.success(`Foto da opção ${optionIndex + 1} carregada!`);
       refresh();
-    } catch (err: any) {
-      let errorMsg = "Erro ao carregar imagem.";
-      if (err?.response?.data?.detail) {
-        const { detail } = err.response.data;
-        errorMsg =
-          typeof detail === "string"
-            ? detail
-            : detail[0]?.msg || JSON.stringify(detail);
-
-        // Translate some common errors for better UX
-        if (errorMsg.includes("File too large"))
-          errorMsg = "A imagem é demasiado grande (máx. 5MB).";
-        if (errorMsg.includes("Invalid file type"))
-          errorMsg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
-      }
-
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      let msg =
+        typeof detail === "string" ? detail : "Erro ao carregar imagem.";
+      if (msg.includes("File too large"))
+        msg = "A imagem é demasiado grande (máx. 5MB).";
+      if (msg.includes("Invalid file type"))
+        msg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
+      toast.error(msg);
     }
   };
 
@@ -410,23 +558,14 @@ function CategoryRow({
       await GalaService.vote.deleteOptionPhoto(vote._id, optionIndex);
       toast.success("A foto foi removida.");
       refresh();
-    } catch (err: any) {
-      let errorMsg = "Erro ao remover imagem.";
-      if (err?.response?.data?.detail) {
-        const { detail } = err.response.data;
-        errorMsg =
-          typeof detail === "string"
-            ? detail
-            : detail[0]?.msg || JSON.stringify(detail);
-      }
-
-      toast.error(errorMsg);
+    } catch {
+      toast.error("Erro ao remover imagem.");
     }
   };
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/20 p-5">
-      {/* Header: Name and Actions */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
         {isEditing ? (
           <input
@@ -442,7 +581,6 @@ function CategoryRow({
         )}
 
         <div className="flex items-center gap-2">
-          {/* Delete Actions */}
           {isConfirmingDelete ? (
             <>
               <span className="mr-2 text-xs font-semibold text-red-400">
@@ -467,7 +605,6 @@ function CategoryRow({
             </>
           ) : (
             <>
-              {/* Edit Action */}
               {isEditing ? (
                 <button
                   type="button"
@@ -491,8 +628,6 @@ function CategoryRow({
                   <FontAwesomeIcon icon={faEdit} />
                 </button>
               )}
-
-              {/* Trash Action */}
               <button
                 type="button"
                 title="Apagar Categoria"
@@ -506,14 +641,13 @@ function CategoryRow({
         </div>
       </div>
 
-      {/* Options List */}
+      {/* Options list */}
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
             key={`${vote._id}-option-${option}`}
             className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
           >
-            {/* Current photo preview (not editable directly in edit mode string array, but stays visible) */}
             <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
               {vote.photo_paths[i] ? (
                 <>
@@ -543,7 +677,6 @@ function CategoryRow({
               )}
             </div>
 
-            {/* Option Name */}
             {isEditing ? (
               <input
                 type="text"
@@ -559,17 +692,16 @@ function CategoryRow({
               <span className="flex-1 font-medium">{option}</span>
             )}
 
-            {/* Upload photo button (hidden in edit mode to avoid confusion) */}
             {!isEditing && (
               <label
-                htmlFor={`photo-upload-${i}`}
+                htmlFor={`photo-upload-${vote._id}-${i}`}
                 title="Substituir foto"
                 className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold"
               >
                 <FontAwesomeIcon icon={faCloudUploadAlt} className="mr-1" />
                 Foto
                 <input
-                  id={`photo-upload-${i}`}
+                  id={`photo-upload-${vote._id}-${i}`}
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
@@ -581,7 +713,6 @@ function CategoryRow({
               </label>
             )}
 
-            {/* Remove Option Button (only in edit mode) */}
             {isEditing && (
               <button
                 type="button"
@@ -607,15 +738,46 @@ function CategoryRow({
             Nova Opção
           </button>
         )}
+
+        {isEditing && (
+          <div className="flex justify-between px-2 text-xs italic text-white/40">
+            <p>
+              Ao editar opções, as fotos podem precisar de re-upload caso a
+              ordem mude.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Action text block */}
-      {isEditing && (
-        <div className="flex justify-between px-2 text-xs italic text-white/40">
-          <p>
-            Ao editar opções, as fotos podem precisar de re-upload caso a ordem
-            mude.
-          </p>
+      {/* Nominations section */}
+      {!isEditing && (
+        <div className="border-t border-white/10 pt-3">
+          <button
+            type="button"
+            onClick={() => setShowNominations((v) => !v)}
+            className="flex w-full items-center justify-between text-xs text-white/40 transition hover:text-white/70"
+          >
+            <span>
+              Nomeações{" "}
+              <span className="ml-1 rounded-full bg-white/10 px-1.5 py-0.5 font-semibold">
+                {vote.nominations.length}
+              </span>
+            </span>
+            <FontAwesomeIcon
+              icon={showNominations ? faChevronUp : faChevronDown}
+              className="text-[0.6rem]"
+            />
+          </button>
+
+          {showNominations && (
+            <div className="mt-3">
+              <NominationsPanel
+                categoryId={vote._id}
+                nominations={vote.nominations}
+                refresh={refresh}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -624,15 +786,60 @@ function CategoryRow({
 
 // ─── Main VoteCategories Component ───────────────────────────────────────────
 
+type PhaseInfo = { label: string; color: string; dot: string };
+
+function resolvePhase(
+  nominationsOpen: boolean,
+  votingOpen: boolean,
+): PhaseInfo {
+  if (nominationsOpen) {
+    return {
+      label: "Nomeações abertas",
+      color: "border-blue-500/30 bg-blue-500/5 text-blue-300",
+      dot: "bg-blue-400",
+    };
+  }
+  if (votingOpen) {
+    return {
+      label: "Votação aberta",
+      color: "border-dark-gold/30 bg-dark-gold/5 text-dark-gold",
+      dot: "bg-dark-gold",
+    };
+  }
+  return {
+    label: "Fase fechada",
+    color: "border-white/10 bg-white/5 text-white/40",
+    dot: "bg-white/20",
+  };
+}
+
+function PhaseBanner() {
+  const { time } = useTime();
+  const nominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;
+  const votingOpen = time?.votesStatus === TimeStatus.OPEN;
+  const phase = resolvePhase(nominationsOpen, votingOpen);
+
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold ${phase.color}`}
+    >
+      <span className={`h-2 w-2 rounded-full ${phase.dot}`} />
+      Fase atual: {phase.label}
+    </div>
+  );
+}
+
 export default function VoteCategories() {
-  const [categories, setCategories] = useState<Vote[]>([]);
+  const [categories, setCategories] = useState<AdminVoteCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resultsVisible, setResultsVisible] = useState(false);
+  const [togglingResults, setTogglingResults] = useState(false);
   const toast = useAppToast();
 
   const refresh = () => {
     setLoading(true);
-    GalaService.vote
-      .listCategories()
+    GalaService.admin
+      .listVotingCategories()
       .then((data) => setCategories(data))
       .catch(() => toast.error("Erro ao carregar categorias."))
       .finally(() => setLoading(false));
@@ -640,16 +847,68 @@ export default function VoteCategories() {
 
   useEffect(() => {
     refresh();
+    GalaService.config
+      .getConfig()
+      .then((cfg) =>
+        setResultsVisible(
+          (cfg as { results_visible?: boolean }).results_visible ?? false,
+        ),
+      )
+      .catch(() => {});
   }, []);
+
+  const handleResultsToggle = async () => {
+    setTogglingResults(true);
+    try {
+      await GalaService.admin.setResultsVisibility(!resultsVisible);
+      setResultsVisible((v) => !v);
+      toast.success(
+        resultsVisible
+          ? "Resultados ocultados."
+          : "Resultados visíveis para todos.",
+      );
+    } catch {
+      toast.error("Erro ao alterar visibilidade dos resultados.");
+    } finally {
+      setTogglingResults(false);
+    }
+  };
+
+  const resultsLabel = resultsVisible
+    ? "Resultados visíveis"
+    : "Resultados ocultos";
 
   return (
     <div className="flex flex-col gap-8">
       <CreateCategoryForm onSuccess={refresh} />
 
       <div className="flex flex-col gap-4">
-        <h2 className="border-b border-dark-gold/20 pb-2 font-gala text-2xl font-semibold text-white/90">
-          Categorias Existentes
-        </h2>
+        <div className="flex items-center justify-between border-b border-dark-gold/20 pb-2">
+          <h2 className="font-gala text-2xl font-semibold text-white/90">
+            Categorias Existentes
+          </h2>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleResultsToggle}
+              disabled={togglingResults}
+              className={[
+                "flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50",
+                resultsVisible
+                  ? "border-green-500/40 bg-green-500/10 text-green-400"
+                  : "border-white/15 bg-white/5 text-white/40 hover:border-white/30 hover:text-white/70",
+              ].join(" ")}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  resultsVisible ? "bg-green-400" : "bg-white/20"
+                }`}
+              />
+              {togglingResults ? "..." : resultsLabel}
+            </button>
+            <PhaseBanner />
+          </div>
+        </div>
         {(() => {
           if (loading) {
             return (

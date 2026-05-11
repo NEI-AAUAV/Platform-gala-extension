@@ -176,6 +176,9 @@ async def invite_user(
 
     invited_user_doc = await User.get_collection(db).find_one({"_id": user_id})
     if invited_user_doc:
+        invited_user = User.parse_obj(invited_user_doc)
+        if not invited_user.is_registered or not invited_user.registration_active:
+            raise HTTPException(status_code=400, detail="This user is not registered for the gala")
         invited_user_email = invited_user_doc.get("email")
         invited_user_name = invited_user_doc.get("name")
     else:

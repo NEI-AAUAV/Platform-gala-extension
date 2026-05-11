@@ -51,6 +51,24 @@ type VoteCategoryCreate = {
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
 
+export type AdminNominee = {
+  name: string;
+  votes: number[];
+};
+
+export type AdminVoteCategory = {
+  _id: number;
+  category: string;
+  nominations: AdminNominee[];
+  options: string[];
+  photo_paths: string[];
+};
+
+export type MergeNomineesBody = {
+  target_name: string;
+  source_names: string[];
+};
+
 export type ManagerPermissionKey =
   | "registration"
   | "tables"
@@ -323,6 +341,25 @@ const GalaService = {
     ): Promise<void> => {
       return client.delete(`/admin/tables/${tableId}/members/${userId}`);
     },
+
+    // Voting category management
+    listVotingCategories: async (): Promise<AdminVoteCategory[]> => {
+      return client.get("/admin/voting/categories");
+    },
+    finalizeNominations: async (categoryId: number): Promise<void> => {
+      return client.post(`/admin/voting/categories/${categoryId}/finalize`, {});
+    },
+    mergeNominees: async (
+      categoryId: number,
+      body: MergeNomineesBody,
+    ): Promise<void> => {
+      return client.post(`/admin/voting/categories/${categoryId}/merge`, body);
+    },
+    setResultsVisibility: async (visible: boolean): Promise<void> => {
+      return client.patch(
+        `/admin/voting/results-visibility?visible=${visible}`,
+      );
+    },
   },
 
   time: {
@@ -370,6 +407,19 @@ const GalaService = {
         request,
       );
       return response;
+    },
+    nominate: async (id: string | number, name: string): Promise<void> => {
+      await client.post(`/voting/categories/${id}/nominate`, { name });
+    },
+    getSuggestions: async (
+      id: string | number,
+      query: string,
+    ): Promise<string[]> => {
+      return client.get(
+        `/voting/nominees/suggest?category_id=${id}&q=${encodeURIComponent(
+          query,
+        )}`,
+      );
     },
     uploadOptionPhoto: async (
       categoryId: string | number,

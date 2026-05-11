@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from typing import Annotated
+from fastapi import APIRouter, Security
 
 from app.models.time_slots import TimeSlots
 from app.core.db import DatabaseDep
-from app.api.auth import auth_responses
+from app.api.auth import AuthData, api_nei_auth, auth_responses
 
 from .util import fetch_time_slots
 
@@ -16,6 +17,7 @@ router = APIRouter()
 async def get_time_slots(
     *,
     db: DatabaseDep,
+    _: Annotated[AuthData, Security(api_nei_auth)],
 ) -> TimeSlots:
     """Gets the current time slots config"""
     return await fetch_time_slots(db)
