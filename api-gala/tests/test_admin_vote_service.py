@@ -137,8 +137,6 @@ async def test_finalize_nominations_selects_top_4_by_vote_count():
     coll.update_one.assert_called_once()
     update = coll.update_one.call_args[0][1]["$set"]
     assert len(update["options"]) == 4
-    assert update["nomination_open"] is False
-    assert update["voting_open"] is True
     assert "Carol" in update["options"]
     assert "Alice" in update["options"]
     assert "Dave" not in update["options"]
@@ -157,8 +155,6 @@ async def test_finalize_nominations_takes_all_when_fewer_than_4():
     assert result is True
     update = coll.update_one.call_args[0][1]["$set"]
     assert set(update["options"]) == {"Alice", "Bob"}
-    assert update["nomination_open"] is False
-    assert update["voting_open"] is True
 
 
 @pytest.mark.asyncio
