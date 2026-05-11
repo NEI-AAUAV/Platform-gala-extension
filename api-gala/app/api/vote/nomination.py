@@ -57,6 +57,7 @@ async def submit_nomination(
     "/nominees/suggest",
     responses={
         **auth_responses,
+        403: {"description": "Only gala registrants can access nominations"},
         500: {"description": "Internal server error"},
     },
     response_model=List[str]
