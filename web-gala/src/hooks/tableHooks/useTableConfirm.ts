@@ -5,7 +5,7 @@ type Confirmation = {
   confirm: boolean;
 };
 
-export default async function useTableConfirm(
+export default async function tableConfirm(
   id: string | number,
   request: Confirmation,
 ) {

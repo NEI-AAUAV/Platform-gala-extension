@@ -9,7 +9,7 @@ type ReserveTable = {
   }[];
 };
 
-export default async function useTableReserve(
+export default async function tableReserve(
   id: number,
   request: ReserveTable,
 ) {

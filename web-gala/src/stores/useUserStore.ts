@@ -1,15 +1,15 @@
 import { create } from "zustand";
-import { shallow } from "zustand/shallow";
+export { shallow } from "zustand/shallow";
 import config from "@/config";
 
 function parseJWT(token: string) {
   const base64Url = token.split(".")[1];
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const base64 = base64Url.replaceAll("-", "+").replaceAll("_", "/");
   const jsonPayload = decodeURIComponent(
-    window
+    globalThis
       .atob(base64)
       .split("")
-      .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+      .map((c) => `%${(c.codePointAt(0) ?? 0).toString(16).padStart(2, "0")}`)
       .join(""),
   );
   return JSON.parse(jsonPayload);
@@ -17,10 +17,10 @@ function parseJWT(token: string) {
 
 const defaultTheme =
   localStorage.getItem("th") ||
-  (window.matchMedia("(prefers-color-scheme: dark)").matches
+  (globalThis.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light");
-document.body.setAttribute("data-theme", defaultTheme);
+document.body.dataset.theme = defaultTheme;
 
 interface TokenPayload {
   image?: string;
@@ -46,7 +46,7 @@ const useUserStore = create<UserState>((set) => ({
 
   setTheme: (theme) => {
     localStorage.setItem("th", theme);
-    document.body.setAttribute("data-theme", theme);
+    document.body.dataset.theme = theme;
     set(() => ({ theme }));
   },
 
@@ -76,4 +76,4 @@ const useUserStore = create<UserState>((set) => ({
   },
 }));
 
-export { useUserStore, shallow };
+export { useUserStore };

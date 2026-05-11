@@ -592,7 +592,7 @@ export default function RegistrationAdmin() {
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
               <span className="font-semibold text-white/60">imagens e PDF</span>
-              . Validação aplicada no backend.
+              {". Validação aplicada no backend."}
             </p>
           </Section>
         </div>

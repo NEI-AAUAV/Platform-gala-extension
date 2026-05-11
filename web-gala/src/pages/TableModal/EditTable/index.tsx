@@ -13,7 +13,7 @@ import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
 import AcceptPending from "./AcceptPending";
 import Avatar from "@/components/Avatar";
-import useTableLeave from "@/hooks/tableHooks/useTableLeave";
+import tableLeave from "@/hooks/tableHooks/useTableLeave";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
 import GalaService from "@/services/GalaService";
@@ -385,7 +385,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
             className="w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
             onClick={async () => {
               try {
-                await useTableLeave(table._id);
+                await tableLeave(table._id);
                 mutate();
                 navigate("/reserve");
               } catch (e) {
