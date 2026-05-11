@@ -16,7 +16,11 @@ test.describe('Voting System', () => {
             category: 'Best Student',
             options: ['Alice', 'Bob', 'Charlie'],
             photo_paths: ['https://placehold.co/32', 'https://placehold.co/32', 'https://placehold.co/32'],
-            already_voted: null
+            scores: [0, 0, 0],
+            already_voted: null,
+            nomination_open: false,
+            voting_open: true,
+            already_nominated: false,
           }
         ]
       });
