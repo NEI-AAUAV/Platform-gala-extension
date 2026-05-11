@@ -29,6 +29,7 @@ class TableMergeForm(BaseModel):
     "/{table_id}/merge",
     responses={
         **auth_responses,
+        403: {"description": "Not enough permissions"},
         404: {"description": "Table not found"},
         409: {
             "description": "<br>".join(
@@ -39,6 +40,7 @@ class TableMergeForm(BaseModel):
                 ]
             )
         },
+        500: {"description": "Internal error during merge operation"},
     },
 )
 async def merge_table(

@@ -30,7 +30,8 @@ class TableCreateBody(BaseModel):
     response_model=Table,
     responses={
         **auth_responses,
-        400: {"description": "Invalid input or limit reached"}
+        400: {"description": "Invalid input or limit reached"},
+        403: {"description": "Only gala registrants can create tables"},
     }
 )
 async def create_table(
@@ -57,7 +58,8 @@ async def create_table(
     response_model=Table,
     responses={
         **auth_responses,
-        400: {"description": "Invalid token or table full"}
+        400: {"description": "Invalid token or table full"},
+        403: {"description": "Only gala registrants can join tables"},
     }
 )
 async def join_table(
