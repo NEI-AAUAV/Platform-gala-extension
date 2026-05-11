@@ -2,7 +2,10 @@ import VoteCard from "@/components/VoteCard";
 import useVotes from "@/hooks/voteHooks/useVotes";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 
-function NominateContent({ categories, isRegistered }: Readonly<{ categories: Vote[]; isRegistered: boolean }>) {
+function NominateContent({
+  categories,
+  isRegistered,
+}: Readonly<{ categories: Vote[]; isRegistered: boolean }>) {
   if (!isRegistered) {
     return (
       <p className="py-10 text-center text-sm text-white/30">

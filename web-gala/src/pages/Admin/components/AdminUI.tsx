@@ -113,10 +113,14 @@ export function Toggle({
   readonly label: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3">
+    <label
+      htmlFor="toggle-control"
+      className="flex cursor-pointer items-center gap-3"
+    >
       <input
+        id="toggle-control"
         type="checkbox"
-        className="toggle toggle-primary toggle-sm"
+        className="toggle-primary toggle toggle-sm"
         checked={enabled}
         onChange={(e) => onChange(e.target.checked)}
       />

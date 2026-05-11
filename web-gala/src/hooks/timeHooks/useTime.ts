@@ -37,8 +37,14 @@ const POLL_INTERVAL_MS = 30_000;
 function buildTimeExtended(response: TimeSlots): TimeExtended {
   return {
     ...response,
-    registrationStatus: getTimeStatus(response.registrationStart, response.registrationEnd),
-    nominationsStatus: getTimeStatus(response.nominationsStart, response.nominationsEnd),
+    registrationStatus: getTimeStatus(
+      response.registrationStart,
+      response.registrationEnd,
+    ),
+    nominationsStatus: getTimeStatus(
+      response.nominationsStart,
+      response.nominationsEnd,
+    ),
     votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
     tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
     galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),

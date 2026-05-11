@@ -130,7 +130,11 @@ export default function Step4Payment({
                   </a>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard.writeText(contact.phone.replaceAll(" ", ""))}
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        contact.phone.replaceAll(" ", ""),
+                      )
+                    }
                     className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
                   >
                     <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
@@ -208,8 +212,7 @@ export default function Step4Payment({
               }}
               className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
             >
-              <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
-              COPIAR
+              <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" /> COPIAR
             </button>
           </div>
           <span className="text-xs italic text-white/80">

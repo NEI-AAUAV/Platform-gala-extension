@@ -129,7 +129,9 @@ function NominationsPanel({
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [confirmFinalize, setConfirmFinalize] = useState(false);
 
-  const sorted = [...nominations].sort((a, b) => b.votes.length - a.votes.length);
+  const sorted = [...nominations].sort(
+    (a, b) => b.votes.length - a.votes.length,
+  );
 
   const toggleSelect = (name: string) => {
     setSelected((prev) => {
@@ -167,7 +169,9 @@ function NominationsPanel({
     setIsFinalizing(true);
     try {
       await GalaService.admin.finalizeNominations(categoryId);
-      toast.success("Nomeações finalizadas. Top 4 definido como opções de votação.");
+      toast.success(
+        "Nomeações finalizadas. Top 4 definido como opções de votação.",
+      );
       setConfirmFinalize(false);
       refresh();
     } catch {
@@ -192,16 +196,18 @@ function NominationsPanel({
         {sorted.map((nominee) => (
           <label
             key={nominee.name}
+            htmlFor={`nominee-${nominee.name}`}
             className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-white/5"
           >
             <input
+              id={`nominee-${nominee.name}`}
               type="checkbox"
               checked={selected.has(nominee.name)}
               onChange={() => toggleSelect(nominee.name)}
               className="h-3.5 w-3.5 accent-dark-gold"
             />
             <span className="flex-1 text-sm text-white/80">{nominee.name}</span>
-            <span className="text-xs text-white/35">
+            <span className="text-white/35 text-xs">
               {nominee.votes.length} voto{nominee.votes.length === 1 ? "" : "s"}
             </span>
           </label>
@@ -211,13 +217,16 @@ function NominationsPanel({
       {/* Merge controls */}
       {selected.size > 0 && (
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-3">
-          <FontAwesomeIcon icon={faObjectGroup} className="shrink-0 text-xs text-dark-gold/60" />
+          <FontAwesomeIcon
+            icon={faObjectGroup}
+            className="shrink-0 text-xs text-dark-gold/60"
+          />
           <input
             type="text"
             value={mergeTarget}
             onChange={(e) => setMergeTarget(e.target.value)}
             placeholder={`Nome final (padrão: "${[...selected][0]}")`}
-            className="flex-1 rounded border border-white/10 bg-transparent px-2 py-1 text-xs text-white outline-none focus:border-dark-gold/50 placeholder-white/25"
+            className="flex-1 rounded border border-white/10 bg-transparent px-2 py-1 text-xs text-white placeholder-white/25 outline-none focus:border-dark-gold/50"
           />
           <button
             type="button"
@@ -240,7 +249,8 @@ function NominationsPanel({
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
-              Isto define o Top 4 como opções de votação e fecha as nomeações. Irreversível.
+              Isto define o Top 4 como opções de votação e fecha as nomeações.
+              Irreversível.
             </span>
             <button
               type="button"
@@ -253,7 +263,7 @@ function NominationsPanel({
             <button
               type="button"
               onClick={() => setConfirmFinalize(false)}
-              className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60 hover:bg-white/15"
+              className="hover:bg-white/15 rounded-full bg-white/10 px-3 py-1 text-xs text-white/60"
             >
               Cancelar
             </button>
@@ -380,7 +390,8 @@ function CreateCategoryForm({
         ?.response?.data?.detail;
       let errorMsg = "Erro ao criar categoria.";
       if (typeof detail === "string") errorMsg = detail;
-      else if (Array.isArray(detail) && detail[0]?.msg) errorMsg = detail[0].msg;
+      else if (Array.isArray(detail) && detail[0]?.msg)
+        errorMsg = detail[0].msg;
       toast.error(errorMsg);
     }
   };
@@ -731,8 +742,8 @@ function CategoryRow({
         {isEditing && (
           <div className="flex justify-between px-2 text-xs italic text-white/40">
             <p>
-              Ao editar opções, as fotos podem precisar de re-upload caso a ordem
-              mude.
+              Ao editar opções, as fotos podem precisar de re-upload caso a
+              ordem mude.
             </p>
           </div>
         )}
@@ -777,14 +788,29 @@ function CategoryRow({
 
 type PhaseInfo = { label: string; color: string; dot: string };
 
-function resolvePhase(nominationsOpen: boolean, votingOpen: boolean): PhaseInfo {
+function resolvePhase(
+  nominationsOpen: boolean,
+  votingOpen: boolean,
+): PhaseInfo {
   if (nominationsOpen) {
-    return { label: "Nomeações abertas", color: "border-blue-500/30 bg-blue-500/5 text-blue-300", dot: "bg-blue-400" };
+    return {
+      label: "Nomeações abertas",
+      color: "border-blue-500/30 bg-blue-500/5 text-blue-300",
+      dot: "bg-blue-400",
+    };
   }
   if (votingOpen) {
-    return { label: "Votação aberta", color: "border-dark-gold/30 bg-dark-gold/5 text-dark-gold", dot: "bg-dark-gold" };
+    return {
+      label: "Votação aberta",
+      color: "border-dark-gold/30 bg-dark-gold/5 text-dark-gold",
+      dot: "bg-dark-gold",
+    };
   }
-  return { label: "Fase fechada", color: "border-white/10 bg-white/5 text-white/40", dot: "bg-white/20" };
+  return {
+    label: "Fase fechada",
+    color: "border-white/10 bg-white/5 text-white/40",
+    dot: "bg-white/20",
+  };
 }
 
 function PhaseBanner() {
@@ -794,7 +820,9 @@ function PhaseBanner() {
   const phase = resolvePhase(nominationsOpen, votingOpen);
 
   return (
-    <div className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold ${phase.color}`}>
+    <div
+      className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold ${phase.color}`}
+    >
       <span className={`h-2 w-2 rounded-full ${phase.dot}`} />
       Fase atual: {phase.label}
     </div>
@@ -821,7 +849,11 @@ export default function VoteCategories() {
     refresh();
     GalaService.config
       .getConfig()
-      .then((cfg) => setResultsVisible((cfg as { results_visible?: boolean }).results_visible ?? false))
+      .then((cfg) =>
+        setResultsVisible(
+          (cfg as { results_visible?: boolean }).results_visible ?? false,
+        ),
+      )
       .catch(() => {});
   }, []);
 
@@ -830,7 +862,11 @@ export default function VoteCategories() {
     try {
       await GalaService.admin.setResultsVisibility(!resultsVisible);
       setResultsVisible((v) => !v);
-      toast.success(resultsVisible ? "Resultados ocultados." : "Resultados visíveis para todos.");
+      toast.success(
+        resultsVisible
+          ? "Resultados ocultados."
+          : "Resultados visíveis para todos.",
+      );
     } catch {
       toast.error("Erro ao alterar visibilidade dos resultados.");
     } finally {
@@ -838,7 +874,9 @@ export default function VoteCategories() {
     }
   };
 
-  const resultsLabel = resultsVisible ? "Resultados visíveis" : "Resultados ocultos";
+  const resultsLabel = resultsVisible
+    ? "Resultados visíveis"
+    : "Resultados ocultos";
 
   return (
     <div className="flex flex-col gap-8">
@@ -861,7 +899,11 @@ export default function VoteCategories() {
                   : "border-white/15 bg-white/5 text-white/40 hover:border-white/30 hover:text-white/70",
               ].join(" ")}
             >
-              <span className={`h-2 w-2 rounded-full ${resultsVisible ? "bg-green-400" : "bg-white/20"}`} />
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  resultsVisible ? "bg-green-400" : "bg-white/20"
+                }`}
+              />
               {togglingResults ? "..." : resultsLabel}
             </button>
             <PhaseBanner />

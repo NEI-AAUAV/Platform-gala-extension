@@ -81,7 +81,10 @@ export default function ProfilePaymentSection({
             contact={contact}
             description={config.paymentDescription
               .replace("<Nome>", fullName)
-              .replace("<Nmec>", sessionUser?.nmec ? String(sessionUser.nmec) : "")}
+              .replace(
+                "<Nmec>",
+                sessionUser?.nmec ? String(sessionUser.nmec) : "",
+              )}
             template={config.paymentDescription}
             amount={userChosePhased ? config.phase1Price : config.eventPrice}
           />
@@ -92,7 +95,10 @@ export default function ProfilePaymentSection({
             config={config}
             description={config.paymentDescription
               .replace("<Nome>", fullName)
-              .replace("<Nmec>", sessionUser?.nmec ? String(sessionUser.nmec) : "")}
+              .replace(
+                "<Nmec>",
+                sessionUser?.nmec ? String(sessionUser.nmec) : "",
+              )}
             template={config.paymentDescription}
           />
         )}
@@ -212,16 +218,22 @@ function MBWayCard({
             {copiedDesc ? "Copiado ✓" : "Copiar"}
           </button>
         </div>
-        <p className="mt-1 text-xs text-white/60">
-          {description}
-        </p>
+        <p className="mt-1 text-xs text-white/60">{description}</p>
         <p className="mt-1 text-[0.6rem] text-white/25">{template}</p>
       </div>
     </div>
   );
 }
 
-function IBANCard({ config, description, template }: Readonly<{ config: RegistrationConfig; description: string; template: string }>) {
+function IBANCard({
+  config,
+  description,
+  template,
+}: Readonly<{
+  config: RegistrationConfig;
+  description: string;
+  template: string;
+}>) {
   const [copied, setCopied] = useState(false);
 
   const copy = () => {
@@ -263,9 +275,7 @@ function IBANCard({ config, description, template }: Readonly<{ config: Registra
         <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
           Descrição da transferência
         </p>
-        <p className="mt-1 text-xs text-white/60">
-          {description}
-        </p>
+        <p className="mt-1 text-xs text-white/60">{description}</p>
         <p className="mt-1 text-[0.6rem] text-white/25">{template}</p>
       </div>
     </div>

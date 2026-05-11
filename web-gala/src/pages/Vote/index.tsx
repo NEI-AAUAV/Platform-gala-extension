@@ -30,9 +30,12 @@ type FormValues = {
 
 function resolveVoteError(reason: unknown): string {
   if (typeof reason === "object" && reason !== null) {
-    const r = reason as { response?: { status?: number; data?: { detail?: string } } };
+    const r = reason as {
+      response?: { status?: number; data?: { detail?: string } };
+    };
     const status = r.response?.status;
-    if (status === 403) return "A votação ainda não está aberta para esta categoria.";
+    if (status === 403)
+      return "A votação ainda não está aberta para esta categoria.";
     if (status === 409) return "Já votaste nesta categoria.";
     const detail = r.response?.data?.detail;
     if (typeof detail === "string") return detail;
@@ -43,7 +46,9 @@ function resolveVoteError(reason: unknown): string {
 export default function Vote() {
   const { state } = useSessionUser();
   const { votes: allVotes, mutate } = useVotes();
-  const votes = allVotes.filter((v: Vote) => v.voting_open && v.options.length > 0);
+  const votes = allVotes.filter(
+    (v: Vote) => v.voting_open && v.options.length > 0,
+  );
   const hasVotingCategories = votes.length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -98,9 +103,8 @@ export default function Vote() {
         (r): r is PromiseRejectedResult => r.status === "rejected",
       );
 
-      const errorMessage = rejections.length > 0
-        ? resolveVoteError(rejections[0].reason)
-        : null;
+      const errorMessage =
+        rejections.length > 0 ? resolveVoteError(rejections[0].reason) : null;
 
       if (rejections.length === 0) {
         setFeedback({
@@ -150,9 +154,7 @@ export default function Vote() {
 
           <div className="mx-4 mt-10 grid gap-8">
             {state === State.REGISTERED ? (
-              votes.map((vote: Vote) => (
-                <VoteCard key={vote._id} vote={vote} />
-              ))
+              votes.map((vote: Vote) => <VoteCard key={vote._id} vote={vote} />)
             ) : (
               <p className="py-10 text-center text-sm text-white/30">
                 Tens de estar inscrito na Gala para participar nas votações.

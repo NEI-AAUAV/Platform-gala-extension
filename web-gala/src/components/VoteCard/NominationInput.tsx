@@ -14,9 +14,13 @@ interface Props {
 
 function resolveNominationError(reason: unknown): string {
   if (typeof reason === "object" && reason !== null) {
-    const r = reason as { response?: { status?: number; data?: { detail?: string } } };
-    if (r.response?.status === 409) return "Já nomeaste alguém nesta categoria.";
-    if (r.response?.status === 403) return "As nomeações desta categoria já fecharam.";
+    const r = reason as {
+      response?: { status?: number; data?: { detail?: string } };
+    };
+    if (r.response?.status === 409)
+      return "Já nomeaste alguém nesta categoria.";
+    if (r.response?.status === 403)
+      return "As nomeações desta categoria já fecharam.";
     const detail = r.response?.data?.detail;
     if (typeof detail === "string") return detail;
   }
@@ -25,12 +29,19 @@ function resolveNominationError(reason: unknown): string {
 
 const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 
-export default function NominationInput({ categoryId, alreadyNominated }: Props) {
-  const [value, setValue] = useState(() => localStorage.getItem(storageKey(categoryId)) ?? "");
+export default function NominationInput({
+  categoryId,
+  alreadyNominated,
+}: Props) {
+  const [value, setValue] = useState(
+    () => localStorage.getItem(storageKey(categoryId)) ?? "",
+  );
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(alreadyNominated);
-  const [nominatedName, setNominatedName] = useState<string | null>(() => localStorage.getItem(storageKey(categoryId)));
+  const [nominatedName, setNominatedName] = useState<string | null>(() =>
+    localStorage.getItem(storageKey(categoryId)),
+  );
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -43,7 +54,10 @@ export default function NominationInput({ categoryId, alreadyNominated }: Props)
     }
     debounceRef.current = setTimeout(async () => {
       try {
-        const results = await GalaService.vote.getSuggestions(categoryId, value);
+        const results = await GalaService.vote.getSuggestions(
+          categoryId,
+          value,
+        );
         setSuggestions(results);
       } catch {
         setSuggestions([]);
@@ -82,7 +96,10 @@ export default function NominationInput({ categoryId, alreadyNominated }: Props)
     return (
       <div className="flex items-center justify-between gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
         <div className="flex items-center gap-3">
-          <FontAwesomeIcon icon={faCheckCircle} className="shrink-0 text-green-400" />
+          <FontAwesomeIcon
+            icon={faCheckCircle}
+            className="shrink-0 text-green-400"
+          />
           <div>
             <p className="text-sm font-semibold text-white/80">
               {nominatedName ?? "Nomeação submetida"}
@@ -117,7 +134,7 @@ export default function NominationInput({ categoryId, alreadyNominated }: Props)
             if (e.key === "Escape") setSuggestions([]);
           }}
           placeholder="Nome do candidato..."
-          className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-dark-gold/60 focus:outline-none"
+          className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-dark-gold/60 focus:outline-none"
         />
         {suggestions.length > 0 && (
           <ul

@@ -356,7 +356,9 @@ const GalaService = {
       return client.post(`/admin/voting/categories/${categoryId}/merge`, body);
     },
     setResultsVisibility: async (visible: boolean): Promise<void> => {
-      return client.patch(`/admin/voting/results-visibility?visible=${visible}`);
+      return client.patch(
+        `/admin/voting/results-visibility?visible=${visible}`,
+      );
     },
   },
 
@@ -414,7 +416,9 @@ const GalaService = {
       query: string,
     ): Promise<string[]> => {
       return client.get(
-        `/voting/nominees/suggest?category_id=${id}&q=${encodeURIComponent(query)}`,
+        `/voting/nominees/suggest?category_id=${id}&q=${encodeURIComponent(
+          query,
+        )}`,
       );
     },
     uploadOptionPhoto: async (
