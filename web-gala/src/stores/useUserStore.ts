@@ -1,6 +1,7 @@
 import { create } from "zustand";
-export { shallow } from "zustand/shallow";
 import config from "@/config";
+
+export { shallow } from "zustand/shallow";
 
 function parseJWT(token: string) {
   const base64Url = token.split(".")[1];
