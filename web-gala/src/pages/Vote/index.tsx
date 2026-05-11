@@ -149,9 +149,15 @@ export default function Vote() {
           </h2>
 
           <div className="mx-4 mt-10 grid gap-8">
-            {votes?.map((vote) => (
-              <VoteCard key={vote._id} vote={vote} />
-            ))}
+            {state === State.REGISTERED ? (
+              votes.map((vote: Vote) => (
+                <VoteCard key={vote._id} vote={vote} />
+              ))
+            ) : (
+              <p className="py-10 text-center text-sm text-white/30">
+                Tens de estar inscrito na Gala para participar nas votações.
+              </p>
+            )}
           </div>
           {state === State.REGISTERED && hasVotingCategories && (
             <div className="sticky bottom-0 z-10 mx-auto mt-5 max-w-md justify-center px-4 pb-10 pt-5 font-gala">

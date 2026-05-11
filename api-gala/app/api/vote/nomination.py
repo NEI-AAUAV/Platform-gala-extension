@@ -7,6 +7,7 @@ from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
 from app.api.vote._utils import is_nominations_open
 from app.core.db import DatabaseDep
+from app.models.user import User
 from app.services.vote import VoteService
 
 router = APIRouter(tags=["Nominations"])
@@ -31,6 +32,13 @@ async def submit_nomination(
     db: DatabaseDep,
     auth: Annotated[AuthData, Security(api_nei_auth)],
 ):
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+
     ts = await fetch_time_slots(db)
     if not is_nominations_open(ts):
         raise HTTPException(status_code=403, detail="Nominations are closed for this category")
