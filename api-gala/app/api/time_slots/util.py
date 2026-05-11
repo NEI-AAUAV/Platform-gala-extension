@@ -14,7 +14,7 @@ def _ensure_utc(dt: datetime) -> datetime:
 async def fetch_time_slots(db: DBType) -> TimeSlots:
     res = await TimeSlots.get_collection(db).find_one({"_id": TIME_SLOTS_ID})
     if res is None:
-        raise HTTPException(status_code=404, detail="Time slots not configured yet")
+        return TimeSlots()
     return TimeSlots.parse_obj(res)
 
 

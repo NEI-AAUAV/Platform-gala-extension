@@ -47,6 +47,9 @@ class AdminVoteService:
 
         category = VoteCategory.parse_obj(category_dict)
 
+        if not category.nominations:
+            return False
+
         sorted_nominations = sorted(category.nominations, key=lambda x: len(x.votes), reverse=True)
         top_4 = sorted_nominations[:4]
 

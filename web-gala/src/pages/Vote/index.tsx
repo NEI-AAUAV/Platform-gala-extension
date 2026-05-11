@@ -56,8 +56,6 @@ export default function Vote() {
   });
 
   useEffect(() => {
-    if (!votes) return;
-
     methods.reset({
       votes: votes.reduce((obj: FormVotes, vote) => {
         const newObj = { ...obj };

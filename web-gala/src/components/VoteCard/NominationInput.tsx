@@ -26,12 +26,11 @@ function resolveNominationError(reason: unknown): string {
 const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 
 export default function NominationInput({ categoryId, alreadyNominated }: Props) {
-  const savedName = localStorage.getItem(storageKey(categoryId));
-  const [value, setValue] = useState(savedName ?? "");
+  const [value, setValue] = useState(() => localStorage.getItem(storageKey(categoryId)) ?? "");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(alreadyNominated);
-  const [nominatedName, setNominatedName] = useState<string | null>(savedName);
+  const [nominatedName, setNominatedName] = useState<string | null>(() => localStorage.getItem(storageKey(categoryId)));
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<HTMLUListElement>(null);

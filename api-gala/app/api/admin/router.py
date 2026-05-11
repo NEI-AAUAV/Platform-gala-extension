@@ -782,7 +782,7 @@ async def admin_finalize_nominations(
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     success = await AdminVoteService.finalize_nominations(db, category_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Finalization failed")
+        raise HTTPException(status_code=400, detail="Category not found or has no nominations to finalize")
     return {"status": "success"}
 
 

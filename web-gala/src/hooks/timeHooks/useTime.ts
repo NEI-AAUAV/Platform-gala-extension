@@ -32,31 +32,35 @@ const getTimeStatus = (startTime: string | null, endTime: string | null) => {
   return TimeStatus.CLOSED;
 };
 
+const POLL_INTERVAL_MS = 30_000;
+
+function buildTimeExtended(response: TimeSlots): TimeExtended {
+  return {
+    ...response,
+    registrationStatus: getTimeStatus(response.registrationStart, response.registrationEnd),
+    nominationsStatus: getTimeStatus(response.nominationsStart, response.nominationsEnd),
+    votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
+    tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
+    galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),
+  };
+}
+
 export default function useTime() {
   const [time, setTime] = useState<TimeExtended>();
 
   useEffect(() => {
-    GalaService.time
-      .getTimeSlots()
-      .then((response) => {
-        setTime({
-          ...response,
-          registrationStatus: getTimeStatus(
-            response.registrationStart,
-            response.registrationEnd,
-          ),
-          nominationsStatus: getTimeStatus(
-            response.nominationsStart,
-            response.nominationsEnd,
-          ),
-          votesStatus: getTimeStatus(response.votesStart, response.votesEnd),
-          tablesStatus: getTimeStatus(response.tablesStart, response.tablesEnd),
-          galaStatus: getTimeStatus(response.galaStart, "2099-12-31T23:59:59Z"),
+    const fetch = () => {
+      GalaService.time
+        .getTimeSlots()
+        .then((response) => setTime(buildTimeExtended(response)))
+        .catch(() => {
+          // time_slots not initialised yet — leave time as undefined
         });
-      })
-      .catch(() => {
-        // time_slots not initialised yet — leave time as undefined
-      });
+    };
+
+    fetch();
+    const id = setInterval(fetch, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
   }, []);
 
   return { time };
