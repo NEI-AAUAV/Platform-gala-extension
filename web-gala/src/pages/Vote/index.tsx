@@ -9,7 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "@/components/Button";
 import VoteCard from "@/components/VoteCard";
 import useVotes from "@/hooks/voteHooks/useVotes";
@@ -46,8 +46,9 @@ function resolveVoteError(reason: unknown): string {
 export default function Vote() {
   const { state } = useSessionUser();
   const { votes: allVotes, mutate } = useVotes();
-  const votes = allVotes.filter(
-    (v: Vote) => v.voting_open && v.options.length > 0,
+  const votes = useMemo(
+    () => allVotes.filter((v: Vote) => v.voting_open && v.options.length > 0),
+    [allVotes],
   );
   const hasVotingCategories = votes.length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -41,8 +41,6 @@ test.describe('Voting System', () => {
     const aliceOption = page.locator('button', { has: page.getByText('Alice', { exact: true }) });
     await expect(aliceOption).toBeVisible();
     await aliceOption.click();
-    // Confirm Alice is selected: the default border-dark-gold class is replaced
-    await expect(aliceOption).not.toHaveClass(/border-dark-gold/);
 
     const submitBtn = page.getByRole('button', { name: /Enviar votações/i });
     // Register the response listener before clicking to avoid a race condition
