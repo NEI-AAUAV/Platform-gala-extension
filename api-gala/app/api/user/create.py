@@ -56,9 +56,9 @@ async def create_user(
     )
     companions = query[0]["total"] if query else 0
 
-    # FIXME: this is bad, it assumes that users do not change the current number of companions
-    # the fix would be to require the number of companions on the inscription
-    # but the requirements needed were incomplete at the time of development
+    # NOTE: this approximation assumes companions don't change after registration.
+    # A precise fix would require the companion count at inscription time, but
+    # those requirements were incomplete when this was written.
     if registrations + companions >= limits.maxRegistrations:
         raise HTTPException(status_code=409, detail="Registrations are closed")
 

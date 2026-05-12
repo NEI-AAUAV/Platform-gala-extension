@@ -30,6 +30,7 @@ class TableTransferForm(BaseModel):
         400: {"description": "The person doesn't belong to the table"},
         404: {"description": "Table not found"},
         409: {"description": "Table is full"},
+        500: {"description": "Internal server error"},
     },
 )
 async def person_transfer_table(

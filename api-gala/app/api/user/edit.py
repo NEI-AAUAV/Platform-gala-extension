@@ -3,7 +3,7 @@ from pymongo import ReturnDocument
 
 from app.models.user import User
 from app.core.db import DatabaseDep
-from app.api.auth import AuthData, api_nei_auth, ScopeEnum
+from app.api.auth import AuthData, api_nei_auth, auth_responses, ScopeEnum
 from app.utils import optional
 
 router = APIRouter()
@@ -14,7 +14,13 @@ class UserEditForm(User):
     id: int
 
 
-@router.put("/")
+@router.put(
+    "/",
+    responses={
+        **auth_responses,
+        404: {"description": "User doesn't exist"},
+    },
+)
 async def edit_user(
     form_data: UserEditForm,
     *,
