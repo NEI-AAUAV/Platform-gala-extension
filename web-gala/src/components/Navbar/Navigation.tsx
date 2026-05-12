@@ -16,7 +16,7 @@ type NavigationProps = {
   className?: string;
 };
 
-export default function Navigation({ className }: NavigationProps) {
+export default function Navigation({ className }: Readonly<NavigationProps>) {
   const location = useLocation().pathname;
   const { name, scopes } = useUserStore((state) => state, shallow);
   const { time } = useTime();

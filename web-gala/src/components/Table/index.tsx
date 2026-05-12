@@ -7,7 +7,7 @@ type TableProps = {
   className?: string;
 };
 
-export default function Table({ table, className }: TableProps) {
+export default function Table({ table, className }: Readonly<TableProps>) {
   const { name, head } = table;
   const { neiUser } = useNEIUser(head);
   return (

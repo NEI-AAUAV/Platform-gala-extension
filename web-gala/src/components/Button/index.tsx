@@ -12,7 +12,7 @@ export default function Button({
   children,
   submit,
   ...props
-}: ButtonProps) {
+}: Readonly<ButtonProps>) {
   return (
     <button
       type={submit ? "submit" : "button"}

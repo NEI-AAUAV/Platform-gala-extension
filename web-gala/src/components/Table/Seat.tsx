@@ -18,7 +18,12 @@ function cssCalcCoords(
   return `calc(${axis} * (${minRadius} + ${gap}))`;
 }
 
-export default function Seat({ angle, isTaken, isVisible, delay }: SeatProps) {
+export default function Seat({
+  angle,
+  isTaken,
+  isVisible,
+  delay,
+}: Readonly<SeatProps>) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const x = Math.cos(angle);
