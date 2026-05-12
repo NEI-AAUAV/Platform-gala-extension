@@ -11,13 +11,17 @@ type AvatarProps = {
 const defaultImage = `${config.BASE_URL}/gala/default-profile.svg`;
 
 export default function Avatar({ className, style, id, alt }: AvatarProps) {
-  let neiUserImage: string | undefined;
-  const defaultImageCondition =
-    id === -1 ||
-    (neiUserImage = useNEIUser(id ?? null).neiUser?.image) === null;
-  const idImage = defaultImageCondition ? defaultImage : neiUserImage;
+  const { neiUser } = useNEIUser(id != null && id !== -1 ? id : null);
+  const userStoreImage = useUserStore((state) => state.image);
 
-  const imageSrc = id === null ? useUserStore((state) => state.image) : idImage;
+  let imageSrc: string | undefined;
+  if (id == null) {
+    imageSrc = userStoreImage;
+  } else if (id === -1 || neiUser?.image == null) {
+    imageSrc = defaultImage;
+  } else {
+    imageSrc = neiUser.image;
+  }
 
   if (!imageSrc) {
     return null;

@@ -11,7 +11,7 @@ import RequestForm from "./RequestForm";
 import Button from "@/components/Button";
 import useNEIUser from "@/hooks/useNEIUser";
 import GuestList from "@/components/TableModal/GuestList";
-import useTableReserve from "@/hooks/tableHooks/useTableReserve";
+import tableReserve from "@/hooks/tableHooks/useTableReserve";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
 
@@ -47,7 +47,7 @@ export default function RequestJoinTable({
 
   const formSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
-      await useTableReserve(table._id, data);
+      await tableReserve(table._id, data);
       toast.success("Pedido de entrada enviado!");
       mutate();
       navigate("/reserve");

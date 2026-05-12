@@ -9,9 +9,6 @@ type ReserveTable = {
   }[];
 };
 
-export default async function useTableReserve(
-  id: number,
-  request: ReserveTable,
-) {
+export default async function tableReserve(id: number, request: ReserveTable) {
   await GalaService.table.reserveTable(id, request);
 }

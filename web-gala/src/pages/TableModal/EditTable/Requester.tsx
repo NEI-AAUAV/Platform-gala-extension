@@ -8,8 +8,8 @@ import { useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "@/components/Avatar";
 import useNEIUser from "@/hooks/useNEIUser";
-import useTableConfirm from "@/hooks/tableHooks/useTableConfirm";
-import useTableUserRemove from "@/hooks/tableHooks/useTableUserRemove";
+import tableConfirm from "@/hooks/tableHooks/useTableConfirm";
+import tableUserRemove from "@/hooks/tableHooks/useTableUserRemove";
 import { FrangoIcon } from "@/assets/icons";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
@@ -60,7 +60,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
 
   async function acceptGuest(userId: number) {
     try {
-      await useTableConfirm(tableId, { uid: userId, confirm: true });
+      await tableConfirm(tableId, { uid: userId, confirm: true });
       toast.success("Pedido aceite!");
       mutate();
     } catch (e) {
@@ -74,7 +74,7 @@ export default function Requester({ person, tableId, mutate }: RequesterProps) {
 
   async function rejectGuest(userId: number) {
     try {
-      await useTableUserRemove(tableId, userId);
+      await tableUserRemove(tableId, userId);
       toast.success("Pedido rejeitado.");
       mutate();
     } catch (e) {

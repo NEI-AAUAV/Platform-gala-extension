@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "@/components/Avatar";
 import VisualTable from "@/components/Table/VisualTable";
 import GuestList from "@/components/TableModal/GuestList";
-import useTableLeave from "@/hooks/tableHooks/useTableLeave";
+import tableLeave from "@/hooks/tableHooks/useTableLeave";
 import useNEIUser from "@/hooks/useNEIUser";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
@@ -160,7 +160,7 @@ export default function ViewTable({
                 type="button"
                 className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
                 onClick={async () => {
-                  await useTableLeave(table._id);
+                  await tableLeave(table._id);
                   mutate();
                   navigate("/reserve");
                 }}

@@ -14,7 +14,7 @@ function subscribeTokenRefresh(callback: (token?: string) => void) {
 
 /** Resolve all pending requests with the new access token. */
 function processQueue(token?: string) {
-  refreshSubscribers.map((callback) => callback(token));
+  refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 }
 
@@ -80,7 +80,7 @@ export const createClient = (baseURL?: string) => {
             config.retry = true;
             return axios.request(config);
           }
-          return Promise.reject("Session Expired");
+          throw new Error("Session Expired");
         }
         return new Promise((resolve) => {
           subscribeTokenRefresh((token?: string) => {
@@ -89,7 +89,7 @@ export const createClient = (baseURL?: string) => {
           });
         });
       }
-      return Promise.reject(error);
+      throw error;
     },
   );
   return client;
