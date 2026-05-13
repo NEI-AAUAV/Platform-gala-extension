@@ -1,56 +1,23 @@
-import {
-  faCheck,
-  faHandDots,
-  faSeedling,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "@/components/Avatar";
 import useNEIUser from "@/hooks/useNEIUser";
 import tableConfirm from "@/hooks/tableHooks/useTableConfirm";
 import tableUserRemove from "@/hooks/tableHooks/useTableUserRemove";
-import { FrangoIcon } from "@/assets/icons";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
+import {
+  iconMap,
+  allergyIcon,
+  gridTemplate,
+  CompanionSummary,
+} from "@/components/TableModal/personUtils";
 
 type RequesterProps = {
   person: Person;
   tableId: number;
   mutate: () => void;
-};
-
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
-const red = { color: "#DC3545" };
-const iconMap = new Map([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  ["VEG", <FontAwesomeIcon key="VEG" icon={faSeedling} style={green} />],
-]);
-
-function allergyIcon(allergies: string) {
-  return (
-    allergies.length > 0 && <FontAwesomeIcon icon={faHandDots} style={red} />
-  );
-}
-
-function countVegetarians(person: Person) {
-  return person.companions.filter((companion) => companion.dish === "VEG")
-    .length;
-}
-
-function countNormal(person: Person) {
-  return person.companions.filter((companion) => companion.dish === "NOR")
-    .length;
-}
-
-function countAllergies(person: Person) {
-  return person.companions.filter((companion) => companion.allergies.length > 0)
-    .length;
-}
-
-const gridTemplate = {
-  gridTemplateColumns: "max-content 1fr",
 };
 
 export default function Requester({
@@ -89,7 +56,6 @@ export default function Requester({
   return (
     <>
       <div className="grid items-center gap-2" style={gridTemplate}>
-        {/* <Guest id={person.id} /> */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <button
@@ -116,39 +82,10 @@ export default function Requester({
             {allergyIcon(person.allergies)}
           </span>
         </div>
-        {/* Companions */}
         {person.companions.length > 0 && (
           <>
             <div />
-            <div className="flex items-center gap-2 font-light">
-              <span>{`+${person.companions.length} companions`}</span>
-              <span className="flex items-center gap-2">
-                {countNormal(person) > 0 && (
-                  <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
-                      {countNormal(person)}
-                    </span>
-                    <FrangoIcon style={orange} />
-                  </span>
-                )}
-                {countVegetarians(person) > 0 && (
-                  <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
-                      {countVegetarians(person)}
-                    </span>
-                    <FontAwesomeIcon icon={faSeedling} style={green} />
-                  </span>
-                )}
-                {countAllergies(person) > 0 && (
-                  <span className="flex items-center gap-2">
-                    <span className="text-sm text-base-content/70">
-                      {countAllergies(person)}
-                    </span>
-                    <FontAwesomeIcon icon={faHandDots} style={red} />
-                  </span>
-                )}
-              </span>
-            </div>
+            <CompanionSummary person={person} />
           </>
         )}
       </div>

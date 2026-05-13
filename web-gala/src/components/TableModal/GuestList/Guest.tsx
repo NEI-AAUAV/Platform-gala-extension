@@ -1,27 +1,10 @@
-import { faSeedling, faHandDots } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { FrangoIcon } from "@/assets/icons";
 import Avatar from "@/components/Avatar";
 import useNEIUser from "@/hooks/useNEIUser";
+import { iconMap, allergyIcon } from "../personUtils";
 
 type GuestProps = {
   person: Person;
 };
-
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
-const red = { color: "#DC3545" };
-
-const iconMap = new Map([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  ["VEG", <FontAwesomeIcon key="VEG" icon={faSeedling} style={green} />],
-]);
-
-function allergyIcon(allergies: string) {
-  return (
-    allergies.length > 0 && <FontAwesomeIcon icon={faHandDots} style={red} />
-  );
-}
 
 export default function Guest({ person }: Readonly<GuestProps>) {
   const { neiUser } = useNEIUser(person.id);
