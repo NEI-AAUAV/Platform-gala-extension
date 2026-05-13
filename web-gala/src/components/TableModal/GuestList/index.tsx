@@ -30,7 +30,7 @@ const gridTemplate = {
   gridTemplateColumns: "max-content 1fr",
 };
 
-export default function GuestList({ persons }: GuestListProps) {
+export default function GuestList({ persons }: Readonly<GuestListProps>) {
   const filteredPersons = persons.filter((person) => person.confirmed);
   return (
     <div className="w-full">

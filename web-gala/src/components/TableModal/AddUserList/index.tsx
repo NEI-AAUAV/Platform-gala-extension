@@ -11,7 +11,7 @@ type AddUserListProps = {
 export default function AddUserList({
   freeSeats,
   className,
-}: AddUserListProps) {
+}: Readonly<AddUserListProps>) {
   const { control, setValue } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,

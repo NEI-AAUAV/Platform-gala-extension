@@ -21,7 +21,7 @@ export default function MealSelect({
   setSelected,
   className,
   style,
-}: MealSelectProps) {
+}: Readonly<MealSelectProps>) {
   const options: [JSX.Element, "NOR" | "VEG"][] = [
     [optionMap.get("NOR") ?? <>Error</>, "NOR"],
     [optionMap.get("VEG") ?? <>Error</>, "VEG"],
