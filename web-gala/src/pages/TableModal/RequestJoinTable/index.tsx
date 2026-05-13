@@ -32,7 +32,7 @@ type FormValues = {
 export default function RequestJoinTable({
   table,
   mutate,
-}: RequestJoinTableProps) {
+}: Readonly<RequestJoinTableProps>) {
   const [form, setForm] = useState(false);
   const { neiUser } = useNEIUser(table.head);
   const methods = useForm<FormValues>({

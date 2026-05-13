@@ -13,7 +13,10 @@ type ClaimTableProps = {
   mutate: () => void;
 };
 
-export default function ClaimTable({ table, mutate }: ClaimTableProps) {
+export default function ClaimTable({
+  table,
+  mutate,
+}: Readonly<ClaimTableProps>) {
   const [tableName, setTableName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);

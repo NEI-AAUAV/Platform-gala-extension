@@ -10,7 +10,7 @@ export default function AcceptPending({
   persons,
   tableId,
   mutate,
-}: AcceptTableProps) {
+}: Readonly<AcceptTableProps>) {
   const filteredPersons = persons.filter((person) => !person.confirmed);
 
   return (

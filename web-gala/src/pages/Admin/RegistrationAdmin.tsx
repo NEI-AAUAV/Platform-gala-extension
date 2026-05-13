@@ -591,8 +591,12 @@ export default function RegistrationAdmin() {
               Tamanho máximo:{" "}
               <span className="font-semibold text-white/60">10 MB</span> por
               comprovativo. Formatos aceites:{" "}
-              <span className="font-semibold text-white/60">imagens e PDF</span>
-              . Validação aplicada no backend.
+              <span className="font-semibold text-white/60">
+                imagens e PDF.
+              </span>
+            </p>
+            <p className="text-xs text-white/40">
+              Validação aplicada no backend.
             </p>
           </Section>
         </div>

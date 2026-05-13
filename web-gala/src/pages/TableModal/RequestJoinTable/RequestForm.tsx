@@ -6,7 +6,7 @@ type RequestFormProps = {
 function calculateOccupiedSeats(persons: Person[]) {
   return persons.reduce((acc, person) => acc + 1 + person.companions.length, 0);
 }
-export default function RequestForm({ table }: RequestFormProps) {
+export default function RequestForm({ table }: Readonly<RequestFormProps>) {
   return (
     <AddUserList
       freeSeats={table.seats - calculateOccupiedSeats(table.persons)}

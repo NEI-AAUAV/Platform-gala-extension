@@ -24,8 +24,8 @@ const orange = { color: "#DD8500" };
 const green = { color: "#198754" };
 const red = { color: "#DC3545" };
 const iconMap = new Map([
-  ["NOR", <FrangoIcon style={orange} />],
-  ["VEG", <FontAwesomeIcon icon={faSeedling} style={green} />],
+  ["NOR", <FrangoIcon key="NOR" style={orange} />],
+  ["VEG", <FontAwesomeIcon key="VEG" icon={faSeedling} style={green} />],
 ]);
 
 function allergyIcon(allergies: string) {
@@ -53,7 +53,11 @@ const gridTemplate = {
   gridTemplateColumns: "max-content 1fr",
 };
 
-export default function Requester({ person, tableId, mutate }: RequesterProps) {
+export default function Requester({
+  person,
+  tableId,
+  mutate,
+}: Readonly<RequesterProps>) {
   const { neiUser } = useNEIUser(person.id);
   const rejectConfirmModalRef = useRef<HTMLDialogElement>(null);
   const toast = useAppToast();
