@@ -448,6 +448,9 @@ const GalaService = {
   },
 
   registration: {
+    getCapacity: async (): Promise<{ remaining: number; total: number }> => {
+      return client.get("/registration/capacity");
+    },
     getStatus: async (): Promise<User> => {
       return client.get("/registration/status");
     },

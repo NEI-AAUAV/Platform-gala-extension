@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, File, HTTPException, status
+from pydantic import BaseModel
 from typing import Dict, Any, Annotated
 from app.api.auth import api_nei_auth, AuthData, auth_responses
 from app.core.db import get_db
@@ -46,6 +47,22 @@ async def _require_registration_open(db: DBType) -> None:
             reg_end = reg_end.replace(tzinfo=timezone.utc)
         if now > reg_end:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="O prazo de inscrições já terminou.")
+
+
+class RegistrationCapacity(BaseModel):
+    remaining: int
+    total: int
+
+
+@router.get("/capacity", response_model=RegistrationCapacity)
+async def get_registration_capacity(
+    db: Annotated[DBType, Depends(get_db)],
+):
+    """Returns the number of remaining and total seats. No auth required."""
+    limits = await fetch_limits(db)
+    total = await RegistrationService.count_registered_attendees(db)
+    remaining = max(0, limits.maxRegistrations - total)
+    return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations)
 
 
 @router.get("/status", response_model=User, responses={**auth_responses})

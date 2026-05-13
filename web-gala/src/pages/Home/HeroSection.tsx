@@ -10,6 +10,7 @@ import {
 import useLoginLink from "@/hooks/useLoginLink";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import useCapacity from "@/hooks/useCapacity";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { formatDatePT, formatTimePT } from "@/utils/formatDate";
@@ -32,79 +33,67 @@ function EventPill({
 
 type StateValue = (typeof State)[keyof typeof State];
 
-function HeroContent({
-  state,
-  loginLink,
+function LiveBadge({ label }: { readonly label: string }) {
+  return (
+    <span className="flex items-center gap-2 rounded-full border border-light-gold/20 bg-black/30 px-4 py-1.5 font-gala text-xs uppercase tracking-widest text-light-gold/70 backdrop-blur-sm">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-light-gold opacity-60" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-light-gold" />
+      </span>
+      {label}
+    </span>
+  );
+}
+
+function SeatsBadge({ remaining }: { readonly remaining: number | undefined }) {
+  if (remaining == null) return null;
+  if (remaining <= 0)
+    return (
+      <span className="font-gala text-xs uppercase tracking-widest text-red-400/70">
+        Sem vagas disponíveis
+      </span>
+    );
+  return (
+    <span className="font-gala text-xs uppercase tracking-widest text-white/40">
+      {remaining} {remaining === 1 ? "vaga disponível" : "vagas disponíveis"}
+    </span>
+  );
+}
+
+type CountdownEntry = { targetDate: string; label: string };
+
+function nextCountdown(time: ReturnType<typeof useTime>["time"]): CountdownEntry | null {
+  if (!time) return null;
+
+  return [
+    { active: time.nominationsStatus === TimeStatus.OPEN, targetDate: time.nominationsEnd, label: "Nomeações Terminam Em" },
+    { active: time.votesStatus === TimeStatus.OPEN, targetDate: time.votesEnd, label: "Votação Termina Em" },
+    { active: time.registrationStatus === TimeStatus.OPENING, targetDate: time.registrationStart, label: "Inscrição Abre Em" },
+    { active: time.tablesStatus === TimeStatus.OPENING, targetDate: time.tablesStart, label: "Mesas Abrem Em" },
+    { active: time.nominationsStatus === TimeStatus.OPENING, targetDate: time.nominationsStart, label: "Nomeações Abrem Em" },
+    { active: time.galaStatus === TimeStatus.OPENING, targetDate: time.galaStart, label: "O Grande Dia Começa Em" },
+    { active: time.votesStatus === TimeStatus.OPENING, targetDate: time.votesStart, label: "Votação Abre Em" },
+  ]
+    .flatMap((e) =>
+      e.active && e.targetDate !== null ? [{ targetDate: e.targetDate, label: e.label }] : [],
+    )
+    .sort((a, b) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime())
+    .at(0) ?? null;
+}
+
+function RegisteredHeroContent({
+  time,
+  remainingSeats,
 }: {
-  readonly state: StateValue;
-  readonly loginLink: string;
+  readonly time: ReturnType<typeof useTime>["time"];
+  readonly remainingSeats: number | undefined;
 }) {
-  const { time } = useTime();
-
-  if (state === State.NONE) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="mt-12 flex flex-col items-center justify-center gap-6"
-      >
-        <div className="flex flex-wrap justify-center gap-3">
-          <a
-            href={loginLink}
-            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-          >
-            Inscrever no Jantar
-          </a>
-          <a
-            href={loginLink}
-            className="border border-white/20 px-10 py-4 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white"
-          >
-            Entrar
-          </a>
-        </div>
-        {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown
-            targetDate={time.galaStart}
-            label="O Grande Dia Começa Em"
-          />
-        )}
-      </motion.div>
-    );
-  }
-
-  if (state === State.AUTHENTICATED) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="mt-12 flex flex-col items-center gap-6"
-      >
-        <Link
-          to="/register"
-          className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-        >
-          Inscrever no Jantar
-        </Link>
-        {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown
-            targetDate={time.galaStart}
-            label="O Grande Dia Começa Em"
-          />
-        )}
-      </motion.div>
-    );
-  }
-
   const isRegistrationOpen = time?.registrationStatus === TimeStatus.OPEN;
-  const isRegistrationOpening = time?.registrationStatus === TimeStatus.OPENING;
   const isNominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;
-  const isNominationsOpening = time?.nominationsStatus === TimeStatus.OPENING;
   const isVotingOpen = time?.votesStatus === TimeStatus.OPEN;
-  const isVotingOpening = time?.votesStatus === TimeStatus.OPENING;
   const isTablesOpen = time?.tablesStatus === TimeStatus.OPEN;
-  const isTablesOpening = time?.tablesStatus === TimeStatus.OPENING;
+  const isGalaOpen = time?.galaStatus === TimeStatus.OPEN;
+  const countdown = nextCountdown(time);
 
   return (
     <motion.div
@@ -113,7 +102,6 @@ function HeroContent({
       transition={{ delay: 0.5, duration: 0.5 }}
       className="mt-12 flex flex-col items-center gap-8"
     >
-      {/* Primary CTAs */}
       <div className="flex flex-wrap justify-center gap-3">
         {isRegistrationOpen && (
           <Link
@@ -148,39 +136,87 @@ function HeroContent({
           </Link>
         )}
       </div>
+      {isRegistrationOpen && <SeatsBadge remaining={remainingSeats} />}
 
-      {/* Countdown chips */}
-      {(isRegistrationOpening ||
-        isTablesOpening ||
-        isNominationsOpening ||
-        isVotingOpening) && (
-        <div className="flex flex-wrap justify-center gap-4">
-          {isRegistrationOpening && (
-            <Countdown
-              targetDate={time!.registrationStart}
-              label="Inscrição Abre Em"
-            />
-          )}
-          {isTablesOpening && (
-            <Countdown targetDate={time!.tablesStart} label="Mesas Abrem Em" />
-          )}
-          {isNominationsOpening && (
-            <Countdown
-              targetDate={time!.nominationsStart}
-              label="Nomeações Abrem Em"
-            />
-          )}
-          {isVotingOpening && (
-            <Countdown targetDate={time!.votesStart} label="Votação Abre Em" />
-          )}
+      {(isNominationsOpen || isVotingOpen || isGalaOpen) && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {isNominationsOpen && <LiveBadge label="Nomeações a Ocorrer" />}
+          {isVotingOpen && <LiveBadge label="Votação a Ocorrer" />}
+          {isGalaOpen && <LiveBadge label="Jantar a Ocorrer" />}
         </div>
       )}
 
-      {time?.galaStatus === TimeStatus.OPENING && (
-        <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+      {countdown && (
+        <Countdown targetDate={countdown.targetDate} label={countdown.label} />
       )}
     </motion.div>
   );
+}
+
+function HeroContent({
+  state,
+  loginLink,
+  remainingSeats,
+}: {
+  readonly state: StateValue;
+  readonly loginLink: string;
+  readonly remainingSeats: number | undefined;
+}) {
+  const { time } = useTime();
+
+  if (state === State.NONE) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="mt-12 flex flex-col items-center justify-center gap-6"
+      >
+        <div className="flex flex-wrap justify-center gap-3">
+          <a
+            href={loginLink}
+            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+          >
+            Inscrever no Jantar
+          </a>
+          <a
+            href={loginLink}
+            className="border border-white/20 px-10 py-4 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white"
+          >
+            Entrar
+          </a>
+        </div>
+        <SeatsBadge remaining={remainingSeats} />
+        {time?.galaStatus === TimeStatus.OPENING && (
+          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+        )}
+      </motion.div>
+    );
+  }
+
+  if (state === State.AUTHENTICATED) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="mt-12 flex flex-col items-center gap-6"
+      >
+        <Link
+          to="/register"
+          className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+        >
+          Inscrever no Jantar
+        </Link>
+        <SeatsBadge remaining={remainingSeats} />
+        {time?.galaStatus === TimeStatus.OPENING && (
+          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+        )}
+      </motion.div>
+    );
+  }
+
+  return <RegisteredHeroContent time={time} remainingSeats={remainingSeats} />;
 }
 
 export default function HeroSection() {
@@ -188,6 +224,7 @@ export default function HeroSection() {
   const { state, isLoading, mutate: galaUserRefetch } = useSessionUser();
   const { config } = useRegistrationConfig();
   const { time } = useTime();
+  const { capacity } = useCapacity();
 
   useEffect(() => {
     if (!isLoading) galaUserRefetch();
@@ -263,7 +300,7 @@ export default function HeroSection() {
           <EventPill icon={faLocationDot} text={config.eventLocation || "—"} />
         </motion.div>
 
-        <HeroContent state={state} loginLink={loginLink} />
+        <HeroContent state={state} loginLink={loginLink} remainingSeats={capacity?.remaining} />
       </motion.div>
 
       {/* Scroll hint */}
