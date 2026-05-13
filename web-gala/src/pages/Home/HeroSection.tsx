@@ -65,23 +65,60 @@ function SeatsBadge({ remaining }: { readonly remaining: number | undefined }) {
 
 type CountdownEntry = { targetDate: string; label: string };
 
-function nextCountdown(time: ReturnType<typeof useTime>["time"]): CountdownEntry | null {
+function nextCountdown(
+  time: ReturnType<typeof useTime>["time"],
+): CountdownEntry | null {
   if (!time) return null;
 
-  return [
-    { active: time.nominationsStatus === TimeStatus.OPEN, targetDate: time.nominationsEnd, label: "Nomeações Terminam Em" },
-    { active: time.votesStatus === TimeStatus.OPEN, targetDate: time.votesEnd, label: "Votação Termina Em" },
-    { active: time.registrationStatus === TimeStatus.OPENING, targetDate: time.registrationStart, label: "Inscrição Abre Em" },
-    { active: time.tablesStatus === TimeStatus.OPENING, targetDate: time.tablesStart, label: "Mesas Abrem Em" },
-    { active: time.nominationsStatus === TimeStatus.OPENING, targetDate: time.nominationsStart, label: "Nomeações Abrem Em" },
-    { active: time.galaStatus === TimeStatus.OPENING, targetDate: time.galaStart, label: "O Grande Dia Começa Em" },
-    { active: time.votesStatus === TimeStatus.OPENING, targetDate: time.votesStart, label: "Votação Abre Em" },
-  ]
-    .flatMap((e) =>
-      e.active && e.targetDate !== null ? [{ targetDate: e.targetDate, label: e.label }] : [],
-    )
-    .sort((a, b) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime())
-    .at(0) ?? null;
+  return (
+    [
+      {
+        active: time.nominationsStatus === TimeStatus.OPEN,
+        targetDate: time.nominationsEnd,
+        label: "Nomeações Terminam Em",
+      },
+      {
+        active: time.votesStatus === TimeStatus.OPEN,
+        targetDate: time.votesEnd,
+        label: "Votação Termina Em",
+      },
+      {
+        active: time.registrationStatus === TimeStatus.OPENING,
+        targetDate: time.registrationStart,
+        label: "Inscrição Abre Em",
+      },
+      {
+        active: time.tablesStatus === TimeStatus.OPENING,
+        targetDate: time.tablesStart,
+        label: "Mesas Abrem Em",
+      },
+      {
+        active: time.nominationsStatus === TimeStatus.OPENING,
+        targetDate: time.nominationsStart,
+        label: "Nomeações Abrem Em",
+      },
+      {
+        active: time.galaStatus === TimeStatus.OPENING,
+        targetDate: time.galaStart,
+        label: "O Grande Dia Começa Em",
+      },
+      {
+        active: time.votesStatus === TimeStatus.OPENING,
+        targetDate: time.votesStart,
+        label: "Votação Abre Em",
+      },
+    ]
+      .flatMap((e) =>
+        e.active && e.targetDate !== null
+          ? [{ targetDate: e.targetDate, label: e.label }]
+          : [],
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime(),
+      )
+      .at(0) ?? null
+  );
 }
 
 function RegisteredHeroContent({
@@ -191,7 +228,10 @@ function HeroContent({
         </div>
         <SeatsBadge remaining={remainingSeats} />
         {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+          <Countdown
+            targetDate={time.galaStart}
+            label="O Grande Dia Começa Em"
+          />
         )}
       </motion.div>
     );
@@ -213,7 +253,10 @@ function HeroContent({
         </Link>
         <SeatsBadge remaining={remainingSeats} />
         {time?.galaStatus === TimeStatus.OPENING && (
-          <Countdown targetDate={time.galaStart} label="O Grande Dia Começa Em" />
+          <Countdown
+            targetDate={time.galaStart}
+            label="O Grande Dia Começa Em"
+          />
         )}
       </motion.div>
     );
@@ -303,7 +346,11 @@ export default function HeroSection() {
           <EventPill icon={faLocationDot} text={config.eventLocation || "—"} />
         </motion.div>
 
-        <HeroContent state={state} loginLink={loginLink} remainingSeats={capacity?.remaining} />
+        <HeroContent
+          state={state}
+          loginLink={loginLink}
+          remainingSeats={capacity?.remaining}
+        />
       </motion.div>
 
       {/* Scroll hint */}
