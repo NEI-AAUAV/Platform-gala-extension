@@ -284,7 +284,7 @@ export default function Step4Payment({
         </p>
       )}
 
-      {/* Payment mode toggle — only when admin has enabled phased payments */}
+      {/* Payment mode toggle - only when admin has enabled phased payments */}
       {config.phasedPaymentEnabled && (
         <div className="bg-white/3 rounded-2xl border border-white/10 p-5">
           <div className="mb-3 flex items-center gap-2">

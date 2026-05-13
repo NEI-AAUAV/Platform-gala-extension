@@ -114,7 +114,7 @@ export default function ProfilePaymentSection({
           phase={1}
           label={
             userChosePhased
-              ? "Comprovativo — Fase 1"
+              ? "Comprovativo - Fase 1"
               : "Comprovativo de Pagamento"
           }
           deadline={phase1Deadline}
@@ -127,7 +127,7 @@ export default function ProfilePaymentSection({
         {userChosePhased && (
           <ProofUpload
             phase={2}
-            label="Comprovativo — Fase 2"
+            label="Comprovativo - Fase 2"
             deadline={phase2Deadline}
             deadlinePassed={phase2Passed}
             proofName={phase2ProofName}

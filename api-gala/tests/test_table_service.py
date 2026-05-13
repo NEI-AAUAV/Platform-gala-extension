@@ -1,4 +1,4 @@
-"""Unit tests for TableService — covers capacity calculation and leave_table fixes."""
+"""Unit tests for TableService - covers capacity calculation and leave_table fixes."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -21,7 +21,7 @@ def _make_db(*, user_doc=None, table_doc=None):
 
 
 # ---------------------------------------------------------------------------
-# join_table — seat capacity
+# join_table - seat capacity
 # ---------------------------------------------------------------------------
 
 
@@ -129,7 +129,7 @@ async def test_join_table_rejects_unregistered_user():
 
 
 # ---------------------------------------------------------------------------
-# leave_table — head reassignment and empty table cleanup
+# leave_table - head reassignment and empty table cleanup
 # ---------------------------------------------------------------------------
 
 

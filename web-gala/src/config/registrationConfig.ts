@@ -45,11 +45,11 @@ export const defaultConfig: RegistrationConfig = {
     "Sopa",
     "Prato principal (carne ou vegetariano/vegan)",
     "Sobremesa",
-    "AfterParty — bar aberto",
+    "AfterParty - bar aberto",
     "Transporte (incluído no preço)",
   ],
   eventRules: [
-    "Inscrições limitadas — garante o teu lugar.",
+    "Inscrições limitadas - garante o teu lugar.",
     "O pagamento deve ser efetuado nas 48h após a inscrição.",
     "Em caso de não comparência não há reembolso.",
     "O comprovativo de pagamento deve ser enviado por email.",
@@ -67,7 +67,7 @@ export const defaultConfig: RegistrationConfig = {
   allergiesRequired: false,
   paymentMethod: "both",
   ibanNumber: "",
-  ibanHolder: "NEI — Núcleo de Estudantes de Informática",
+  ibanHolder: "NEI - Núcleo de Estudantes de Informática",
   paymentDeadlineHours: 48,
   paymentDeadlineDate: "A anunciar",
   paymentContacts: [

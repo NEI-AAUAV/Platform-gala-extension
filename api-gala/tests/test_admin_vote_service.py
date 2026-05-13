@@ -1,4 +1,4 @@
-"""Unit tests for AdminVoteService — merge_nominees and finalize_nominations."""
+"""Unit tests for AdminVoteService - merge_nominees and finalize_nominations."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 

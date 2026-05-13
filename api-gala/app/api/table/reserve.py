@@ -36,6 +36,7 @@ class TableReservationForm(BaseModel):
         400: {"description": "There aren't enough seats for the companions"},
         404: {"description": "Table not found"},
         409: {"description": "Table already full or person already belongs to a table"},
+        500: {"description": "Internal server error"},
     },
 )
 async def reserve_table(

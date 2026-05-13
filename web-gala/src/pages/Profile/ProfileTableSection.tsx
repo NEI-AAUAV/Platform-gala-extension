@@ -59,7 +59,7 @@ export function PendingInvitesBanner({
 
   const decline = async (tableId: number) => {
     try {
-      // We need our own user ID — fetch via session user
+      // We need our own user ID - fetch via session user
       const me = await GalaService.user.getSessionUser();
       await GalaService.table.revokeInvite(tableId, me._id);
       toast.success("Convite recusado.");

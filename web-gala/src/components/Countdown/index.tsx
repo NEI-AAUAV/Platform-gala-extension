@@ -58,29 +58,29 @@ export default function Countdown({
   return (
     <div className={`flex flex-col items-center gap-1 ${className}`}>
       {label && (
-        <span className="text-[0.6rem] uppercase tracking-widest text-light-gold/50">
+        <span className="text-[0.7rem] uppercase tracking-widest text-light-gold/50">
           {label}
         </span>
       )}
-      <div className="flex gap-3 font-mono text-xl font-bold text-light-gold">
+      <div className="flex gap-3 font-mono text-2xl font-bold text-light-gold">
         <div className="flex flex-col items-center">
           <span>{String(timeLeft.days).padStart(2, "0")}</span>
-          <span className="text-[0.5rem] uppercase opacity-50">Dias</span>
+          <span className="text-[0.6rem] uppercase opacity-50">Dias</span>
         </div>
         <span className="opacity-30">:</span>
         <div className="flex flex-col items-center">
           <span>{String(timeLeft.hours).padStart(2, "0")}</span>
-          <span className="text-[0.5rem] uppercase opacity-50">Hrs</span>
+          <span className="text-[0.6rem] uppercase opacity-50">Hrs</span>
         </div>
         <span className="opacity-30">:</span>
         <div className="flex flex-col items-center">
           <span>{String(timeLeft.minutes).padStart(2, "0")}</span>
-          <span className="text-[0.5rem] uppercase opacity-50">Min</span>
+          <span className="text-[0.6rem] uppercase opacity-50">Min</span>
         </div>
         <span className="opacity-30">:</span>
         <div className="flex flex-col items-center">
           <span>{String(timeLeft.seconds).padStart(2, "0")}</span>
-          <span className="text-[0.5rem] uppercase opacity-50">Seg</span>
+          <span className="text-[0.6rem] uppercase opacity-50">Seg</span>
         </div>
       </div>
     </div>

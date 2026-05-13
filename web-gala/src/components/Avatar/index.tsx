@@ -10,7 +10,12 @@ type AvatarProps = {
 };
 const defaultImage = `${config.BASE_URL}/gala/default-profile.svg`;
 
-export default function Avatar({ className, style, id, alt }: AvatarProps) {
+export default function Avatar({
+  className,
+  style,
+  id,
+  alt,
+}: Readonly<AvatarProps>) {
   const { neiUser } = useNEIUser(id != null && id !== -1 ? id : null);
   const userStoreImage = useUserStore((state) => state.image);
 

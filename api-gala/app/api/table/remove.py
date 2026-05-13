@@ -87,6 +87,7 @@ async def common(
             "description": "The table head cannot leave a non-empty table or the person doesn't belong to the table"
         },
         404: {"description": "Table not found"},
+        500: {"description": "Internal server error"},
     },
 )
 async def person_leave_table(
@@ -109,6 +110,7 @@ async def person_leave_table(
             "description": "The table head cannot leave a non-empty table or the person doesn't belong to the table"
         },
         404: {"description": "Table not found"},
+        500: {"description": "Internal server error"},
     },
 )
 async def person_remove_table(

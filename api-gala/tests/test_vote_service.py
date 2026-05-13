@@ -1,4 +1,4 @@
-"""Unit tests for VoteService — covers atomicity fixes for vote and nomination."""
+"""Unit tests for VoteService - covers atomicity fixes for vote and nomination."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 

@@ -19,7 +19,7 @@ export default function Select<T>({
   options,
   className,
   disabled,
-}: SelectProps<T>) {
+}: Readonly<SelectProps<T>>) {
   return (
     <div className={`relative w-full ${className}`}>
       <Listbox

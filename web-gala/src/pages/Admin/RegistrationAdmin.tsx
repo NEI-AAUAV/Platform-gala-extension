@@ -28,7 +28,7 @@ import {
 } from "./components/AdminUI";
 import { utcIsoToLocalInput, localInputToUtcIso } from "@/utils/datetime";
 
-// ─── Types (local) — TimeSlots and User are global ambient types from .d.ts ──
+// ─── Types (local) - TimeSlots and User are global ambient types from .d.ts ──
 
 // ─── Section index definition ─────────────────────────────────────────────────
 const NAV_SECTIONS = [
@@ -381,7 +381,7 @@ export default function RegistrationAdmin() {
               label="Autocarro disponível (ida e volta)"
             />
             {config.busEnabled && (
-              <Field label="Preço por pessoa (€ — 0 = incluído no preço)">
+              <Field label="Preço por pessoa (€ - 0 = incluído no preço)">
                 <NumberInput
                   value={config.busRoundTripPrice}
                   onChange={(v) => save({ busRoundTripPrice: v })}
@@ -441,7 +441,7 @@ export default function RegistrationAdmin() {
                   <TextInput
                     value={config.ibanHolder}
                     onChange={(v) => save({ ibanHolder: v })}
-                    placeholder="NEI — Núcleo de Estudantes de Informática"
+                    placeholder="NEI - Núcleo de Estudantes de Informática"
                   />
                 </Field>
               </div>

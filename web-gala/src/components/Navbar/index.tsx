@@ -148,7 +148,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile drawer — full-screen overlay slide from right */}
+      {/* Mobile drawer - full-screen overlay slide from right */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>

@@ -1,11 +1,11 @@
 """
-Table invite system — user-ID-based invitations (by Authentik sub/ID).
+Table invite system - user-ID-based invitations (by Authentik sub/ID).
 
 Endpoints:
-  POST   /{table_id}/invite/accept      — accept an invite (joins table as confirmed)
-  POST   /{table_id}/invite/{user_id}   — head sends invite to a registered user
-  DELETE /{table_id}/invite/{user_id}   — head revokes invite OR invitee declines
-  GET    /my-invites                    — returns tables where current user is invited
+  POST   /{table_id}/invite/accept      - accept an invite (joins table as confirmed)
+  POST   /{table_id}/invite/{user_id}   - head sends invite to a registered user
+  DELETE /{table_id}/invite/{user_id}   - head revokes invite OR invitee declines
+  GET    /my-invites                    - returns tables where current user is invited
 """
 from typing import Annotated, List
 
@@ -31,7 +31,7 @@ def _is_head_or_admin(auth: AuthData, table: Table) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Invitee: accept an invite — declared FIRST so "accept" beats {user_id}
+# Invitee: accept an invite - declared FIRST so "accept" beats {user_id}
 # ---------------------------------------------------------------------------
 
 
@@ -57,7 +57,7 @@ async def accept_invite(
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     settings: SettingsDep,
 ) -> Table:
-    """Accept a table invite — joins the table automatically as confirmed."""
+    """Accept a table invite - joins the table automatically as confirmed."""
     table = await fetch_table(table_id, db)
 
     if auth.sub not in (table.invites or []):

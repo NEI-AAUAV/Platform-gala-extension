@@ -16,6 +16,7 @@ router = APIRouter()
 
 class UserCreateForm(BaseModel):
     nmec: int
+    num_companions: int = 0
     matriculation: Optional[Matriculation] = None
 
 
@@ -56,10 +57,7 @@ async def create_user(
     )
     companions = query[0]["total"] if query else 0
 
-    # FIXME: this is bad, it assumes that users do not change the current number of companions
-    # the fix would be to require the number of companions on the inscription
-    # but the requirements needed were incomplete at the time of development
-    if registrations + companions >= limits.maxRegistrations:
+    if registrations + companions + 1 + form_data.num_companions > limits.maxRegistrations:
         raise HTTPException(status_code=409, detail="Registrations are closed")
 
     user = User(

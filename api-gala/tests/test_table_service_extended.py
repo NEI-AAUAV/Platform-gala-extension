@@ -1,4 +1,4 @@
-"""Unit tests for TableService — create_table, join_via_invite, sync_companions,
+"""Unit tests for TableService - create_table, join_via_invite, sync_companions,
 create_empty_table, delete_table."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch

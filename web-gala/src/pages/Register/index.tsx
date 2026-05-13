@@ -244,7 +244,7 @@ export default function Register() {
             Núcleo de Estudantes de Informática
           </span>
           <h1 className="font-gala text-3xl font-bold text-light-gold sm:text-4xl">
-            Inscrição — Jantar de Gala
+            Inscrição - Jantar de Gala
           </h1>
         </motion.div>
 

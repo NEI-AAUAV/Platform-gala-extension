@@ -2,7 +2,7 @@ type BackgroundProps = {
   src: string;
 };
 
-export default function Background({ src }: BackgroundProps) {
+export default function Background({ src }: Readonly<BackgroundProps>) {
   return (
     <img
       className="absolute inset-0 h-screen w-screen object-cover object-bottom"

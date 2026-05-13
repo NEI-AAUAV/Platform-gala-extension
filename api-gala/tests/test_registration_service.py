@@ -1,4 +1,4 @@
-"""Unit tests for RegistrationService — registration flow, step transitions, payment states."""
+"""Unit tests for RegistrationService - registration flow, step transitions, payment states."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from pymongo.errors import DuplicateKeyError
@@ -94,7 +94,7 @@ async def test_get_or_create_inserts_when_not_found():
 
 @pytest.mark.asyncio
 async def test_get_or_create_recovers_from_duplicate_key_error():
-    """Race: two requests concurrently create the same user — second insert raises DuplicateKeyError.
+    """Race: two requests concurrently create the same user - second insert raises DuplicateKeyError.
     The service must retry find_one and return the existing doc."""
     from app.services.registration import RegistrationService
 
@@ -160,7 +160,7 @@ async def test_payment_review_state_review_phase2():
 
 
 # ---------------------------------------------------------------------------
-# _handle_step_5 — table selection logic
+# _handle_step_5 - table selection logic
 # ---------------------------------------------------------------------------
 
 
@@ -260,7 +260,7 @@ async def test_handle_step_5_does_nothing_for_invited_flag():
 
 
 # ---------------------------------------------------------------------------
-# update_step — step transitions
+# update_step - step transitions
 # ---------------------------------------------------------------------------
 
 

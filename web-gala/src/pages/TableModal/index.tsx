@@ -36,10 +36,10 @@ function useModalPage(tableId: number) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Loading or missing data — render nothing
+  // Loading or missing data - render nothing
   if (tableLoading || !time) return null;
 
-  // Table doesn't exist — redirect
+  // Table doesn't exist - redirect
   if (table === undefined) return <Navigate to="/reserve" />;
 
   const occupied = calculateOccupiedSeats(table.persons);
@@ -50,7 +50,7 @@ function useModalPage(tableId: number) {
 
   const inTable = table.persons.some((p) => p.id === sessionUser?._id);
 
-  // Use _id (not sub) for the head comparison — sessionUser is a User object
+  // Use _id (not sub) for the head comparison - sessionUser is a User object
   const isHead = sessionUser?._id != null && table.head === sessionUser._id;
 
   // Check if the current user is invited to THIS specific table
@@ -70,7 +70,7 @@ function useModalPage(tableId: number) {
     return <ViewTable table={table} inTable={inTable} mutate={mutate} />;
   }
   if (isInvited && !inAnyTable) {
-    // User has been invited to this table — show an accept/decline view
+    // User has been invited to this table - show an accept/decline view
     return (
       <ViewTable table={table} inTable={false} mutate={mutate} isInvited />
     );

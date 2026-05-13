@@ -67,7 +67,7 @@ export default function Step2PersonalData({
       : data.nmec;
 
     if (!nmecToValidate.trim() || !/^\d+$/.test(nmecToValidate)) {
-      setError("Número mecanográfico inválido — deve conter apenas dígitos.");
+      setError("Número mecanográfico inválido - deve conter apenas dígitos.");
       return;
     }
 
