@@ -49,13 +49,16 @@ function SeatsBadge({ remaining }: { readonly remaining: number | undefined }) {
   if (remaining == null) return null;
   if (remaining <= 0)
     return (
-      <span className="font-gala text-xs uppercase tracking-widest text-red-400/70">
-        Sem vagas disponíveis
+      <span className="font-gala text-xs uppercase tracking-widest text-white/40">
+        <span className="font-bold text-red-400">0</span>{" "}
+        {remaining === -1 ? "vaga disponível" : "vagas disponíveis"} -{" "}
+        <span className="text-red-400">inscrições encerradas</span>
       </span>
     );
   return (
     <span className="font-gala text-xs uppercase tracking-widest text-white/40">
-      {remaining} {remaining === 1 ? "vaga disponível" : "vagas disponíveis"}
+      <span className="font-bold text-light-gold">{remaining}</span>{" "}
+      {remaining === 1 ? "vaga disponível" : "vagas disponíveis"}
     </span>
   );
 }

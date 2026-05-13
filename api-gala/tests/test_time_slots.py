@@ -30,7 +30,7 @@ async def test_get_time_slots(async_client: AsyncClient, test_db, mock_time_slot
 
 @pytest.mark.asyncio
 async def test_update_time_slots_unauthorized(async_client: AsyncClient, test_db, mock_time_slots_data):
-    # async_client has default scope — not manager-gala or admin
+    # async_client has default scope - not manager-gala or admin
     # require_feature checks this explicitly and returns 403
     test_db.manager_permissions.find_one.return_value = None
     test_db.time_slots.find_one.return_value = mock_time_slots_data

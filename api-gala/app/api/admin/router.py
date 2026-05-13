@@ -150,7 +150,7 @@ async def confirm_payment(
         background_tasks.add_task(
             send_email,
             user.email,
-            "Pagamento confirmado — Jantar de Gala",
+            "Pagamento confirmado - Jantar de Gala",
             settings=settings,
             template="payment_confirmed",
             name=user.name,
@@ -189,7 +189,7 @@ async def send_payment_reminder(
     background_tasks.add_task(
         send_email,
         user.email,
-        "Lembrete de pagamento — Jantar de Gala",
+        "Lembrete de pagamento - Jantar de Gala",
         settings=settings,
         template="payment_reminder",
         name=user.name,
@@ -247,7 +247,7 @@ async def reject_payment_proof(
         background_tasks.add_task(
             send_email,
             user.email,
-            "Comprovativo de Pagamento Rejeitado — Jantar de Gala",
+            "Comprovativo de Pagamento Rejeitado - Jantar de Gala",
             settings=settings,
             template="payment_rejected",
             name=user.name,

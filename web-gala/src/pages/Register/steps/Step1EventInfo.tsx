@@ -58,7 +58,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
       className="flex flex-col gap-8"
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Column 1 — Event details */}
+        {/* Column 1 - Event details */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             Detalhes do Evento
@@ -88,7 +88,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
           </div>
         </div>
 
-        {/* Column 2 — Includes */}
+        {/* Column 2 - Includes */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             O que está incluído
@@ -110,7 +110,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
           </div>
         </div>
 
-        {/* Column 3 — Rules + Dates */}
+        {/* Column 3 - Rules + Dates */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             Regras e Datas

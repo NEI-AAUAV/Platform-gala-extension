@@ -61,7 +61,7 @@ export default function StepIndicator({
                   {isDone ? "✓" : step.n}
                 </span>
               </div>
-              {/* Label — hidden on mobile for steps 3+ to avoid overflow */}
+              {/* Label - hidden on mobile for steps 3+ to avoid overflow */}
               <span
                 className={[
                   "text-[0.6rem] font-semibold uppercase tracking-widest transition-colors",

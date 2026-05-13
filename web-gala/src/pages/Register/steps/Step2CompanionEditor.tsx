@@ -113,7 +113,7 @@ function CompanionCard({
             <FontAwesomeIcon icon={faEnvelope} className="text-[0.5rem]" />
             Email{" "}
             <span className="normal-case text-white/25">
-              (opcional — para sincronizar conta futura)
+              (opcional - para sincronizar conta futura)
             </span>
           </label>
           <input

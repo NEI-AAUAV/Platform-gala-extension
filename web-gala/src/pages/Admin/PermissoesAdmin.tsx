@@ -125,7 +125,7 @@ function ManagerRow({
 
       {perms.size === 0 && (
         <p className="text-xs text-yellow-400/60">
-          Sem permissões — este manager não tem acesso a nenhuma funcionalidade.
+          Sem permissões - este manager não tem acesso a nenhuma funcionalidade.
         </p>
       )}
     </div>

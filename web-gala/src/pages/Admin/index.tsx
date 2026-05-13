@@ -422,7 +422,7 @@ export default function Admin() {
               <div className="md:border-white/8 flex w-full flex-col bg-black md:w-1/2 md:border-l">
                 <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-2">
                   <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/30">
-                    Preview — {previewRoute}
+                    Preview - {previewRoute}
                   </span>
                   <button
                     type="button"
