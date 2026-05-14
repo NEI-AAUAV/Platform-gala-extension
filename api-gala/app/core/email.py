@@ -13,6 +13,8 @@ _env: Environment
 _logo_bytes: bytes | None = None
 _BASE_DIR = Path(__file__).resolve().parents[2]
 _TEMPLATES_DIR = _BASE_DIR / "templates"
+_LOGO_FILENAME = "nei.png"
+_EMPTY_SMTP_USER = "<empty>"
 
 
 def init_emails(settings: Settings) -> None:
@@ -26,8 +28,8 @@ def init_emails(settings: Settings) -> None:
         global _logo_bytes
         _logo_bytes = None
         logo_candidates = (
-            _TEMPLATES_DIR / "assets" / "nei.png",
-            _BASE_DIR.parent / "web-nei" / "public" / "nei.png",
+            _TEMPLATES_DIR / "assets" / _LOGO_FILENAME,
+            _BASE_DIR.parent / "web-nei" / "public" / _LOGO_FILENAME,
         )
         for candidate in logo_candidates:
             try:
@@ -78,7 +80,7 @@ async def send_email(
         email,
         settings.EMAIL_SMTP_HOST,
         settings.EMAIL_SMTP_PORT,
-        settings.EMAIL_SMTP_USER or "<empty>",
+        settings.EMAIL_SMTP_USER or _EMPTY_SMTP_USER,
         settings.EMAIL_SENDER_ADDRESS,
         template,
     )
@@ -107,7 +109,7 @@ async def send_email(
             maintype="image",
             subtype="png",
             cid="<nei-logo>",
-            filename="nei.png",
+            filename=_LOGO_FILENAME,
             disposition="inline",
         )
     message["X-Mailer"] = "NEI Gala API"
@@ -146,7 +148,7 @@ async def send_email(
             email,
             settings.EMAIL_SMTP_HOST,
             settings.EMAIL_SMTP_PORT,
-            settings.EMAIL_SMTP_USER or "<empty>",
+            settings.EMAIL_SMTP_USER or _EMPTY_SMTP_USER,
         )
         raise
     finally:
