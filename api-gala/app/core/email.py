@@ -11,6 +11,8 @@ from app.core.config import Settings
 
 _env: Environment
 _logo_bytes: bytes | None = None
+_BASE_DIR = Path(__file__).resolve().parents[2]
+_TEMPLATES_DIR = _BASE_DIR / "templates"
 
 
 def init_emails(settings: Settings) -> None:
@@ -18,17 +20,16 @@ def init_emails(settings: Settings) -> None:
         logger.info("Email is enabled")
         global _env
         _env = Environment(
-            loader=FileSystemLoader("templates"),
+            loader=FileSystemLoader(str(_TEMPLATES_DIR)),
             autoescape=select_autoescape(["html", "xml"]),
         )
         global _logo_bytes
         _logo_bytes = None
-        for candidate in (
-            Path("templates/assets/nei.png"),
-            Path("web-nei/public/nei.png"),
-            Path("../web-nei/public/nei.png"),
-            Path("../../web-nei/public/nei.png"),
-        ):
+        logo_candidates = (
+            _TEMPLATES_DIR / "assets" / "nei.png",
+            _BASE_DIR.parent / "web-nei" / "public" / "nei.png",
+        )
+        for candidate in logo_candidates:
             try:
                 if candidate.exists():
                     _logo_bytes = candidate.read_bytes()
@@ -36,6 +37,8 @@ def init_emails(settings: Settings) -> None:
                     break
             except Exception:
                 logger.debug("Failed to load email logo from {}", candidate)
+        if not _logo_bytes:
+            logger.warning("Email logo not found. Checked paths: {}", [str(path) for path in logo_candidates])
     else:
         logger.warning("Email is disabled")
 

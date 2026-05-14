@@ -26,6 +26,7 @@ from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 from app.api.time_slots.edit import TimeSlotsEditForm
+from app.utils import meal_label_from_config, companions_with_meal_labels
 
 
 router = APIRouter()
@@ -33,28 +34,6 @@ router.include_router(tables_router)
 
 ERROR_FORBIDDEN = "Not enough permissions"
 ERROR_USER_NOT_FOUND = "User not found"
-
-
-def _meal_label_from_config(meal_option: str | None, config: GlobalConfig) -> str:
-    if not meal_option:
-        return "—"
-    meal_map = {meal.id: meal.name for meal in config.meals}
-    if meal_option in meal_map:
-        return meal_map[meal_option]
-    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
-    return legacy.get(meal_option.strip().upper(), meal_option)
-
-
-def _companions_with_meal_labels(companions: list, config: GlobalConfig) -> list:
-    meal_map = {meal.id: meal.name for meal in config.meals}
-    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
-    out = []
-    for c in companions or []:
-        dish = c.dish.value if c.dish else "—"
-        dish_label = meal_map.get(dish, legacy.get(str(dish).strip().upper(), dish))
-        out.append({**c.dict(), "dish": dish_label})
-    return out
-
 
 @router.get("/config", response_model=GlobalConfig, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}})
 async def get_config(
@@ -613,11 +592,11 @@ async def admin_create_registration(
             nmec=user.nmec,
             year=year_label,
             bus=bus_labels.get(user.bus_option.value, "—"),
-            meal=_meal_label_from_config(user.meal_option, config),
+            meal=meal_label_from_config(user.meal_option, config),
             allergies=user.food_allergies or "Nenhuma",
             phone=user.phone or "—",
             phased_payment=user.phased_payment,
-            companions=_companions_with_meal_labels(user.companions, config),
+            companions=companions_with_meal_labels(user.companions, config),
         )
 
     return user

@@ -14,34 +14,12 @@ from app.services.config import ConfigService
 from app.services.authentik_service import sync_email_based_registrations
 from app.api.limits.util import fetch_limits
 from app.services.storage import storage_client
-from app.utils import is_deadline_passed
+from app.utils import is_deadline_passed, meal_label_from_config, companions_with_meal_labels
 from app.core.logging import logger
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
-
-
-def _meal_label_from_config(meal_option: str | None, config) -> str:
-    if not meal_option:
-        return "—"
-    meal_map = {meal.id: meal.name for meal in config.meals}
-    if meal_option in meal_map:
-        return meal_map[meal_option]
-    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
-    return legacy.get(meal_option.strip().upper(), meal_option)
-
-
-def _companions_with_meal_labels(companions: list, config) -> list:
-    meal_map = {meal.id: meal.name for meal in config.meals}
-    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
-    out = []
-    for c in companions or []:
-        dish = c.dish.value if c.dish else "—"
-        dish_label = meal_map.get(dish, legacy.get(str(dish).strip().upper(), dish))
-        out.append({**c.dict(), "dish": dish_label})
-    return out
-
 
 async def _require_registration_open(db: DBType) -> None:
     ts_coll = TimeSlots.get_collection(db)
@@ -179,11 +157,11 @@ async def update_registration_step(
                 nmec=user.nmec,
                 year=year_label,
                 bus=bus_labels.get(user.bus_option.value, "—"),
-                meal=_meal_label_from_config(user.meal_option, config),
+                meal=meal_label_from_config(user.meal_option, config),
                 allergies=user.food_allergies or "Nenhuma",
                 phone=user.phone or "—",
                 phased_payment=user.phased_payment,
-                companions=_companions_with_meal_labels(user.companions, config),
+                companions=companions_with_meal_labels(user.companions, config),
             )
         else:
             logger.info("Registration confirmation email disabled in config for {}", user.email)
