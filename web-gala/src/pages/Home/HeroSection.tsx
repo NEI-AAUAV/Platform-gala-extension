@@ -143,14 +143,12 @@ function RegisteredHeroContent({
       className="mt-12 flex flex-col items-center gap-8"
     >
       <div className="flex flex-wrap justify-center gap-3">
-        {isRegistrationOpen && (
-          <Link
-            to="/register"
-            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-          >
-            Inscrever no Jantar
-          </Link>
-        )}
+        <Link
+          to="/profile"
+          className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+        >
+          Ver Perfil
+        </Link>
         {isTablesOpen && (
           <Link
             to="/reserve"

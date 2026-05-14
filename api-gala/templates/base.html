@@ -9,6 +9,7 @@
     body{background:#0a0a0a;font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#ffffff;padding:24px 12px}
     .w{max-width:640px;margin:0 auto;background:#111111;border:1px solid rgba(247,187,172,.18);border-radius:14px;padding:24px}
     .hdr{padding-bottom:18px;border-bottom:1px solid rgba(247,187,172,.15);margin-bottom:24px}
+    .hdr-logo{display:block;height:48px;width:auto;margin:0 0 12px 0}
     .brand{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#F7BBAC}
     .brand strong{color:#ffffff;font-weight:800;letter-spacing:0}
     .band{background:linear-gradient(140deg,rgba(197,134,118,.16) 0%,rgba(247,187,172,.07) 100%);border:1px solid rgba(247,187,172,.25);border-left:5px solid #C58676;border-radius:10px;padding:18px 18px;margin-bottom:22px}
@@ -35,11 +36,6 @@
     a{color:#F7BBAC;text-decoration:none}
     a:hover{text-decoration:underline}
     .ftr{margin-top:28px;padding-top:18px;border-top:1px solid rgba(247,187,172,.15)}
-    .ftr-grid{display:table;width:100%;margin-bottom:16px}
-    .ftr-col{display:table-cell;vertical-align:top;width:33.33%;padding-right:10px}
-    .ftr-col:last-child{padding-right:0}
-    .ftr-col-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F7BBAC;margin-bottom:8px}
-    .ftr-link{display:block;font-size:14px;color:rgba(255,255,255,.85);text-decoration:none;margin-bottom:6px}
     .ftr-bottom{border-top:1px solid rgba(247,187,172,.12);padding-top:12px}
     .ftr-copy{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.58);margin-bottom:4px}
     {% block style %}{% endblock %}
@@ -50,6 +46,7 @@
 
   <!-- Header -->
   <div class="hdr">
+    <img class="hdr-logo" src="cid:nei-logo" alt="Logotipo NEI-AAUAv" />
     <span class="brand"><strong>NEI-AAUAv</strong>  Jantar de Gala</span>
   </div>
 
@@ -57,28 +54,8 @@
 
   <!-- Footer -->
   <div class="ftr">
-    <div class="ftr-grid">
-      <div class="ftr-col">
-        <p class="ftr-col-title">Navegação</p>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala">Início</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/register">Inscrição</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/reserve">Mesas</a>
-        <a class="ftr-link" href="{{PUBLIC_URL}}/gala/vote">Votar</a>
-      </div>
-      <div class="ftr-col">
-        <p class="ftr-col-title">Contacto</p>
-        <a class="ftr-link" href="mailto:nei@aauav.pt">nei@aauav.pt</a>
-        <a class="ftr-link" href="https://goo.gl/maps/JZY6mi3T9T6UxE3z6">Aveiro, Portugal</a>
-      </div>
-      <div class="ftr-col">
-        <p class="ftr-col-title">Redes Sociais</p>
-        <a class="ftr-link" href="https://www.instagram.com/nei.aauav/">Instagram</a>
-        <a class="ftr-link" href="https://www.linkedin.com/company/nei-aauav/">LinkedIn</a>
-        <a class="ftr-link" href="https://www.facebook.com/NEIAAUAv">Facebook</a>
-      </div>
-    </div>
     <div class="ftr-bottom">
-      <span class="ftr-copy">&copy; 2026 NEI-AAUAv. Todos os direitos reservados.</span>
+      <span class="ftr-copy">&copy; 2026. Todos os direitos reservados.</span>
       <span class="ftr-copy">A apoiar os estudantes desde 2013.</span>
     </div>
   </div>

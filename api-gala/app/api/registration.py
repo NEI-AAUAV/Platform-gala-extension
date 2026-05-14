@@ -22,6 +22,27 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 router = APIRouter()
 
 
+def _meal_label_from_config(meal_option: str | None, config) -> str:
+    if not meal_option:
+        return "—"
+    meal_map = {meal.id: meal.name for meal in config.meals}
+    if meal_option in meal_map:
+        return meal_map[meal_option]
+    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
+    return legacy.get(meal_option.strip().upper(), meal_option)
+
+
+def _companions_with_meal_labels(companions: list, config) -> list:
+    meal_map = {meal.id: meal.name for meal in config.meals}
+    legacy = {"NOR": "Carne", "NORMAL": "Carne", "CARNE": "Carne", "VEG": "Vegetariano", "VEGETARIAN": "Vegetariano", "VEGETARIANO": "Vegetariano"}
+    out = []
+    for c in companions or []:
+        dish = c.dish.value if c.dish else "—"
+        dish_label = meal_map.get(dish, legacy.get(str(dish).strip().upper(), dish))
+        out.append({**c.dict(), "dish": dish_label})
+    return out
+
+
 async def _require_registration_open(db: DBType) -> None:
     ts_coll = TimeSlots.get_collection(db)
     ts_doc = await ts_coll.find_one({"_id": TIME_SLOTS_ID})
@@ -127,9 +148,14 @@ async def update_registration_step(
     if step < 6:
         await _require_registration_open(db)
 
-    await RegistrationService.get_or_create_user_registration(
+    user = await RegistrationService.get_or_create_user_registration(
         db, auth.sub, auth.email, f"{auth.name} {auth.surname}", auth.nmec
     )
+    if user.is_registered:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A inscrição já foi concluída e não pode ser alterada.",
+        )
 
     try:
         user = await RegistrationService.update_step(db, auth.sub, step, data)
@@ -153,11 +179,11 @@ async def update_registration_step(
                 nmec=user.nmec,
                 year=year_label,
                 bus=bus_labels.get(user.bus_option.value, "—"),
-                meal=user.meal_option or "—",
+                meal=_meal_label_from_config(user.meal_option, config),
                 allergies=user.food_allergies or "Nenhuma",
                 phone=user.phone or "—",
                 phased_payment=user.phased_payment,
-                companions=user.companions,
+                companions=_companions_with_meal_labels(user.companions, config),
             )
         else:
             logger.info("Registration confirmation email disabled in config for {}", user.email)

@@ -1,6 +1,7 @@
 from typing import Any
 import aiosmtplib
 import ssl
+from pathlib import Path
 from email.utils import formatdate, make_msgid
 from email.message import EmailMessage
 from jinja2 import Environment, select_autoescape, FileSystemLoader
@@ -9,6 +10,7 @@ from app.core.logging import logger
 from app.core.config import Settings
 
 _env: Environment
+_logo_bytes: bytes | None = None
 
 
 def init_emails(settings: Settings) -> None:
@@ -19,6 +21,21 @@ def init_emails(settings: Settings) -> None:
             loader=FileSystemLoader("templates"),
             autoescape=select_autoescape(["html", "xml"]),
         )
+        global _logo_bytes
+        _logo_bytes = None
+        for candidate in (
+            Path("templates/assets/nei.png"),
+            Path("web-nei/public/nei.png"),
+            Path("../web-nei/public/nei.png"),
+            Path("../../web-nei/public/nei.png"),
+        ):
+            try:
+                if candidate.exists():
+                    _logo_bytes = candidate.read_bytes()
+                    logger.info("Loaded email logo from {}", candidate)
+                    break
+            except Exception:
+                logger.debug("Failed to load email logo from {}", candidate)
     else:
         logger.warning("Email is disabled")
 
@@ -81,6 +98,15 @@ async def send_email(
     message["Message-Id"] = make_msgid(domain=settings.EMAIL_DOMAIN)
     message.set_content(text_content, subtype="plain", charset="utf-8")
     message.add_alternative(html_content, subtype="html", charset="utf-8")
+    if _logo_bytes:
+        message.get_payload()[-1].add_related(
+            _logo_bytes,
+            maintype="image",
+            subtype="png",
+            cid="<nei-logo>",
+            filename="nei.png",
+            disposition="inline",
+        )
     message["X-Mailer"] = "NEI Gala API"
 
     tls_context = ssl.create_default_context()
