@@ -1,4 +1,6 @@
 fileignoreconfig:
+- filename: api-gala/app/queries/table.py
+  checksum: 09d4fae7c7ca46628c82e19746774540e7c991837c5a12d03a63d1cddbd23058
 - filename: web-gala/src/pages/Admin/VoteCategories.tsx
   checksum: 7d79f562cc04c2abf135c71aa20ff601c81695c30f68cdc40bfe1a9d951c5e38
 - filename: web-gala/src/pages/Admin/components/UserDetail.tsx
