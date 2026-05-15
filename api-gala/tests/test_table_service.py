@@ -39,9 +39,9 @@ async def test_join_table_rejects_when_companions_fill_seats():
         "dish": "NOR",
         "confirmed": True,
         "companions": [
-            {"name": "A", "dish": "NOR", "allergies": ""},
-            {"name": "B", "dish": "NOR", "allergies": ""},
-            {"name": "C", "dish": "NOR", "allergies": ""},
+            {"name": "A", "email": "", "dish": "NOR", "allergies": ""},
+            {"name": "B", "email": "", "dish": "NOR", "allergies": ""},
+            {"name": "C", "email": "", "dish": "NOR", "allergies": ""},
         ],
     }
     user_doc = {
@@ -83,8 +83,8 @@ async def test_join_table_allows_when_seats_available():
         "dish": "NOR",
         "confirmed": True,
         "companions": [
-            {"name": "A", "dish": "NOR", "allergies": ""},
-            {"name": "B", "dish": "NOR", "allergies": ""},
+            {"name": "A", "email": "", "dish": "NOR", "allergies": ""},
+            {"name": "B", "email": "", "dish": "NOR", "allergies": ""},
         ],
     }
     user_doc = {
