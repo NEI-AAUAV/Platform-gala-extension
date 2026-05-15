@@ -14,13 +14,12 @@ from app.services.config import ConfigService
 from app.services.authentik_service import sync_email_based_registrations
 from app.api.limits.util import fetch_limits
 from app.services.storage import storage_client
-from app.utils import is_deadline_passed
+from app.utils import is_deadline_passed, meal_label_from_config, companions_with_meal_labels
 from app.core.logging import logger
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter()
-
 
 async def _require_registration_open(db: DBType) -> None:
     ts_coll = TimeSlots.get_collection(db)
@@ -127,9 +126,14 @@ async def update_registration_step(
     if step < 6:
         await _require_registration_open(db)
 
-    await RegistrationService.get_or_create_user_registration(
+    user = await RegistrationService.get_or_create_user_registration(
         db, auth.sub, auth.email, f"{auth.name} {auth.surname}", auth.nmec
     )
+    if user.is_registered:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A inscrição já foi concluída e não pode ser alterada.",
+        )
 
     try:
         user = await RegistrationService.update_step(db, auth.sub, step, data)
@@ -153,11 +157,11 @@ async def update_registration_step(
                 nmec=user.nmec,
                 year=year_label,
                 bus=bus_labels.get(user.bus_option.value, "—"),
-                meal=user.meal_option or "—",
+                meal=meal_label_from_config(user.meal_option, config),
                 allergies=user.food_allergies or "Nenhuma",
                 phone=user.phone or "—",
                 phased_payment=user.phased_payment,
-                companions=user.companions,
+                companions=companions_with_meal_labels(user.companions, config),
             )
         else:
             logger.info("Registration confirmation email disabled in config for {}", user.email)

@@ -26,6 +26,7 @@ from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
 from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
 from app.api.time_slots.edit import TimeSlotsEditForm
+from app.utils import meal_label_from_config, companions_with_meal_labels
 
 
 router = APIRouter()
@@ -33,7 +34,6 @@ router.include_router(tables_router)
 
 ERROR_FORBIDDEN = "Not enough permissions"
 ERROR_USER_NOT_FOUND = "User not found"
-
 
 @router.get("/config", response_model=GlobalConfig, responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}})
 async def get_config(
@@ -592,11 +592,11 @@ async def admin_create_registration(
             nmec=user.nmec,
             year=year_label,
             bus=bus_labels.get(user.bus_option.value, "—"),
-            meal=user.meal_option or "—",
+            meal=meal_label_from_config(user.meal_option, config),
             allergies=user.food_allergies or "Nenhuma",
             phone=user.phone or "—",
             phased_payment=user.phased_payment,
-            companions=user.companions,
+            companions=companions_with_meal_labels(user.companions, config),
         )
 
     return user

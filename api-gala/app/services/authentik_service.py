@@ -4,6 +4,7 @@ from typing import List, Optional
 import httpx
 
 from app.core.config import Settings
+from app.core.logging import logger
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,44 @@ class AuthentikUser:
     pk: int
     name: str
     email: str
+
+
+def _users_from_results(results: list[dict]) -> list[AuthentikUser]:
+    return [
+        AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
+        for u in results
+    ]
+
+
+def _apply_next_page(data: dict, params: dict, current_url: str) -> tuple[str, bool]:
+    pagination = data.get("pagination", {})
+    next_page = pagination.get("next")
+    next_url_str = data.get("next")
+
+    if isinstance(next_url_str, str) and next_url_str.startswith("http"):
+        params.clear()
+        return next_url_str, True
+
+    if isinstance(next_page, int) and next_page > 0:
+        params["page"] = next_page
+        return current_url, True
+
+    return current_url, False
+
+
+def _filter_users_by_search(users: list[AuthentikUser], search: Optional[str]) -> list[AuthentikUser]:
+    if not search:
+        return users
+    s = search.strip().lower()
+    return [
+        u
+        for u in users
+        if s in (u.name or "").lower() or s in (u.email or "").lower()
+    ]
+
+
+def _dedupe_users(users: list[AuthentikUser]) -> list[AuthentikUser]:
+    return list({u.pk: u for u in users}.values())
 
 
 async def fetch_group_members(settings: Settings, group_name: str) -> List[AuthentikUser]:
@@ -82,34 +121,23 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
 
     async with httpx.AsyncClient(verify=verify_ssl) as client:
         try:
-            while url:
+            has_next = True
+            while has_next:
                 resp = await client.get(url, params=params, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
-                for u in data.get("results", []):
-                    users.append(
-                        AuthentikUser(pk=u["pk"], name=u.get("name", ""), email=u.get("email", ""))
-                    )
-                
-                # Check for pagination in Authentik's format
-                pagination = data.get("pagination", {})
-                next_page = pagination.get("next")
-                
-                # Some versions might return standard DRF next URL string
-                next_url_str = data.get("next")
-                
-                if isinstance(next_url_str, str) and next_url_str.startswith("http"):
-                    url = next_url_str
-                    params = {}
-                elif isinstance(next_page, int) and next_page > 0:
-                    params["page"] = next_page
-                else:
-                    break
+                users.extend(_users_from_results(data.get("results", [])))
+                url, has_next = _apply_next_page(data, params, url)
         except Exception as e:
-            print(f"Error fetching Authentik users: {e}")
-            # Return whatever users we managed to fetch before the error
+            logger.warning("Error fetching Authentik users via /core/users: {}", e)
+            # Fallback: try manager group members (works with narrower permissions in some setups)
+            fallback_users = await fetch_group_members(
+                settings, settings.AUTHENTIK_MANAGER_GALA_GROUP
+            )
+            fallback_users = _filter_users_by_search(fallback_users, search)
+            return _dedupe_users([*users, *fallback_users])
 
-    return users
+    return _dedupe_users(users)
 
 
 async def fetch_user_by_id(settings: Settings, user_id: int) -> Optional[AuthentikUser]:

@@ -143,14 +143,12 @@ function RegisteredHeroContent({
       className="mt-12 flex flex-col items-center gap-8"
     >
       <div className="flex flex-wrap justify-center gap-3">
-        {isRegistrationOpen && (
-          <Link
-            to="/register"
-            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-          >
-            Inscrever no Jantar
-          </Link>
-        )}
+        <Link
+          to="/profile"
+          className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+        >
+          Ver Perfil
+        </Link>
         {isTablesOpen && (
           <Link
             to="/reserve"
@@ -277,7 +275,7 @@ export default function HeroSection() {
   }, [isLoading, galaUserRefetch]);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-20">
+    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pb-20 pt-20 md:pb-24">
       {/* Background image */}
       <div className="absolute inset-0 -z-10">
         <img
@@ -358,7 +356,7 @@ export default function HeroSection() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2"
+        className="pointer-events-none absolute bottom-3 left-1/2 hidden -translate-x-1/2 sm:block md:bottom-4"
       >
         <div className="flex flex-col items-center gap-2">
           <span className="font-gala text-[0.55rem] uppercase tracking-[0.3em] text-white/25">

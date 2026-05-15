@@ -61,26 +61,64 @@ async def search_users(
 ) -> List[dict]:
     """Search ALL platform users via Authentik (for table invites)."""
     from app.services.authentik_service import fetch_all_users
+    import re
     
-    # 1. Search in Authentik
-    authentik_users = await fetch_all_users(settings, search=q)
-    
-    # 2. Get registered status for these users
+    q_norm = q.strip()
+    q_regex = {"$regex": re.escape(q_norm), "$options": "i"}
+
+    # 1. Search in Authentik (may be empty if token lacks permissions)
+    authentik_users = await fetch_all_users(settings, search=q_norm)
+
+    # 2. Fallback/local search in Gala DB for already known users
     user_coll = User.get_collection(db)
-    registered_ids = await user_coll.distinct("_id", {"_id": {"$in": [u.pk for u in authentik_users]}, "is_registered": True})
+    local_users = await user_coll.find(
+        {
+            "$or": [
+                {"name": q_regex},
+                {"email": q_regex},
+            ]
+        }
+    ).to_list(20)
+
+    # 3. Get registered status for Authentik users
+    user_coll = User.get_collection(db)
+    registered_ids = await user_coll.distinct(
+        "_id",
+        {"_id": {"$in": [u.pk for u in authentik_users]}, "is_registered": True},
+    )
     registered_ids_set = set(registered_ids)
 
-    # 3. Map to the expected format and exclude self
-    results = []
+    # 4. Map to expected format and exclude self
+    results: List[dict] = []
+    seen_ids: set[int] = set()
+
+    for user_doc in local_users:
+        uid = int(user_doc["_id"])
+        if uid == auth.sub:
+            continue
+        seen_ids.add(uid)
+        results.append(
+            {
+                "id": uid,
+                "name": user_doc.get("name", "") or "",
+                "email": user_doc.get("email", "") or "",
+                "is_registered": bool(user_doc.get("is_registered", False)),
+            }
+        )
+
     for u in authentik_users:
         if u.pk == auth.sub:
             continue
-        results.append({
-            "id": u.pk,
-            "name": u.name,
-            "email": u.email,
-            "is_registered": u.pk in registered_ids_set
-        })
+        if u.pk in seen_ids:
+            continue
+        results.append(
+            {
+                "id": u.pk,
+                "name": u.name,
+                "email": u.email,
+                "is_registered": u.pk in registered_ids_set,
+            }
+        )
 
     return results[:10]
 

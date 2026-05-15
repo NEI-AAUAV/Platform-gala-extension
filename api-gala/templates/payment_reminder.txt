@@ -13,4 +13,3 @@ Prazo: {{ payment_deadline or "a anunciar" }}
 Envia o comprovativo no teu perfil para que a inscrição possa ser validada.
 
 Até já,
-NEI-AAUAv
