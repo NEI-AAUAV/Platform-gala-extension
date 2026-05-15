@@ -48,6 +48,8 @@ class Table(BaseDocument):
     invite_token: Optional[str] = None
     # User IDs (auth.sub) that have been invited to this table
     invites: List[int] = []
+    # Creator of the table (business owner of the table)
+    owner_id: Optional[int] = None
     head: Optional[int] = None
     seats: PositiveInt = 10
     persons: List[TablePerson] = []

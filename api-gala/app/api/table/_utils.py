@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from app.core.db.types import DBType
 from app.models.table import Table
 from app.api.auth import AuthData, ScopeEnum
+from app.core.logging import logger
 
 
 def table_head_check_override(auth: AuthData) -> bool:
@@ -13,14 +14,24 @@ def table_head_check_override(auth: AuthData) -> bool:
 
 
 def table_head_permissions(auth: AuthData, table: Table) -> bool:
-    return table_head_check_override(auth) or table.head == auth.sub
+    first_person_id = table.persons[0].id if table.persons else None
+    return (
+        table_head_check_override(auth)
+        or table.head == auth.sub
+        or table.owner_id == auth.sub
+        or first_person_id == auth.sub
+    )
 
 
 def query_check_table_head_permissions(
     auth: AuthData, query: dict[str, Any]
 ) -> dict[str, Any]:
     if not table_head_check_override(auth):
-        query["head"] = auth.sub
+        query["$or"] = [
+            {"head": auth.sub},
+            {"owner_id": auth.sub},
+            {"persons.0.id": auth.sub},
+        ]
 
     return query
 
@@ -30,6 +41,15 @@ def head_permission_check(
     table: Table,
 ) -> None:
     if not table_head_permissions(auth, table):
+        first_person_id = table.persons[0].id if table.persons else None
+        logger.warning(
+            "Table permission denied | auth.sub={} | table_id={} | head={} | owner_id={} | first_person_id={}",
+            auth.sub,
+            table.id,
+            table.head,
+            table.owner_id,
+            first_person_id,
+        )
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
 

@@ -54,6 +54,10 @@ export default function Step4Payment({
 
   // Determine if user CHOSE phased payment (only possible when admin enabled it)
   const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;
+  const totalPersons = 1 + data.companions.length;
+  const totalEventPrice = config.eventPrice * totalPersons;
+  const totalPhase1Price = config.phase1Price * totalPersons;
+  const totalPhase2Price = config.phase2Price * totalPersons;
 
   const handleUpload = async (phase: 1 | 2, file: File) => {
     setUploadError(null);
@@ -189,8 +193,8 @@ export default function Step4Payment({
                   </span>
                   <span className="font-mono text-sm text-white/80">
                     {config.phasedPaymentEnabled && data.phasedPayment
-                      ? `${config.phase1Price}€ (Fase 1)`
-                      : `${config.eventPrice}€`}
+                      ? `${totalPhase1Price}€ (Fase 1)`
+                      : `${totalEventPrice}€`}
                   </span>
                 </div>
               </div>
@@ -325,7 +329,7 @@ export default function Step4Payment({
                 )}
               </div>
               <p className="text-white/35 text-xs">
-                Paga {config.eventPrice}€ de uma só vez e envia 1 comprovativo.
+                Paga {totalEventPrice}€ de uma só vez e envia 1 comprovativo.
               </p>
             </button>
 
@@ -353,9 +357,9 @@ export default function Step4Payment({
                 )}
               </div>
               <p className="text-white/35 text-xs">
-                Fase 1: {config.phase1Price}€ até {config.phase1Deadline}
+                Fase 1: {totalPhase1Price}€ até {config.phase1Deadline}
                 <br />
-                Fase 2: {config.phase2Price}€ até {config.phase2Deadline}
+                Fase 2: {totalPhase2Price}€ até {config.phase2Deadline}
               </p>
             </button>
           </div>
@@ -371,7 +375,7 @@ export default function Step4Payment({
       >
         <PhaseCard
           label={userChosePhased ? "Fase 1" : "Comprovativo de Pagamento"}
-          price={userChosePhased ? config.phase1Price : config.eventPrice}
+          price={userChosePhased ? totalPhase1Price : totalEventPrice}
           deadline={
             userChosePhased ? config.phase1Deadline : config.paymentDeadlineDate
           }
@@ -382,7 +386,7 @@ export default function Step4Payment({
         {userChosePhased && (
           <PhaseCard
             label="Fase 2"
-            price={config.phase2Price}
+            price={totalPhase2Price}
             deadline={config.phase2Deadline}
             hasProof={!!data.paymentProofPhase2}
             uploading={uploading === 2}

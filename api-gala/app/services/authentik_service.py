@@ -4,6 +4,7 @@ from typing import List, Optional
 import httpx
 
 from app.core.config import Settings
+from app.core.logging import logger
 
 
 @dataclass(frozen=True)
@@ -106,8 +107,21 @@ async def fetch_all_users(settings: Settings, search: Optional[str] = None) -> L
                 else:
                     break
         except Exception as e:
-            print(f"Error fetching Authentik users: {e}")
-            # Return whatever users we managed to fetch before the error
+            logger.warning("Error fetching Authentik users via /core/users: {}", e)
+            # Fallback: try manager group members (works with narrower permissions in some setups)
+            fallback_users = await fetch_group_members(
+                settings, settings.AUTHENTIK_MANAGER_GALA_GROUP
+            )
+            if search:
+                s = search.strip().lower()
+                fallback_users = [
+                    u
+                    for u in fallback_users
+                    if s in (u.name or "").lower() or s in (u.email or "").lower()
+                ]
+            # De-duplicate by user PK
+            by_pk = {u.pk: u for u in [*users, *fallback_users]}
+            return list(by_pk.values())
 
     return users
 

@@ -44,6 +44,7 @@ class TableService:
             name=name,
             photo_url=photo_url,
             invite_token=invite_token,
+            owner_id=user_id,
             head=user_id,
             seats=seats,
             persons=[person]

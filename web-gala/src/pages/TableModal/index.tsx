@@ -21,6 +21,12 @@ function calculateOccupiedSeats(persons: Person[]) {
   return persons.reduce((acc, person) => acc + 1 + person.companions.length, 0);
 }
 
+function normalizeId(value: unknown): number | null {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * Determines which modal page to render based on user state, table state, and time constraints.
  * All hooks are called unconditionally at the top to comply with React's Rules of Hooks.
@@ -43,28 +49,60 @@ function useModalPage(tableId: number) {
   if (table === undefined) return <Navigate to="/reserve" />;
 
   const occupied = calculateOccupiedSeats(table.persons);
+  const currentUserId =
+    normalizeId(sessionUser?._id) ?? normalizeId(sessionUser?.sub);
 
-  const inAnyTable = tables.some((t) =>
-    t.persons.some((p) => p.id === sessionUser?._id),
-  );
+  const inAnyTable =
+    currentUserId != null &&
+    tables.some((t) =>
+      t.persons.some((p) => normalizeId(p.id) === currentUserId),
+    );
 
-  const inTable = table.persons.some((p) => p.id === sessionUser?._id);
+  const inTable =
+    currentUserId != null &&
+    table.persons.some((p) => normalizeId(p.id) === currentUserId);
 
-  // Use _id (not sub) for the head comparison - sessionUser is a User object
-  const isHead = sessionUser?._id != null && table.head === sessionUser._id;
+  // Permission parity with backend: admin checks happen server-side; here we allow
+  // local edit mode when the user is head, owner or first person in the table.
+  const tableHeadId = normalizeId(table.head);
+  const tableOwnerId = normalizeId(table.owner_id);
+  const firstPersonId = normalizeId(table.persons[0]?.id);
+  const canManageTable =
+    currentUserId != null &&
+    (tableHeadId === currentUserId ||
+      tableOwnerId === currentUserId ||
+      firstPersonId === currentUserId);
+
+  if (import.meta.env.DEV) {
+    // Debug helper for permission issues in table modal.
+    // eslint-disable-next-line no-console
+    console.log("[TableModal] permission-check", {
+      tableId: table._id,
+      currentUserId,
+      tableHeadId,
+      tableOwnerId,
+      firstPersonId,
+      inAnyTable,
+      inTable,
+      canManageTable,
+      sessionState: state,
+      tablesStatus: time.tablesStatus,
+    });
+  }
 
   // Check if the current user is invited to THIS specific table
   const isInvited =
-    sessionUser?._id != null && (table.invites ?? []).includes(sessionUser._id);
+    currentUserId != null &&
+    (table.invites ?? []).some((uid) => normalizeId(uid) === currentUserId);
 
+  if (canManageTable) {
+    return <EditTable table={table} mutate={mutate} />;
+  }
   if (state !== State.REGISTERED || time.tablesStatus !== TimeStatus.OPEN) {
     return <ViewTable table={table} inTable={false} mutate={mutate} />;
   }
   if (occupied === 0 && !inAnyTable) {
     return <ClaimTable table={table} mutate={mutate} />;
-  }
-  if (isHead) {
-    return <EditTable table={table} mutate={mutate} />;
   }
   if (inTable || (inAnyTable && occupied > 0)) {
     return <ViewTable table={table} inTable={inTable} mutate={mutate} />;

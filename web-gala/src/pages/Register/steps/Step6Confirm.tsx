@@ -73,6 +73,9 @@ export default function Step6Confirm({
   const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;
 
   const totalPersons = 1 + data.companions.length;
+  const totalPhase1Price = config.phase1Price * totalPersons;
+  const totalPhase2Price = config.phase2Price * totalPersons;
+  const totalEventPrice = config.eventPrice * totalPersons;
   const pricePerPerson = userChosePhased
     ? config.phase1Price + config.phase2Price
     : config.eventPrice;
@@ -171,8 +174,8 @@ export default function Step6Confirm({
             <div className="border-white/6 flex items-center justify-between border-b py-2.5">
               <span className="text-xs text-white/40">
                 {userChosePhased
-                  ? `Fase 1 (${config.phase1Price}€)`
-                  : `Pagamento (${config.eventPrice}€)`}
+                  ? `Fase 1 (${totalPhase1Price}€)`
+                  : `Pagamento (${totalEventPrice}€)`}
               </span>
               {data.paymentProofPhase1 ? (
                 <span className="text-[0.6rem] font-bold uppercase tracking-tighter text-green-400">
@@ -185,7 +188,7 @@ export default function Step6Confirm({
             {userChosePhased && (
               <div className="flex items-center justify-between py-2.5">
                 <span className="text-xs text-white/40">
-                  Fase 2 ({config.phase2Price}€)
+                  Fase 2 ({totalPhase2Price}€)
                 </span>
                 {data.paymentProofPhase2 ? (
                   <span className="text-[0.6rem] font-bold uppercase tracking-tighter text-green-400">
