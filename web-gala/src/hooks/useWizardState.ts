@@ -3,9 +3,9 @@ import { useState, useCallback } from "react";
 export interface Companion {
   id?: string;
   name: string;
+  email: string;
   meal: string;
   allergies: string;
-  email?: string;
 }
 
 export type BusOption = "round_trip" | "one_way" | "none";

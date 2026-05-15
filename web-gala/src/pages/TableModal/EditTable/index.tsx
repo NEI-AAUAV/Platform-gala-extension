@@ -372,6 +372,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
           <AcceptPending
             persons={table.persons}
             tableId={table._id}
+            seats={table.seats}
             mutate={mutate}
           />
         </div>

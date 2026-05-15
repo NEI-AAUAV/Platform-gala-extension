@@ -48,7 +48,7 @@ function normalizeCompanionsFromApi(raw: unknown): Companion[] {
 function companionsToApi(companions: Companion[]) {
   return companions.map((c) => ({
     name: c.name,
-    email: c.email || undefined,
+    email: c.email,
     dish: c.meal || null,
     allergies: c.allergies || "",
   }));

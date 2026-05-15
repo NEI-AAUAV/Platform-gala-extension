@@ -1,8 +1,8 @@
 type Companion = {
   name: string;
+  email: string;
   dish: string;
   allergies: string;
-  email?: string | null;
 };
 
 type Person = {

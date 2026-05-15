@@ -18,12 +18,14 @@ type RequesterProps = {
   person: Person;
   tableId: number;
   mutate: () => void;
+  isFull: boolean;
 };
 
 export default function Requester({
   person,
   tableId,
   mutate,
+  isFull,
 }: Readonly<RequesterProps>) {
   const { neiUser } = useNEIUser(person.id);
   const rejectConfirmModalRef = useRef<HTMLDialogElement>(null);
@@ -60,7 +62,9 @@ export default function Requester({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-light-gold p-1"
+              disabled={isFull}
+              title={isFull ? "Mesa cheia" : undefined}
+              className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-light-gold p-1 disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => acceptGuest(person.id)}
             >
               <FontAwesomeIcon icon={faCheck} />

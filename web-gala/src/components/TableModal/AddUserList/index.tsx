@@ -28,6 +28,8 @@ export default function AddUserList({
         <AddUser
           key={field.id}
           id={-1}
+          setName={(name) => setValue(`companions.${index}.name`, name)}
+          setEmail={(email) => setValue(`companions.${index}.email`, email)}
           setDish={(dish) => setValue(`companions.${index}.dish`, dish)}
           setAllergies={(allergies) =>
             setValue(`companions.${index}.allergies`, allergies)
@@ -45,6 +47,8 @@ export default function AddUserList({
         onClick={() => {
           if (fields.length >= freeSeats - 1) return;
           append({
+            name: "",
+            email: "",
             dish: "NOR",
             allergies: "",
           });

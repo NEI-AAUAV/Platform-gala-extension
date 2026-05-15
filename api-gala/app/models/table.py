@@ -11,9 +11,9 @@ class DishType(str, Enum):
 
 class Companion(BaseModel):
     name: str
+    email: str
     dish: Optional[DishType] = None
     allergies: str = ""
-    email: Optional[str] = None  # For future account linking
 
     @validator("dish", pre=True)
     def normalize_dish(cls, value):

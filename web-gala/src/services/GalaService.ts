@@ -94,9 +94,9 @@ type VoteCategoryCast = {
 
 export type AdminCompanionInput = {
   name: string;
+  email: string;
   dish?: string;
   allergies?: string;
-  email?: string;
 };
 
 export type AdminCreateRegistrationBody = {

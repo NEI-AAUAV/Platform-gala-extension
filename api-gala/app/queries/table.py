@@ -12,7 +12,13 @@ KEY_PERSONS = "$persons"
 
 num_confirmed_companions = {
     KEY_REDUCE: {
-        KEY_INPUT: KEY_PERSONS,
+        KEY_INPUT: {
+            "$filter": {
+                KEY_INPUT: KEY_PERSONS,
+                "as": "person",
+                "cond": "$$person.confirmed",
+            }
+        },
         KEY_INITIAL_VALUE: 0,
         KEY_IN: {KEY_ADD: [KEY_VALUE, {KEY_SIZE: KEY_COMPANIONS}]},
     },

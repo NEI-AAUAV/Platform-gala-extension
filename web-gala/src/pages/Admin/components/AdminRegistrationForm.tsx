@@ -100,9 +100,9 @@ export default function AdminRegistrationForm({
       has_payed: hasPayed,
       companions: companions.map((c) => ({
         name: c.name,
+        email: c.email,
         dish: c.dish || undefined,
         allergies: c.allergies || undefined,
-        email: c.email || undefined,
       })),
     };
     await GalaService.admin.editRegistration(userToEdit._id, body);
@@ -128,9 +128,9 @@ export default function AdminRegistrationForm({
       phased_payment: phasedPayment,
       companions: companions.map((c) => ({
         name: c.name,
+        email: c.email,
         dish: c.dish || undefined,
         allergies: c.allergies || undefined,
-        email: c.email || undefined,
       })),
     };
     await GalaService.admin.createRegistration(body);

@@ -674,7 +674,7 @@ async def test_reserve_table_full_companions(
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
 
     companions = [
-        Companion(name="", dish=DishType.NORMAL),
+        Companion(name="", email="", dish=DishType.NORMAL),
     ]
     form = TableReservationForm(dish=DishType.NORMAL, companions=companions)
     response = await client.post(
@@ -713,8 +713,8 @@ async def test_reserve_table_too_many_companions(
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
 
     companions = [
-        Companion(name="", dish=DishType.NORMAL),
-        Companion(name="", dish=DishType.NORMAL),
+        Companion(name="", email="", dish=DishType.NORMAL),
+        Companion(name="", email="", dish=DishType.NORMAL),
     ]
     form = TableReservationForm(dish=DishType.NORMAL, companions=companions)
     response = await client.post(
@@ -1067,7 +1067,7 @@ async def test_confirm_table_full_companions(
     test_table2.persons = [
         dummy_person(id=0, confirmed=True),
         dummy_person(
-            id=2, confirmed=False, companions=[Companion(name="", dish=DishType.NORMAL)]
+            id=2, confirmed=False, companions=[Companion(name="", email="", dish=DishType.NORMAL)]
         ),
     ]
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
@@ -1265,7 +1265,7 @@ async def test_transfer_table_full_companions(
     test_table2.persons = [
         dummy_person(id=0, confirmed=True),
         dummy_person(
-            id=1, confirmed=False, companions=[Companion(name="", dish=DishType.NORMAL)]
+            id=1, confirmed=False, companions=[Companion(name="", email="", dish=DishType.NORMAL)]
         ),
         dummy_person(id=2, confirmed=True),
     ]
@@ -1822,7 +1822,7 @@ async def test_merge_table_without_space(
         persons=[
             dummy_person(id=1, confirmed=True),
             dummy_person(
-                id=2, confirmed=True, companions=[Companion(name="", dish=DishType.NORMAL)]
+                id=2, confirmed=True, companions=[Companion(name="", email="", dish=DishType.NORMAL)]
             ),
         ],
     )
@@ -1885,7 +1885,7 @@ async def test_merge_table_with_space(
         persons=[
             dummy_person(id=1, confirmed=True),
             dummy_person(
-                id=2, confirmed=False, companions=[Companion(name="", dish=DishType.NORMAL)]
+                id=2, confirmed=False, companions=[Companion(name="", email="", dish=DishType.NORMAL)]
             ),
         ],
     )
