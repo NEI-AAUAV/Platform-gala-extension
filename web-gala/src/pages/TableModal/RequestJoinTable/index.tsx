@@ -24,6 +24,8 @@ type FormValues = {
   dish: "NOR" | "VEG";
   allergies: string;
   companions: {
+    name: string;
+    email: string;
     dish: "NOR" | "VEG";
     allergies: string;
   }[];
@@ -37,9 +39,9 @@ export default function RequestJoinTable({
   const { neiUser } = useNEIUser(table.head);
   const methods = useForm<FormValues>({
     defaultValues: {
-      dish: "NOR",
+      dish: "NOR" as const,
       allergies: "",
-      companions: [],
+      companions: [] as { name: string; email: string; dish: "NOR" | "VEG"; allergies: string }[],
     },
   });
   const navigate = useNavigate();

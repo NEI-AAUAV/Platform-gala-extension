@@ -11,6 +11,7 @@ import useTable from "@/hooks/tableHooks/useTable";
 import EditTable from "./EditTable";
 import ViewTable from "./ViewTable";
 import ClaimTable from "./ClaimTable";
+import RequestJoinTable from "./RequestJoinTable";
 
 type TableModalProps = {
   readonly tableId: number;
@@ -75,7 +76,7 @@ function useModalPage(tableId: number) {
       <ViewTable table={table} inTable={false} mutate={mutate} isInvited />
     );
   }
-  return <ViewTable table={table} inTable={false} mutate={mutate} />;
+  return <RequestJoinTable table={table} mutate={mutate} />;
 }
 
 function useModal() {
