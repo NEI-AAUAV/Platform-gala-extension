@@ -1,4 +1,6 @@
 fileignoreconfig:
+- filename: api-gala/poetry.lock
+  checksum: fbb4ce3cd660334c7d5061079e6a4eb0eff96af4f3e6a86b253b70a86344cb75
 - filename: api-gala/app/queries/table.py
   checksum: 09d4fae7c7ca46628c82e19746774540e7c991837c5a12d03a63d1cddbd23058
 - filename: web-gala/src/pages/Admin/VoteCategories.tsx
