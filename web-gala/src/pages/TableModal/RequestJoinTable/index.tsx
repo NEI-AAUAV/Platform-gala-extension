@@ -41,7 +41,12 @@ export default function RequestJoinTable({
     defaultValues: {
       dish: "NOR" as const,
       allergies: "",
-      companions: [] as { name: string; email: string; dish: "NOR" | "VEG"; allergies: string }[],
+      companions: [] as {
+        name: string;
+        email: string;
+        dish: "NOR" | "VEG";
+        allergies: string;
+      }[],
     },
   });
   const navigate = useNavigate();

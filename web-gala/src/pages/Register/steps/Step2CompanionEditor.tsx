@@ -106,6 +106,7 @@ function CompanionCard({
         </div>
 
         <div className="flex flex-col gap-1.5">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
             htmlFor={`companion-email-${index}`}
             className="flex items-center gap-1.5 text-[0.6rem] font-semibold uppercase tracking-widest text-white/40"
