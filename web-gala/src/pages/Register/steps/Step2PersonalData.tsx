@@ -45,37 +45,27 @@ export default function Step2PersonalData({
   const { sessionUser } = useSessionUser();
   const [error, setError] = useState<string | null>(null);
 
-  const isAlreadyRegistered = !!sessionUser?.nmec;
-
-  // Sync wizard state with session user if already registered and data is missing
+  // Pre-fill from existing registration if local state is empty
   useEffect(() => {
-    if (isAlreadyRegistered && !data.nmec && sessionUser?.nmec) {
+    if (!data.nmec && sessionUser?.nmec) {
       onUpdate({
         nmec: String(sessionUser.nmec),
         year: sessionUser.matriculation ?? null,
       });
     }
-  }, [isAlreadyRegistered, sessionUser, data.nmec, onUpdate]);
+  }, [sessionUser, data.nmec, onUpdate]);
 
   const fullName = [name, surname].filter(Boolean).join(" ");
 
   const handleNext = async () => {
     setError(null);
 
-    const nmecToValidate = isAlreadyRegistered
-      ? String(sessionUser?.nmec ?? "")
-      : data.nmec;
-
-    if (!nmecToValidate.trim() || !/^\d+$/.test(nmecToValidate)) {
+    if (!data.nmec.trim() || !/^\d+$/.test(data.nmec)) {
       setError("Número mecanográfico inválido - deve conter apenas dígitos.");
       return;
     }
 
-    const yearToValidate = isAlreadyRegistered
-      ? sessionUser?.matriculation ?? null
-      : data.year;
-
-    if (yearToValidate === undefined) {
+    if (data.year === undefined) {
       setError("Seleciona o teu ano.");
       return;
     }
@@ -105,12 +95,9 @@ export default function Step2PersonalData({
         <IdentitySection
           fullName={fullName}
           email={email}
-          isAlreadyRegistered={isAlreadyRegistered}
         />
         <FormSection
           data={data}
-          sessionUser={sessionUser}
-          isAlreadyRegistered={isAlreadyRegistered}
           onUpdate={onUpdate}
         />
       </div>
@@ -160,7 +147,7 @@ export default function Step2PersonalData({
               className="animate-spin text-xs"
             />
           )}
-          {isAlreadyRegistered ? "Continuar →" : "Registar e Continuar →"}
+          Continuar →
         </button>
       </div>
     </motion.div>
@@ -170,11 +157,9 @@ export default function Step2PersonalData({
 function IdentitySection({
   fullName,
   email,
-  isAlreadyRegistered,
 }: Readonly<{
   fullName: string;
   email?: string;
-  isAlreadyRegistered: boolean;
 }>) {
   return (
     <div className="flex flex-col gap-4">
@@ -193,14 +178,6 @@ function IdentitySection({
         </div>
         <IdentityRow icon={faUser} label="Nome" value={fullName || "—"} />
         <IdentityRow icon={faEnvelope} label="Email" value={email || "—"} />
-        {isAlreadyRegistered && (
-          <div className="mt-2 rounded-lg border border-dark-gold/20 bg-dark-gold/10 px-4 py-3">
-            <p className="text-xs text-dark-gold/80">
-              Já tens inscrição efetuada. Os dados abaixo são apenas para
-              consulta.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -208,25 +185,11 @@ function IdentitySection({
 
 function FormSection({
   data,
-  sessionUser,
-  isAlreadyRegistered,
   onUpdate,
 }: Readonly<{
   data: WizardData;
-  sessionUser: ReturnType<typeof useSessionUser>["sessionUser"];
-  isAlreadyRegistered: boolean;
   onUpdate: (updates: Partial<WizardData>) => void;
 }>) {
-  let displayNmec = data.nmec;
-  if (!displayNmec && isAlreadyRegistered) {
-    displayNmec = String(sessionUser?.nmec ?? "");
-  }
-
-  let displayYear = data.year;
-  if (displayYear === null && isAlreadyRegistered) {
-    displayYear = sessionUser?.matriculation ?? null;
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -249,11 +212,10 @@ function FormSection({
             id="nmec-input"
             type="text"
             inputMode="numeric"
-            value={displayNmec}
+            value={data.nmec}
             onChange={(e) => onUpdate({ nmec: e.target.value })}
-            disabled={isAlreadyRegistered}
             placeholder="Ex: 123456"
-            className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
           />
         </div>
 
@@ -263,15 +225,14 @@ function FormSection({
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {YEAR_OPTIONS.map(([label, value]) => {
-              const isSelected = displayYear === value;
+              const isSelected = data.year === value;
               return (
                 <button
                   key={String(value)}
                   type="button"
-                  disabled={isAlreadyRegistered}
                   onClick={() => onUpdate({ year: value })}
                   className={[
-                    "rounded-lg border px-3 py-2 text-xs font-semibold transition-all disabled:cursor-not-allowed",
+                    "rounded-lg border px-3 py-2 text-xs font-semibold transition-all",
                     isSelected
                       ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
                       : "border-white/10 text-white/40 hover:border-white/25 hover:text-white/60",
