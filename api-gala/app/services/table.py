@@ -214,6 +214,7 @@ class TableService:
         table_doc = await Table.get_collection(db).find_one({"_id": target_id})
         if not (table_doc and user.id in (table_doc.get("invites") or [])):
             raise ValueError("Não tens convite para essa mesa.")
+        needed = 1 + len(user.companions)
         person = TablePerson(
             id=user.id,
             allergies=user.food_allergies or "",
@@ -221,10 +222,36 @@ class TableService:
             confirmed=True,
             companions=user.companions,
         )
-        await Table.get_collection(db).update_one(
-            {"_id": target_id},
+        updated = await Table.get_collection(db).find_one_and_update(
+            {
+                "_id": target_id,
+                "invites": user.id,
+                "persons.id": {"$ne": user.id},
+                "$expr": {
+                    "$lte": [
+                        {
+                            "$add": [
+                                needed,
+                                {
+                                    "$sum": {
+                                        "$map": {
+                                            "input": "$persons",
+                                            "as": "p",
+                                            "in": {"$add": [1, {"$size": "$$p.companions"}]},
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                        "$seats",
+                    ]
+                },
+            },
             {"$push": {"persons": person.dict()}, "$pull": {"invites": user.id}},
+            return_document=ReturnDocument.AFTER,
         )
+        if not updated:
+            raise ValueError("Mesa cheia ou convite inválido.")
         await User.get_collection(db).update_one(
             {"_id": user.id}, {"$set": {"table_id": target_id}}
         )
