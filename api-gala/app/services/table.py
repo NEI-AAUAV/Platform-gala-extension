@@ -6,6 +6,8 @@ from app.services.storage import storage_client
 from app.utils import generate_invite_token
 from pymongo import ReturnDocument
 
+PERSONS_ID_FIELD = "persons.id"
+
 
 async def _user_dish(user: User, db: DBType) -> DishType:
     if not user.meal_option:
@@ -125,7 +127,7 @@ class TableService:
         updated_dict = await collection.find_one_and_update(
             {
                 "_id": table.id,
-                "persons.id": {"$ne": user_id},
+                PERSONS_ID_FIELD: {"$ne": user_id},
                 "$expr": {
                     "$lte": [
                         {
@@ -226,7 +228,7 @@ class TableService:
             {
                 "_id": target_id,
                 "invites": user.id,
-                "persons.id": {"$ne": user.id},
+                PERSONS_ID_FIELD: {"$ne": user.id},
                 "$expr": {
                     "$lte": [
                         {
@@ -293,7 +295,7 @@ class TableService:
             return
         table_id = user_dict["table_id"]
         await Table.get_collection(db).update_one(
-            {"_id": table_id, "persons.id": user_id},
+            {"_id": table_id, PERSONS_ID_FIELD: user_id},
             {"$set": {"persons.$.companions": companions}},
         )
 

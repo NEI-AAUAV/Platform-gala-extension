@@ -34,6 +34,7 @@ class TableReservationForm(BaseModel):
     responses={
         **auth_responses,
         400: {"description": "There aren't enough seats for the companions"},
+        403: {"description": "Only gala registrants with active registration can reserve tables"},
         404: {"description": "Table not found"},
         409: {"description": "Table already full or person already belongs to a table"},
         500: {"description": "Internal server error"},
