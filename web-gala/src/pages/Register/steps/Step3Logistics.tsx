@@ -5,6 +5,7 @@ import {
   faUtensils,
   faLeaf,
   faFish,
+  faSeedling,
   faBan,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -229,7 +230,7 @@ function PersonMealSection({
             {mealOptions.map((opt) => {
               const isSelected = meal === opt.id;
               const dishIconMap: Record<string, typeof faUtensils> = {
-                VEG: faLeaf,
+                VEG: faSeedling,
                 VEGAN: faLeaf,
                 FISH: faFish,
               };

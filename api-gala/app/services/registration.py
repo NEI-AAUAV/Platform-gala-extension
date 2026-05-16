@@ -17,24 +17,33 @@ _deadline_policy_last_run: Optional[datetime] = None
 
 
 class RegistrationService:
+    _DISH_ALIASES: Dict[str, str] = {
+        "NOR": "NOR", "NORMAL": "NOR", "CARNE": "NOR",
+        "VEG": "VEG", "VEGETARIAN": "VEG", "VEGETARIANO": "VEG",
+        "FISH": "FISH", "PEIXE": "FISH",
+        "VEGAN": "VEGAN",
+    }
+
     @staticmethod
-    def _normalize_companions_payload(companions: Any) -> list:
+    def _resolve_dish(raw: str, meal_to_dish: Dict[str, str]) -> Optional[str]:
+        key = raw.strip().upper()
+        return RegistrationService._DISH_ALIASES.get(key) or meal_to_dish.get(key)
+
+    @staticmethod
+    def _normalize_companions_payload(companions: Any, config=None) -> list:
         if not isinstance(companions, list):
             return []
+
+        meal_to_dish: Dict[str, str] = (
+            {m.id.strip().upper(): m.dish_type for m in config.meals} if config else {}
+        )
 
         normalized = []
         for c in companions:
             if not isinstance(c, dict):
                 continue
             raw_dish = c.get("dish", c.get("meal"))
-            dish = None
-            if isinstance(raw_dish, str):
-                key = raw_dish.strip().upper()
-                if key in ("NOR", "NORMAL", "CARNE"):
-                    dish = "NOR"
-                elif key in ("VEG", "VEGETARIAN", "VEGETARIANO"):
-                    dish = "VEG"
-
+            dish = RegistrationService._resolve_dish(raw_dish, meal_to_dish) if isinstance(raw_dish, str) else None
             normalized.append(
                 {
                     "name": str(c.get("name", "")).strip(),
@@ -217,18 +226,10 @@ class RegistrationService:
             update_data["phone"] = data.get("phone")
             if "nmec" in data:
                 update_data["nmec"] = data["nmec"]
-            if "companions" in data:
-                update_data["companions"] = RegistrationService._normalize_companions_payload(
-                    data["companions"]
-                )
         elif step == 3:
             update_data["bus_option"] = BusOption(data.get("bus_option", "NONE"))
             update_data["meal_option"] = data.get("meal_option")
             update_data["food_allergies"] = data.get("food_allergies")
-            if "companions" in data:
-                update_data["companions"] = RegistrationService._normalize_companions_payload(
-                    data["companions"]
-                )
         elif step == 4:
             if "payment_proof_url" in data:
                 update_data["payment_proof_url"] = data["payment_proof_url"]
@@ -240,14 +241,20 @@ class RegistrationService:
     @staticmethod
     async def update_step(db: DBType, user_id: int, step: int, data: Dict[str, Any]) -> User:
         collection = User.get_collection(db)
-        
+
         user = await RegistrationService.get_user_registration(db, user_id)
         if not user:
             raise ValueError("Utilizador não encontrado. Por favor inicia sessão novamente.")
 
         update_data = {"registration_step": max(user.registration_step, step)}
-        
+
         RegistrationService._apply_step_data(step, data, update_data)
+
+        if step in (2, 3) and "companions" in data:
+            config = await ConfigService.get_config(db)
+            update_data["companions"] = RegistrationService._normalize_companions_payload(
+                data["companions"], config
+            )
 
         if step == 5:
             await RegistrationService._handle_step_5(db, user, user_id, data)
@@ -255,11 +262,10 @@ class RegistrationService:
         await collection.update_one({"_id": user_id}, {"$set": update_data})
 
         if step in (2, 3) and "companions" in data:
-            await TableService.sync_companions(
-                db,
-                user_id,
-                update_data.get("companions", []),
-            )
+            await TableService.sync_companions(db, user_id, update_data.get("companions", []))
+
+        if step == 3 and "meal_option" in update_data:
+            await TableService.sync_user_dish(db, user_id)
 
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)

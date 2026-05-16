@@ -246,6 +246,18 @@ class TableService:
         )
 
     @staticmethod
+    async def sync_user_dish(db: DBType, user_id: int) -> None:
+        user_dict = await User.get_collection(db).find_one({"_id": user_id})
+        if not user_dict or not user_dict.get("table_id"):
+            return
+        user = User.parse_obj(user_dict)
+        dish = await _user_dish(user, db)
+        await Table.get_collection(db).update_one(
+            {"_id": user.table_id, "persons.id": user_id},
+            {"$set": {"persons.$.dish": dish.value}},
+        )
+
+    @staticmethod
     async def create_empty_table(db: DBType, name: str, seats: int) -> Table:
         new_id = await TableService._get_next_id(db)
         table = Table(

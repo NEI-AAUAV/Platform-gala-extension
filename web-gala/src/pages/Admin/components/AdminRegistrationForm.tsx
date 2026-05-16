@@ -26,6 +26,15 @@ export default function AdminRegistrationForm({
   const [useExisting, setUseExisting] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<number | "">("");
 
+  const { config } = useRegistrationConfig();
+
+  const resolveDishId = (rawDish: string): string => {
+    if (!rawDish) return "";
+    if (config.mealOptions.find((m) => m.id === rawDish)) return rawDish;
+    const upper = rawDish.toUpperCase();
+    return config.mealOptions.find((m) => m.dishType === upper)?.id ?? rawDish;
+  };
+
   const [name, setName] = useState(userToEdit?.name || "");
   const [email, setEmail] = useState(userToEdit?.email || "");
   const [nmec, setNmec] = useState(userToEdit?.nmec?.toString() || "");
@@ -51,18 +60,21 @@ export default function AdminRegistrationForm({
       _id: string;
     }[]
   >(
-    userToEdit?.companions?.map((c) => ({
-      name: c.name,
-      dish: c.dish || "",
-      allergies: c.allergies || "",
-      email: c.email || "",
-      _id: crypto.randomUUID(),
-    })) || [],
+    userToEdit?.companions?.map((c) => {
+      const companion = c as Companion & { meal?: string };
+      const rawDish = companion.dish || companion.meal || "";
+      return {
+        name: c.name,
+        dish: resolveDishId(rawDish),
+        allergies: c.allergies || "",
+        email: c.email || "",
+        _id: crypto.randomUUID(),
+      };
+    }) || [],
   );
 
   const [saving, setSaving] = useState(false);
   const toast = useAppToast();
-  const { config } = useRegistrationConfig();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);

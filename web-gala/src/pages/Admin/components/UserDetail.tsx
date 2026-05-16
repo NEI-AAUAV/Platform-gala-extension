@@ -14,7 +14,8 @@ import {
   faEnvelope,
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
-import { FrangoIcon } from "@/assets/icons";
+import { iconMap } from "@/components/TableModal/personUtils";
+import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { INPUT_CLS } from "./AdminUI";
 
 const BUS_LABEL: Record<string, string> = {
@@ -23,19 +24,7 @@ const BUS_LABEL: Record<string, string> = {
   NONE: "Sem autocarro",
 };
 
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
 const red = { color: "#DC3545" };
-
-const dishIcon = new Map<string, React.ReactNode>([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  [
-    "VEG",
-    <span key="VEG" style={green}>
-      🥬
-    </span>,
-  ], // using simple emoji/icon representation as faSeedling might not be imported if we don't need to bloat
-]);
 
 function ProofRow({
   label,
@@ -204,6 +193,12 @@ export default function UserDetail({
   readonly onRejectProof: (phase: number) => void;
   readonly onAssignTable: (tableId: string | null) => void;
 }) {
+  const { config } = useRegistrationConfig();
+  const mealLabel =
+    config.mealOptions.find((m) => m.id === user.meal_option)?.label ??
+    user.meal_option ??
+    "—";
+
   const fallbackPhone =
     user.phone?.trim() ||
     (user as User & { phone_number?: string; contact_phone?: string })
@@ -282,8 +277,11 @@ export default function UserDetail({
         />
         <DetailRow
           label="Prato"
-          value={user.meal_option ?? "—"}
-          icon={dishIcon.get(user.meal_option ?? "")}
+          value={mealLabel}
+          icon={iconMap.get(
+            config.mealOptions.find((m) => m.id === user.meal_option)
+              ?.dishType ?? "",
+          )}
         />
         {user.food_allergies && (
           <div className="col-span-2">
@@ -305,7 +303,14 @@ export default function UserDetail({
           <div className="flex flex-col gap-1.5">
             {user.companions.map((c, i) => {
               const companion = c as Companion & { meal?: string };
-              const companionDish = companion.dish || companion.meal || "—";
+              const companionDishId = companion.dish || companion.meal || "—";
+              const companionDish =
+                config.mealOptions.find((m) => m.id === companionDishId)
+                  ?.label ??
+                config.mealOptions.find(
+                  (m) => m.dishType === companionDishId.toUpperCase(),
+                )?.label ??
+                companionDishId;
               const companionAllergies = companion.allergies || "—";
               return (
                 <div
@@ -322,7 +327,7 @@ export default function UserDetail({
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    {dishIcon.get(companionDish)}
+                    {iconMap.get(companionDishId)}
                   </span>
                   <span className="text-white/65 text-xs">
                     Prato: {companionDish}
