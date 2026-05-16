@@ -223,7 +223,7 @@ async def test_handle_step_5_joins_via_invite():
     from app.models.user import User
 
     user = User.parse_obj(_user_doc())
-    db, _ = _make_db()
+    db, _ = _make_db({"_id": 10, "invites": [1]})
 
     with patch("app.services.registration.RegistrationService._check_tables_open", new_callable=AsyncMock), \
          patch("app.services.registration.TableService.join_via_invite", new_callable=AsyncMock) as mock_join:
