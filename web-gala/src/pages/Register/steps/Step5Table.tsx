@@ -108,6 +108,19 @@ export default function Step5Table({
   const { time } = useTime();
   const [searchTerm, setSearchTerm] = useState("");
 
+  const maxCount = limits?.maxTablesCount ?? tables.length;
+  const slots = useMemo(() => buildSlots(tables, maxCount), [tables, maxCount]);
+  const filteredSlots = useMemo(() => {
+    if (!searchTerm) return slots;
+    return slots.map((t) => {
+      if (!t) return null;
+      return t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t._id.toString().includes(searchTerm)
+        ? t
+        : null;
+    });
+  }, [slots, searchTerm]);
+
   const tablesStatus = time?.tablesStatus;
   const tablesNotOpen =
     tablesStatus === undefined || tablesStatus === TimeStatus.OPENING;
@@ -165,20 +178,6 @@ export default function Step5Table({
       </motion.div>
     );
   }
-
-  const maxCount = limits?.maxTablesCount ?? tables.length;
-  const slots = useMemo(() => buildSlots(tables, maxCount), [tables, maxCount]);
-
-  const filteredSlots = useMemo(() => {
-    if (!searchTerm) return slots;
-    return slots.map((t) => {
-      if (!t) return null;
-      return t.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t._id.toString().includes(searchTerm)
-        ? t
-        : null;
-    });
-  }, [slots, searchTerm]);
 
   const selectedTable =
     data.tableId && data.tableId !== "new" && data.tableId !== "none"
