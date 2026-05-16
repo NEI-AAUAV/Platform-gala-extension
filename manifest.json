@@ -13,14 +13,5 @@
       "description": "Manage gala events"
     }
   ],
-  "nav": [
-    {
-      "label": "Gala",
-      "href": "/gala",
-      "requiresScopes": [
-        "manager-gala",
-        "admin"
-      ]
-    }
-  ]
+  "nav": []
 }
