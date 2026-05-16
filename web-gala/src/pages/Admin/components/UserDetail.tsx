@@ -314,8 +314,9 @@ export default function UserDetail({
               const companion = c as Companion & { meal?: string };
               const companionDishId = companion.dish || companion.meal || "—";
               const companionDish =
-                config.mealOptions.find((m) => m.id === companionDishId)
-                  ?.label ?? companionDishId;
+                config.mealOptions.find((m) => m.id === companionDishId)?.label ??
+                config.mealOptions.find((m) => m.dishType === companionDishId.toUpperCase())?.label ??
+                companionDishId;
               const companionAllergies = companion.allergies || "—";
               return (
                 <div
