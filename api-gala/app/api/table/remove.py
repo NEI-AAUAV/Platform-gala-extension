@@ -5,6 +5,7 @@ from typing import Any
 from app.core.db.types import DBType
 
 from app.models.table import Table
+from app.models.user import User
 from app.api.auth import api_nei_auth, AuthData, auth_responses
 from app.core.db import DatabaseDep
 from app.core.logging import logger
@@ -74,6 +75,12 @@ async def common(
         logger.error(e)
 
         raise HTTPException(status_code=500, detail="Something went wrong")
+
+    # Keep user state consistent with table membership removal.
+    await User.get_collection(db).update_one(
+        {"_id": uid, "table_id": table_id},
+        {"$unset": {"table_id": ""}},
+    )
 
     table = Table.parse_obj(res)
     return sanitize_table(auth, table)
