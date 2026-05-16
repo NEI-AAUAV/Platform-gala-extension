@@ -1,6 +1,8 @@
 fileignoreconfig:
 - filename: compose.override.prod.yml
   checksum: a4b33252591191322474e3d0073a6967ea46ccfbada2bc525ef5b6ca1dd5faef
+- filename: api-gala/app/services/registration.py
+  checksum: 9944fc16bac8e33d53c405175d6109d1aa2479a81477572a373135229ab2f934
 - filename: api-gala/poetry.lock
   checksum: fbb4ce3cd660334c7d5061079e6a4eb0eff96af4f3e6a86b253b70a86344cb75
 - filename: api-gala/app/queries/table.py
