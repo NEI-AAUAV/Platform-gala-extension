@@ -13,4 +13,6 @@ fileignoreconfig:
   checksum: 9f17257af57770e8ccc0f81658a4ebe12e0acadc1a1036176f2299f834252b29
 - filename: web-gala/src/hooks/useWizardState.ts
   checksum: 3bcd78f767dc511b95cb20b1ae2ce0d94b533778f5e6833997f776aada6b6276
+- filename: web-gala/src/pages/Reserve/index.tsx
+  checksum: 8f6d8477604a6c1d076ea38eef8c438402f956514c64eb23ade45bea47ff9162
 version: "1.0"
