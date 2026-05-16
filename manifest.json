@@ -13,5 +13,11 @@
       "description": "Manage gala events"
     }
   ],
-  "nav": []
+  "nav": [
+    {
+      "label": "Jantar Gala",
+      "href": "/gala",
+      "branded": true
+    }
+  ]
 }
