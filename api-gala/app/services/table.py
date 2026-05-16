@@ -4,6 +4,7 @@ from app.models.table import Table, TablePerson, DishType
 from app.models.user import User
 from app.services.storage import storage_client
 from app.utils import generate_invite_token
+from pymongo import ReturnDocument
 
 
 async def _user_dish(user: User, db: DBType) -> DishType:
@@ -121,15 +122,39 @@ class TableService:
         if table.head is None:
             update_op["$set"] = {"head": user_id}
 
-        await collection.update_one(
-            {"_id": table.id},
-            update_op
+        updated_dict = await collection.find_one_and_update(
+            {
+                "_id": table.id,
+                "persons.id": {"$ne": user_id},
+                "$expr": {
+                    "$lte": [
+                        {
+                            "$add": [
+                                needed,
+                                {
+                                    "$sum": {
+                                        "$map": {
+                                            "input": "$persons",
+                                            "as": "p",
+                                            "in": {"$add": [1, {"$size": "$$p.companions"}]},
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                        "$seats",
+                    ]
+                },
+            },
+            update_op,
+            return_document=ReturnDocument.AFTER,
         )
+        if not updated_dict:
+            raise ValueError("Table is full.")
         
         await user_coll.update_one({"_id": user_id}, {"$set": {"table_id": table.id}})
-        
+
         # Return updated table
-        updated_dict = await collection.find_one({"_id": table.id})
         return Table.parse_obj(updated_dict)
 
     @staticmethod
