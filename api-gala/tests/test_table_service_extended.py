@@ -124,8 +124,8 @@ async def test_join_via_invite_success():
 
     await TableService.join_via_invite(db, user, target_id=1)
 
-    table_coll.update_one.assert_called_once()
-    call_update = table_coll.update_one.call_args[0][1]
+    table_coll.find_one_and_update.assert_called_once()
+    call_update = table_coll.find_one_and_update.call_args[0][1]
     assert "$push" in call_update and "persons" in call_update["$push"]
     assert call_update["$pull"] == {"invites": 1}
     user_coll.update_one.assert_called_once()

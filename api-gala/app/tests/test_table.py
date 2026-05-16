@@ -16,6 +16,7 @@ from app.models.table import Companion, DishType, Table, TablePerson
 from ._utils import (
     auth_data,
     create_test_user,
+    create_registered_test_user,
     mark_open_timeslot,
     mark_closed_timeslot,
 )
@@ -539,7 +540,7 @@ async def test_reserve_table_not_found(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     form = TableReservationForm(dish=DishType.NORMAL, companions=[])
     response = await client.post(
         f"{settings.API_V1_STR}/table/1/reserve", json=form.dict()
@@ -557,7 +558,7 @@ async def test_reserve_table_empty(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     await Table.get_collection(db).insert_one(test_table.dict(by_alias=True))
 
     form = TableReservationForm(dish=DishType.NORMAL, companions=[])
@@ -591,7 +592,7 @@ async def test_reserve_table_non_empty(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     test_table2 = test_table.copy()
     test_table2.head = 1
     test_table2.persons = [
@@ -629,7 +630,7 @@ async def test_reserve_table_already_in_another_table(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     test_table2 = test_table.copy()
     test_table2.head = 1
     test_table2.persons = [
@@ -668,7 +669,7 @@ async def test_reserve_table_full_companions(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     test_table2 = test_table.copy()
     test_table2.seats = 2
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
@@ -707,7 +708,7 @@ async def test_reserve_table_too_many_companions(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_test_user(id=0, db=db)
+    await create_registered_test_user(id=0, db=db)
     test_table2 = test_table.copy()
     test_table2.seats = 2
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
