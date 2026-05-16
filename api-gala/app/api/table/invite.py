@@ -81,6 +81,7 @@ async def accept_invite(
         raise HTTPException(status_code=400, detail="You must complete registration before accepting a table invite")
     if not user.registration_active:
         raise HTTPException(status_code=400, detail="Your registration is not active")
+    needed_seats = 1 + len(user.companions)
 
     person = TablePerson(
         id=auth.sub,
@@ -106,7 +107,7 @@ async def accept_invite(
                             }
                         }
                     },
-                    "$seats",
+                    {"$subtract": ["$seats", needed_seats - 1]},
                 ]
             },
         },
