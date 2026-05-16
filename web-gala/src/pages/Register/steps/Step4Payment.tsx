@@ -100,7 +100,9 @@ export default function Step4Payment({
   const isComplete = userChosePhased ? hasPhase1 && hasPhase2 : hasPhase1;
   const phaseLabel = isComplete
     ? "Continuar → Escolher Mesa"
-    : "Avançar sem comprovativo →";
+    : userChosePhased && hasPhase1
+      ? "Continuar → Escolher Mesa"
+      : "Avançar sem comprovativo →";
   const nextButtonLabel = syncing ? "A guardar..." : phaseLabel;
 
   const renderPaymentMethods = () => {

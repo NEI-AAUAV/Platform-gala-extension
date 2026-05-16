@@ -228,20 +228,32 @@ export default function Step6Confirm({
       {renderCompanionsSummary()}
 
       {/* Final Total Summary */}
+      {(() => {
+        const allPaid = userChosePhased
+          ? !!data.paymentProofPhase1 && !!data.paymentProofPhase2
+          : !!data.paymentProofPhase1;
+        const paidAmount = userChosePhased
+          ? (data.paymentProofPhase1 ? totalPhase1Price : 0) +
+            (data.paymentProofPhase2 ? totalPhase2Price : 0)
+          : data.paymentProofPhase1
+            ? totalEventPrice
+            : 0;
+        return (
       <div className="bg-light-gold/6 rounded-xl border border-light-gold/20 p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FontAwesomeIcon
               icon={faCircleCheck}
-              className="text-light-gold/60"
+              className={allPaid ? "text-light-gold/60" : "text-white/25"}
             />
             <div>
               <p className="text-sm font-semibold text-light-gold/80">
-                Total Pago
+                {allPaid ? "Total Pago" : "Total a Pagar"}
               </p>
               <p className="text-xs text-white/40">
                 {totalPersons} pessoa{totalPersons > 1 ? "s" : ""} ×{" "}
                 {pricePerPerson}€
+                {!allPaid && paidAmount > 0 && ` · ${paidAmount}€ enviados`}
               </p>
             </div>
           </div>
@@ -254,6 +266,8 @@ export default function Step6Confirm({
           permanentemente e o teu lugar na mesa ficará reservado.
         </p>
       </div>
+        );
+      })()}
 
       <div className="mt-4 flex items-center justify-between">
         <button
