@@ -109,12 +109,12 @@ async def test_join_table_allows_when_seats_available():
 
     db, user_coll, table_coll = _make_db(user_doc=user_doc, table_doc=table_doc)
     user_coll.find_one.return_value = user_doc
-    # first call → table; second call after update → updated table
-    table_coll.find_one.side_effect = [table_doc, updated_table_doc]
+    table_coll.find_one.return_value = table_doc
+    table_coll.find_one_and_update.return_value = updated_table_doc
 
     result = await TableService.join_table(db, user_id=2, table_id=10)
     assert result is not None
-    table_coll.update_one.assert_called_once()
+    table_coll.find_one_and_update.assert_called_once()
 
 
 @pytest.mark.asyncio

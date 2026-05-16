@@ -4,6 +4,9 @@ from app.models.table import Table, TablePerson, DishType
 from app.models.user import User
 from app.services.storage import storage_client
 from app.utils import generate_invite_token
+from pymongo import ReturnDocument
+
+PERSONS_ID_FIELD = "persons.id"
 
 
 async def _user_dish(user: User, db: DBType) -> DishType:
@@ -121,15 +124,39 @@ class TableService:
         if table.head is None:
             update_op["$set"] = {"head": user_id}
 
-        await collection.update_one(
-            {"_id": table.id},
-            update_op
+        updated_dict = await collection.find_one_and_update(
+            {
+                "_id": table.id,
+                PERSONS_ID_FIELD: {"$ne": user_id},
+                "$expr": {
+                    "$lte": [
+                        {
+                            "$add": [
+                                needed,
+                                {
+                                    "$sum": {
+                                        "$map": {
+                                            "input": "$persons",
+                                            "as": "p",
+                                            "in": {"$add": [1, {"$size": "$$p.companions"}]},
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                        "$seats",
+                    ]
+                },
+            },
+            update_op,
+            return_document=ReturnDocument.AFTER,
         )
+        if not updated_dict:
+            raise ValueError("Table is full.")
         
         await user_coll.update_one({"_id": user_id}, {"$set": {"table_id": table.id}})
-        
+
         # Return updated table
-        updated_dict = await collection.find_one({"_id": table.id})
         return Table.parse_obj(updated_dict)
 
     @staticmethod
@@ -189,6 +216,7 @@ class TableService:
         table_doc = await Table.get_collection(db).find_one({"_id": target_id})
         if not (table_doc and user.id in (table_doc.get("invites") or [])):
             raise ValueError("Não tens convite para essa mesa.")
+        needed = 1 + len(user.companions)
         person = TablePerson(
             id=user.id,
             allergies=user.food_allergies or "",
@@ -196,10 +224,36 @@ class TableService:
             confirmed=True,
             companions=user.companions,
         )
-        await Table.get_collection(db).update_one(
-            {"_id": target_id},
+        updated = await Table.get_collection(db).find_one_and_update(
+            {
+                "_id": target_id,
+                "invites": user.id,
+                PERSONS_ID_FIELD: {"$ne": user.id},
+                "$expr": {
+                    "$lte": [
+                        {
+                            "$add": [
+                                needed,
+                                {
+                                    "$sum": {
+                                        "$map": {
+                                            "input": "$persons",
+                                            "as": "p",
+                                            "in": {"$add": [1, {"$size": "$$p.companions"}]},
+                                        }
+                                    }
+                                },
+                            ]
+                        },
+                        "$seats",
+                    ]
+                },
+            },
             {"$push": {"persons": person.dict()}, "$pull": {"invites": user.id}},
+            return_document=ReturnDocument.AFTER,
         )
+        if not updated:
+            raise ValueError("Mesa cheia ou convite inválido.")
         await User.get_collection(db).update_one(
             {"_id": user.id}, {"$set": {"table_id": target_id}}
         )
@@ -241,7 +295,7 @@ class TableService:
             return
         table_id = user_dict["table_id"]
         await Table.get_collection(db).update_one(
-            {"_id": table_id, "persons.id": user_id},
+            {"_id": table_id, PERSONS_ID_FIELD: user_id},
             {"$set": {"persons.$.companions": companions}},
         )
 
