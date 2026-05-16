@@ -28,6 +28,7 @@ export interface WizardData {
 }
 
 const STORAGE_KEY_PREFIX = "gala-wizard-state";
+const STORAGE_VERSION = "2026";
 
 const defaultData: WizardData = {
   nmec: "",
@@ -46,6 +47,11 @@ const defaultData: WizardData = {
   currentStep: 1,
 };
 
+const TRANSIENT_FIELDS: (keyof WizardData)[] = [
+  "paymentProofPhase1",
+  "paymentProofPhase2",
+];
+
 function storageKey(userId: string | undefined): string {
   return userId ? `${STORAGE_KEY_PREFIX}:${userId}` : STORAGE_KEY_PREFIX;
 }
@@ -54,7 +60,11 @@ function loadData(userId: string | undefined): WizardData {
   try {
     const stored = localStorage.getItem(storageKey(userId));
     if (!stored) return defaultData;
-    return { ...defaultData, ...JSON.parse(stored) };
+    const parsed = JSON.parse(stored);
+    if (parsed._version !== STORAGE_VERSION) return defaultData;
+    const data = { ...defaultData, ...parsed };
+    TRANSIENT_FIELDS.forEach((f) => { (data as Record<string, unknown>)[f] = null; });
+    return data;
   } catch {
     return defaultData;
   }
@@ -67,7 +77,9 @@ export function useWizardState(userId: string | undefined) {
     (updates: Partial<WizardData>) => {
       setData((prev) => {
         const next = { ...prev, ...updates };
-        localStorage.setItem(storageKey(userId), JSON.stringify(next));
+        const toStore: Record<string, unknown> = { ...next, _version: STORAGE_VERSION };
+        TRANSIENT_FIELDS.forEach((f) => delete toStore[f]);
+        localStorage.setItem(storageKey(userId), JSON.stringify(toStore));
         return next;
       });
     },
