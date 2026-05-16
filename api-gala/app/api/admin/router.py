@@ -655,6 +655,9 @@ async def admin_edit_registration(
     if update_data:
         await user_coll.update_one({"_id": user_id}, {"$set": update_data})
 
+    if "meal_option" in update_data:
+        await TableService.sync_user_dish(db, user_id)
+
     result = await user_coll.find_one({"_id": user_id})
     return User.parse_obj(result)
 

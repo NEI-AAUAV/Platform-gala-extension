@@ -261,6 +261,9 @@ class RegistrationService:
                 update_data.get("companions", []),
             )
 
+        if step == 3 and "meal_option" in update_data:
+            await TableService.sync_user_dish(db, user_id)
+
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)
 

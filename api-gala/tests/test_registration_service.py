@@ -291,7 +291,8 @@ async def test_update_step_3_syncs_companions():
     companions = [{"name": "Bob", "dish": "VEG", "allergies": "gluten"}]
     normalized = [{"name": "Bob", "dish": "VEG", "allergies": "gluten", "email": None}]
 
-    with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync:
+    with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
+         patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock):
         await RegistrationService.update_step(db, user_id=1, step=3, data={"companions": companions})
         mock_sync.assert_awaited_once_with(db, 1, normalized)
 
@@ -304,7 +305,8 @@ async def test_update_step_no_sync_without_companions_key():
     updated_doc = _user_doc(bus_option="ROUND_TRIP")
     db, _ = _make_db(user_doc, updated_doc)
 
-    with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync:
+    with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
+         patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock):
         await RegistrationService.update_step(db, user_id=1, step=3, data={"bus_option": "ROUND_TRIP"})
         mock_sync.assert_not_awaited()
 
