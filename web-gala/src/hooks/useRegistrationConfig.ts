@@ -27,7 +27,9 @@ function mapFromBackend(
         id: m.id,
         label: m.name,
         description: m.description,
-        dishType: (["NOR", "FISH", "VEG", "VEGAN"].includes(m.dish_type) ? m.dish_type : "NOR") as "NOR" | "FISH" | "VEG" | "VEGAN",
+        dishType: (["NOR", "FISH", "VEG", "VEGAN"].includes(m.dish_type)
+          ? m.dish_type
+          : "NOR") as "NOR" | "FISH" | "VEG" | "VEGAN",
       }),
     ),
     phasedPaymentEnabled: (prices.phased_payment_enabled as boolean) ?? false,

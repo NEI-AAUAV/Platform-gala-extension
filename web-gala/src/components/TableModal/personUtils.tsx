@@ -1,5 +1,10 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHandDots, faSeedling, faFish, faLeaf } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHandDots,
+  faSeedling,
+  faFish,
+  faLeaf,
+} from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
 
 export const orange = { color: "#DD8500" };
@@ -22,7 +27,8 @@ export function allergyIcon(allergies: string) {
 }
 
 export function countByDish(person: Person, dish: string) {
-  return person.companions.filter((companion) => companion.dish === dish).length;
+  return person.companions.filter((companion) => companion.dish === dish)
+    .length;
 }
 
 export function countAllergies(person: Person) {

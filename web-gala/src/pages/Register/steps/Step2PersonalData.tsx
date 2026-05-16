@@ -92,14 +92,8 @@ export default function Step2PersonalData({
       className="flex flex-col gap-8"
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <IdentitySection
-          fullName={fullName}
-          email={email}
-        />
-        <FormSection
-          data={data}
-          onUpdate={onUpdate}
-        />
+        <IdentitySection fullName={fullName} email={email} />
+        <FormSection data={data} onUpdate={onUpdate} />
       </div>
 
       <div className="flex flex-col gap-3">

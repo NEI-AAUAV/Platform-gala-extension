@@ -63,7 +63,9 @@ function loadData(userId: string | undefined): WizardData {
     const parsed = JSON.parse(stored);
     if (parsed._version !== STORAGE_VERSION) return defaultData;
     const data = { ...defaultData, ...parsed };
-    TRANSIENT_FIELDS.forEach((f) => { (data as Record<string, unknown>)[f] = null; });
+    TRANSIENT_FIELDS.forEach((f) => {
+      (data as Record<string, unknown>)[f] = null;
+    });
     return data;
   } catch {
     return defaultData;
@@ -77,7 +79,10 @@ export function useWizardState(userId: string | undefined) {
     (updates: Partial<WizardData>) => {
       setData((prev) => {
         const next = { ...prev, ...updates };
-        const toStore: Record<string, unknown> = { ...next, _version: STORAGE_VERSION };
+        const toStore: Record<string, unknown> = {
+          ...next,
+          _version: STORAGE_VERSION,
+        };
         TRANSIENT_FIELDS.forEach((f) => delete toStore[f]);
         localStorage.setItem(storageKey(userId), JSON.stringify(toStore));
         return next;

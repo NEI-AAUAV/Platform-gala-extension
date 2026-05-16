@@ -57,7 +57,10 @@ function MealOptionsEditor({
   return (
     <div className="flex flex-col gap-3">
       {options.map((opt, i) => (
-        <div key={opt.id} className="grid grid-cols-[1fr_1.5fr_auto_2.5rem] gap-2">
+        <div
+          key={opt.id}
+          className="grid grid-cols-[1fr_1.5fr_auto_2.5rem] gap-2"
+        >
           <input
             type="text"
             value={opt.label}
@@ -89,7 +92,16 @@ function MealOptionsEditor({
             onChange={(e) =>
               onChange(
                 options.map((o, idx) =>
-                  idx === i ? { ...o, dishType: e.target.value as "NOR" | "FISH" | "VEG" | "VEGAN" } : o,
+                  idx === i
+                    ? {
+                        ...o,
+                        dishType: e.target.value as
+                          | "NOR"
+                          | "FISH"
+                          | "VEG"
+                          | "VEGAN",
+                      }
+                    : o,
                 ),
               )
             }
@@ -115,7 +127,12 @@ function MealOptionsEditor({
         onClick={() =>
           onChange([
             ...options,
-            { id: `meal_${Date.now()}`, label: "", description: "", dishType: "NOR" as const },
+            {
+              id: `meal_${Date.now()}`,
+              label: "",
+              description: "",
+              dishType: "NOR" as const,
+            },
           ])
         }
         className="flex items-center gap-2 self-start rounded-full border border-dashed border-dark-gold/40 px-3 py-1.5 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"

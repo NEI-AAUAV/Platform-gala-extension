@@ -58,7 +58,12 @@ export const defaultConfig: RegistrationConfig = {
   busEnabled: true,
   busRoundTripPrice: 0,
   mealOptions: [
-    { id: "meat", label: "Carne", description: "Arroz de Pato", dishType: "NOR" as const },
+    {
+      id: "meat",
+      label: "Carne",
+      description: "Arroz de Pato",
+      dishType: "NOR" as const,
+    },
     {
       id: "veg",
       label: "Vegetariano / Vegan",

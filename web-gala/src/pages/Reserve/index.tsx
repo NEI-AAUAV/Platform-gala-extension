@@ -135,10 +135,12 @@ export default function Reserve() {
               type="text"
               value={tableName}
               onChange={(e) => setTableName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCreateTable(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreateTable();
+              }}
               placeholder="Ex: Os Fixolas, Mesa A, ..."
               maxLength={20}
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
+              className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
             />
             {nameError && <p className="text-xs text-red-400">{nameError}</p>}
           </div>

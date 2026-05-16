@@ -168,7 +168,10 @@ export default function Step5Table({
           </button>
           <button
             type="button"
-            onClick={() => { onUpdate({ tableId: "none", tableRole: null }); onNext(); }}
+            onClick={() => {
+              onUpdate({ tableId: "none", tableRole: null });
+              onNext();
+            }}
             disabled={syncing}
             className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
           >

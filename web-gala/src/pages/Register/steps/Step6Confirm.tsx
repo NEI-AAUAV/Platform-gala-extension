@@ -232,40 +232,42 @@ export default function Step6Confirm({
         const allPaid = userChosePhased
           ? !!data.paymentProofPhase1 && !!data.paymentProofPhase2
           : !!data.paymentProofPhase1;
-        const paidAmount = userChosePhased
-          ? (data.paymentProofPhase1 ? totalPhase1Price : 0) +
-            (data.paymentProofPhase2 ? totalPhase2Price : 0)
-          : data.paymentProofPhase1
-            ? totalEventPrice
-            : 0;
+        let paidAmount: number;
+        if (userChosePhased) {
+          paidAmount =
+            (data.paymentProofPhase1 ? totalPhase1Price : 0) +
+            (data.paymentProofPhase2 ? totalPhase2Price : 0);
+        } else {
+          paidAmount = data.paymentProofPhase1 ? totalEventPrice : 0;
+        }
         return (
-      <div className="bg-light-gold/6 rounded-xl border border-light-gold/20 p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FontAwesomeIcon
-              icon={faCircleCheck}
-              className={allPaid ? "text-light-gold/60" : "text-white/25"}
-            />
-            <div>
-              <p className="text-sm font-semibold text-light-gold/80">
-                {allPaid ? "Total Pago" : "Total a Pagar"}
-              </p>
-              <p className="text-xs text-white/40">
-                {totalPersons} pessoa{totalPersons > 1 ? "s" : ""} ×{" "}
-                {pricePerPerson}€
-                {!allPaid && paidAmount > 0 && ` · ${paidAmount}€ enviados`}
+          <div className="bg-light-gold/6 rounded-xl border border-light-gold/20 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FontAwesomeIcon
+                  icon={faCircleCheck}
+                  className={allPaid ? "text-light-gold/60" : "text-white/25"}
+                />
+                <div>
+                  <p className="text-sm font-semibold text-light-gold/80">
+                    {allPaid ? "Total Pago" : "Total a Pagar"}
+                  </p>
+                  <p className="text-xs text-white/40">
+                    {totalPersons} pessoa{totalPersons > 1 ? "s" : ""} ×{" "}
+                    {pricePerPerson}€
+                    {!allPaid && paidAmount > 0 && ` · ${paidAmount}€ enviados`}
+                  </p>
+                </div>
+              </div>
+              <p className="font-gala text-2xl font-bold text-light-gold">
+                {totalPrice}€
               </p>
             </div>
+            <p className="text-white/45 mt-3 text-[0.65rem] italic leading-relaxed">
+              Ao confirmares a inscrição, os teus dados serão registados
+              permanentemente e o teu lugar na mesa ficará reservado.
+            </p>
           </div>
-          <p className="font-gala text-2xl font-bold text-light-gold">
-            {totalPrice}€
-          </p>
-        </div>
-        <p className="text-white/45 mt-3 text-[0.65rem] italic leading-relaxed">
-          Ao confirmares a inscrição, os teus dados serão registados
-          permanentemente e o teu lugar na mesa ficará reservado.
-        </p>
-      </div>
         );
       })()}
 

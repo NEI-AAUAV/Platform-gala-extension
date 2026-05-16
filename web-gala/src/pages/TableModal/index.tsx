@@ -61,11 +61,15 @@ function useModalPage(tableId: number) {
 
   const inTable =
     currentUserId != null &&
-    table.persons.some((p) => normalizeId(p.id) === currentUserId && p.confirmed);
+    table.persons.some(
+      (p) => normalizeId(p.id) === currentUserId && p.confirmed,
+    );
 
   const isPending =
     currentUserId != null &&
-    table.persons.some((p) => normalizeId(p.id) === currentUserId && !p.confirmed);
+    table.persons.some(
+      (p) => normalizeId(p.id) === currentUserId && !p.confirmed,
+    );
 
   // Permission parity with backend: admin checks happen server-side; here we allow
   // local edit mode when the user is head, owner or first person in the table.
