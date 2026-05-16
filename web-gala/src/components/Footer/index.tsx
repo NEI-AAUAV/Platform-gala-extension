@@ -2,16 +2,6 @@ import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationDot, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 
-type NavLink = { href: string; label: string; internal?: boolean };
-
-const NAV_LINKS: NavLink[] = [
-  { href: "/#sobre", label: "Sobre" },
-  { href: "/#evento", label: "Evento" },
-  { href: "/#galeria", label: "Galeria" },
-  { href: "/vote", label: "Nomeados", internal: true },
-  { href: "/reserve", label: "Reservar Mesa", internal: true },
-];
-
 function InstagramIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
@@ -74,7 +64,7 @@ export default function Footer() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-screen-xl px-4 py-14 md:px-8">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-2">
           {/* Branding */}
           <div className="flex flex-col items-start gap-4">
             <Link to="/" className="group flex items-center font-gala">
@@ -88,34 +78,6 @@ export default function Footer() {
             <p className="font-gala text-xs leading-relaxed text-white/40">
               Núcleo de Estudantes de Informática da AAUAv.
             </p>
-          </div>
-
-          {/* Links */}
-          <div>
-            <h4 className="font-gala text-[0.65rem] font-bold uppercase tracking-[0.25em] text-light-gold/60">
-              Navegação
-            </h4>
-            <ul className="mt-4 space-y-3">
-              {NAV_LINKS.map(({ href, label, internal }) => (
-                <li key={label}>
-                  {internal ? (
-                    <Link
-                      to={href}
-                      className="font-gala text-xs text-white/40 transition-colors hover:text-light-gold"
-                    >
-                      {label}
-                    </Link>
-                  ) : (
-                    <a
-                      href={href}
-                      className="font-gala text-xs text-white/40 transition-colors hover:text-light-gold"
-                    >
-                      {label}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Contact + Social */}

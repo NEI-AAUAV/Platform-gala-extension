@@ -175,7 +175,7 @@ export default function Navbar() {
               {/* Drawer header */}
               <div className="flex items-center justify-between border-b border-light-gold/20 px-5 py-4">
                 <img
-                  src="/gala/logo.svg"
+                  src="/gala/gala-logo.png"
                   alt="NEI Logo"
                   className="h-10 w-auto"
                 />

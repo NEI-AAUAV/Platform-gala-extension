@@ -13,6 +13,11 @@ interface Props {
 
 export default function BusSection({ busConfig }: Props) {
   if (!busConfig.visible) return null;
+  const hasScheduleInfo = Boolean(
+    busConfig.departure_location || busConfig.departure_time || busConfig.return_time,
+  );
+  const hasBuses = busConfig.buses.length > 0;
+  const showSingleCard = hasScheduleInfo !== hasBuses;
 
   return (
     <section id="autocarros" className="relative px-4 py-28">
@@ -32,9 +37,19 @@ export default function BusSection({ busConfig }: Props) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <ScheduleInfo busConfig={busConfig} />
-          <BusList buses={busConfig.buses} />
+        <div
+          className={
+            showSingleCard
+              ? "flex justify-center"
+              : "grid grid-cols-1 gap-6 lg:grid-cols-3"
+          }
+        >
+          {hasScheduleInfo && (
+            <ScheduleInfo busConfig={busConfig} singleCard={showSingleCard} />
+          )}
+          {hasBuses && (
+            <BusList buses={busConfig.buses} singleCard={showSingleCard} />
+          )}
         </div>
       </div>
     </section>
@@ -43,8 +58,10 @@ export default function BusSection({ busConfig }: Props) {
 
 function ScheduleInfo({
   busConfig,
+  singleCard,
 }: {
   readonly busConfig: BusScheduleConfig;
+  readonly singleCard?: boolean;
 }) {
   return (
     <motion.div
@@ -52,7 +69,9 @@ function ScheduleInfo({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="bg-white/3 flex flex-col gap-6 border border-light-gold/20 p-8 lg:col-span-1"
+      className={`bg-white/3 flex flex-col gap-6 border border-light-gold/20 p-8 ${
+        singleCard ? "w-full max-w-2xl" : "lg:col-span-1"
+      }`}
     >
       <FontAwesomeIcon icon={faBus} className="text-3xl text-light-gold/50" />
 
@@ -108,7 +127,13 @@ function ScheduleLine({
   );
 }
 
-function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
+function BusList({
+  buses,
+  singleCard,
+}: {
+  readonly buses: BusScheduleConfig["buses"];
+  readonly singleCard?: boolean;
+}) {
   if (buses.length === 0) return null;
 
   return (
@@ -117,7 +142,9 @@ function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: 0.1, duration: 0.6 }}
-      className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-8 lg:col-span-2"
+      className={`bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-8 ${
+        singleCard ? "w-full max-w-2xl" : "lg:col-span-2"
+      }`}
     >
       <p className="font-gala text-xs font-bold uppercase tracking-[0.3em] text-white/40">
         Autocarros disponíveis
