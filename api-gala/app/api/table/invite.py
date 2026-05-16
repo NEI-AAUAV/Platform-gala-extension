@@ -19,6 +19,7 @@ from app.core.db import get_db
 from app.core.db.types import DBType
 from app.core.email import send_email
 from app.models.table import Table, TablePerson, DishType
+from app.services.table import _user_dish
 from app.models.user import User
 from app.services.config import ConfigService
 from app.api.table._utils import fetch_table, table_head_permissions
@@ -84,7 +85,7 @@ async def accept_invite(
     person = TablePerson(
         id=auth.sub,
         allergies=user.food_allergies or body.allergies,
-        dish=body.dish,
+        dish=_user_dish(user),
         confirmed=True,
         companions=user.companions,
     )

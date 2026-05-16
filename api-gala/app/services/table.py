@@ -6,6 +6,13 @@ from app.services.storage import storage_client
 from app.utils import generate_invite_token
 
 
+def _user_dish(user: User) -> DishType:
+    option = (user.meal_option or "").strip().upper()
+    if option in ("VEG", "VEGETARIAN", "VEGETARIANO"):
+        return DishType.VEGETARIAN
+    return DishType.NORMAL
+
+
 class TableService:
     @staticmethod
     async def create_table(db: DBType, user_id: int, name: str, photo: Optional[bytes] = None, content_type: str = "image/png", seats: int = 10) -> Table:
@@ -34,7 +41,7 @@ class TableService:
         person = TablePerson(
             id=user_id,
             allergies=user.food_allergies or "",
-            dish=DishType.NORMAL,
+            dish=_user_dish(user),
             confirmed=True,
             companions=user.companions,
         )
@@ -93,7 +100,7 @@ class TableService:
         person = TablePerson(
             id=user_id,
             allergies=user.food_allergies or "",
-            dish=DishType.NORMAL,
+            dish=_user_dish(user),
             confirmed=True,
             companions=user.companions,
         )
@@ -173,7 +180,7 @@ class TableService:
         person = TablePerson(
             id=user.id,
             allergies=user.food_allergies or "",
-            dish=DishType.NORMAL,
+            dish=_user_dish(user),
             confirmed=True,
             companions=user.companions,
         )
