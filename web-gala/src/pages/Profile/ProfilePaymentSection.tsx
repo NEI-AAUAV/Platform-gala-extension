@@ -71,12 +71,22 @@ export default function ProfilePaymentSection({
 
   const phase1Passed = isDeadlinePassed(phase1Deadline);
   const phase2Passed = isDeadlinePassed(phase2Deadline);
+  const showMBWay =
+    (config.paymentMethod === "mbway" || config.paymentMethod === "both") &&
+    Boolean(contact);
+  const showIBAN =
+    config.paymentMethod === "iban" || config.paymentMethod === "both";
+  const showTwoPaymentCards = showMBWay && showIBAN;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {(config.paymentMethod === "mbway" ||
-          config.paymentMethod === "both") && (
+      <div
+        className={[
+          "grid grid-cols-1 gap-4",
+          showTwoPaymentCards ? "lg:grid-cols-2" : "",
+        ].join(" ")}
+      >
+        {showMBWay && (
           <MBWayCard
             contact={contact}
             description={config.paymentDescription
@@ -89,8 +99,7 @@ export default function ProfilePaymentSection({
             amount={userChosePhased ? config.phase1Price : config.eventPrice}
           />
         )}
-        {(config.paymentMethod === "iban" ||
-          config.paymentMethod === "both") && (
+        {showIBAN && (
           <IBANCard
             config={config}
             description={config.paymentDescription

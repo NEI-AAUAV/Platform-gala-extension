@@ -57,8 +57,8 @@ const logo = {
 const main = {
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
-  backgroundColor: "#36d399",
-  background: "linear-gradient(90deg, #36d399 0%, #548786 100%)",
+  backgroundColor: "#182c2a",
+  background: "linear-gradient(120deg, #182c2a 0%, #203836 55%, #355a56 100%)",
   backgroundRepeat: "no-repeat",
   backgroundSize: "cover",
   backgroundPosition: "center"
@@ -68,7 +68,8 @@ const container = {
   margin: '0 auto',
   width: '560px',
   padding: "1rem",
-  backgroundColor: "#fff",
+  backgroundColor: "#203836",
+  border: "1px solid rgba(201,168,67,.28)",
   borderRadius: "1rem"
 };
 
@@ -77,7 +78,7 @@ const heading = {
   letterSpacing: '-0.5px',
   lineHeight: '1.3',
   fontWeight: '400',
-  color: '#3c4149',
+  color: '#c9a843',
   padding: '17px 0 0',
 };
 
@@ -85,5 +86,5 @@ const paragraph = {
   margin: '0 0 15px',
   fontSize: '15px',
   lineHeight: '1.4',
-  color: '#3c4149',
+  color: '#c1cac9',
 };
