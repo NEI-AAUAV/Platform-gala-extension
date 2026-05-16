@@ -44,7 +44,7 @@ export default function BusAssignmentAdmin() {
 
   if (buses.length === 0) {
     return (
-      <div className="border-light-gold/20 bg-white/3 border px-5 py-8 text-center">
+      <div className="bg-white/3 border border-light-gold/20 px-5 py-8 text-center">
         <FontAwesomeIcon icon={faBus} className="text-white/15 mb-3 text-3xl" />
         <p className="font-gala text-sm text-white/40">
           Configura primeiro os autocarros na tab{" "}
@@ -68,7 +68,7 @@ export default function BusAssignmentAdmin() {
         )}
       </div>
 
-      <div className="border-light-gold/20 bg-white/3 flex flex-wrap items-center gap-3 border p-4">
+      <div className="bg-white/3 flex flex-wrap items-center gap-3 border border-light-gold/20 p-4">
         <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/40">
           Auto-distribuir por
         </span>
@@ -101,7 +101,7 @@ export default function BusAssignmentAdmin() {
         </button>
       </div>
 
-      <div className="border-light-gold/20 overflow-x-auto border">
+      <div className="overflow-x-auto border border-light-gold/20">
         <table className="w-full text-left">
           <thead>
             <tr className="border-light-gold/15 border-b">

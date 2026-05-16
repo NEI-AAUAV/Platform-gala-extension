@@ -189,7 +189,7 @@ function FormSection({
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
         Dados da Inscrição
       </h3>
-      <div className="border-light-gold/20 bg-white/4 flex flex-col gap-5 border p-5">
+      <div className="bg-white/4 flex flex-col gap-5 border border-light-gold/20 p-5">
         <div className="flex flex-col gap-2">
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label

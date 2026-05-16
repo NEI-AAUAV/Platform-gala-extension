@@ -12,7 +12,7 @@ export default function RegistrantsCharts({
 }: Readonly<{ stats: RegistrantsStats }>) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <div className="border-light-gold/20 bg-white/3 border p-4">
+      <div className="bg-white/3 border border-light-gold/20 p-4">
         <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
           Por ano
         </p>
@@ -30,7 +30,7 @@ export default function RegistrantsCharts({
             ))}
         </div>
       </div>
-      <div className="border-light-gold/20 bg-white/3 border p-4">
+      <div className="bg-white/3 border border-light-gold/20 p-4">
         <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
           Por prato
         </p>
@@ -46,7 +46,7 @@ export default function RegistrantsCharts({
           ))}
         </div>
       </div>
-      <div className="border-light-gold/20 bg-white/3 border p-4">
+      <div className="bg-white/3 border border-light-gold/20 p-4">
         <p className="mb-3 text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
           Transporte
         </p>

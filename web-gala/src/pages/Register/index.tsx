@@ -84,9 +84,7 @@ export default function Register() {
           const apiPhone = (s.phone as string) || "";
           const apiCompanions = normalizeCompanionsFromApi(s.companions);
           const apiTableId =
-            (s.table_id as number | null) === null
-              ? null
-              : String(s.table_id);
+            (s.table_id as number | null) === null ? null : String(s.table_id);
           update({
             nmec: String(status.nmec || ""),
             year: (s.matriculation as number | null) ?? null,
@@ -352,7 +350,7 @@ const STEP_TITLES: Record<number, { title: string; sub: string }> = {
 function StepTitle({ step }: Readonly<{ step: number }>) {
   const { title, sub } = STEP_TITLES[step] ?? { title: "", sub: "" };
   return (
-    <div className="border-light-gold/20 mb-6 border-b pb-5">
+    <div className="mb-6 border-b border-light-gold/20 pb-5">
       <h2 className="font-gala text-xl font-bold text-white/90">{title}</h2>
       <p className="mt-1 text-sm text-white/40">{sub}</p>
     </div>

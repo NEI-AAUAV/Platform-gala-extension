@@ -19,7 +19,7 @@ export default function RegistrantsAutoAssign({
   if (busesLength === 0) return null;
 
   return (
-    <div className="border-light-gold/20 bg-white/3 flex flex-wrap items-center gap-3 border p-4">
+    <div className="bg-white/3 flex flex-wrap items-center gap-3 border border-light-gold/20 p-4">
       <span className="text-xs font-semibold text-white/40">
         Auto-distribuir autocarros por
       </span>

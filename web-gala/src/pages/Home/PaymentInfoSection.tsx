@@ -121,7 +121,7 @@ function PriceCard({
         "relative overflow-hidden border p-8 text-center",
         highlight
           ? "border-light-gold/30 bg-light-gold/5 shadow-[0_0_40px_rgba(212,175,55,0.07)]"
-          : "border-light-gold/20 bg-white/3",
+          : "bg-white/3 border-light-gold/20",
       ].join(" ")}
     >
       {highlight && (
@@ -163,7 +163,7 @@ function DeadlineCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: index * 0.1, duration: 0.6 }}
-      className="border-light-gold/20 bg-white/3 flex flex-col gap-5 border p-8"
+      className="bg-white/3 flex flex-col gap-5 border border-light-gold/20 p-8"
     >
       <FontAwesomeIcon
         icon={faCalendarCheck}

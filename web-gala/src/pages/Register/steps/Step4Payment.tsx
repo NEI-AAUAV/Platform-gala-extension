@@ -313,7 +313,7 @@ export default function Step4Payment({
                 "flex flex-col gap-2 border p-4 text-left transition-all",
                 data.phasedPayment === false
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
+                  : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
@@ -341,7 +341,7 @@ export default function Step4Payment({
                 "flex flex-col gap-2 border p-4 text-left transition-all",
                 data.phasedPayment
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
+                  : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">

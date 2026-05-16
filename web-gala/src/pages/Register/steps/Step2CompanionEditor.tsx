@@ -72,7 +72,7 @@ function CompanionCard({
   onRemove,
 }: Readonly<CardProps>) {
   return (
-    <div className="border-light-gold/20 bg-white/3 border p-4">
+    <div className="bg-white/3 border border-light-gold/20 p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
           Acompanhante {index + 1}

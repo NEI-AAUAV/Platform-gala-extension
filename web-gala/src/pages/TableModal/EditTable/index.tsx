@@ -111,7 +111,7 @@ function InvitePanel({
 
       {/* Search results */}
       {results.length > 0 && (
-        <div className="border-light-gold/20 divide-y divide-white/5 overflow-hidden border bg-[#111]">
+        <div className="divide-y divide-white/5 overflow-hidden border border-light-gold/20 bg-[#111]">
           {results.map((u) => {
             const alreadyInvited = pending.includes(u.id);
             return (
@@ -185,7 +185,7 @@ function PendingInviteRow({
 }>) {
   const { neiUser } = useNEIUser(userId);
   return (
-    <div className="border-light-gold/20 bg-white/3 flex items-center justify-between gap-3 border px-3 py-2">
+    <div className="bg-white/3 flex items-center justify-between gap-3 border border-light-gold/20 px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar id={userId} className="w-4 rounded-full" />
         <span className="truncate text-xs text-white/60">

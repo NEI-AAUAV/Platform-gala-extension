@@ -143,7 +143,7 @@ function CategoryNominees({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: index * 0.07, duration: 0.6 }}
-      className="border-light-gold/20 bg-white/3 border p-6"
+      className="bg-white/3 border border-light-gold/20 p-6"
     >
       <p className="mb-1 font-gala text-[0.6rem] font-bold uppercase tracking-[0.35em] text-light-gold/50">
         Categoria

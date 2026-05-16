@@ -42,7 +42,7 @@ export default function RegistrantsTable({
   openDetail,
 }: RegistrantsTableProps) {
   return (
-    <div className="border-light-gold/20 overflow-x-auto border">
+    <div className="overflow-x-auto border border-light-gold/20">
       <table className="w-full text-left text-sm">
         <thead className="border-light-gold/15 border-b">
           <tr>

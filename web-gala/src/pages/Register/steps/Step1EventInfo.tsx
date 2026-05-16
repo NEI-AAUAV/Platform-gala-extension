@@ -24,7 +24,7 @@ function InfoCard({
   value,
 }: Readonly<{ icon: typeof faCalendarDay; label: string; value: string }>) {
   return (
-    <div className="border-light-gold/20 bg-white/4 flex items-start gap-3 border p-4">
+    <div className="bg-white/4 flex items-start gap-3 border border-light-gold/20 p-4">
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-light-gold/10">
         <FontAwesomeIcon icon={icon} className="text-xs text-light-gold" />
       </div>
@@ -93,7 +93,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             O que está incluído
           </h3>
-          <div className="border-light-gold/20 bg-white/4 border p-5">
+          <div className="bg-white/4 border border-light-gold/20 p-5">
             <ul className="flex flex-col gap-3">
               {config.eventIncludes.map((item) => (
                 <li key={item} className="flex items-start gap-3">
@@ -116,7 +116,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             Regras e Datas
           </h3>
           <div className="flex flex-col gap-3">
-            <div className="border-light-gold/20 bg-white/4 border p-5">
+            <div className="bg-white/4 border border-light-gold/20 p-5">
               <ul className="flex flex-col gap-3">
                 {config.eventRules.map((rule) => (
                   <li key={rule} className="flex items-start gap-3">
@@ -131,7 +131,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="border-light-gold/20 bg-white/4 flex flex-col gap-1.5 border p-3">
+              <div className="bg-white/4 flex flex-col gap-1.5 border border-light-gold/20 p-3">
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon
                     icon={faCalendarPlus}
@@ -145,7 +145,7 @@ export default function Step1EventInfo({ config, onNext }: Readonly<Props>) {
                   {registrationOpen}
                 </span>
               </div>
-              <div className="border-light-gold/20 bg-white/4 flex flex-col gap-1.5 border p-3">
+              <div className="bg-white/4 flex flex-col gap-1.5 border border-light-gold/20 p-3">
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon
                     icon={faCalendarXmark}

@@ -109,7 +109,7 @@ function InviteRow({
   );
 
   return (
-    <div className="border-light-gold/20 bg-white/3 flex items-center justify-between gap-3 border px-4 py-3">
+    <div className="bg-white/3 flex items-center justify-between gap-3 border border-light-gold/20 px-4 py-3">
       <div className="min-w-0">
         <p className="text-white/85 truncate text-sm font-semibold">
           {table.name || `Mesa #${table._id}`}
@@ -215,7 +215,7 @@ export default function ProfileTableSection() {
                 "rounded-xl border p-3 text-left transition-all hover:border-white/20",
                 selectedId === table._id
                   ? "border-light-gold/40 bg-light-gold/5"
-                  : "border-light-gold/20 bg-white/3",
+                  : "bg-white/3 border-light-gold/20",
               ].join(" ")}
             >
               <Table table={table} />

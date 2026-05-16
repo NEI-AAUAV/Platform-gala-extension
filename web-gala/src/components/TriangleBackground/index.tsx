@@ -9,14 +9,21 @@ import sparkle3 from "@/assets/sparkle-3.png";
 const SPARKLE_IMGS = [sparkle1, sparkle2, sparkle3];
 
 const SPARKLES = [
-  { top: "7%",  left: "5%",  size: 56, delay: 0,   duration: 4.0, img: 0 },
+  { top: "7%", left: "5%", size: 56, delay: 0, duration: 4.0, img: 0 },
   { top: "14%", left: "89%", size: 40, delay: 1.4, duration: 5.0, img: 1 },
   { top: "50%", left: "93%", size: 48, delay: 0.7, duration: 4.5, img: 2 },
-  { top: "74%", left: "4%",  size: 36, delay: 2.2, duration: 5.2, img: 1 },
+  { top: "74%", left: "4%", size: 36, delay: 2.2, duration: 5.2, img: 1 },
   { top: "86%", left: "80%", size: 44, delay: 1.0, duration: 3.8, img: 0 },
 ];
 
-function Sparkle({ top, left, size, delay, duration, img }: (typeof SPARKLES)[0]) {
+function Sparkle({
+  top,
+  left,
+  size,
+  delay,
+  duration,
+  img,
+}: (typeof SPARKLES)[0]) {
   return (
     <img
       aria-hidden
@@ -39,11 +46,11 @@ function Sparkle({ top, left, size, delay, duration, img }: (typeof SPARKLES)[0]
 // ─── Matrix rain ─────────────────────────────────────────────────────────────
 
 const CHARS = "01";
-const COL_W = 36;        // column width in px
-const CHAR_H = 18;       // row height in px
-const FPS = 7;           // frames per second — slow classic feel
-const TRAIL = 10;        // number of characters in each drop trail
-const DROP_OPACITY = 0.08; // max opacity of head character
+const COL_W = 36; // column width in px
+const CHAR_H = 18; // row height in px
+const FPS = 7; // frames per second — slow classic feel
+const TRAIL = 10; // number of characters in each drop trail
+const DROP_OPACITY = 0.14; // max opacity of head character
 
 const MatrixCanvas = memo(function MatrixCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,9 +58,8 @@ const MatrixCanvas = memo(function MatrixCanvas() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return undefined;
 
     let W = window.innerWidth;
     let H = window.innerHeight;
@@ -63,14 +69,14 @@ const MatrixCanvas = memo(function MatrixCanvas() {
     const cols = Math.floor(W / COL_W);
     const rows = Math.ceil(H / CHAR_H) + TRAIL + 2;
 
-    // Each column: current head row (can be negative = off-screen above)
-    const heads = Array.from({ length: cols }, () =>
-      -Math.floor(Math.random() * rows),
+    const heads = Array.from(
+      { length: cols },
+      () => -Math.floor(Math.random() * rows),
     );
-    // Characters stored per cell so they don't flicker each frame
     const grid: string[][] = Array.from({ length: cols }, () =>
-      Array.from({ length: rows }, () =>
-        CHARS[Math.floor(Math.random() * CHARS.length)],
+      Array.from(
+        { length: rows },
+        () => CHARS[Math.floor(Math.random() * CHARS.length)],
       ),
     );
 
@@ -86,20 +92,17 @@ const MatrixCanvas = memo(function MatrixCanvas() {
 
         for (let t = 0; t < TRAIL; t++) {
           const row = head - t;
-          if (row < 0 || row >= rows) continue;
-
-          // Fade from head (full) to tail (transparent)
-          const frac = 1 - t / TRAIL;
-          ctx.globalAlpha = DROP_OPACITY * frac * frac;
-          ctx.fillStyle = "#00ff41";
-          ctx.fillText(grid[c][row], x, row * CHAR_H);
+          if (row >= 0 && row < rows) {
+            const frac = 1 - t / TRAIL;
+            ctx.globalAlpha = DROP_OPACITY * frac * frac;
+            ctx.fillStyle = "#00ff41";
+            ctx.fillText(grid[c][row], x, row * CHAR_H);
+          }
         }
 
         heads[c]++;
-        // Reset when the entire trail has scrolled off screen
         if ((heads[c] - TRAIL) * CHAR_H > H) {
           heads[c] = -Math.floor(Math.random() * 8);
-          // Randomise characters in this column for variety
           for (let r = 0; r < rows; r++) {
             grid[c][r] = CHARS[Math.floor(Math.random() * CHARS.length)];
           }
@@ -139,7 +142,8 @@ const GlowOrbs = memo(function GlowOrbs() {
         style={{
           left: "8%",
           top: "-15%",
-          background: "linear-gradient(135deg, rgba(201,168,67,0.10), rgba(138,106,32,0.06))",
+          background:
+            "linear-gradient(135deg, rgba(201,168,67,0.10), rgba(138,106,32,0.06))",
         }}
       />
       <div
@@ -147,7 +151,8 @@ const GlowOrbs = memo(function GlowOrbs() {
         style={{
           right: "-8%",
           top: "45%",
-          background: "linear-gradient(135deg, rgba(138,106,32,0.08), rgba(201,168,67,0.04))",
+          background:
+            "linear-gradient(135deg, rgba(138,106,32,0.08), rgba(201,168,67,0.04))",
         }}
       />
       <div
@@ -155,7 +160,8 @@ const GlowOrbs = memo(function GlowOrbs() {
         style={{
           left: "35%",
           bottom: "-10%",
-          background: "linear-gradient(135deg, rgba(201,168,67,0.06), rgba(138,106,32,0.03))",
+          background:
+            "linear-gradient(135deg, rgba(201,168,67,0.06), rgba(138,106,32,0.03))",
         }}
       />
     </>
@@ -177,8 +183,16 @@ export default function TriangleBackground() {
         <MatrixCanvas />
       </motion.div>
       <div className="absolute inset-0">
-        {SPARKLES.map((s, i) => (
-          <Sparkle key={i} {...s} />
+        {SPARKLES.map((s) => (
+          <Sparkle
+            key={`${s.top}-${s.left}`}
+            top={s.top}
+            left={s.left}
+            size={s.size}
+            delay={s.delay}
+            duration={s.duration}
+            img={s.img}
+          />
         ))}
       </div>
     </div>

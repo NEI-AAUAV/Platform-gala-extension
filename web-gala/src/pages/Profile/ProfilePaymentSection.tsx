@@ -169,7 +169,7 @@ function MBWayCard({
   };
 
   return (
-    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
+    <div className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faCreditCard} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -244,7 +244,7 @@ function IBANCard({
   };
 
   return (
-    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
+    <div className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faBuilding} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">

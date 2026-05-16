@@ -21,7 +21,7 @@ export function StatCard({
   }[accent ?? "default"];
 
   return (
-    <div className="border-light-gold/20 bg-white/3 border p-4">
+    <div className="bg-white/3 border border-light-gold/20 p-4">
       <div className="flex items-center gap-2 text-xs text-white/40">
         {icon}
         <span>{label}</span>

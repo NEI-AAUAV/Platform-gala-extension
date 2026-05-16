@@ -152,7 +152,7 @@ function BusSection({
                 "flex flex-col gap-2 border p-4 text-left transition-all",
                 isSelected
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
+                  : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
@@ -209,7 +209,7 @@ function PersonMealSection({
   onAllergiesChange,
 }: Readonly<PersonMealSectionProps>) {
   return (
-    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
+    <div className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-5">
       <div className="flex items-center gap-2">
         <FontAwesomeIcon
           icon={faUser}

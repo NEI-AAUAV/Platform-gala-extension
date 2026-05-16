@@ -52,7 +52,7 @@ function ScheduleInfo({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="border-light-gold/20 bg-white/3 flex flex-col gap-6 border p-8 lg:col-span-1"
+      className="bg-white/3 flex flex-col gap-6 border border-light-gold/20 p-8 lg:col-span-1"
     >
       <FontAwesomeIcon icon={faBus} className="text-3xl text-light-gold/50" />
 
@@ -117,7 +117,7 @@ function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: 0.1, duration: 0.6 }}
-      className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-8 lg:col-span-2"
+      className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-8 lg:col-span-2"
     >
       <p className="font-gala text-xs font-bold uppercase tracking-[0.3em] text-white/40">
         Autocarros disponíveis

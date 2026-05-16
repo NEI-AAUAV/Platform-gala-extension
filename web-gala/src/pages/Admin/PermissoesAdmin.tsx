@@ -93,7 +93,7 @@ function ManagerRow({
     [...manager.permissions].sort((a, b) => a.localeCompare(b)).join();
 
   return (
-    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
+    <div className="bg-white/3 flex flex-col gap-4 border border-light-gold/20 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-semibold text-white">{manager.name}</p>

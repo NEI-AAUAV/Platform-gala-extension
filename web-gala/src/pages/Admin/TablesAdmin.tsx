@@ -338,7 +338,7 @@ function TableAdminCard({
   const [addingMember, setAddingMember] = useState(false);
 
   return (
-    <div className="border-light-gold/20 bg-white/3 hover:border-white/12 border transition-colors">
+    <div className="bg-white/3 hover:border-white/12 border border-light-gold/20 transition-colors">
       {/* Header */}
       <button
         type="button"
@@ -549,7 +549,7 @@ function StatCard({
   readonly sub?: string;
 }) {
   return (
-    <div className="border-light-gold/20 bg-white/3 border p-4">
+    <div className="bg-white/3 border border-light-gold/20 p-4">
       <p className="text-xs text-white/40">{label}</p>
       <p className="mt-1 text-2xl font-bold text-white/90">{value}</p>
       {sub && <p className="mt-0.5 text-[0.6rem] text-white/25">{sub}</p>}

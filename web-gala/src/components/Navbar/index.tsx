@@ -173,7 +173,7 @@ export default function Navbar() {
               className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#203836] shadow-2xl md:hidden"
             >
               {/* Drawer header */}
-              <div className="border-light-gold/20 flex items-center justify-between border-b px-5 py-4">
+              <div className="flex items-center justify-between border-b border-light-gold/20 px-5 py-4">
                 <img
                   src="/gala/logo.svg"
                   alt="NEI Logo"
@@ -193,7 +193,7 @@ export default function Navbar() {
               <nav className="flex flex-col gap-1 px-3 py-4" />
 
               {/* Divider */}
-              <div className="border-light-gold/20 mx-5 border-t" />
+              <div className="mx-5 border-t border-light-gold/20" />
 
               {/* Auth section */}
               <div className="flex flex-col gap-2 px-4 py-5">

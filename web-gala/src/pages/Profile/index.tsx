@@ -159,7 +159,7 @@ export default function Profile() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="border-light-gold/20 mb-8 flex items-center justify-center gap-2 border-b pb-4"
+          className="mb-8 flex items-center justify-center gap-2 border-b border-light-gold/20 pb-4"
         >
           {TABS.filter(
             (t) => t.id !== "payment" || !sessionUser?.is_companion_of,

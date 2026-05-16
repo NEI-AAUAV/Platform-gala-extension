@@ -140,7 +140,7 @@ export function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-light-gold/20 bg-white/3 border">
+    <div className="bg-white/3 border border-light-gold/20">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

@@ -238,14 +238,14 @@ export default function Admin() {
         <aside
           className={[
             // Mobile: fixed full-height drawer
-            "border-light-gold/20 fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r bg-[#203836] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
+            "fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r border-light-gold/20 bg-[#203836] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
             sidebarOpen
               ? "flex translate-x-0"
               : "hidden -translate-x-full lg:flex",
           ].join(" ")}
         >
           {/* Sidebar header */}
-          <div className="border-light-gold/20 flex items-center justify-between border-b px-5 py-4">
+          <div className="flex items-center justify-between border-b border-light-gold/20 px-5 py-4">
             <span className="font-gala text-[0.6rem] font-bold uppercase tracking-[0.3em] text-white/30">
               Admin
             </span>
@@ -308,7 +308,7 @@ export default function Admin() {
         {/* ── Main content area ── */}
         <div className="flex flex-1 flex-col overflow-hidden transition-all duration-500">
           {/* Top bar (mobile hamburger + preview toggle) */}
-          <div className="border-light-gold/20 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
+          <div className="flex shrink-0 items-center justify-between border-b border-light-gold/20 px-4 py-3 lg:px-6">
             {/* Mobile: hamburger */}
             <button
               type="button"
@@ -419,8 +419,8 @@ export default function Admin() {
 
             {/* Live preview pane */}
             {previewOpen && (
-              <div className="md:border-light-gold/20 flex w-full flex-col bg-black md:w-1/2 md:border-l">
-                <div className="border-light-gold/20 flex shrink-0 items-center justify-between border-b px-4 py-2">
+              <div className="flex w-full flex-col bg-black md:w-1/2 md:border-l md:border-light-gold/20">
+                <div className="flex shrink-0 items-center justify-between border-b border-light-gold/20 px-4 py-2">
                   <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/30">
                     Preview - {previewRoute}
                   </span>
