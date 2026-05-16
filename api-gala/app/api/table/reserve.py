@@ -51,6 +51,11 @@ async def reserve_table(
 
     if user is None:
         raise HTTPException(status_code=400, detail="An user must be created first")
+    user_model = User.parse_obj(user)
+    if not user_model.is_registered:
+        raise HTTPException(status_code=403, detail="Only gala registrants can reserve tables")
+    if not user_model.registration_active:
+        raise HTTPException(status_code=403, detail="Only active registrations can reserve tables")
 
     table_person = TablePerson(
         id=auth_data.sub,
