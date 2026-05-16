@@ -42,7 +42,7 @@ export default function TimelineSection() {
                 key={phase.id}
                 type="button"
                 onClick={() => setSelectedPhase(phase.id)}
-                className={`group relative overflow-hidden rounded-xl border p-6 text-left transition-all duration-500 ${
+                className={`group relative overflow-hidden border p-6 text-left transition-all duration-500 ${
                   selectedPhase === phase.id
                     ? "border-light-gold bg-light-gold/10 shadow-[0_10px_30px_rgba(212,175,55,0.1)]"
                     : "border-white/5 bg-white/[0.02] hover:border-white/20"
@@ -100,7 +100,7 @@ export default function TimelineSection() {
               className="flex flex-col gap-10"
             >
               {/* Main Prominent Image */}
-              <div className="relative aspect-[21/9] w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl lg:aspect-[16/7]">
+              <div className="relative aspect-[21/9] w-full overflow-hidden rounded-3xl border border-light-gold/20 shadow-2xl lg:aspect-[16/7]">
                 <img
                   src={currentPhaseData?.images[0]}
                   alt={currentPhaseData?.label}

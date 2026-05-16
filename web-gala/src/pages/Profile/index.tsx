@@ -19,6 +19,7 @@ import ProfileTableSection, {
   PendingInvitesBanner,
 } from "./ProfileTableSection";
 import useMyInvites from "@/hooks/tableHooks/useMyInvites";
+import GalaFrame from "@/components/GalaFrame";
 
 type RegistrationStatus =
   | "pending_payment"
@@ -130,7 +131,7 @@ export default function Profile() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 flex flex-col items-center gap-1 rounded-xl border border-purple-400/30 bg-purple-400/10 p-4 text-center text-sm text-purple-100/90"
+            className="mb-6 flex flex-col items-center gap-1 border border-purple-400/30 bg-purple-400/10 p-4 text-center text-sm text-purple-100/90"
           >
             <span className="font-semibold">Inscrito como Acompanhante</span>
             <span className="text-xs text-purple-100/70">
@@ -143,7 +144,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex flex-col items-center gap-1 rounded-xl border border-blue-400/30 bg-blue-400/10 p-4 text-center text-sm text-blue-100/90"
+              className="mb-6 flex flex-col items-center gap-1 border border-blue-400/30 bg-blue-400/10 p-4 text-center text-sm text-blue-100/90"
             >
               <span className="font-semibold">Inscrição Automática</span>
               <span className="text-xs text-blue-100/70">
@@ -158,7 +159,7 @@ export default function Profile() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="border-white/8 mb-8 flex items-center justify-center gap-2 border-b pb-4"
+          className="border-light-gold/20 mb-8 flex items-center justify-center gap-2 border-b pb-4"
         >
           {TABS.filter(
             (t) => t.id !== "payment" || !sessionUser?.is_companion_of,
@@ -179,7 +180,7 @@ export default function Profile() {
           ))}
         </motion.div>
 
-        <div className="border-white/8 bg-white/3 rounded-2xl border p-6 sm:p-8">
+        <GalaFrame className="bg-white/3 p-6 sm:p-8">
           {activeTab === "registration" && (
             <RegistrationTab
               sessionUser={sessionUser}
@@ -196,7 +197,7 @@ export default function Profile() {
             />
           )}
           {activeTab === "table" && <ProfileTableSection />}
-        </div>
+        </GalaFrame>
       </div>
     </div>
   );
@@ -247,7 +248,7 @@ function RegistrationTab({
           />
         )}
       </div>
-      <div className="border-white/6 bg-white/3 rounded-xl border px-5 py-4">
+      <div className="border-light-gold/15 bg-white/3 border px-5 py-4">
         <p className="text-xs text-white/40">
           Para alterar os dados da inscrição (prato, autocarro, acompanhantes),
           contacta a organização por email.
@@ -263,7 +264,7 @@ function InfoRow({
   value,
 }: Readonly<{ icon: typeof faUser; label: string; value: string }>) {
   return (
-    <div className="border-white/6 bg-white/3 flex items-center gap-3 rounded-xl border px-4 py-3">
+    <div className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-3">
       <FontAwesomeIcon
         icon={icon}
         className="w-3 flex-shrink-0 text-light-gold/40"

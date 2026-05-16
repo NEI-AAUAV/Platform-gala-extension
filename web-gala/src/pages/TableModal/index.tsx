@@ -171,7 +171,7 @@ export default function TableModal({ tableId, onClose }: TableModalProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-10 my-16 rounded-3xl border border-light-gold/20 bg-[#0a0a0a] px-4 py-12 shadow-2xl backdrop-blur-xl sm:px-12 md:mx-auto md:h-auto md:max-w-4xl"
+            className="relative z-10 my-16 rounded-3xl border border-light-gold/20 bg-[#203836] px-4 py-12 shadow-2xl backdrop-blur-xl sm:px-12 md:mx-auto md:h-auto md:max-w-4xl"
           >
             <button
               className="absolute right-6 top-6 text-xl text-white/30 transition-colors hover:text-white/80"

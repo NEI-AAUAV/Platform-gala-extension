@@ -41,7 +41,7 @@ export default function PhotoGallerySection({ galleryConfig }: Props) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-3xl border border-white/10"
+          className="relative overflow-hidden rounded-3xl border border-light-gold/20"
         >
           {galleryConfig.preview_photo_url ? (
             <img

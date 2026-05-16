@@ -60,7 +60,7 @@ function OptionInput({
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+    <div className="flex items-center gap-3 border border-light-gold/20 bg-black/20 p-3">
       <button
         type="button"
         title="Carregar foto"
@@ -93,7 +93,7 @@ function OptionInput({
         value={option.name}
         onChange={(e) => onChange(index, "name", e.target.value)}
         placeholder={`Nome da opção ${index + 1}`}
-        className="flex-1 rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
+        className="flex-1 border border-light-gold/20 bg-transparent px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
       />
 
       <button
@@ -197,7 +197,7 @@ function NominationsPanel({
           <label
             key={nominee.name}
             htmlFor={`nominee-${nominee.name}`}
-            className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-white/5"
+            className="flex cursor-pointer items-center gap-3 px-2 py-1.5 transition hover:bg-white/5"
           >
             <input
               id={`nominee-${nominee.name}`}
@@ -216,7 +216,7 @@ function NominationsPanel({
 
       {/* Merge controls */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-3">
+        <div className="flex items-center gap-2 border border-light-gold/20 bg-black/20 p-3">
           <FontAwesomeIcon
             icon={faObjectGroup}
             className="shrink-0 text-xs text-dark-gold/60"
@@ -226,7 +226,7 @@ function NominationsPanel({
             value={mergeTarget}
             onChange={(e) => setMergeTarget(e.target.value)}
             placeholder={`Nome final (padrão: "${[...selected][0]}")`}
-            className="flex-1 rounded border border-white/10 bg-transparent px-2 py-1 text-xs text-white placeholder-white/25 outline-none focus:border-dark-gold/50"
+            className="flex-1 rounded border border-light-gold/20 bg-transparent px-2 py-1 text-xs text-white placeholder-white/25 outline-none focus:border-dark-gold/50"
           />
           <button
             type="button"
@@ -245,7 +245,7 @@ function NominationsPanel({
       )}
 
       {/* Finalize button */}
-      <div className="border-t border-white/10 pt-3">
+      <div className="border-t border-light-gold/20 pt-3">
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
@@ -405,7 +405,7 @@ function CreateCategoryForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 rounded-2xl border border-dark-gold/30 bg-black/30 p-6 backdrop-blur-md"
+      className="flex flex-col gap-5 border border-dark-gold/30 bg-black/30 p-6 backdrop-blur-md"
     >
       <h2 className="font-gala text-xl font-semibold text-dark-gold">
         Nova Categoria
@@ -422,7 +422,7 @@ function CreateCategoryForm({
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
             placeholder="Ex: O mais simpático(a)"
-            className="rounded-lg border border-white/10 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
           />
         </label>
       </div>
@@ -454,7 +454,7 @@ function CreateCategoryForm({
       <button
         type="submit"
         disabled={status === "uploading"}
-        className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#F7BBAC] to-[#C58676] px-6 py-2 text-sm font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
+        className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#c9a843] to-[#8a6a20] px-6 py-2 text-sm font-semibold text-black transition hover:opacity-90 disabled:opacity-60"
       >
         {status === "uploading" && (
           <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
@@ -564,15 +564,15 @@ function CategoryRow({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/20 p-5">
+    <div className="flex flex-col gap-4 border border-light-gold/20 bg-black/20 p-5">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-3">
+      <div className="flex items-center justify-between gap-4 border-b border-light-gold/20 pb-3">
         {isEditing ? (
           <input
             type="text"
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
-            className="flex-1 rounded-lg border border-dark-gold/50 bg-black/40 px-3 py-1 font-gala text-xl font-semibold text-white outline-none"
+            className="flex-1 border border-dark-gold/50 bg-black/40 px-3 py-1 font-gala text-xl font-semibold text-white outline-none"
           />
         ) : (
           <h3 className="flex-1 font-gala text-xl font-semibold leading-tight text-dark-gold">
@@ -646,7 +646,7 @@ function CategoryRow({
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
             key={`${vote._id}-option-${option}`}
-            className="flex items-center gap-3 rounded-xl bg-black/10 p-2 text-sm text-white/80"
+            className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80"
           >
             <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
               {vote.photo_paths[i] ? (
@@ -751,7 +751,7 @@ function CategoryRow({
 
       {/* Nominations section */}
       {!isEditing && (
-        <div className="border-t border-white/10 pt-3">
+        <div className="border-t border-light-gold/20 pt-3">
           <button
             type="button"
             onClick={() => setShowNominations((v) => !v)}
@@ -808,7 +808,7 @@ function resolvePhase(
   }
   return {
     label: "Fase fechada",
-    color: "border-white/10 bg-white/5 text-white/40",
+    color: "border-light-gold/20 bg-white/5 text-white/40",
     dot: "bg-white/20",
   };
 }
@@ -821,7 +821,7 @@ function PhaseBanner() {
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold ${phase.color}`}
+      className={`flex items-center gap-2 border px-4 py-2 text-xs font-semibold ${phase.color}`}
     >
       <span className={`h-2 w-2 rounded-full ${phase.dot}`} />
       Fase atual: {phase.label}

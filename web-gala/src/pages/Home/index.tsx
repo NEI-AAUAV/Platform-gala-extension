@@ -5,7 +5,6 @@ import DJSection from "./DJSection";
 import PhotoGallerySection from "./PhotoGallerySection";
 import BusSection from "./BusSection";
 import AfterPartySection from "./AfterPartySection";
-import TriangleBackground from "@/components/TriangleBackground";
 import Footer from "@/components/Footer";
 import { useHomepageConfig } from "@/hooks/useHomepageConfig";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
@@ -16,7 +15,6 @@ export default function Home() {
 
   return (
     <main className="relative w-full overflow-hidden">
-      <TriangleBackground />
       <HeroSection />
       <NominationsSection nominationsConfig={homepage.nominations_display} />
       <PaymentInfoSection

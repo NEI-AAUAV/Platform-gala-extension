@@ -169,7 +169,7 @@ function MBWayCard({
   };
 
   return (
-    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
+    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faCreditCard} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -204,7 +204,7 @@ function MBWayCard({
           </p>
         </div>
       )}
-      <div className="border-white/6 bg-white/3 rounded-lg border px-4 py-3">
+      <div className="border-light-gold/15 bg-white/3 border px-4 py-3">
         <div className="flex items-center justify-between">
           <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
             Descrição do pagamento
@@ -244,7 +244,7 @@ function IBANCard({
   };
 
   return (
-    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
+    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faBuilding} className="text-light-gold/60" />
         <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
@@ -261,7 +261,7 @@ function IBANCard({
         <button
           type="button"
           onClick={copy}
-          className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 transition hover:border-light-gold/30"
+          className="flex items-center justify-between border border-light-gold/20 bg-white/5 px-4 py-3 transition hover:border-light-gold/30"
         >
           <span className="font-mono text-sm tracking-wider text-white/70">
             {config.ibanNumber}
@@ -271,7 +271,7 @@ function IBANCard({
           </span>
         </button>
       )}
-      <div className="border-white/6 bg-white/3 rounded-lg border px-4 py-3">
+      <div className="border-light-gold/15 bg-white/3 border px-4 py-3">
         <p className="text-[0.6rem] uppercase tracking-widest text-white/30">
           Descrição da transferência
         </p>
@@ -360,7 +360,7 @@ function ProofUpload({
       {(() => {
         if (proofName) {
           return (
-            <div className="bg-dark-gold/8 flex items-center gap-4 rounded-xl border border-dark-gold/30 px-5 py-4">
+            <div className="bg-dark-gold/8 flex items-center gap-4 border border-dark-gold/30 px-5 py-4">
               <FontAwesomeIcon
                 icon={faFileCircleCheck}
                 className="text-dark-gold/70"
@@ -393,7 +393,7 @@ function ProofUpload({
         }
         if (deadlinePassed) {
           return (
-            <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
+            <div className="flex flex-col items-center gap-3 border-2 border-dashed border-red-500/20 bg-red-500/5 p-8">
               <FontAwesomeIcon
                 icon={faLock}
                 className="text-xl text-red-400/40"
@@ -418,7 +418,7 @@ function ProofUpload({
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
             className={[
-              "flex flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-all",
+              "flex flex-col items-center gap-3 border-2 border-dashed p-8 transition-all",
               dragOver
                 ? "border-light-gold/50 bg-light-gold/5"
                 : "border-white/12 hover:border-white/25",

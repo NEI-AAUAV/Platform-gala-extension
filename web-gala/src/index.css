@@ -16,6 +16,7 @@ body {
   font-family: "Montserrat", sans-serif;
   max-width: 100vw;
   overflow-x: hidden !important;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #1f4030 0%, #0e2a1e 100%);
 }
 
 #root {
@@ -84,3 +85,97 @@ select {
 @media (min-width: 1024px) {
   .gala-blur { --size: 600px; }
 }
+
+/* Matrix binary rain */
+@keyframes matrix-fall {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.matrix-column {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #00ff41;
+  opacity: 0.085;
+  animation: matrix-fall linear infinite;
+  will-change: transform;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Sparkle 4-point star */
+@keyframes sparkle-appear {
+  0%   { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  40%  { opacity: 1; transform: scale(1) rotate(20deg); }
+  70%  { opacity: 1; transform: scale(1.1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+}
+
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: sparkle-appear ease-in-out infinite;
+}
+
+.sparkle::before,
+.sparkle::after {
+  content: "";
+  position: absolute;
+  background: #ffffff;
+  border-radius: 2px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.sparkle::before {
+  width: 2px;
+  height: var(--spark-size, 18px);
+}
+
+.sparkle::after {
+  width: calc(var(--spark-size, 18px) * 0.55);
+  height: 2px;
+}
+
+/* PCB corner bracket ornaments */
+.pcb-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.pcb-corner::before,
+.pcb-corner::after {
+  content: "";
+  position: absolute;
+  background: #c9a843;
+}
+
+.pcb-corner::before {
+  width: 100%;
+  height: 1px;
+  top: 0;
+  left: 0;
+}
+
+.pcb-corner::after {
+  width: 1px;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.pcb-corner.tr { top: 0; right: 0; transform: rotate(90deg); }
+.pcb-corner.bl { bottom: 0; left: 0; transform: rotate(270deg); }
+.pcb-corner.br { bottom: 0; right: 0; transform: rotate(180deg); }
+.pcb-corner.tl { top: 0; left: 0; }

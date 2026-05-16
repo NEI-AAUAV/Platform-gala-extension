@@ -136,7 +136,7 @@ function MaxTablesEditor() {
       <button
         type="button"
         onClick={save}
-        className="shrink-0 rounded-lg border border-dark-gold/40 px-4 py-2 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
+        className="shrink-0 border border-dark-gold/40 px-4 py-2 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
       >
         Guardar
       </button>
@@ -223,7 +223,7 @@ function MemberRow({
     : `#${person.id}`;
 
   return (
-    <div className="bg-white/4 flex items-center justify-between rounded-lg px-3 py-2">
+    <div className="bg-white/4 flex items-center justify-between px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
         {person.confirmed && (
           <FontAwesomeIcon
@@ -248,7 +248,7 @@ function MemberRow({
           <button
             type="button"
             onClick={onMove}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-blue-400/40 transition hover:bg-blue-500/10 hover:text-blue-400"
+            className="flex h-6 w-6 shrink-0 items-center justify-center text-blue-400/40 transition hover:bg-blue-500/10 hover:text-blue-400"
             title="Mover de mesa"
           >
             <FontAwesomeIcon
@@ -259,7 +259,7 @@ function MemberRow({
           <button
             type="button"
             onClick={onRemove}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
+            className="flex h-6 w-6 shrink-0 items-center justify-center text-red-400/40 transition hover:bg-red-500/10 hover:text-red-400"
             title="Remover da mesa"
           >
             <FontAwesomeIcon icon={faTrash} className="text-[0.6rem]" />
@@ -338,7 +338,7 @@ function TableAdminCard({
   const [addingMember, setAddingMember] = useState(false);
 
   return (
-    <div className="border-white/8 bg-white/3 hover:border-white/12 rounded-xl border transition-colors">
+    <div className="border-light-gold/20 bg-white/3 hover:border-white/12 border transition-colors">
       {/* Header */}
       <button
         type="button"
@@ -374,7 +374,7 @@ function TableAdminCard({
       </button>
 
       {expanded && (
-        <div className="border-white/6 flex flex-col gap-4 border-t px-4 pb-4 pt-3">
+        <div className="border-light-gold/15 flex flex-col gap-4 border-t px-4 pb-4 pt-3">
           {/* Visual + photo + name edit */}
           <div className="flex items-start gap-5">
             <div className="shrink-0">
@@ -401,12 +401,12 @@ function TableAdminCard({
                           setEditingName(false);
                         }
                       }}
-                      className="flex-1 rounded-lg border border-light-gold/30 bg-white/5 px-2 py-1 text-xs text-white outline-none"
+                      className="flex-1 border border-light-gold/30 bg-white/5 px-2 py-1 text-xs text-white outline-none"
                     />
                     <button
                       type="button"
                       onClick={saveName}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-light-gold/20 text-light-gold hover:bg-light-gold/30"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center bg-light-gold/20 text-light-gold hover:bg-light-gold/30"
                     >
                       <FontAwesomeIcon
                         icon={faCheck}
@@ -444,10 +444,10 @@ function TableAdminCard({
                     <img
                       src={table.photo_url}
                       alt="foto de grupo"
-                      className="h-14 w-14 rounded-lg object-cover ring-1 ring-white/10"
+                      className="h-14 w-14 object-cover ring-1 ring-white/10"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-white/20">
+                    <div className="flex h-14 w-14 items-center justify-center bg-white/5 text-white/20">
                       <FontAwesomeIcon icon={faCamera} />
                     </div>
                   )}
@@ -514,7 +514,7 @@ function TableAdminCard({
             <button
               type="button"
               onClick={handleDeleteTable}
-              className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+              className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
             >
               <FontAwesomeIcon icon={faTrash} />
               Eliminar Mesa
@@ -549,7 +549,7 @@ function StatCard({
   readonly sub?: string;
 }) {
   return (
-    <div className="border-white/8 bg-white/3 rounded-xl border p-4">
+    <div className="border-light-gold/20 bg-white/3 border p-4">
       <p className="text-xs text-white/40">{label}</p>
       <p className="mt-1 text-2xl font-bold text-white/90">{value}</p>
       {sub && <p className="mt-0.5 text-[0.6rem] text-white/25">{sub}</p>}
@@ -593,7 +593,7 @@ function AddMemberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/10 bg-[#121212] p-5 shadow-2xl">
+      <div className="flex w-full max-w-md flex-col gap-4 border border-light-gold/20 bg-[#182c2a] p-5 shadow-2xl">
         <h3 className="text-lg font-bold text-white">
           Adicionar Membro (sem mesa)
         </h3>
@@ -616,7 +616,7 @@ function AddMemberModal({
               {registrants.map((u) => (
                 <div
                   key={u._id}
-                  className="flex items-center justify-between rounded-lg bg-white/5 p-2"
+                  className="flex items-center justify-between bg-white/5 p-2"
                 >
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-semibold text-white">
@@ -630,7 +630,7 @@ function AddMemberModal({
                     type="button"
                     onClick={() => handleAdd(u._id)}
                     disabled={saving}
-                    className="shrink-0 rounded-lg bg-light-gold/20 px-3 py-1 text-xs font-semibold text-light-gold hover:bg-light-gold/30 disabled:opacity-50"
+                    className="shrink-0 bg-light-gold/20 px-3 py-1 text-xs font-semibold text-light-gold hover:bg-light-gold/30 disabled:opacity-50"
                   >
                     Adicionar
                   </button>
@@ -679,7 +679,7 @@ function MoveMemberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/10 bg-[#121212] p-5 shadow-2xl">
+      <div className="flex w-full max-w-md flex-col gap-4 border border-light-gold/20 bg-[#182c2a] p-5 shadow-2xl">
         <h3 className="text-lg font-bold text-white">
           Mover Membro para Outra Mesa
         </h3>
@@ -703,7 +703,7 @@ function MoveMemberModal({
               return (
                 <div
                   key={t._id}
-                  className="flex items-center justify-between rounded-lg bg-white/5 p-2"
+                  className="flex items-center justify-between bg-white/5 p-2"
                 >
                   <div className="flex min-w-0 flex-col">
                     <span className="truncate text-sm font-semibold text-white">
@@ -717,7 +717,7 @@ function MoveMemberModal({
                     type="button"
                     onClick={() => handleMove(t._id)}
                     disabled={saving || isFull}
-                    className="shrink-0 rounded-lg bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-400 hover:bg-blue-500/30 disabled:opacity-50"
+                    className="shrink-0 bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-400 hover:bg-blue-500/30 disabled:opacity-50"
                   >
                     {isFull ? "Cheia" : "Mover"}
                   </button>
@@ -842,7 +842,7 @@ export default function TablesAdmin() {
                   toast.error(extractApiError(e, "Erro ao criar mesa."));
                 }
               }}
-              className="flex items-center gap-2 rounded-lg bg-light-gold px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-yellow-600"
+              className="flex items-center gap-2 bg-light-gold px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-yellow-600"
             >
               <FontAwesomeIcon icon={faPlus} />
               Nova Mesa
@@ -851,7 +851,7 @@ export default function TablesAdmin() {
         </div>
 
         {tables.length === 0 ? (
-          <div className="border-white/6 bg-white/2 rounded-xl border py-12 text-center">
+          <div className="border-light-gold/15 bg-white/2 border py-12 text-center">
             <FontAwesomeIcon
               icon={faChair}
               className="mb-3 text-2xl text-white/10"

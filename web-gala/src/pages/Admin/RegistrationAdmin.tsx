@@ -116,7 +116,7 @@ function MealOptionsEditor({
             type="button"
             disabled={options.length <= 1}
             onClick={() => onChange(options.filter((_, idx) => idx !== i))}
-            className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-20"
+            className="flex items-center justify-center text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-20"
           >
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           </button>
@@ -188,7 +188,7 @@ function PaymentContactsEditor({
             <button
               type="button"
               onClick={() => onChange(contacts.filter((_, idx) => idx !== i))}
-              className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
+              className="flex items-center justify-center text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
             >
               <FontAwesomeIcon icon={faTrash} className="text-xs" />
             </button>
@@ -451,7 +451,7 @@ export default function RegistrationAdmin() {
                       "rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
                       config.paymentMethod === opt.value
                         ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-                        : "border-white/10 text-white/40 hover:border-white/25 hover:text-white/70",
+                        : "border-light-gold/20 text-white/40 hover:border-white/25 hover:text-white/70",
                     ].join(" ")}
                   >
                     {opt.label}
@@ -529,7 +529,7 @@ export default function RegistrationAdmin() {
             />
             {config.phasedPaymentEnabled && (
               <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-4 rounded-xl bg-white/5 p-4">
+                <div className="flex flex-col gap-4 bg-white/5 p-4">
                   <h4 className="text-[0.6rem] font-bold uppercase tracking-widest text-light-gold/60">
                     Fase 1
                   </h4>
@@ -546,7 +546,7 @@ export default function RegistrationAdmin() {
                     />
                   </Field>
                 </div>
-                <div className="flex flex-col gap-4 rounded-xl bg-white/5 p-4">
+                <div className="flex flex-col gap-4 bg-white/5 p-4">
                   <h4 className="text-[0.6rem] font-bold uppercase tracking-widest text-light-gold/60">
                     Fase 2
                   </h4>
@@ -754,7 +754,7 @@ function LimitsEditor() {
           <button
             type="button"
             onClick={() => saveField("maxRegistrations", maxRegistrations)}
-            className="shrink-0 rounded-lg border border-dark-gold/40 px-3 py-1.5 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
+            className="shrink-0 border border-dark-gold/40 px-3 py-1.5 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
           >
             Guardar
           </button>
@@ -772,7 +772,7 @@ function LimitsEditor() {
           <button
             type="button"
             onClick={() => saveField("maxBusSeats", maxBusSeats)}
-            className="shrink-0 rounded-lg border border-dark-gold/40 px-3 py-1.5 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
+            className="shrink-0 border border-dark-gold/40 px-3 py-1.5 text-xs font-semibold text-dark-gold transition hover:bg-dark-gold/10"
           >
             Guardar
           </button>

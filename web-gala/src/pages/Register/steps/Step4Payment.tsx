@@ -122,7 +122,7 @@ export default function Step4Payment({
               <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
                 MB Way
               </p>
-              <div className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/5 p-4">
+              <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
                 <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
                   {contact.name} ({contact.year})
                 </span>
@@ -156,7 +156,7 @@ export default function Step4Payment({
               <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
                 Transferência Bancária (IBAN)
               </p>
-              <div className="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/5 p-4">
+              <div className="flex flex-col gap-2 border border-white/5 bg-white/5 p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
                     Titular
@@ -202,7 +202,7 @@ export default function Step4Payment({
             </>
           )}
 
-        <div className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/5 p-4">
+        <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
           <div className="flex items-center justify-between">
             <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
               Assunto / Descritivo
@@ -291,7 +291,7 @@ export default function Step4Payment({
 
       {/* Payment mode toggle - only when admin has enabled phased payments */}
       {config.phasedPaymentEnabled && (
-        <div className="bg-white/3 rounded-2xl border border-white/10 p-5">
+        <div className="bg-white/3 border border-light-gold/20 p-5">
           <div className="mb-3 flex items-center gap-2">
             <FontAwesomeIcon
               icon={faMoneyBillWave}
@@ -310,10 +310,10 @@ export default function Step4Payment({
               type="button"
               onClick={() => onUpdate({ phasedPayment: false })}
               className={[
-                "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                "flex flex-col gap-2 border p-4 text-left transition-all",
                 data.phasedPayment === false
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-white/8 bg-white/3 hover:border-white/20",
+                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
@@ -338,10 +338,10 @@ export default function Step4Payment({
               type="button"
               onClick={() => onUpdate({ phasedPayment: true })}
               className={[
-                "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                "flex flex-col gap-2 border p-4 text-left transition-all",
                 data.phasedPayment
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-white/8 bg-white/3 hover:border-white/20",
+                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
@@ -444,10 +444,10 @@ function PhaseCard({
   return (
     <div
       className={[
-        "flex flex-col gap-4 rounded-2xl border p-5 transition-all",
+        "flex flex-col gap-4 border p-5 transition-all",
         hasProof
           ? "border-green-500/30 bg-green-500/5"
-          : "bg-white/3 border-white/10",
+          : "bg-white/3 border-light-gold/20",
       ].join(" ")}
     >
       <div className="flex items-center justify-between">
@@ -465,7 +465,7 @@ function PhaseCard({
         onClick={onUpload}
         disabled={uploading}
         className={[
-          "mt-2 flex items-center justify-center gap-2 rounded-xl border py-3 text-sm font-bold transition-all",
+          "mt-2 flex items-center justify-center gap-2 border py-3 text-sm font-bold transition-all",
           hasProof
             ? "border-green-500/50 bg-green-500/10 text-green-400"
             : "border-light-gold/40 text-light-gold hover:bg-light-gold/10",

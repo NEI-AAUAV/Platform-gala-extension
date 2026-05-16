@@ -10,7 +10,7 @@ export default function VoteCard({ vote }: Props) {
   const showVoting = vote.voting_open && vote.options.length > 0;
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-dark-gold bg-black/20 p-4 backdrop-blur-md">
+    <div className="flex flex-col gap-4 border border-dark-gold bg-black/20 p-4 backdrop-blur-md">
       <div className="text-center">
         <h1 className="font-gala text-2xl font-semibold text-white">
           {vote.category}

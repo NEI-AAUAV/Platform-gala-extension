@@ -161,7 +161,7 @@ function ToastComponent({
 
   return (
     <div
-      className={`relative min-w-[320px] max-w-[450px] ${bg} ${border} animate-in fade-in slide-in-from-right-5 pointer-events-auto rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 md:mt-2`}
+      className={`relative min-w-[320px] max-w-[450px] ${bg} ${border} animate-in fade-in slide-in-from-right-5 pointer-events-auto border p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 md:mt-2`}
     >
       {/* Accent line */}
       <div

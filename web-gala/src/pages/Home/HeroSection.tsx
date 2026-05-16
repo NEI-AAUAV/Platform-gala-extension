@@ -14,7 +14,6 @@ import useCapacity from "@/hooks/useCapacity";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { formatDatePT, formatTimePT } from "@/utils/formatDate";
-import homeBg from "@/assets/home-background.jpg";
 
 function EventPill({
   icon,
@@ -276,27 +275,6 @@ export default function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pb-20 pt-20 md:pb-24">
-      {/* Background image */}
-      <div className="absolute inset-0 -z-10">
-        <img
-          src={homeBg}
-          alt=""
-          className="h-full w-full object-cover object-center"
-          aria-hidden="true"
-        />
-        {/* Multi-layer overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-        <div className="absolute inset-0 bg-[#050505]/40" />
-      </div>
-
-      {/* Subtle vignette */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, transparent 40%, rgba(5,5,5,0.7) 100%)",
-        }}
-      />
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -329,7 +307,7 @@ export default function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.35 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-4 rounded-full border border-white/10 bg-black/30 px-6 py-3 backdrop-blur-sm"
+          className="mt-8 flex flex-wrap items-center justify-center gap-4 rounded-full border border-light-gold/20 bg-black/30 px-6 py-3 backdrop-blur-sm"
         >
           <EventPill
             icon={faCalendarDay}

@@ -6,7 +6,7 @@ import useUsers from "@/hooks/userHooks/useUsers";
 import GalaService from "@/services/GalaService";
 
 const INPUT_CLS =
-  "rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
+  "rounded-lg border border-white/15 bg-[#2a4845] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
 
 export default function BusAssignmentAdmin() {
   const { config } = useHomepageConfig();
@@ -44,7 +44,7 @@ export default function BusAssignmentAdmin() {
 
   if (buses.length === 0) {
     return (
-      <div className="border-white/8 bg-white/3 rounded-xl border px-5 py-8 text-center">
+      <div className="border-light-gold/20 bg-white/3 border px-5 py-8 text-center">
         <FontAwesomeIcon icon={faBus} className="text-white/15 mb-3 text-3xl" />
         <p className="font-gala text-sm text-white/40">
           Configura primeiro os autocarros na tab{" "}
@@ -68,7 +68,7 @@ export default function BusAssignmentAdmin() {
         )}
       </div>
 
-      <div className="border-white/8 bg-white/3 flex flex-wrap items-center gap-3 rounded-xl border p-4">
+      <div className="border-light-gold/20 bg-white/3 flex flex-wrap items-center gap-3 border p-4">
         <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/40">
           Auto-distribuir por
         </span>
@@ -81,7 +81,7 @@ export default function BusAssignmentAdmin() {
               "rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
               autoStrategy === s
                 ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-                : "border-white/10 text-white/40 hover:border-white/25 hover:text-white/60",
+                : "border-light-gold/20 text-white/40 hover:border-white/25 hover:text-white/60",
             ].join(" ")}
           >
             {s === "year" ? "Ano de matrícula" : "Ordem de inscrição"}
@@ -101,10 +101,10 @@ export default function BusAssignmentAdmin() {
         </button>
       </div>
 
-      <div className="border-white/8 overflow-x-auto rounded-xl border">
+      <div className="border-light-gold/20 overflow-x-auto border">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-white/6 border-b">
+            <tr className="border-light-gold/15 border-b">
               <th className="px-4 py-3 text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
                 Nome
               </th>

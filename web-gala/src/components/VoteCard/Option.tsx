@@ -29,7 +29,7 @@ export default function Option({
       className={classNames(
         "flex flex-row items-center gap-2 rounded-full border p-2 transition-colors duration-300 ease-in-out",
         {
-          "border-transparent bg-gradient-to-r from-[#F7BBAC] to-[#C58676]":
+          "border-transparent bg-gradient-to-r from-[#c9a843] to-[#8a6a20]":
             currentSelected === optionIdx, // Selected state
           "border-dark-gold bg-black/20": currentSelected !== optionIdx, // Default state
         },
@@ -54,7 +54,7 @@ export default function Option({
           "bg-clip-text text-left font-gala font-semibold transition-all duration-300 ease-in-out ",
           {
             "text-black": currentSelected === optionIdx, // Gradient text when selected
-            "bg-gradient-to-r from-[#F7BBAC] to-[#C58676] text-transparent":
+            "bg-gradient-to-r from-[#c9a843] to-[#8a6a20] text-transparent":
               currentSelected !== optionIdx, // Default text color
           },
         )}

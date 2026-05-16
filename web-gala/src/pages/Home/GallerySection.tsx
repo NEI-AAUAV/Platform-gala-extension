@@ -25,7 +25,7 @@ export default function GallerySection() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 * idx, duration: 0.5 }}
-              className="overflow-hidden rounded-xl border border-light-gold/20 shadow-xl"
+              className="overflow-hidden border border-light-gold/20 shadow-xl"
             >
               <img
                 src={imgSrc}

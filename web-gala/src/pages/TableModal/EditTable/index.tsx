@@ -105,13 +105,13 @@ function InvitePanel({
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Procurar por nome ou email..."
-          className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-light-gold/40"
+          className="w-full border border-light-gold/20 bg-white/5 py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-light-gold/40"
         />
       </div>
 
       {/* Search results */}
       {results.length > 0 && (
-        <div className="border-white/8 divide-y divide-white/5 overflow-hidden rounded-xl border bg-[#111]">
+        <div className="border-light-gold/20 divide-y divide-white/5 overflow-hidden border bg-[#111]">
           {results.map((u) => {
             const alreadyInvited = pending.includes(u.id);
             return (
@@ -185,7 +185,7 @@ function PendingInviteRow({
 }>) {
   const { neiUser } = useNEIUser(userId);
   return (
-    <div className="border-white/8 bg-white/3 flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+    <div className="border-light-gold/20 bg-white/3 flex items-center justify-between gap-3 border px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
         <Avatar id={userId} className="w-4 rounded-full" />
         <span className="truncate text-xs text-white/60">
@@ -230,7 +230,7 @@ function PhotoUpload({
   if (!photoEnabled && !table.photo_url) return null;
 
   return (
-    <div className="bg-white/2 flex items-center justify-between rounded-xl border border-dashed border-white/10 p-4">
+    <div className="bg-white/2 flex items-center justify-between border border-dashed border-light-gold/20 p-4">
       <div className="flex items-center gap-4">
         {table.photo_url ? (
           <img
@@ -312,7 +312,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
             <textarea
               rows={1}
               ref={titleRef}
-              className="block w-full max-w-[20rem] select-none resize-none overflow-hidden rounded-xl border border-transparent bg-transparent py-1 text-3xl font-bold text-white transition-all focus:border-light-gold/30 focus:bg-white/5 focus:px-4 focus:outline-none"
+              className="block w-full max-w-[20rem] select-none resize-none overflow-hidden border border-transparent bg-transparent py-1 text-3xl font-bold text-white transition-all focus:border-light-gold/30 focus:bg-white/5 focus:px-4 focus:outline-none"
               readOnly
               placeholder="Nome da Mesa"
               defaultValue={table.name ?? ""}
@@ -383,7 +383,7 @@ export default function EditTable({ table, mutate }: EditTableProps) {
 
           <button
             type="button"
-            className="w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+            className="w-full border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
             onClick={async () => {
               try {
                 await tableLeave(table._id);

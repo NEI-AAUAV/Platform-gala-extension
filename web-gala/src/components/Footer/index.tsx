@@ -62,7 +62,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="relative z-10 overflow-hidden bg-[#050505]">
+    <footer className="relative z-10 overflow-hidden bg-[#182c2a]">
       {/* Background Map - Now local to Footer */}
       <div className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden">
         <img
@@ -70,7 +70,7 @@ export default function Footer() {
           alt="NEI Map Background"
           className="h-full w-full scale-110 object-cover object-center opacity-[0.2] grayscale"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-transparent to-[#050505]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#182c2a] via-transparent to-[#182c2a]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-screen-xl px-4 py-14 md:px-8">

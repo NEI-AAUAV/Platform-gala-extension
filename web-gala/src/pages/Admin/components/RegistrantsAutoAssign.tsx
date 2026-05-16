@@ -19,7 +19,7 @@ export default function RegistrantsAutoAssign({
   if (busesLength === 0) return null;
 
   return (
-    <div className="border-white/8 bg-white/3 flex flex-wrap items-center gap-3 rounded-xl border p-4">
+    <div className="border-light-gold/20 bg-white/3 flex flex-wrap items-center gap-3 border p-4">
       <span className="text-xs font-semibold text-white/40">
         Auto-distribuir autocarros por
       </span>
@@ -32,7 +32,7 @@ export default function RegistrantsAutoAssign({
             "rounded-full border px-4 py-1.5 text-xs font-semibold transition-all",
             autoStrategy === s
               ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-              : "border-white/10 text-white/40 hover:border-white/25 hover:text-white/60",
+              : "border-light-gold/20 text-white/40 hover:border-white/25 hover:text-white/60",
           ].join(" ")}
         >
           {s === "year" ? "Ano de matrícula" : "Ordem de inscrição"}

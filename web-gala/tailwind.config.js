@@ -11,11 +11,14 @@ export default {
         xs: "576px",
       },
       fontFamily: {
-        gala: ["Inter", "sans-serif"],
+        gala: ["Montserrat", "sans-serif"],
       },
       colors: {
-        "light-gold": "#F7BBAC",
-        "dark-gold": "#C58676",
+        "light-gold": "#c9a843",
+        "dark-gold": "#8a6a20",
+        "green-dark": "#203836",
+        "green-light": "#355a56",
+        "gala-white": "#c1cac9",
       },
       backgroundImage: () => ({
         "gradient-radial":
@@ -29,13 +32,13 @@ export default {
     themes: [
       {
         light: {
-          primary: "#F7BBAC",
-          secondary: "#C58676",
-          accent: "#F7BBAC",
-          neutral: "#3D4451",
-          "base-100": "#0a0a0a",
-          "base-200": "#111111",
-          "base-content": "#FFFFFF",
+          primary: "#c9a843",
+          secondary: "#8a6a20",
+          accent: "#c9a843",
+          neutral: "#355a56",
+          "base-100": "#203836",
+          "base-200": "#182c2a",
+          "base-content": "#c1cac9",
           info: "#0284c7",
           success: "#198754",
           warning: "#DD8500",

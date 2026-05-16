@@ -70,7 +70,7 @@ export function PendingInvitesBanner({
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-light-gold/25 bg-light-gold/5 p-4">
+    <div className="space-y-3 border border-light-gold/25 bg-light-gold/5 p-4">
       <div className="flex items-center gap-2">
         <FontAwesomeIcon icon={faBell} className="text-light-gold" />
         <p className="text-xs font-bold text-light-gold">
@@ -109,7 +109,7 @@ function InviteRow({
   );
 
   return (
-    <div className="border-white/8 bg-white/3 flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
+    <div className="border-light-gold/20 bg-white/3 flex items-center justify-between gap-3 border px-4 py-3">
       <div className="min-w-0">
         <p className="text-white/85 truncate text-sm font-semibold">
           {table.name || `Mesa #${table._id}`}
@@ -215,7 +215,7 @@ export default function ProfileTableSection() {
                 "rounded-xl border p-3 text-left transition-all hover:border-white/20",
                 selectedId === table._id
                   ? "border-light-gold/40 bg-light-gold/5"
-                  : "border-white/8 bg-white/3",
+                  : "border-light-gold/20 bg-white/3",
               ].join(" ")}
             >
               <Table table={table} />
@@ -245,7 +245,7 @@ function EmptySlot({ slotNumber }: Readonly<{ slotNumber: number }>) {
   };
 
   return (
-    <div className="bg-white/2 flex flex-col items-center gap-2 rounded-xl border border-white/5 p-3 opacity-40">
+    <div className="bg-white/2 flex flex-col items-center gap-2 border border-white/5 p-3 opacity-40">
       <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
         Mesa #{slotNumber}
       </span>

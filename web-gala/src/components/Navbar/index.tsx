@@ -58,7 +58,7 @@ export default function Navbar() {
       <nav
         className={`w-full transition-all duration-300 ${
           isScrolled
-            ? "border-light-gold/15 border-b bg-[#050505]/90 shadow-lg backdrop-blur-md"
+            ? "border-light-gold/15 border-b bg-[#182c2a]/90 shadow-lg backdrop-blur-md"
             : "bg-transparent"
         }`}
       >
@@ -70,7 +70,7 @@ export default function Navbar() {
             className="group flex items-center font-gala"
           >
             <img
-              src="/gala/logo.svg"
+              src="/gala/gala-logo.png"
               alt="NEI Logo"
               className="h-12 w-auto transition-transform group-hover:scale-105"
             />
@@ -170,10 +170,10 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#0a0a0a] shadow-2xl md:hidden"
+              className="fixed right-0 top-0 z-50 flex h-full w-72 max-w-[85vw] flex-col bg-[#203836] shadow-2xl md:hidden"
             >
               {/* Drawer header */}
-              <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
+              <div className="border-light-gold/20 flex items-center justify-between border-b px-5 py-4">
                 <img
                   src="/gala/logo.svg"
                   alt="NEI Logo"
@@ -182,7 +182,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={closeMenu}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/50 transition-colors hover:border-white/25 hover:text-white/80"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-light-gold/20 text-white/50 transition-colors hover:border-white/25 hover:text-white/80"
                   aria-label="Fechar menu"
                 >
                   <FontAwesomeIcon icon={faXmark} className="text-sm" />
@@ -193,7 +193,7 @@ export default function Navbar() {
               <nav className="flex flex-col gap-1 px-3 py-4" />
 
               {/* Divider */}
-              <div className="border-white/8 mx-5 border-t" />
+              <div className="border-light-gold/20 mx-5 border-t" />
 
               {/* Auth section */}
               <div className="flex flex-col gap-2 px-4 py-5">
@@ -232,7 +232,7 @@ export default function Navbar() {
                     <Link
                       to="/profile"
                       onClick={closeMenu}
-                      className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
+                      className="flex items-center gap-3 border border-light-gold/20 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
                     >
                       <FontAwesomeIcon
                         icon={faUser}
@@ -245,7 +245,7 @@ export default function Navbar() {
                       <Link
                         to="/admin"
                         onClick={closeMenu}
-                        className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
+                        className="flex items-center gap-3 border border-light-gold/20 px-4 py-3.5 font-gala text-sm font-semibold text-white/60 transition-all hover:border-light-gold/30 hover:text-light-gold"
                       >
                         <FontAwesomeIcon
                           icon={faUsersGear}

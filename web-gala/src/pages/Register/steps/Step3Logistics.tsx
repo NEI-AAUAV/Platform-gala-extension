@@ -149,10 +149,10 @@ function BusSection({
               type="button"
               onClick={() => onUpdate({ bus: opt.value })}
               className={[
-                "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                "flex flex-col gap-2 border p-4 text-left transition-all",
                 isSelected
                   ? "bg-light-gold/8 border-light-gold/60"
-                  : "border-white/8 bg-white/3 hover:border-white/20",
+                  : "border-light-gold/20 bg-white/3 hover:border-white/20",
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
@@ -209,7 +209,7 @@ function PersonMealSection({
   onAllergiesChange,
 }: Readonly<PersonMealSectionProps>) {
   return (
-    <div className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-xl border p-5">
+    <div className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-5">
       <div className="flex items-center gap-2">
         <FontAwesomeIcon
           icon={faUser}
@@ -240,10 +240,10 @@ function PersonMealSection({
                   type="button"
                   onClick={() => onMealChange(opt.id)}
                   className={[
-                    "flex items-center gap-3 rounded-lg border p-3 text-left transition-all",
+                    "flex items-center gap-3 border p-3 text-left transition-all",
                     isSelected
                       ? "bg-light-gold/8 border-light-gold/60"
-                      : "border-white/8 hover:border-white/20",
+                      : "border-light-gold/20 hover:border-white/20",
                   ].join(" ")}
                 >
                   <div
@@ -298,7 +298,7 @@ function PersonMealSection({
             onChange={(e) => onAllergiesChange(e.target.value)}
             placeholder="Ex: alergia a frutos secos, intolerância à lactose..."
             rows={4}
-            className="resize-none rounded-lg border border-white/10 bg-transparent px-4 py-3 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
+            className="resize-none border border-light-gold/20 bg-transparent px-4 py-3 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
           />
           {!allergiesRequired && (
             <p className="text-[0.6rem] text-white/25">

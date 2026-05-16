@@ -106,7 +106,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
               "rounded-full border px-4 py-1.5 font-gala text-xs font-semibold transition-all duration-300",
               active === idx
                 ? "border-light-gold bg-light-gold/10 text-light-gold"
-                : "border-white/10 text-white/30 hover:border-white/25 hover:text-white/60",
+                : "border-light-gold/20 text-white/30 hover:border-white/25 hover:text-white/60",
             ].join(" ")}
           >
             {vote.category}
@@ -143,7 +143,7 @@ function CategoryNominees({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: index * 0.07, duration: 0.6 }}
-      className="border-white/8 bg-white/3 rounded-2xl border p-6"
+      className="border-light-gold/20 bg-white/3 border p-6"
     >
       <p className="mb-1 font-gala text-[0.6rem] font-bold uppercase tracking-[0.35em] text-light-gold/50">
         Categoria
@@ -155,7 +155,7 @@ function CategoryNominees({
         {nominees.map((name, i) => (
           <li
             key={name}
-            className="border-white/6 bg-white/3 flex items-center gap-3 rounded-xl border px-4 py-2.5"
+            className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-2.5"
           >
             <span className="font-gala text-xs font-bold text-light-gold/40">
               {String(i + 1).padStart(2, "0")}

@@ -48,7 +48,7 @@ function ImageUploadField({
     <Field label={label}>
       <div className="flex flex-col gap-3">
         {currentUrl && (
-          <div className="relative w-32 overflow-hidden rounded-lg border border-white/10">
+          <div className="relative w-32 overflow-hidden border border-light-gold/20">
             <img src={currentUrl} alt="" className="h-20 w-full object-cover" />
             <button
               type="button"
@@ -63,7 +63,7 @@ function ImageUploadField({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="flex w-fit items-center gap-2 rounded-lg border border-dashed border-white/20 px-4 py-2 text-xs text-white/40 transition hover:border-white/40 hover:text-white/70 disabled:opacity-50"
+          className="flex w-fit items-center gap-2 border border-dashed border-white/20 px-4 py-2 text-xs text-white/40 transition hover:border-white/40 hover:text-white/70 disabled:opacity-50"
         >
           <FontAwesomeIcon icon={faUpload} className="text-[0.6rem]" />
           {(() => {
@@ -134,7 +134,7 @@ function BusesEditor({
           <button
             type="button"
             onClick={() => onChange(buses.filter((_, idx) => idx !== i))}
-            className="flex items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
+            className="flex items-center justify-center text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
           >
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           </button>

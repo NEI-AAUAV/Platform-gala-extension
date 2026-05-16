@@ -94,7 +94,7 @@ export default function NominationInput({
 
   if (submitted) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border border-green-500/30 bg-green-500/5 px-4 py-3">
         <div className="flex items-center gap-3">
           <FontAwesomeIcon
             icon={faCheckCircle}
@@ -110,7 +110,7 @@ export default function NominationInput({
         <button
           type="button"
           onClick={startEditing}
-          className="shrink-0 rounded-lg p-1.5 text-white/30 transition hover:bg-white/5 hover:text-white/60"
+          className="shrink-0 p-1.5 text-white/30 transition hover:bg-white/5 hover:text-white/60"
           title="Alterar nomeação"
         >
           <FontAwesomeIcon icon={faPencil} className="text-xs" />
@@ -134,12 +134,12 @@ export default function NominationInput({
             if (e.key === "Escape") setSuggestions([]);
           }}
           placeholder="Nome do candidato..."
-          className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-dark-gold/60 focus:outline-none"
+          className="border-white/15 w-full border bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-dark-gold/60 focus:outline-none"
         />
         {suggestions.length > 0 && (
           <ul
             ref={listRef}
-            className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-white/10 bg-[#111] shadow-lg"
+            className="absolute z-10 mt-1 w-full overflow-hidden border border-light-gold/20 bg-[#111] shadow-lg"
           >
             {suggestions.map((s) => (
               <li key={s}>
@@ -165,7 +165,7 @@ export default function NominationInput({
         type="button"
         onClick={submit}
         disabled={submitting || !value.trim()}
-        className="flex items-center justify-center gap-2 rounded-xl border border-dark-gold/40 py-2.5 text-sm font-semibold text-dark-gold transition hover:bg-dark-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex items-center justify-center gap-2 border border-dark-gold/40 py-2.5 text-sm font-semibold text-dark-gold transition hover:bg-dark-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <FontAwesomeIcon icon={faPaperPlane} className="text-xs" />
         {submitting ? "A submeter..." : "Nomear"}

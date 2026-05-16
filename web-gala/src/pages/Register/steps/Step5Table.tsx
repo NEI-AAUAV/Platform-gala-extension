@@ -65,7 +65,7 @@ function InviteCard({
       type="button"
       onClick={onSelect}
       className={[
-        "flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all",
+        "flex w-full items-center justify-between gap-3 border px-4 py-3 text-left transition-all",
         isSelected
           ? "border-light-gold bg-light-gold/10 ring-1 ring-light-gold"
           : "border-light-gold/20 bg-light-gold/5 hover:border-light-gold/40",
@@ -135,7 +135,7 @@ export default function Step5Table({
         transition={{ duration: 0.35 }}
         className="flex flex-col gap-6"
       >
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 py-16 text-center">
+        <div className="flex flex-col items-center gap-4 border border-light-gold/20 bg-white/5 py-16 text-center">
           <FontAwesomeIcon
             icon={faClock}
             className="text-3xl text-light-gold/40"
@@ -238,7 +238,7 @@ export default function Step5Table({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col gap-3 rounded-2xl border border-light-gold/30 bg-light-gold/10 p-5 shadow-lg shadow-light-gold/5"
+          className="flex flex-col gap-3 border border-light-gold/30 bg-light-gold/10 p-5 shadow-lg shadow-light-gold/5"
         >
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-light-gold">
             <FontAwesomeIcon icon={faBell} className="animate-bounce" />
@@ -275,14 +275,14 @@ export default function Step5Table({
             placeholder="Procurar mesa por nome ou número..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none focus:border-light-gold/50"
+            className="w-full border border-light-gold/20 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none focus:border-light-gold/50"
           />
         </div>
         <button
           type="button"
           onClick={handleCreateNew}
           className={[
-            "flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold transition-all",
+            "flex items-center justify-center gap-2 border px-5 py-3 text-sm font-bold transition-all",
             data.tableId === "new"
               ? "border-light-gold bg-light-gold text-black"
               : "border-light-gold/40 text-light-gold hover:bg-light-gold/10",
@@ -297,7 +297,7 @@ export default function Step5Table({
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-3 rounded-xl border border-light-gold/30 bg-light-gold/5 p-5"
+          className="flex flex-col gap-3 border border-light-gold/30 bg-light-gold/5 p-5"
         >
           <p className="text-xs font-semibold text-light-gold/70">
             Dá um nome à tua mesa. Poderás convidar amigos depois de concluíres
@@ -311,7 +311,7 @@ export default function Step5Table({
             onChange={(e) =>
               onUpdate({ tableName: e.target.value || undefined })
             }
-            className="border-white/15 rounded-lg border bg-[#1c1c1e] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-light-gold/50"
+            className="border-white/15 border bg-[#2a4845] px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-light-gold/50"
           />
         </motion.div>
       )}
@@ -321,7 +321,7 @@ export default function Step5Table({
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between rounded-xl border border-light-gold/30 bg-light-gold/5 px-5 py-4"
+          className="flex items-center justify-between border border-light-gold/30 bg-light-gold/5 px-5 py-4"
         >
           <div className="flex items-center gap-3">
             <FontAwesomeIcon icon={faCheck} className="text-light-gold" />
@@ -381,7 +381,7 @@ export default function Step5Table({
       </div>
 
       {/* Info box */}
-      <div className="flex gap-3 rounded-xl border border-white/5 bg-white/5 p-4">
+      <div className="flex gap-3 border border-white/5 bg-white/5 p-4">
         <FontAwesomeIcon
           icon={faInfoCircle}
           className="mt-0.5 shrink-0 text-light-gold/40"
@@ -415,7 +415,7 @@ export default function Step5Table({
               "border px-5 py-2.5 font-gala text-sm font-semibold transition-all",
               data.tableId === "none"
                 ? "border-white/30 text-white/70"
-                : "border-white/10 text-white/30 hover:border-white/20 hover:text-white/50",
+                : "border-light-gold/20 text-white/30 hover:border-white/20 hover:text-white/50",
             ].join(" ")}
           >
             Sem mesa
@@ -481,7 +481,7 @@ function TableCard({
       type="button"
       onClick={() => canSelect && !isFull && onSelect()}
       disabled={(isFull && !isSelected) || (!canSelect && !isSelected)}
-      className={`group relative flex flex-col items-center gap-3 rounded-2xl border p-4 transition-all ${containerStyles} ${cursorStyles}`}
+      className={`group relative flex flex-col items-center gap-3 border p-4 transition-all ${containerStyles} ${cursorStyles}`}
     >
       <div className="flex w-full items-center justify-between">
         <span className="text-[0.6rem] font-bold uppercase text-white/30">
@@ -544,7 +544,7 @@ function EmptySlotCard({
   };
   return (
     <div
-      className={`bg-white/2 flex flex-col items-center gap-3 rounded-2xl border border-white/5 p-4 transition-opacity ${
+      className={`bg-white/2 flex flex-col items-center gap-3 border border-white/5 p-4 transition-opacity ${
         dimmed ? "opacity-20" : "opacity-40"
       }`}
     >

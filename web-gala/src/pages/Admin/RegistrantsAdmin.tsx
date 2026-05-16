@@ -265,7 +265,7 @@ export default function RegistrantsAdmin() {
         <button
           type="button"
           onClick={() => openForm()}
-          className="flex items-center gap-2 rounded-xl bg-dark-gold px-4 py-2 text-sm font-bold text-black transition hover:bg-yellow-600"
+          className="flex items-center gap-2 bg-dark-gold px-4 py-2 text-sm font-bold text-black transition hover:bg-yellow-600"
         >
           <FontAwesomeIcon icon={faPlus} />
           Nova Inscrição
@@ -301,7 +301,7 @@ export default function RegistrantsAdmin() {
               "inscricoes.csv",
             )
           }
-          className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
+          className="flex items-center gap-2 border border-light-gold/20 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
         >
           <FontAwesomeIcon icon={faDownload} /> Exportar inscrições (CSV)
         </button>
@@ -310,7 +310,7 @@ export default function RegistrantsAdmin() {
           onClick={() =>
             downloadCsv("/api/gala/v1/admin/export/tables", "mesas.csv")
           }
-          className="flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
+          className="flex items-center gap-2 border border-light-gold/20 px-4 py-2 text-xs font-semibold text-white/50 transition hover:border-white/25 hover:text-white/70"
         >
           <FontAwesomeIcon icon={faDownload} /> Exportar mesas (CSV)
         </button>
@@ -333,7 +333,7 @@ export default function RegistrantsAdmin() {
 
       <dialog
         ref={detailRef}
-        className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0f0f0f] p-6 text-white shadow-2xl backdrop:bg-black/80"
+        className="w-full max-w-lg border border-light-gold/20 bg-[#182c2a] p-6 text-white shadow-2xl backdrop:bg-black/80"
       >
         {selectedUser && (
           <UserDetail
@@ -356,7 +356,7 @@ export default function RegistrantsAdmin() {
 
       <dialog
         ref={formRef}
-        className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0f0f0f] p-6 text-white shadow-2xl backdrop:bg-black/80"
+        className="w-full max-w-2xl border border-light-gold/20 bg-[#182c2a] p-6 text-white shadow-2xl backdrop:bg-black/80"
       >
         {formUser !== undefined && (
           <AdminRegistrationForm

@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export const INPUT_CLS =
-  "rounded-lg border border-white/15 bg-[#1c1c1e] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
+  "rounded-lg border border-white/15 bg-[#2a4845] px-3 py-2 text-sm text-white placeholder:text-white/30 caret-white outline-none transition focus:border-light-gold/50";
 
 export function Field({
   label,
@@ -140,7 +140,7 @@ export function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-white/8 bg-white/3 rounded-xl border">
+    <div className="border-light-gold/20 bg-white/3 border">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -158,7 +158,7 @@ export function Section({
         />
       </button>
       {open && (
-        <div className="border-white/6 flex flex-col gap-4 border-t px-5 pb-5 pt-4">
+        <div className="border-light-gold/15 flex flex-col gap-4 border-t px-5 pb-5 pt-4">
           {children}
         </div>
       )}
@@ -216,7 +216,7 @@ export function StringListEditor({
           <button
             type="button"
             onClick={() => update(rows.filter((_, idx) => idx !== i))}
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
           >
             <FontAwesomeIcon icon={faTrash} className="text-xs" />
           </button>

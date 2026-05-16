@@ -24,7 +24,7 @@ function SummaryRow({
   value,
 }: Readonly<{ label: string; value: string }>) {
   return (
-    <div className="border-white/6 flex items-start justify-between gap-4 border-b py-2.5 last:border-0">
+    <div className="border-light-gold/15 flex items-start justify-between gap-4 border-b py-2.5 last:border-0">
       <span className="text-xs text-white/40">{label}</span>
       <span className="text-right text-xs font-semibold text-white/75">
         {value}
@@ -101,7 +101,7 @@ export default function Step6Confirm({
             return (
               <div
                 key={c.id}
-                className="border-white/8 bg-white/4 flex items-start gap-3 rounded-xl border p-4"
+                className="border-light-gold/20 bg-white/4 flex items-start gap-3 border p-4"
               >
                 <div className="bg-white/6 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
                   <FontAwesomeIcon
@@ -140,7 +140,7 @@ export default function Step6Confirm({
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             Dados Pessoais
           </h3>
-          <div className="border-white/8 bg-white/4 rounded-xl border px-5 py-2">
+          <div className="border-light-gold/20 bg-white/4 border px-5 py-2">
             <SummaryRow
               label="Nome"
               value={[name, surname].filter(Boolean).join(" ") || "—"}
@@ -159,7 +159,7 @@ export default function Step6Confirm({
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             Logística
           </h3>
-          <div className="border-white/8 bg-white/4 rounded-xl border px-5 py-2">
+          <div className="border-light-gold/20 bg-white/4 border px-5 py-2">
             {config.busEnabled && (
               <SummaryRow label="Transporte" value={busLabel} />
             )}
@@ -176,8 +176,8 @@ export default function Step6Confirm({
           <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
             Pagamento
           </h3>
-          <div className="border-white/8 bg-white/4 rounded-xl border px-5 py-2">
-            <div className="border-white/6 flex items-center justify-between border-b py-2.5">
+          <div className="border-light-gold/20 bg-white/4 border px-5 py-2">
+            <div className="border-light-gold/15 flex items-center justify-between border-b py-2.5">
               <span className="text-xs text-white/40">
                 {userChosePhased
                   ? `Fase 1 (${totalPhase1Price}€)`
@@ -214,7 +214,7 @@ export default function Step6Confirm({
             <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
               Mesa Selecionada
             </h3>
-            <div className="border-white/8 bg-white/4 flex items-center gap-4 rounded-xl border p-4">
+            <div className="border-light-gold/20 bg-white/4 flex items-center gap-4 border p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-light-gold/10 text-light-gold">
                 <FontAwesomeIcon icon={faChair} />
               </div>
@@ -247,7 +247,7 @@ export default function Step6Confirm({
           paidAmount = data.paymentProofPhase1 ? totalEventPrice : 0;
         }
         return (
-          <div className="bg-light-gold/6 rounded-xl border border-light-gold/20 p-5">
+          <div className="bg-light-gold/6 border border-light-gold/20 p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <FontAwesomeIcon

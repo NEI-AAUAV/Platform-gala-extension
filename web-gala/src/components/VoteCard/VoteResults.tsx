@@ -34,7 +34,7 @@ function VoteResults() {
           Erro ao carregar resultados. A tentar novamente...
         </p>
       )}
-      <table className="my-20 w-full overflow-hidden rounded-lg  text-center text-light-gold">
+      <table className="my-20 w-full overflow-hidden  text-center text-light-gold">
         <thead className="bg-dark-gold text-black">
           <tr>
             <th className="p-2">Category</th>

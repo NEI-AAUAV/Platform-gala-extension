@@ -163,7 +163,7 @@ export default function AdminRegistrationForm({
 
   return (
     <div className="flex max-h-[80vh] flex-col gap-4 overflow-y-auto">
-      <div className="sticky top-0 z-10 flex items-start justify-between bg-[#0f0f0f] pb-2">
+      <div className="sticky top-0 z-10 flex items-start justify-between bg-[#182c2a] pb-2">
         <div>
           <h2 className="font-gala text-xl font-bold text-white">
             {userToEdit ? "Editar Inscrição" : "Nova Inscrição"}
@@ -172,7 +172,7 @@ export default function AdminRegistrationForm({
         <button
           type="button"
           onClick={onClose}
-          className="hover:bg-white/8 flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition hover:text-white/70"
+          className="hover:bg-white/8 flex h-8 w-8 items-center justify-center text-white/30 transition hover:text-white/70"
         >
           <FontAwesomeIcon icon={faXmark} />
         </button>
@@ -180,7 +180,7 @@ export default function AdminRegistrationForm({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {!userToEdit && (
-          <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="flex flex-col gap-2 border border-light-gold/20 bg-white/5 p-4">
             <div className="flex items-center gap-4">
               <label
                 htmlFor="use-existing-yes"
@@ -228,7 +228,7 @@ export default function AdminRegistrationForm({
                   <span className="text-xs text-white/40">A procurar...</span>
                 )}
                 {users.length > 0 && (
-                  <div className="mt-2 flex max-h-40 flex-col gap-1 overflow-y-auto rounded-xl border border-white/10 p-1">
+                  <div className="mt-2 flex max-h-40 flex-col gap-1 overflow-y-auto border border-light-gold/20 p-1">
                     {users.map((u) => (
                       <button
                         key={u.id}
@@ -441,7 +441,7 @@ export default function AdminRegistrationForm({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
+        <div className="flex flex-col gap-2 border border-light-gold/20 bg-white/5 p-4">
           <p className="text-xs font-semibold uppercase text-white/50">
             Pagamento
           </p>
@@ -501,7 +501,7 @@ export default function AdminRegistrationForm({
           {companions.map((c, i) => (
             <div
               key={c._id}
-              className="relative flex flex-col gap-2 rounded-lg bg-white/5 p-3"
+              className="relative flex flex-col gap-2 bg-white/5 p-3"
             >
               <button
                 type="button"
@@ -581,7 +581,7 @@ export default function AdminRegistrationForm({
         <button
           type="submit"
           disabled={saving}
-          className="mt-4 w-full rounded-xl bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600 disabled:opacity-50"
+          className="mt-4 w-full bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600 disabled:opacity-50"
         >
           {saving ? "A guardar..." : "Guardar Inscrição"}
         </button>

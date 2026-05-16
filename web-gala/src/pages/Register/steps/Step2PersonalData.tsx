@@ -160,7 +160,7 @@ function IdentitySection({
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
         Identificação (via Autenticação)
       </h3>
-      <div className="border-light-gold/15 bg-white/4 flex flex-col gap-3 rounded-xl border p-5">
+      <div className="border-light-gold/15 bg-white/4 flex flex-col gap-3 border p-5">
         <div className="flex items-center gap-3 text-sm">
           <FontAwesomeIcon
             icon={faLock}
@@ -189,7 +189,7 @@ function FormSection({
       <h3 className="text-[0.65rem] font-semibold uppercase tracking-widest text-light-gold/60">
         Dados da Inscrição
       </h3>
-      <div className="border-white/8 bg-white/4 flex flex-col gap-5 rounded-xl border p-5">
+      <div className="border-light-gold/20 bg-white/4 flex flex-col gap-5 border p-5">
         <div className="flex flex-col gap-2">
           {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label
@@ -209,7 +209,7 @@ function FormSection({
             value={data.nmec}
             onChange={(e) => onUpdate({ nmec: e.target.value })}
             placeholder="Ex: 123456"
-            className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
           />
         </div>
 
@@ -229,7 +229,7 @@ function FormSection({
                     "rounded-lg border px-3 py-2 text-xs font-semibold transition-all",
                     isSelected
                       ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-                      : "border-white/10 text-white/40 hover:border-white/25 hover:text-white/60",
+                      : "border-light-gold/20 text-white/40 hover:border-white/25 hover:text-white/60",
                   ].join(" ")}
                 >
                   {label}
@@ -257,7 +257,7 @@ function FormSection({
             value={data.phone}
             onChange={(e) => onUpdate({ phone: e.target.value })}
             placeholder="Ex: 912 345 678"
-            className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2.5 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/50"
           />
         </div>
       </div>
@@ -275,7 +275,7 @@ function IdentityRow({
   value: string;
 }>) {
   return (
-    <div className="border-white/6 bg-white/3 flex items-center gap-3 rounded-lg border px-4 py-3">
+    <div className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-3">
       <FontAwesomeIcon
         icon={icon}
         className="w-3 flex-shrink-0 text-[0.7rem] text-light-gold/40"

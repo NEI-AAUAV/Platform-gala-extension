@@ -42,9 +42,9 @@ export default function RegistrantsTable({
   openDetail,
 }: RegistrantsTableProps) {
   return (
-    <div className="border-white/8 overflow-x-auto rounded-xl border">
+    <div className="border-light-gold/20 overflow-x-auto border">
       <table className="w-full text-left text-sm">
-        <thead className="border-white/6 border-b">
+        <thead className="border-light-gold/15 border-b">
           <tr>
             {[
               "NMec",
@@ -216,7 +216,7 @@ export default function RegistrantsTable({
                     <button
                       type="button"
                       onClick={() => openDetail(user)}
-                      className="text-white/35 flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-[0.6rem] font-semibold opacity-0 transition hover:border-white/25 hover:text-white/60 group-hover:opacity-100"
+                      className="text-white/35 flex items-center gap-1.5 rounded-full border border-light-gold/20 px-3 py-1 text-[0.6rem] font-semibold opacity-0 transition hover:border-white/25 hover:text-white/60 group-hover:opacity-100"
                     >
                       <FontAwesomeIcon icon={faEye} /> Ver
                     </button>

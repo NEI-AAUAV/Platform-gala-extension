@@ -238,21 +238,21 @@ export default function Admin() {
         <aside
           className={[
             // Mobile: fixed full-height drawer
-            "border-white/8 fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r bg-[#0a0a0a] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
+            "border-light-gold/20 fixed left-0 top-20 z-50 h-[calc(100vh-5rem)] w-64 flex-col border-r bg-[#203836] transition-transform duration-300 lg:relative lg:top-0 lg:z-auto lg:flex lg:translate-x-0",
             sidebarOpen
               ? "flex translate-x-0"
               : "hidden -translate-x-full lg:flex",
           ].join(" ")}
         >
           {/* Sidebar header */}
-          <div className="border-white/8 flex items-center justify-between border-b px-5 py-4">
+          <div className="border-light-gold/20 flex items-center justify-between border-b px-5 py-4">
             <span className="font-gala text-[0.6rem] font-bold uppercase tracking-[0.3em] text-white/30">
               Admin
             </span>
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
-              className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60 lg:hidden"
+              className="hover:bg-white/8 flex h-7 w-7 items-center justify-center text-white/30 transition hover:text-white/60 lg:hidden"
             >
               <FontAwesomeIcon icon={faXmark} className="text-xs" />
             </button>
@@ -268,7 +268,7 @@ export default function Admin() {
                   type="button"
                   onClick={() => handleTabChange(id)}
                   className={[
-                    "group flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all",
+                    "group flex w-full items-start gap-3 px-3 py-3 text-left transition-all",
                     isActive
                       ? "bg-dark-gold/12 text-dark-gold"
                       : "text-white/50 hover:bg-white/5 hover:text-white/80",
@@ -308,7 +308,7 @@ export default function Admin() {
         {/* ── Main content area ── */}
         <div className="flex flex-1 flex-col overflow-hidden transition-all duration-500">
           {/* Top bar (mobile hamburger + preview toggle) */}
-          <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
+          <div className="border-light-gold/20 flex shrink-0 items-center justify-between border-b px-4 py-3 lg:px-6">
             {/* Mobile: hamburger */}
             <button
               type="button"
@@ -419,8 +419,8 @@ export default function Admin() {
 
             {/* Live preview pane */}
             {previewOpen && (
-              <div className="md:border-white/8 flex w-full flex-col bg-black md:w-1/2 md:border-l">
-                <div className="border-white/8 flex shrink-0 items-center justify-between border-b px-4 py-2">
+              <div className="md:border-light-gold/20 flex w-full flex-col bg-black md:w-1/2 md:border-l">
+                <div className="border-light-gold/20 flex shrink-0 items-center justify-between border-b px-4 py-2">
                   <span className="font-gala text-xs font-semibold uppercase tracking-widest text-white/30">
                     Preview - {previewRoute}
                   </span>
@@ -428,7 +428,7 @@ export default function Admin() {
                     type="button"
                     onClick={reload}
                     title="Recarregar preview"
-                    className="hover:bg-white/8 flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition hover:text-white/60"
+                    className="hover:bg-white/8 flex h-7 w-7 items-center justify-center text-white/30 transition hover:text-white/60"
                   >
                     <FontAwesomeIcon icon={faRotateRight} className="text-xs" />
                   </button>

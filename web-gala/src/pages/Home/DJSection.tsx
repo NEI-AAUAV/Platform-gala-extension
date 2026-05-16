@@ -50,7 +50,7 @@ function DJPhoto({
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-3xl border border-white/10"
+      className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-3xl border border-light-gold/20"
     >
       {photoUrl ? (
         <img

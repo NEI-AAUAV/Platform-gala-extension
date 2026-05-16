@@ -39,7 +39,7 @@ export default function RegistrantsFilters({
           placeholder="Pesquisar por nome, email ou NMec..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-white/4 w-full rounded-xl border border-white/10 py-2.5 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/25 focus:border-white/25"
+          className="bg-white/4 w-full border border-light-gold/20 py-2.5 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/25 focus:border-white/25"
         />
       </div>
       <div className="flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ export default function RegistrantsFilters({
               "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
               paymentFilter === f
                 ? "border-light-gold/60 bg-light-gold/10 text-light-gold"
-                : "text-white/35 hover:text-white/55 border-white/10 hover:border-white/20",
+                : "text-white/35 hover:text-white/55 border-light-gold/20 hover:border-white/20",
             ].join(" ")}
           >
             {
@@ -86,7 +86,7 @@ export default function RegistrantsFilters({
               "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
               tableFilter === f
                 ? "bg-white/8 border-white/30 text-white/70"
-                : "text-white/35 hover:text-white/55 border-white/10 hover:border-white/20",
+                : "text-white/35 hover:text-white/55 border-light-gold/20 hover:border-white/20",
             ].join(" ")}
           >
             {

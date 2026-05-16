@@ -72,7 +72,7 @@ function CompanionCard({
   onRemove,
 }: Readonly<CardProps>) {
   return (
-    <div className="border-white/8 bg-white/3 rounded-xl border p-4">
+    <div className="border-light-gold/20 bg-white/3 border p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
           Acompanhante {index + 1}
@@ -80,7 +80,7 @@ function CompanionCard({
         <button
           type="button"
           onClick={onRemove}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
+          className="flex h-7 w-7 items-center justify-center text-red-400/50 transition hover:bg-red-500/10 hover:text-red-400"
         >
           <FontAwesomeIcon icon={faTrash} className="text-xs" />
         </button>
@@ -101,7 +101,7 @@ function CompanionCard({
             value={companion.name}
             onChange={(e) => onUpdateName(e.target.value)}
             placeholder="Ex: João Silva"
-            className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
           />
         </div>
 
@@ -121,7 +121,7 @@ function CompanionCard({
             value={companion.email}
             onChange={(e) => onUpdateEmail(e.target.value)}
             placeholder="Ex: joao@exemplo.com"
-            className="rounded-lg border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-3 py-2 text-sm text-white/80 placeholder-white/25 outline-none transition focus:border-light-gold/40"
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useUserStore } from "@/stores/useUserStore";
@@ -10,6 +10,7 @@ import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 import { formatDateTimePT } from "@/utils/formatDate";
 import GalaService from "@/services/GalaService";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
+import GalaFrame from "@/components/GalaFrame";
 import StepIndicator from "./StepIndicator";
 import Step1EventInfo from "./steps/Step1EventInfo";
 import Step2PersonalData from "./steps/Step2PersonalData";
@@ -65,54 +66,41 @@ export default function Register() {
   const [syncing, setSyncing] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   useEffect(() => {
     if (sub === undefined) return;
     GalaService.registration
       .getStatus()
       .then((status) => {
         if (status) {
+          const cur = dataRef.current;
+          const s = status as unknown as Record<string, unknown>;
+          const apiMeal = (s.meal_option as string) || "";
+          const apiBus =
+            BUS_OPTION_MAP[(s.bus_option as string) ?? "NONE"] ?? "none";
+          const apiAllergies = (s.food_allergies as string) || "";
+          const apiPhone = (s.phone as string) || "";
+          const apiCompanions = normalizeCompanionsFromApi(s.companions);
+          const apiTableId =
+            (s.table_id as number | null) === null
+              ? null
+              : String(s.table_id);
           update({
             nmec: String(status.nmec || ""),
-            year:
-              ((status as unknown as Record<string, unknown>).matriculation as
-                | number
-                | null) ?? null,
-            bus:
-              BUS_OPTION_MAP[
-                ((status as unknown as Record<string, unknown>)
-                  .bus_option as string) ?? "NONE"
-              ] ?? "none",
-            meal:
-              ((status as unknown as Record<string, unknown>)
-                .meal_option as string) || "",
-            allergies:
-              ((status as unknown as Record<string, unknown>)
-                .food_allergies as string) || "",
-            phone:
-              ((status as unknown as Record<string, unknown>)
-                .phone as string) || "",
-            phasedPayment:
-              ((status as unknown as Record<string, unknown>)
-                .phased_payment as boolean) ?? false,
-            companions: normalizeCompanionsFromApi(
-              (status as unknown as Record<string, unknown>).companions,
-            ),
-            tableId:
-              ((status as unknown as Record<string, unknown>).table_id as
-                | number
-                | null) === null
-                ? null
-                : String(
-                    (status as unknown as Record<string, unknown>).table_id,
-                  ),
-            tableRole:
-              ((status as unknown as Record<string, unknown>).table_id as
-                | number
-                | null) === null
-                ? null
-                : "member",
-
+            year: (s.matriculation as number | null) ?? null,
+            phasedPayment: (s.phased_payment as boolean) ?? false,
+            tableId: apiTableId,
+            tableRole: apiTableId === null ? null : "member",
             currentStep: status.registration_step || 1,
+            // Only seed user-editable fields if they haven't been set locally yet
+            bus: cur.bus === "none" ? apiBus : cur.bus,
+            meal: cur.meal === "" ? apiMeal : cur.meal,
+            allergies: cur.allergies === "" ? apiAllergies : cur.allergies,
+            phone: cur.phone === "" ? apiPhone : cur.phone,
+            companions:
+              cur.companions.length === 0 ? apiCompanions : cur.companions,
           });
         }
       })
@@ -261,11 +249,11 @@ export default function Register() {
           />
         </motion.div>
 
-        <div className="border-white/8 bg-white/3 rounded-2xl border p-6 backdrop-blur-sm sm:p-8">
+        <GalaFrame className="bg-white/3 p-6 backdrop-blur-sm sm:p-8">
           <StepTitle step={currentStep} />
 
           {stepError && (
-            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <div className="mb-4 border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
               {stepError}
             </div>
           )}
@@ -327,7 +315,7 @@ export default function Register() {
               )}
             </div>
           </AnimatePresence>
-        </div>
+        </GalaFrame>
 
         <p className="mt-4 text-center text-[0.6rem] uppercase tracking-widest text-white/20">
           Passo {currentStep} de 6
@@ -364,7 +352,7 @@ const STEP_TITLES: Record<number, { title: string; sub: string }> = {
 function StepTitle({ step }: Readonly<{ step: number }>) {
   const { title, sub } = STEP_TITLES[step] ?? { title: "", sub: "" };
   return (
-    <div className="border-white/8 mb-6 border-b pb-5">
+    <div className="border-light-gold/20 mb-6 border-b pb-5">
       <h2 className="font-gala text-xl font-bold text-white/90">{title}</h2>
       <p className="mt-1 text-sm text-white/40">{sub}</p>
     </div>

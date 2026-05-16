@@ -97,7 +97,7 @@ export default function Reserve() {
               setNameError(null);
               dialogRef.current?.showModal();
             }}
-            className="flex items-center gap-2 rounded-xl border border-light-gold/40 px-6 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
+            className="flex items-center gap-2 border border-light-gold/40 px-6 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black"
           >
             <FontAwesomeIcon icon={faPlus} />
             Criar Mesa
@@ -118,7 +118,7 @@ export default function Reserve() {
 
       <dialog
         ref={dialogRef}
-        className="w-full max-w-sm overflow-hidden rounded-3xl bg-[#0a0a0a] p-0 text-white backdrop:bg-black/80"
+        className="w-full max-w-sm overflow-hidden rounded-3xl bg-[#203836] p-0 text-white backdrop:bg-black/80"
       >
         <div className="space-y-4 p-8">
           <h2 className="text-xl font-bold text-white">Criar Mesa</h2>
@@ -140,7 +140,7 @@ export default function Reserve() {
               }}
               placeholder="Ex: Os Fixolas, Mesa A, ..."
               maxLength={20}
-              className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
+              className="border-white/15 w-full border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
             />
             {nameError && <p className="text-xs text-red-400">{nameError}</p>}
           </div>
@@ -148,7 +148,7 @@ export default function Reserve() {
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
-              className="flex-1 rounded-xl border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-white/40 hover:text-white/60"
+              className="flex-1 border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-white/40 hover:text-white/60"
             >
               Cancelar
             </button>
@@ -156,7 +156,7 @@ export default function Reserve() {
               type="button"
               disabled={creating}
               onClick={handleCreateTable}
-              className="flex-1 rounded-xl border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:opacity-40"
+              className="flex-1 border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:opacity-40"
             >
               {creating ? "A criar..." : "Criar"}
             </button>

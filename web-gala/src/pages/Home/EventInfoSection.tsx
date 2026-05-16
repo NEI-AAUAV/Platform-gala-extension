@@ -45,7 +45,7 @@ export default function EventInfoSection() {
                 delay: 0.1 * infoBoxes.indexOf(info),
                 duration: 0.6,
               }}
-              className="flex flex-col items-center justify-center rounded-2xl border border-light-gold/10 bg-black/40 p-8 shadow-lg backdrop-blur-sm transition-colors hover:border-light-gold/30 hover:bg-black/60"
+              className="flex flex-col items-center justify-center border border-light-gold/10 bg-black/40 p-8 shadow-lg backdrop-blur-sm transition-colors hover:border-light-gold/30 hover:bg-black/60"
             >
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-light-gold to-dark-gold text-2xl text-black shadow-inner">
                 <FontAwesomeIcon icon={info.icon} />

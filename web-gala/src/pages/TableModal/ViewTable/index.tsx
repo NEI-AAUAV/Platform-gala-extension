@@ -85,7 +85,7 @@ export default function ViewTable({
               </span>
               <Avatar
                 id={neiUser.id}
-                className="w-4 rounded-full border border-white/10"
+                className="w-4 rounded-full border border-light-gold/20"
               />
               <span className="text-xs font-semibold text-white/60">{`${neiUser.name} ${neiUser.surname}`}</span>
             </div>
@@ -94,7 +94,7 @@ export default function ViewTable({
 
         {/* Invite banner */}
         {isInvited && (
-          <div className="flex items-start gap-3 rounded-xl border border-light-gold/30 bg-light-gold/5 px-4 py-3">
+          <div className="flex items-start gap-3 border border-light-gold/30 bg-light-gold/5 px-4 py-3">
             <FontAwesomeIcon
               icon={faBell}
               className="mt-0.5 shrink-0 text-light-gold"
@@ -112,7 +112,7 @@ export default function ViewTable({
 
         {/* Pending banner */}
         {isPending && (
-          <div className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 px-4 py-3">
+          <div className="flex items-start gap-3 border border-white/20 bg-white/5 px-4 py-3">
             <FontAwesomeIcon
               icon={faHourglass}
               className="mt-0.5 shrink-0 text-white/40"
@@ -130,7 +130,7 @@ export default function ViewTable({
 
         {/* Group Photo Section */}
         {table.photo_url && (
-          <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+          <div className="aspect-video w-full overflow-hidden border border-light-gold/20 bg-white/5">
             <img
               src={table.photo_url}
               alt={table.name || "Mesa"}
@@ -144,7 +144,7 @@ export default function ViewTable({
           <h4 className="flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-widest text-white/30">
             <FontAwesomeIcon icon={faUser} /> Convidados na Mesa
           </h4>
-          <div className="border-white/6 bg-white/2 rounded-xl border p-2">
+          <div className="border-light-gold/15 bg-white/2 border p-2">
             <GuestList persons={table.persons} />
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function ViewTable({
                   type="button"
                   disabled={loading}
                   onClick={handleDecline}
-                  className="flex-1 rounded-xl border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-red-400/40 hover:text-red-400 disabled:opacity-40"
+                  className="flex-1 border border-white/20 py-3 text-xs font-bold uppercase tracking-widest text-white/40 transition-all hover:border-red-400/40 hover:text-red-400 disabled:opacity-40"
                 >
                   <FontAwesomeIcon icon={faXmark} className="mr-2" />
                   Recusar
@@ -167,7 +167,7 @@ export default function ViewTable({
                   type="button"
                   disabled={loading}
                   onClick={handleAccept}
-                  className="flex-1 rounded-xl border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:bg-light-gold hover:text-black disabled:opacity-40"
+                  className="flex-1 border border-light-gold/60 py-3 text-xs font-bold uppercase tracking-widest text-light-gold transition-all hover:bg-light-gold hover:text-black disabled:opacity-40"
                 >
                   <FontAwesomeIcon icon={faCheck} className="mr-2" />
                   Aceitar
@@ -179,7 +179,7 @@ export default function ViewTable({
             return (
               <button
                 type="button"
-                className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+                className="mt-auto w-full border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
                 onClick={async () => {
                   await tableLeave(table._id);
                   mutate();
@@ -194,7 +194,7 @@ export default function ViewTable({
             return (
               <button
                 type="button"
-                className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+                className="mt-auto w-full border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
                 onClick={async () => {
                   await tableLeave(table._id);
                   mutate();

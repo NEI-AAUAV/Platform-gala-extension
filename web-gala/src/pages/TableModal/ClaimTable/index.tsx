@@ -71,8 +71,8 @@ export default function ClaimTable({
         </div>
 
         {/* Owner badge */}
-        <div className="flex items-center gap-3 rounded-xl border border-light-gold/20 bg-light-gold/5 px-4 py-3">
-          <Avatar className="w-8 rounded-full border border-white/10" />
+        <div className="flex items-center gap-3 border border-light-gold/20 bg-light-gold/5 px-4 py-3">
+          <Avatar className="w-8 rounded-full border border-light-gold/20" />
           <div>
             <p className="text-xs font-bold text-light-gold">
               Serás o dono da mesa
@@ -99,7 +99,7 @@ export default function ClaimTable({
             onChange={(e) => setTableName(e.target.value)}
             placeholder="Ex: Os Fixolas, Mesa A, ..."
             maxLength={20}
-            className="border-white/15 w-full rounded-xl border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
+            className="border-white/15 w-full border bg-white/5 px-4 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-light-gold/40"
           />
           {nameError && <p className="text-xs text-red-400">{nameError}</p>}
         </div>
@@ -114,7 +114,7 @@ export default function ClaimTable({
           type="button"
           disabled={submitting}
           onClick={handleClaim}
-          className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border border-light-gold/60 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-auto flex w-full items-center justify-center gap-2 border border-light-gold/60 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
           <FontAwesomeIcon icon={faPlus} />
           {submitting ? "A criar..." : "Criar Mesa"}

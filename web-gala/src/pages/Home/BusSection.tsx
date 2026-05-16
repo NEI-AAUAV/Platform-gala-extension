@@ -52,7 +52,7 @@ function ScheduleInfo({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6 }}
-      className="border-white/8 bg-white/3 flex flex-col gap-6 rounded-2xl border p-8 lg:col-span-1"
+      className="border-light-gold/20 bg-white/3 flex flex-col gap-6 border p-8 lg:col-span-1"
     >
       <FontAwesomeIcon icon={faBus} className="text-3xl text-light-gold/50" />
 
@@ -117,7 +117,7 @@ function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: 0.1, duration: 0.6 }}
-      className="border-white/8 bg-white/3 flex flex-col gap-4 rounded-2xl border p-8 lg:col-span-2"
+      className="border-light-gold/20 bg-white/3 flex flex-col gap-4 border p-8 lg:col-span-2"
     >
       <p className="font-gala text-xs font-bold uppercase tracking-[0.3em] text-white/40">
         Autocarros disponíveis
@@ -130,7 +130,7 @@ function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.07, duration: 0.5 }}
-            className="border-white/6 bg-white/3 flex items-center justify-between rounded-xl border px-5 py-4"
+            className="border-light-gold/15 bg-white/3 flex items-center justify-between border px-5 py-4"
           >
             <div className="flex items-center gap-3">
               <FontAwesomeIcon icon={faBus} className="text-light-gold/40" />
@@ -138,7 +138,7 @@ function BusList({ buses }: { readonly buses: BusScheduleConfig["buses"] }) {
                 {bus.name}
               </span>
             </div>
-            <span className="rounded-full border border-white/10 px-3 py-1 font-gala text-xs text-white/40">
+            <span className="rounded-full border border-light-gold/20 px-3 py-1 font-gala text-xs text-white/40">
               {bus.capacity} lugares
             </span>
           </motion.div>

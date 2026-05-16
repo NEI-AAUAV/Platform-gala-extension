@@ -75,7 +75,7 @@ function ProofRow({
   const isPdf = url?.toLowerCase().includes("pdf");
 
   return (
-    <div className="bg-white/4 flex flex-col gap-2 rounded-lg px-3 py-2">
+    <div className="bg-white/4 flex flex-col gap-2 px-3 py-2">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
           <span className="text-xs text-white/60">{label}</span>
@@ -163,7 +163,7 @@ function DetailRow({
   readonly icon?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white/4 flex flex-col gap-0.5 rounded-lg px-3 py-2">
+    <div className="bg-white/4 flex flex-col gap-0.5 px-3 py-2">
       <span className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">
         {label}
       </span>
@@ -221,7 +221,7 @@ export default function UserDetail({
   return (
     <div className="flex max-h-[80vh] flex-col gap-5 overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-start justify-between bg-[#0f0f0f] pb-2">
+      <div className="sticky top-0 z-10 flex items-start justify-between bg-[#182c2a] pb-2">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-gala text-xl font-bold text-white">
@@ -241,7 +241,7 @@ export default function UserDetail({
           <button
             type="button"
             onClick={onEdit}
-            className="hover:bg-white/8 flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition hover:text-white/70"
+            className="hover:bg-white/8 flex h-8 w-8 items-center justify-center text-white/30 transition hover:text-white/70"
             title="Editar Inscrição"
           >
             <FontAwesomeIcon icon={faPen} />
@@ -249,7 +249,7 @@ export default function UserDetail({
           <button
             type="button"
             onClick={onDelete}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-red-400/50 transition hover:bg-red-400/10 hover:text-red-400"
+            className="flex h-8 w-8 items-center justify-center text-red-400/50 transition hover:bg-red-400/10 hover:text-red-400"
             title="Eliminar Inscrição"
           >
             <FontAwesomeIcon icon={faTrash} />
@@ -257,7 +257,7 @@ export default function UserDetail({
           <button
             type="button"
             onClick={onClose}
-            className="hover:bg-white/8 flex h-8 w-8 items-center justify-center rounded-lg text-white/30 transition hover:text-white/70"
+            className="hover:bg-white/8 flex h-8 w-8 items-center justify-center text-white/30 transition hover:text-white/70"
             title="Fechar"
           >
             <FontAwesomeIcon icon={faXmark} />
@@ -310,7 +310,7 @@ export default function UserDetail({
               return (
                 <div
                   key={c.name || i}
-                  className="bg-white/4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                  className="bg-white/4 flex items-center gap-3 px-3 py-2 text-sm"
                 >
                   <span className="text-white/40">#{i + 1}</span>
                   <span className="text-white/85 min-w-0 flex-1 truncate">
@@ -390,19 +390,19 @@ export default function UserDetail({
             />
           )}
           {(user.payment_expired || user.registration_active === false) && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300/80">
+            <div className="flex items-center gap-2 bg-red-500/10 px-3 py-2 text-sm text-red-300/80">
               <FontAwesomeIcon icon={faTriangleExclamation} /> Inscrição
               desativada por falta de comprovativo no prazo.
             </div>
           )}
           {isPartiallyPaid && (
-            <div className="flex items-center gap-2 rounded-lg bg-sky-500/10 px-3 py-2 text-sm text-sky-300/80">
+            <div className="flex items-center gap-2 bg-sky-500/10 px-3 py-2 text-sm text-sky-300/80">
               <FontAwesomeIcon icon={faClock} /> Pagamento parcialmente
               validado.
             </div>
           )}
           {user.has_payed ? (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
               <FontAwesomeIcon icon={faCircleCheck} /> Pagamento confirmado
             </div>
           ) : (
@@ -410,7 +410,7 @@ export default function UserDetail({
               <button
                 type="button"
                 onClick={() => onConfirmPayment(undefined)}
-                className="w-full rounded-xl bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600"
+                className="w-full bg-dark-gold py-2.5 text-sm font-bold text-black transition hover:bg-yellow-600"
               >
                 <FontAwesomeIcon icon={faCircleCheck} className="mr-2" />
                 Confirmar Pagamento
@@ -418,7 +418,7 @@ export default function UserDetail({
               <button
                 type="button"
                 onClick={onSendPaymentReminder}
-                className="w-full rounded-xl border border-white/10 py-2.5 text-sm font-bold text-white/60 transition hover:border-white/25 hover:text-white/80"
+                className="w-full border border-light-gold/20 py-2.5 text-sm font-bold text-white/60 transition hover:border-white/25 hover:text-white/80"
               >
                 <FontAwesomeIcon icon={faEnvelope} className="mr-2" />
                 {user.payment_reminder_sent
