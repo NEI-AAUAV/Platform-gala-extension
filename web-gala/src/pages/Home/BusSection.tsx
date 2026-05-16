@@ -14,7 +14,9 @@ interface Props {
 export default function BusSection({ busConfig }: Props) {
   if (!busConfig.visible) return null;
   const hasScheduleInfo = Boolean(
-    busConfig.departure_location || busConfig.departure_time || busConfig.return_time,
+    busConfig.departure_location ||
+      busConfig.departure_time ||
+      busConfig.return_time,
   );
   const hasBuses = busConfig.buses.length > 0;
   const showSingleCard = hasScheduleInfo !== hasBuses;

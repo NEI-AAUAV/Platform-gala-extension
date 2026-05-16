@@ -26,7 +26,6 @@ const BUS_LABEL: Record<string, string> = {
 
 const red = { color: "#DC3545" };
 
-
 function ProofRow({
   label,
   url,
@@ -279,7 +278,10 @@ export default function UserDetail({
         <DetailRow
           label="Prato"
           value={mealLabel}
-          icon={iconMap.get(config.mealOptions.find((m) => m.id === user.meal_option)?.dishType ?? "")}
+          icon={iconMap.get(
+            config.mealOptions.find((m) => m.id === user.meal_option)
+              ?.dishType ?? "",
+          )}
         />
         {user.food_allergies && (
           <div className="col-span-2">
@@ -303,8 +305,11 @@ export default function UserDetail({
               const companion = c as Companion & { meal?: string };
               const companionDishId = companion.dish || companion.meal || "—";
               const companionDish =
-                config.mealOptions.find((m) => m.id === companionDishId)?.label ??
-                config.mealOptions.find((m) => m.dishType === companionDishId.toUpperCase())?.label ??
+                config.mealOptions.find((m) => m.id === companionDishId)
+                  ?.label ??
+                config.mealOptions.find(
+                  (m) => m.dishType === companionDishId.toUpperCase(),
+                )?.label ??
                 companionDishId;
               const companionAllergies = companion.allergies || "—";
               return (
