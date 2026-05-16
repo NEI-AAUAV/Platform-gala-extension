@@ -168,33 +168,39 @@ class RegistrationService:
             )
 
     @staticmethod
-    async def _check_table_deadline(db: DBType) -> None:
+    async def _check_tables_open(db: DBType) -> None:
         from app.models.time_slots import TimeSlots, TIME_SLOTS_ID
         from datetime import datetime, timezone
         ts_coll = TimeSlots.get_collection(db)
         ts_doc = await ts_coll.find_one({"_id": TIME_SLOTS_ID})
-        if ts_doc:
-            ts = TimeSlots.parse_obj(ts_doc)
-            now = datetime.now(tz=timezone.utc)
-            tables_end = ts.tables_end
-            if tables_end.tzinfo is None:
-                tables_end = tables_end.replace(tzinfo=timezone.utc)
-            if now > tables_end and tables_end.year > 1970:
-                raise ValueError("O prazo para escolha de mesa já passou.")
+        ts = TimeSlots.parse_obj(ts_doc) if ts_doc else TimeSlots()
+
+        def ensure_utc(dt: datetime) -> datetime:
+            return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+        now = datetime.now(tz=timezone.utc)
+
+        if ts.tables_start is None or ts.tables_end is None:
+            raise ValueError("A escolha de mesa ainda não está aberta.")
+        tables_start = ensure_utc(ts.tables_start)
+        tables_end = ensure_utc(ts.tables_end)
+        if now < tables_start:
+            raise ValueError("A escolha de mesa ainda não está aberta.")
+        if now > tables_end:
+            raise ValueError("O prazo para escolha de mesa já passou.")
 
     @staticmethod
     async def _handle_step_5(db: DBType, user: User, user_id: int, data: Dict[str, Any]) -> None:
-        if user.is_registered:
-            await RegistrationService._check_table_deadline(db)
-
         table_id = data.get("table_id")
         table_name = data.get("table_name") or f"Mesa de {user.name}"
 
         if table_id == "new" and not user.table_id:
+            await RegistrationService._check_tables_open(db)
             await TableService.create_table(db, user_id, table_name)
         elif table_id and table_id not in ("new", "none", "null", "invited"):
             target_id = int(table_id)
             if user.table_id != target_id:
+                await RegistrationService._check_tables_open(db)
                 await TableService.join_via_invite(db, user, target_id)
         elif table_id in ("none", "null") and user.table_id:
             await TableService.leave_table(db, user_id)

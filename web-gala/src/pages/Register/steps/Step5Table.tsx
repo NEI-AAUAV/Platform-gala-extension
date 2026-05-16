@@ -8,6 +8,7 @@ import {
   faCheck,
   faInfoCircle,
   faBell,
+  faClock,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import { WizardData } from "@/hooks/useWizardState";
@@ -16,6 +17,8 @@ import useLimits from "@/hooks/useLimits";
 import useMyInvites from "@/hooks/tableHooks/useMyInvites";
 import VisualTable from "@/components/Table/VisualTable";
 import useNEIUser from "@/hooks/useNEIUser";
+import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import { formatDateTimePT } from "@/utils/formatDate";
 
 interface Props {
   readonly config: RegistrationConfig;
@@ -102,7 +105,66 @@ export default function Step5Table({
   const { tables, isLoading } = useTables();
   const { limits } = useLimits();
   const { invites } = useMyInvites();
+  const { time } = useTime();
   const [searchTerm, setSearchTerm] = useState("");
+
+  const tablesStatus = time?.tablesStatus;
+  const tablesNotOpen =
+    tablesStatus === undefined || tablesStatus === TimeStatus.OPENING;
+  const tablesClosed = tablesStatus === TimeStatus.CLOSED;
+
+  if (tablesNotOpen || tablesClosed) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.35 }}
+        className="flex flex-col gap-6"
+      >
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 py-16 text-center">
+          <FontAwesomeIcon
+            icon={faClock}
+            className="text-3xl text-light-gold/40"
+          />
+          <div className="flex flex-col gap-1">
+            <p className="font-gala text-base font-bold text-white/70">
+              {tablesClosed
+                ? "O período de escolha de mesa terminou"
+                : "A escolha de mesa ainda não está aberta"}
+            </p>
+            {tablesNotOpen && time?.tablesStart && (
+              <p className="text-sm text-white/40">
+                Abre a {formatDateTimePT(time.tablesStart)}
+              </p>
+            )}
+          </div>
+          <p className="max-w-sm text-xs text-white/30">
+            Podes concluir a inscrição sem mesa e escolher mais tarde no teu
+            perfil quando o período abrir.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="border-white/15 border px-6 py-2.5 font-gala text-sm font-semibold text-white/50 transition-all hover:border-white/30 hover:text-white/80"
+          >
+            ← Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => { onUpdate({ tableId: "none", tableRole: null }); onNext(); }}
+            disabled={syncing}
+            className="border border-light-gold/60 px-8 py-3 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {syncing ? "A guardar..." : "Continuar sem mesa →"}
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   const maxCount = limits?.maxTablesCount ?? tables.length;
   const slots = useMemo(() => buildSlots(tables, maxCount), [tables, maxCount]);
