@@ -15,6 +15,7 @@ import {
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
+import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { INPUT_CLS } from "./AdminUI";
 
 const BUS_LABEL: Record<string, string> = {
@@ -204,6 +205,12 @@ export default function UserDetail({
   readonly onRejectProof: (phase: number) => void;
   readonly onAssignTable: (tableId: string | null) => void;
 }) {
+  const { config } = useRegistrationConfig();
+  const mealLabel =
+    config.mealOptions.find((m) => m.id === user.meal_option)?.label ??
+    user.meal_option ??
+    "—";
+
   const fallbackPhone =
     user.phone?.trim() ||
     (user as User & { phone_number?: string; contact_phone?: string })
@@ -282,7 +289,7 @@ export default function UserDetail({
         />
         <DetailRow
           label="Prato"
-          value={user.meal_option ?? "—"}
+          value={mealLabel}
           icon={dishIcon.get(user.meal_option ?? "")}
         />
         {user.food_allergies && (
@@ -305,7 +312,10 @@ export default function UserDetail({
           <div className="flex flex-col gap-1.5">
             {user.companions.map((c, i) => {
               const companion = c as Companion & { meal?: string };
-              const companionDish = companion.dish || companion.meal || "—";
+              const companionDishId = companion.dish || companion.meal || "—";
+              const companionDish =
+                config.mealOptions.find((m) => m.id === companionDishId)
+                  ?.label ?? companionDishId;
               const companionAllergies = companion.allergies || "—";
               return (
                 <div
