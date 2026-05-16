@@ -6,6 +6,7 @@ import {
   faCheck,
   faXmark,
   faBell,
+  faHourglass,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Avatar from "@/components/Avatar";
@@ -22,6 +23,7 @@ type ViewTableProps = {
   readonly mutate: () => void;
   readonly inTable?: boolean;
   readonly isInvited?: boolean;
+  readonly isPending?: boolean;
 };
 
 export default function ViewTable({
@@ -29,6 +31,7 @@ export default function ViewTable({
   inTable = false,
   mutate,
   isInvited = false,
+  isPending = false,
 }: ViewTableProps) {
   const { neiUser } = useNEIUser(table.head ?? null);
   const navigate = useNavigate();
@@ -107,6 +110,24 @@ export default function ViewTable({
           </div>
         )}
 
+        {/* Pending banner */}
+        {isPending && (
+          <div className="flex items-start gap-3 rounded-xl border border-white/20 bg-white/5 px-4 py-3">
+            <FontAwesomeIcon
+              icon={faHourglass}
+              className="mt-0.5 shrink-0 text-white/40"
+            />
+            <div>
+              <p className="text-sm font-bold text-white/60">
+                O teu pedido está a aguardar confirmação
+              </p>
+              <p className="text-xs text-white/40">
+                O responsável da mesa ainda não aceitou o teu pedido.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Group Photo Section */}
         {table.photo_url && (
           <div className="aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5">
@@ -152,6 +173,21 @@ export default function ViewTable({
                   Aceitar
                 </button>
               </div>
+            );
+          }
+          if (isPending) {
+            return (
+              <button
+                type="button"
+                className="mt-auto w-full rounded-xl border border-red-500/30 bg-red-500/5 py-3 text-xs font-bold uppercase tracking-widest text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+                onClick={async () => {
+                  await tableLeave(table._id);
+                  mutate();
+                  navigate("/reserve");
+                }}
+              >
+                Cancelar Pedido
+              </button>
             );
           }
           if (inTable) {

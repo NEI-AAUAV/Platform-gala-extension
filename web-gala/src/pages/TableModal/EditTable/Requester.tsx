@@ -59,22 +59,24 @@ export default function Requester({
     <>
       <div className="grid items-center gap-2" style={gridTemplate}>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               disabled={isFull}
               title={isFull ? "Mesa cheia" : undefined}
-              className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-light-gold p-1 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-lg bg-light-gold/20 px-3 py-1.5 text-xs font-bold text-light-gold transition-all hover:bg-light-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => acceptGuest(person.id)}
             >
               <FontAwesomeIcon icon={faCheck} />
+              Aceitar
             </button>
             <button
-              className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-light-gold p-1"
+              className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-bold text-red-400 transition-all hover:bg-red-500/10"
               type="button"
               onClick={() => modalRejectConfirm()}
             >
               <FontAwesomeIcon icon={faXmark} />
+              Rejeitar
             </button>
           </div>
           <Avatar id={person.id} className="w-[18px]" />

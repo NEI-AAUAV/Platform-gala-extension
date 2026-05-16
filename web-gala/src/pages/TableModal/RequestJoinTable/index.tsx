@@ -102,7 +102,7 @@ export default function RequestJoinTable({
             })}
             onClick={() => setForm(true)}
           >
-            <FontAwesomeIcon icon={faChair} /> Pedir convite para esta mesa
+            <FontAwesomeIcon icon={faChair} /> Pedir para entrar nesta mesa
           </Button>
           <Button
             className={classNames("sticky bottom-0 mt-auto w-full", {
@@ -110,7 +110,7 @@ export default function RequestJoinTable({
             })}
             submit
           >
-            <FontAwesomeIcon icon={faPaperPlane} /> Enviar Convite
+            <FontAwesomeIcon icon={faPaperPlane} /> Enviar Pedido
           </Button>
         </form>
       </FormProvider>

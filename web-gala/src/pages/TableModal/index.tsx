@@ -56,12 +56,16 @@ function useModalPage(tableId: number) {
   const inAnyTable =
     currentUserId != null &&
     tables.some((t) =>
-      t.persons.some((p) => normalizeId(p.id) === currentUserId),
+      t.persons.some((p) => normalizeId(p.id) === currentUserId && p.confirmed),
     );
 
   const inTable =
     currentUserId != null &&
-    table.persons.some((p) => normalizeId(p.id) === currentUserId);
+    table.persons.some((p) => normalizeId(p.id) === currentUserId && p.confirmed);
+
+  const isPending =
+    currentUserId != null &&
+    table.persons.some((p) => normalizeId(p.id) === currentUserId && !p.confirmed);
 
   // Permission parity with backend: admin checks happen server-side; here we allow
   // local edit mode when the user is head, owner or first person in the table.
@@ -104,6 +108,9 @@ function useModalPage(tableId: number) {
   }
   if (occupied === 0 && !inAnyTable) {
     return <ClaimTable table={table} mutate={mutate} />;
+  }
+  if (isPending) {
+    return <ViewTable table={table} mutate={mutate} isPending />;
   }
   if (inTable || (inAnyTable && occupied > 0)) {
     return <ViewTable table={table} inTable={inTable} mutate={mutate} />;
