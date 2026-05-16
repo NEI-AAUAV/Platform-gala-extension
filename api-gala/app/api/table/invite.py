@@ -85,7 +85,7 @@ async def accept_invite(
     person = TablePerson(
         id=auth.sub,
         allergies=user.food_allergies or body.allergies,
-        dish=_user_dish(user),
+        dish=await _user_dish(user, db),
         confirmed=True,
         companions=user.companions,
     )

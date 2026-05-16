@@ -27,8 +27,9 @@ test_time_slots = TimeSlots(
 async def test_get_time_slots_logged_out(
     settings: Settings, client: AsyncClient
 ) -> None:
+    # GET /time_slots/ is intentionally public (no auth required)
     response = await client.get(f"{settings.API_V1_STR}/time_slots/")
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio

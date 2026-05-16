@@ -172,7 +172,8 @@ async def test_handle_step_5_creates_new_table():
     user = User.parse_obj(_user_doc())
     db, _ = _make_db()
 
-    with patch("app.services.registration.TableService.create_table", new_callable=AsyncMock) as mock_create:
+    with patch("app.services.registration.RegistrationService._check_tables_open", new_callable=AsyncMock), \
+         patch("app.services.registration.TableService.create_table", new_callable=AsyncMock) as mock_create:
         await RegistrationService._handle_step_5(db, user, user_id=1, data={"table_id": "new", "table_name": "Mesa Geral"})
         mock_create.assert_awaited_once_with(db, 1, "Mesa Geral")
 
@@ -224,7 +225,8 @@ async def test_handle_step_5_joins_via_invite():
     user = User.parse_obj(_user_doc())
     db, _ = _make_db()
 
-    with patch("app.services.registration.TableService.join_via_invite", new_callable=AsyncMock) as mock_join:
+    with patch("app.services.registration.RegistrationService._check_tables_open", new_callable=AsyncMock), \
+         patch("app.services.registration.TableService.join_via_invite", new_callable=AsyncMock) as mock_join:
         await RegistrationService._handle_step_5(db, user, user_id=1, data={"table_id": "10"})
         mock_join.assert_awaited_once_with(db, user, 10)
 

@@ -6,10 +6,22 @@ from app.services.storage import storage_client
 from app.utils import generate_invite_token
 
 
-def _user_dish(user: User) -> DishType:
-    option = (user.meal_option or "").strip().upper()
-    if option in ("VEG", "VEGETARIAN", "VEGETARIANO"):
-        return DishType.VEGETARIAN
+async def _user_dish(user: User, db: DBType) -> DishType:
+    if not user.meal_option:
+        return DishType.NORMAL
+    try:
+        from app.services.config import ConfigService
+        config = await ConfigService.get_config(db)
+        for meal in config.meals:
+            if meal.id == user.meal_option:
+                dish_map = {
+                    "FISH": DishType.FISH,
+                    "VEG": DishType.VEGETARIAN,
+                    "VEGAN": DishType.VEGAN,
+                }
+                return dish_map.get(meal.dish_type, DishType.NORMAL)
+    except Exception:
+        pass
     return DishType.NORMAL
 
 
@@ -41,7 +53,7 @@ class TableService:
         person = TablePerson(
             id=user_id,
             allergies=user.food_allergies or "",
-            dish=_user_dish(user),
+            dish=await _user_dish(user, db),
             confirmed=True,
             companions=user.companions,
         )
@@ -100,7 +112,7 @@ class TableService:
         person = TablePerson(
             id=user_id,
             allergies=user.food_allergies or "",
-            dish=_user_dish(user),
+            dish=await _user_dish(user, db),
             confirmed=True,
             companions=user.companions,
         )
@@ -180,7 +192,7 @@ class TableService:
         person = TablePerson(
             id=user.id,
             allergies=user.food_allergies or "",
-            dish=_user_dish(user),
+            dish=await _user_dish(user, db),
             confirmed=True,
             companions=user.companions,
         )

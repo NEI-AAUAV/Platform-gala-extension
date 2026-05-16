@@ -4,6 +4,7 @@ import {
   faBus,
   faUtensils,
   faLeaf,
+  faFish,
   faBan,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -227,7 +228,12 @@ function PersonMealSection({
           <div className="flex flex-col gap-2">
             {mealOptions.map((opt) => {
               const isSelected = meal === opt.id;
-              const icon = opt.id === "veg" ? faLeaf : faUtensils;
+              const dishIconMap: Record<string, typeof faUtensils> = {
+                VEG: faLeaf,
+                VEGAN: faLeaf,
+                FISH: faFish,
+              };
+              const icon = dishIconMap[opt.dishType] ?? faUtensils;
               return (
                 <button
                   key={opt.id}

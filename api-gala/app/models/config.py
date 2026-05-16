@@ -11,6 +11,7 @@ class MealOption(BaseModel):
     name: str
     description: str
     is_active: bool = True
+    dish_type: str = "NOR"
 
 
 class DJConfig(BaseModel):

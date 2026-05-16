@@ -6,7 +6,9 @@ from app.models import BaseDocument
 
 class DishType(str, Enum):
     NORMAL = "NOR"
+    FISH = "FISH"
     VEGETARIAN = "VEG"
+    VEGAN = "VEGAN"
 
 
 class Companion(BaseModel):
@@ -25,9 +27,12 @@ class Companion(BaseModel):
                 "NOR": DishType.NORMAL,
                 "NORMAL": DishType.NORMAL,
                 "CARNE": DishType.NORMAL,
+                "FISH": DishType.FISH,
+                "PEIXE": DishType.FISH,
                 "VEG": DishType.VEGETARIAN,
                 "VEGETARIAN": DishType.VEGETARIAN,
                 "VEGETARIANO": DishType.VEGETARIAN,
+                "VEGAN": DishType.VEGAN,
             }
             return mapping.get(normalized, None)
         return value
