@@ -67,7 +67,7 @@ export default function VisualTable({
         <div
           className={`flex h-full w-full items-center justify-center overflow-hidden ${backgroundColor}`}
         >
-          <span className="text-sm font-bold">Livre</span>
+          <span className="text-sm font-bold text-black/70">Livre</span>
         </div>
       );
       break;
@@ -77,7 +77,7 @@ export default function VisualTable({
         <div
           className={`z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full ${backgroundColor}`}
         >
-          <span className="text-xs font-bold">Ocupada</span>
+          <span className="text-xs font-bold text-black/70">Ocupada</span>
         </div>
       );
       break;
@@ -112,8 +112,10 @@ export default function VisualTable({
               </linearGradient>
             </defs>
           </Wave>
-          <h1 className="z-10 text-lg font-bold leading-tight">{freeSeats}</h1>
-          <h6 className="z-10 text-[0.6rem] font-light leading-tight">
+          <h1 className="z-10 text-lg font-bold leading-tight text-neutral-700">
+            {freeSeats}
+          </h1>
+          <h6 className="z-10 text-[0.6rem] font-light leading-tight text-neutral-600">
             LIVRE{freeSeats > 1 && "S"}
           </h6>
         </div>
