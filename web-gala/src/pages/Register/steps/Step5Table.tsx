@@ -353,7 +353,11 @@ export default function Step5Table({
             const isInvited = table ? inviteTableIds.has(table._id) : false;
             const isOwner = table && userId && table.head === Number(userId);
             const isCurrent = table && data.tableId === String(table._id);
-            const canSelect = isInvited || isOwner || isCurrent;
+            const occupied = table
+              ? table.persons.reduce((a, p) => a + 1 + p.companions.length, 0)
+              : 0;
+            const isFull = table ? occupied >= table.seats : false;
+            const canSelect = !isFull || !!isCurrent;
 
             return table ? (
               <TableCard
@@ -504,9 +508,9 @@ function TableCard({
           Convite
         </span>
       )}
-      {!canSelect && (
-        <span className="absolute right-2 top-8 rounded bg-white/10 px-1 py-0.5 text-[0.5rem] font-bold uppercase text-white/40">
-          Privada
+      {!isInvited && !isOwner && !isSelected && !isFull && (
+        <span className="absolute right-2 top-8 rounded bg-white/10 px-1 py-0.5 text-[0.5rem] font-bold uppercase text-white/30">
+          Pedir
         </span>
       )}
       <div className="pointer-events-none flex w-full justify-center">

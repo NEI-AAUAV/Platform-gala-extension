@@ -201,7 +201,12 @@ class RegistrationService:
             target_id = int(table_id)
             if user.table_id != target_id:
                 await RegistrationService._check_tables_open(db)
-                await TableService.join_via_invite(db, user, target_id)
+                table_doc = await Table.get_collection(db).find_one({"_id": target_id})
+                has_invite = table_doc and user.id in (table_doc.get("invites") or [])
+                if has_invite:
+                    await TableService.join_via_invite(db, user, target_id)
+                else:
+                    await TableService.request_join_table(db, user, target_id)
         elif table_id in ("none", "null") and user.table_id:
             await TableService.leave_table(db, user_id)
 

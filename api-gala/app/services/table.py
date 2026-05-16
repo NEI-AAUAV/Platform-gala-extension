@@ -205,6 +205,36 @@ class TableService:
         )
 
     @staticmethod
+    async def request_join_table(db: DBType, user: User, target_id: int) -> None:
+        """Add user as an unconfirmed (pending) member — owner must accept."""
+        if user.table_id:
+            await TableService.leave_table(db, user.id)
+        table_doc = await Table.get_collection(db).find_one({"_id": target_id})
+        if not table_doc:
+            raise ValueError("Mesa não encontrada.")
+        table = Table.parse_obj(table_doc)
+        if any(p.id == user.id for p in table.persons):
+            raise ValueError("Já estás nessa mesa.")
+        occupied = sum(1 + len(p.companions) for p in table.persons)
+        needed = 1 + len(user.companions)
+        if occupied + needed > table.seats:
+            raise ValueError("Mesa cheia.")
+        person = TablePerson(
+            id=user.id,
+            allergies=user.food_allergies or "",
+            dish=await _user_dish(user, db),
+            confirmed=False,
+            companions=user.companions,
+        )
+        await Table.get_collection(db).update_one(
+            {"_id": target_id},
+            {"$push": {"persons": person.dict()}},
+        )
+        await User.get_collection(db).update_one(
+            {"_id": user.id}, {"$set": {"table_id": target_id}}
+        )
+
+    @staticmethod
     async def sync_companions(db: DBType, user_id: int, companions: list) -> None:
         user_dict = await User.get_collection(db).find_one({"_id": user_id})
         if not user_dict or not user_dict.get("table_id"):

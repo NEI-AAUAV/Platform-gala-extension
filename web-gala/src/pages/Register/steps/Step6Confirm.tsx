@@ -45,6 +45,12 @@ const getBusLabel = (bus: string) => {
   return "Autocarro (Apenas Ida)";
 };
 
+const tableRoleLabel = (role: WizardData["tableRole"]) => {
+  if (role === "owner") return "Head de Mesa";
+  if (role === "member") return "Pedido pendente (aguarda confirmação)";
+  return "Membro";
+};
+
 const getSelectedTable = (tableId: string | null, tables: any[]) => {
   if (!tableId || tableId === "none") return null;
   if (tableId === "new") return "Nova Mesa (A criar)";
@@ -217,7 +223,7 @@ export default function Step6Confirm({
                   {selectedTable}
                 </p>
                 <p className="text-[0.65rem] text-white/40">
-                  {data.tableRole === "owner" ? "Head de Mesa" : "Membro"}
+                  {tableRoleLabel(data.tableRole)}
                 </p>
               </div>
             </div>
