@@ -13,7 +13,7 @@ from app.models.user import User
 from app.services.table import TableService
 from app.services.storage import storage_client
 from app.services.config import ConfigService
-from app.api.table._utils import fetch_table, table_head_permissions
+from app.api.table._utils import fetch_table, table_head_permissions, sanitize_table
 from app.core.logging import logger
 
 
@@ -152,4 +152,4 @@ async def get_table_by_token(
     table_dict = await table_coll.find_one({"invite_token": token})
     if not table_dict:
         raise HTTPException(status_code=404, detail="Table not found")
-    return Table.parse_obj(table_dict)
+    return sanitize_table(auth, Table.parse_obj(table_dict))
