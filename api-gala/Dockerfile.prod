@@ -38,7 +38,9 @@ RUN apt-get update \
     && pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./app ./app
-# Copy the email templates that were built
+# Copy raw Jinja2 templates first (base.html, registered.html, etc.)
+COPY ./templates ./templates
+# Overwrite with React Email built output for migrated templates (accepted.html, etc.)
 COPY --from=email-builder /tmp/out ./templates
 
 RUN useradd -ms /bin/sh appuser && chown -R appuser /api_gala && \
