@@ -14,7 +14,7 @@ import {
   faEnvelope,
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
-import { FrangoIcon } from "@/assets/icons";
+import { iconMap } from "@/components/TableModal/personUtils";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { INPUT_CLS } from "./AdminUI";
 
@@ -24,19 +24,8 @@ const BUS_LABEL: Record<string, string> = {
   NONE: "Sem autocarro",
 };
 
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
 const red = { color: "#DC3545" };
 
-const dishIcon = new Map<string, React.ReactNode>([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  [
-    "VEG",
-    <span key="VEG" style={green}>
-      🥬
-    </span>,
-  ], // using simple emoji/icon representation as faSeedling might not be imported if we don't need to bloat
-]);
 
 function ProofRow({
   label,
@@ -290,7 +279,7 @@ export default function UserDetail({
         <DetailRow
           label="Prato"
           value={mealLabel}
-          icon={dishIcon.get(user.meal_option ?? "")}
+          icon={iconMap.get(config.mealOptions.find((m) => m.id === user.meal_option)?.dishType ?? "")}
         />
         {user.food_allergies && (
           <div className="col-span-2">
@@ -333,7 +322,7 @@ export default function UserDetail({
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    {dishIcon.get(companionDish)}
+                    {iconMap.get(companionDishId)}
                   </span>
                   <span className="text-white/65 text-xs">
                     Prato: {companionDish}
