@@ -34,7 +34,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 settings = get_settings()
 
 app = FastAPI(
-    title="GALA API", lifespan=lifespan, default_response_class=ORJSONResponse
+    title="GALA API",
+    lifespan=lifespan,
+    default_response_class=ORJSONResponse,
+    docs_url=None if settings.PRODUCTION else "/docs",
+    redoc_url=None if settings.PRODUCTION else "/redoc",
+    openapi_url=None if settings.PRODUCTION else "/openapi.json",
 )
 app.add_middleware(
     CORSMiddleware,
