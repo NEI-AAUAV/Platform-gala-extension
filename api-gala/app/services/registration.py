@@ -56,45 +56,25 @@ class RegistrationService:
 
     @staticmethod
     async def count_registered_attendees(db: DBType) -> int:
-        """Counts attendees eligible for capacity:
-        - registered users with payment confirmed, OR
-        - registered users still active (within payment deadline window).
-        Includes companions of those eligible users when they are confirmed on tables.
+        """Counts all registered attendees for capacity enforcement.
+        Every is_registered=True user holds a slot regardless of payment status.
+        Companions declared on their registration profile are counted as additional seats.
         """
-        eligibility_filter = {
-            "is_registered": True,
-            "$or": [
-                {"has_payed": True},
-                {"registration_active": True},
-            ],
-        }
+        result = await User.get_collection(db).aggregate([
+            {"$match": {"is_registered": True}},
+            {
+                "$group": {
+                    "_id": None,
+                    "registrations": {"$sum": 1},
+                    "companions": {"$sum": {"$size": {"$ifNull": ["$companions", []]}}},
+                }
+            },
+        ]).to_list(None)
 
-        registrations = await User.get_collection(db).count_documents(eligibility_filter)
-
-        companions_query = (
-            await Table.get_collection(db)
-            .aggregate(
-                [
-                    {"$unwind": "$persons"},
-                    {"$match": {"persons.confirmed": True}},
-                    {
-                        "$lookup": {
-                            "from": User.collection(),
-                            "localField": "persons.id",
-                            "foreignField": "_id",
-                            "as": "person_user",
-                        }
-                    },
-                    {"$unwind": "$person_user"},
-                    {"$match": {"$or": [{"person_user.has_payed": True}, {"person_user.registration_active": True}], "person_user.is_registered": True}},
-                    {"$project": {"count": {"$size": "$persons.companions"}}},
-                    {"$group": {"_id": None, "total": {"$sum": "$count"}}},
-                ]
-            )
-            .to_list(None)
-        )
-        companions = companions_query[0]["total"] if companions_query else 0
-        return registrations + companions
+        if not result:
+            return 0
+        row = result[0]
+        return row["registrations"] + row["companions"]
 
     @staticmethod
     async def get_user_registration(db: DBType, user_id: int) -> Optional[User]:

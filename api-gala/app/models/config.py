@@ -122,7 +122,6 @@ class GlobalConfig(BaseDocument):
 
     allergies_required: bool = False
     payment_method: str = "both"
-    payment_deadline_hours: int = 48
     payment_deadline_date: str = ""
     payment_email: str = ""
 

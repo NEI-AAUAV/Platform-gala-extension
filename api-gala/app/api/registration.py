@@ -135,6 +135,15 @@ async def update_registration_step(
             detail="A inscrição já foi concluída e não pode ser alterada.",
         )
 
+    if step == 6:
+        limits = await fetch_limits(db)
+        total = await RegistrationService.count_registered_attendees(db)
+        if total >= limits.maxRegistrations:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="As inscrições estão encerradas.",
+            )
+
     if step == 3:
         new_bus = data.get("bus_option", "NONE")
         if new_bus not in ("NONE", None) and user.bus_option.value == "NONE":

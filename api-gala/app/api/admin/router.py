@@ -21,6 +21,7 @@ from app.services.export import ExportService
 from app.services.admin_vote import AdminVoteService
 from app.services.manager_permissions import ManagerPermissionsService
 from app.services.registration import RegistrationService
+from app.api.limits.util import fetch_limits
 from app.services.table import TableService
 from app.api.admin.tables import router as tables_router
 from app.models.vote import VoteCategory
@@ -568,6 +569,14 @@ async def admin_create_registration(
 ):
     """Admin creates a registration for a person (with or without an Authentik account)."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    limits = await fetch_limits(db)
+    total = await RegistrationService.count_registered_attendees(db)
+    if total >= limits.maxRegistrations:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="O limite de inscrições foi atingido.",
+        )
 
     user_coll = User.get_collection(db)
 

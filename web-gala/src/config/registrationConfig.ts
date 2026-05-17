@@ -26,7 +26,6 @@ export interface RegistrationConfig {
   paymentMethod: PaymentMethod;
   ibanNumber: string;
   ibanHolder: string;
-  paymentDeadlineHours: number;
   paymentDeadlineDate: string;
   paymentContacts: PaymentContact[];
   paymentEmail: string;
@@ -75,7 +74,6 @@ export const defaultConfig: RegistrationConfig = {
   paymentMethod: "both",
   ibanNumber: "",
   ibanHolder: "NEI - Núcleo de Estudantes de Informática",
-  paymentDeadlineHours: 48,
   paymentDeadlineDate: "A anunciar",
   paymentContacts: [
     { year: "1ª", name: "Sara Almeida", phone: "967 892 167" },

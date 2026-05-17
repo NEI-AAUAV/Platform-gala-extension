@@ -51,7 +51,6 @@ function mapFromBackend(
     allergiesRequired: (backend.allergies_required as boolean) ?? false,
     paymentMethod:
       (backend.payment_method as RegistrationConfig["paymentMethod"]) || "both",
-    paymentDeadlineHours: (backend.payment_deadline_hours as number) || 48,
     paymentDeadlineDate: (backend.payment_deadline_date as string) || "",
     paymentEmail: (backend.payment_email as string) || "",
   };
@@ -92,7 +91,6 @@ function mapToBackendPatch(
     })),
     allergies_required: config.allergiesRequired,
     payment_method: config.paymentMethod,
-    payment_deadline_hours: config.paymentDeadlineHours,
     payment_deadline_date: config.paymentDeadlineDate,
     payment_email: config.paymentEmail,
   };

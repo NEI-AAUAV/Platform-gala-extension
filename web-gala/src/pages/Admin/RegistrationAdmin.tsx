@@ -480,13 +480,6 @@ export default function RegistrationAdmin() {
               </div>
             )}
 
-            <Field label="Prazo após inscrição (horas)">
-              <NumberInput
-                value={config.paymentDeadlineHours}
-                onChange={(v) => save({ paymentDeadlineHours: v })}
-                min={1}
-              />
-            </Field>
             <Field label="Data limite de pagamento (texto)">
               <TextInput
                 value={config.paymentDeadlineDate}
