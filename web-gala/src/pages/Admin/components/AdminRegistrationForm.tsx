@@ -265,7 +265,7 @@ export default function AdminRegistrationForm({
                       <span className="text-xs text-red-400">
                         Nenhum utilizador encontrado.
                       </span>
-                      <span className="text-[0.65rem] text-white/35">
+                      <span className="text-white/35 text-[0.65rem]">
                         Se o utilizador existe mas não aparece, usa{" "}
                         <button
                           type="button"
@@ -274,7 +274,8 @@ export default function AdminRegistrationForm({
                         >
                           Criar sem Conta
                         </button>{" "}
-                        e insere o email — fica ligado à conta quando fizer login.
+                        e insere o email — fica ligado à conta quando fizer
+                        login.
                       </span>
                     </div>
                   )}
