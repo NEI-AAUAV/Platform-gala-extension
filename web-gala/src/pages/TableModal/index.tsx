@@ -2,7 +2,6 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import classNames from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
@@ -161,39 +160,39 @@ export default function TableModal({ tableId, onClose }: TableModalProps) {
   return (
     <dialog
       ref={modalRef}
-      className={classNames(
-        "relative m-0 grid h-screen max-h-none w-screen max-w-none items-center overflow-y-scroll bg-transparent p-0 text-white/70 backdrop:bg-black/80",
-      )}
+      className="m-0 h-screen max-h-none w-screen max-w-none overflow-y-auto bg-transparent p-0 text-white/70 backdrop:bg-black/80"
     >
-      <AnimatePresence>
-        {!!modalPage && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative z-10 my-16 rounded-3xl border border-light-gold/20 bg-[#203836] px-4 py-12 shadow-2xl backdrop-blur-xl sm:px-12 md:mx-auto md:h-auto md:max-w-4xl"
-          >
-            <button
-              className="absolute right-6 top-6 text-xl text-white/30 transition-colors hover:text-white/80"
-              type="button"
-              onClick={() => (onClose ? onClose() : navigate("/reserve"))}
+      <div className="flex min-h-full flex-col items-center justify-center px-4 py-16">
+        <AnimatePresence>
+          {!!modalPage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative z-10 w-full rounded-3xl border border-light-gold/20 bg-[#203836] px-4 py-12 shadow-2xl backdrop-blur-xl sm:px-12 md:max-w-4xl"
             >
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-            {modalPage}
-          </motion.div>
+              <button
+                className="absolute right-6 top-6 text-xl text-white/30 transition-colors hover:text-white/80"
+                type="button"
+                onClick={() => (onClose ? onClose() : navigate("/reserve"))}
+              >
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
+              {modalPage}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {onClose ? (
+          <button
+            type="button"
+            aria-label="Fechar modal"
+            className="fixed inset-0 -z-10"
+            onClick={onClose}
+          />
+        ) : (
+          <Link className="fixed inset-0 -z-10" to="/reserve" />
         )}
-      </AnimatePresence>
-      {onClose ? (
-        <button
-          type="button"
-          aria-label="Fechar modal"
-          className="absolute inset-0 -z-10"
-          onClick={onClose}
-        />
-      ) : (
-        <Link className="absolute inset-0 -z-10" to="/reserve" />
-      )}
+      </div>
     </dialog>
   );
 }
