@@ -34,6 +34,7 @@ function ProofRow({
   onUpload,
   onReject,
   onConfirm,
+  onUnconfirm,
   uploading,
 }: {
   readonly label: string;
@@ -43,6 +44,7 @@ function ProofRow({
   readonly onUpload: (phase: number, file: File) => void;
   readonly onReject: (phase: number) => void;
   readonly onConfirm: (phase: number) => void;
+  readonly onUnconfirm: (phase: number) => void;
   readonly uploading: boolean;
 }) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -95,7 +97,16 @@ function ProofRow({
               <FontAwesomeIcon icon={faUpload} />
               {uploading ? "..." : "Substituir"}
             </button>
-            {!confirmed && (
+            {confirmed ? (
+              <button
+                type="button"
+                onClick={() => onUnconfirm(phase)}
+                className="flex items-center gap-1.5 rounded-full border border-red-500/30 px-3 py-1 text-[0.6rem] font-bold text-red-400/70 transition hover:bg-red-500/10 hover:text-red-400"
+                title="Anular validação"
+              >
+                Anular
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={() => onConfirm(phase)}
@@ -170,6 +181,7 @@ export default function UserDetail({
   buses,
   uploadingProof,
   onConfirmPayment,
+  onUnconfirmPayment,
   onSendPaymentReminder,
   onAssignBus,
   onEdit,
@@ -184,6 +196,7 @@ export default function UserDetail({
   readonly buses: { id: string; name: string; capacity: number }[];
   readonly uploadingProof: boolean;
   readonly onConfirmPayment: (phase?: number) => void;
+  readonly onUnconfirmPayment: (phase?: number) => void;
   readonly onSendPaymentReminder: () => void;
   readonly onAssignBus: (busId: string | null) => void;
   readonly onEdit: () => void;
@@ -380,6 +393,7 @@ export default function UserDetail({
             onUpload={onUploadProof}
             onReject={onRejectProof}
             onConfirm={onConfirmPayment}
+            onUnconfirm={onUnconfirmPayment}
             uploading={uploadingProof}
           />
           {user.phased_payment && (
@@ -391,6 +405,7 @@ export default function UserDetail({
               onUpload={onUploadProof}
               onReject={onRejectProof}
               onConfirm={onConfirmPayment}
+              onUnconfirm={onUnconfirmPayment}
               uploading={uploadingProof}
             />
           )}
@@ -407,8 +422,17 @@ export default function UserDetail({
             </div>
           )}
           {user.has_payed ? (
-            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
-              <FontAwesomeIcon icon={faCircleCheck} /> Pagamento confirmado
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400">
+                <FontAwesomeIcon icon={faCircleCheck} /> Pagamento confirmado
+              </div>
+              <button
+                type="button"
+                onClick={() => onUnconfirmPayment(undefined)}
+                className="w-full border border-red-500/30 py-2 text-sm font-bold text-red-400/70 transition hover:border-red-400/60 hover:text-red-400"
+              >
+                Anular confirmação
+              </button>
             </div>
           ) : (
             <div className="flex flex-col gap-2">

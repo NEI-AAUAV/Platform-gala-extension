@@ -256,6 +256,12 @@ const GalaService = {
         {},
       );
     },
+    unconfirmPayment: async (userId: number, phase?: number): Promise<void> => {
+      const suffix = phase ? `?phase=${phase}` : "";
+      return client.delete(
+        `/admin/registrations/${userId}/confirm_payment${suffix}`,
+      );
+    },
     sendPaymentReminder: async (userId: number): Promise<void> => {
       return client.post(`/admin/registrations/${userId}/payment-reminder`, {});
     },

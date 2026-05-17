@@ -163,6 +163,19 @@ export default function RegistrantsAdmin() {
     }
   };
 
+  const handleUnconfirmPayment = async (phase?: number) => {
+    if (!selectedUser) return;
+    try {
+      await GalaService.admin.unconfirmPayment(selectedUser._id, phase);
+      toast.success(
+        phase ? `Confirmação fase ${phase} anulada.` : "Confirmação de pagamento anulada.",
+      );
+      load();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao anular confirmação."));
+    }
+  };
+
   const handlePaymentReminder = async () => {
     if (!selectedUser) return;
     try {
@@ -342,6 +355,7 @@ export default function RegistrantsAdmin() {
             buses={buses}
             uploadingProof={uploadingProof}
             onConfirmPayment={handleConfirmPayment}
+            onUnconfirmPayment={handleUnconfirmPayment}
             onSendPaymentReminder={handlePaymentReminder}
             onAssignBus={handleAssignBus}
             onEdit={() => openForm(selectedUser)}

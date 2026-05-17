@@ -162,6 +162,54 @@ async def confirm_payment(
     return {"status": "success"}
 
 
+@router.delete(
+    "/registrations/{user_id}/confirm_payment",
+    responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
+)
+async def unconfirm_payment(
+    user_id: int,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    phase: Annotated[Optional[int], Query(ge=1, le=2)] = None,
+):
+    """Reverses a payment confirmation without deleting the proof."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
+
+    user_coll = User.get_collection(db)
+    current = await user_coll.find_one({"_id": user_id})
+    if not current:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    current_user = User.parse_obj(current)
+    if phase is None:
+        update_data: Dict[str, Any] = {
+            "has_payed": False,
+            "payment_phase1_confirmed": False,
+            "payment_phase2_confirmed": False,
+        }
+    elif phase == 1:
+        update_data = {
+            "has_payed": False,
+            "payment_phase1_confirmed": False,
+        }
+    else:
+        still_paid = current_user.payment_phase1_confirmed if current_user.phased_payment else False
+        update_data = {
+            "has_payed": still_paid,
+            "payment_phase2_confirmed": False,
+        }
+
+    result = await user_coll.find_one_and_update(
+        {"_id": user_id},
+        {"$set": update_data},
+        return_document=True,
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
+
+    return {"status": "success"}
+
+
 @router.post(
     "/registrations/{user_id}/payment-reminder",
     responses={**auth_responses, 400: {"description": "Payment already confirmed"}, 403: {"description": ERROR_FORBIDDEN}, 404: {"description": ERROR_USER_NOT_FOUND}}
