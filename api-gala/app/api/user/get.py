@@ -7,6 +7,7 @@ from app.core.config import SettingsDep
 from app.api.auth import AuthData, api_nei_auth, auth_responses, ScopeEnum
 from app.services.registration import RegistrationService
 from app.services.authentik_service import sync_email_based_registrations
+from app.core.logging import logger
 
 router = APIRouter()
 
@@ -43,6 +44,26 @@ async def get_self(
     res = await User.get_collection(db).find_one({"_id": auth.sub})
 
     if res is None:
+        email_lower = auth.email.strip().lower()
+        # Look for any registered doc at this email (phantom or wrong-ID admin creation).
+        orphan = await User.get_collection(db).find_one(
+            {"email": email_lower, "is_registered": True}
+        )
+        if orphan:
+            orphan_id = orphan["_id"]
+            admin_created = orphan.get("admin_created", False)
+            if admin_created:
+                logger.warning(
+                    "User {} ({}) has a phantom registration (id={}) that did not transfer — "
+                    "likely email mismatch between admin input and Authentik account",
+                    auth.sub, auth.email, orphan_id,
+                )
+            else:
+                logger.warning(
+                    "User {} ({}) has a registration under a different id={} (admin_created=False) — "
+                    "admin may have used wrong Authentik account when registering",
+                    auth.sub, auth.email, orphan_id,
+                )
         raise HTTPException(status_code=404, detail="User doesn't exist")
 
     return User.parse_obj(res)

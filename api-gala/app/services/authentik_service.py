@@ -188,8 +188,15 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
             try:
                 await user_coll.replace_one({"_id": authentik_user_id}, new_doc, upsert=True)
                 await user_coll.delete_one({"_id": phantom_id})
-            except Exception:
-                pass  # If the real user doc already exists somehow, skip silently
+                logger.info(
+                    "Transferred phantom registration {} → {} ({})",
+                    phantom_id, authentik_user_id, email,
+                )
+            except Exception as e:
+                logger.error(
+                    "Failed to transfer phantom registration {} → {} ({}): {}",
+                    phantom_id, authentik_user_id, email, e,
+                )
 
     # Case 2: User is a companion in someone else's registration
     # I should find registrations where `companions.email` == email_lower
