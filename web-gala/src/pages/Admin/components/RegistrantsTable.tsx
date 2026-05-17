@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
 import type { MealOption } from "@/config/registrationConfig";
+import { getMealDishType } from "@/utils/mealOption";
 
 const orange = { color: "#DD8500" };
 const green = { color: "#198754" };
@@ -23,16 +24,6 @@ const DISH_TYPE_ICON: Record<string, React.ReactNode> = {
   VEG: <span style={green}>🥬</span>,
   VEGAN: <span style={green}>🌱</span>,
 };
-
-function getMealIcon(
-  mealOption: string | null | undefined,
-  mealOptions: MealOption[],
-): React.ReactNode {
-  if (!mealOption) return null;
-  const byId = mealOptions.find((m) => m.id === mealOption);
-  const dishType = byId ? byId.dishType : mealOption.toUpperCase();
-  return DISH_TYPE_ICON[dishType] ?? null;
-}
 
 interface RegistrantsTableProps {
   readonly loading: boolean;
@@ -150,7 +141,9 @@ export default function RegistrantsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {getMealIcon(user.meal_option, mealOptions)}
+                      {DISH_TYPE_ICON[
+                        getMealDishType(user.meal_option, mealOptions) ?? ""
+                      ] ?? null}
                       {user.food_allergies && (
                         <FontAwesomeIcon
                           icon={faHandDots}

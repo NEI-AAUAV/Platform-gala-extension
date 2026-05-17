@@ -1,32 +1,5 @@
 import type { MealOption } from "@/config/registrationConfig";
-
-const DISH_TYPE_LABELS: Record<string, string> = {
-  NOR: "Carne",
-  FISH: "Peixe",
-  VEG: "Vegetariano",
-  VEGAN: "Vegan",
-};
-
-const KNOWN_DISH_TYPES = new Set(["NOR", "FISH", "VEG", "VEGAN"]);
-
-function normalizeToDishType(raw: string, mealOptions: MealOption[]): string {
-  const byId = mealOptions.find((m) => m.id === raw);
-  if (byId) return byId.dishType;
-  const upper = raw.toUpperCase();
-  if (KNOWN_DISH_TYPES.has(upper)) return upper;
-  return raw;
-}
-
-function resolveMealLabel(raw: string, mealOptions: MealOption[]): string {
-  if (!raw || raw === "—") return "—";
-  // Normalize to dishType first so "meat" and "NOR" both resolve to the same label.
-  const dishType = normalizeToDishType(raw, mealOptions);
-  const byDishType = mealOptions.find(
-    (m) => m.dishType.toUpperCase() === dishType.toUpperCase(),
-  );
-  if (byDishType) return byDishType.label;
-  return DISH_TYPE_LABELS[dishType.toUpperCase()] ?? raw;
-}
+import { getMealLabel } from "./mealOption";
 
 export interface RegistrantsStats {
   total: number;
@@ -55,16 +28,17 @@ export function computeStats(
     const yr = u.matriculation ? `${u.matriculation}º ano` : "Alumni";
     const companionCount = u.companions?.length ?? 0;
     byYear[yr] = (byYear[yr] ?? 0) + 1 + companionCount;
-    const meal = resolveMealLabel(u.meal_option ?? "—", mealOptions);
+
+    const meal = getMealLabel(u.meal_option, mealOptions);
     byMeal[meal] = (byMeal[meal] ?? 0) + 1;
+
     byBusOption[u.bus_option] = (byBusOption[u.bus_option] ?? 0) + 1;
     totalCompanions += companionCount;
 
     for (const c of u.companions ?? []) {
-      const companionMeal = resolveMealLabel(
+      const companionMeal = getMealLabel(
         (c as Companion & { meal?: string }).dish ||
-          (c as Companion & { meal?: string }).meal ||
-          "—",
+          (c as Companion & { meal?: string }).meal,
         mealOptions,
       );
       byMeal[companionMeal] = (byMeal[companionMeal] ?? 0) + 1;
