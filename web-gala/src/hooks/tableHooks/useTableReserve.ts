@@ -1,14 +1,5 @@
 import GalaService from "@/services/GalaService";
 
-type ReserveTable = {
-  dish: string;
-  allergies: string;
-  companions: {
-    dish: string;
-    allergies: string;
-  }[];
-};
-
-export default async function tableReserve(id: number, request: ReserveTable) {
-  await GalaService.table.reserveTable(id, request);
+export default async function tableReserve(id: number) {
+  await GalaService.table.reserveTable(id);
 }

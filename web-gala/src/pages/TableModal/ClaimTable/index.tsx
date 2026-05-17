@@ -32,11 +32,7 @@ export default function ClaimTable({
     setNameError(null);
     setSubmitting(true);
     try {
-      await GalaService.table.reserveTable(table._id, {
-        dish: "NOR",
-        allergies: "",
-        companions: [],
-      });
+      await GalaService.table.reserveTable(table._id);
       try {
         await GalaService.table.editTable(table._id, { name: trimmed });
         toast.success("Mesa criada com sucesso!");

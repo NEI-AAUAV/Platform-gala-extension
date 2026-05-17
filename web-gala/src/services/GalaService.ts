@@ -3,14 +3,6 @@ import { createClient } from "./client";
 
 const client = createClient(`${config.BASE_URL}/api/gala/v1`);
 
-type ReserveTable = {
-  dish: string;
-  allergies: string;
-  companions: {
-    dish: string;
-    allergies: string;
-  }[];
-};
 
 type Confirmation = {
   uid: number;
@@ -154,11 +146,8 @@ const GalaService = {
       const response: Table = await client.put(`/table/${id}/edit`, request);
       return response;
     },
-    reserveTable: async (id: string | number, request: ReserveTable) => {
-      const response: Table = await client.post(
-        `/table/${id}/reserve`,
-        request,
-      );
+    reserveTable: async (id: string | number) => {
+      const response: Table = await client.post(`/table/${id}/reserve`);
       return response;
     },
     confirmTable: async (id: string | number, request: Confirmation) => {

@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Security, HTTPException
-from pydantic import BaseModel
 from pymongo import ReturnDocument
 from pymongo.errors import OperationFailure
-from typing import List
 from app.core.db.types import DBType
 
-from app.models.table import Companion, Table, TablePerson, DishType
+from app.models.table import Table, TablePerson, DishType
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.core.db import DatabaseDep
 from app.core.logging import logger
@@ -23,12 +21,6 @@ async def person_in_table(uid: int, db: DBType) -> bool:
     return res is not None
 
 
-class TableReservationForm(BaseModel):
-    dish: DishType
-    allergies: str = ""
-    companions: List[Companion]
-
-
 @router.post(
     "/{table_id}/reserve",
     responses={
@@ -42,12 +34,11 @@ class TableReservationForm(BaseModel):
 )
 async def reserve_table(
     table_id: int,
-    form_data: TableReservationForm,
     *,
     db: DatabaseDep,
     auth_data: AuthData = Security(api_nei_auth),
 ) -> Table:
-    """Reserves a seat on table"""
+    """Reserves a seat on table, using dish/allergies/companions from registration."""
     user = await User.get_collection(db).find_one({"_id": auth_data.sub})
 
     if user is None:
@@ -58,11 +49,17 @@ async def reserve_table(
     if not user_model.registration_active:
         raise HTTPException(status_code=403, detail="Only active registrations can reserve tables")
 
+    raw_meal = (user_model.meal_option or "NOR").strip().upper()
+    try:
+        dish = DishType(raw_meal)
+    except ValueError:
+        dish = DishType.NORMAL
+
     table_person = TablePerson(
         id=auth_data.sub,
-        dish=form_data.dish,
-        allergies=form_data.allergies,
-        companions=form_data.companions,
+        dish=dish,
+        allergies=user_model.food_allergies or "",
+        companions=user_model.companions,
         confirmed=False,
     )
 
