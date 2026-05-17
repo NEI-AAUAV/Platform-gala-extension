@@ -104,9 +104,7 @@ export default function Register() {
           });
         }
       })
-      .catch((err) => {
-        console.error("Failed to fetch registration status", err);
-      });
+      .catch(() => {});
   }, [sub]);
 
   if (!sessionLoading && sub === undefined) {

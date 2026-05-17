@@ -29,7 +29,11 @@ export default function RequestJoinTable({
   const handleRequest = async () => {
     setSubmitting(true);
     try {
-      await tableReserve(table._id, { dish: "NOR", allergies: "", companions: [] });
+      await tableReserve(table._id, {
+        dish: "NOR",
+        allergies: "",
+        companions: [],
+      });
       toast.success("Pedido de entrada enviado!");
       mutate();
       navigate("/reserve");
