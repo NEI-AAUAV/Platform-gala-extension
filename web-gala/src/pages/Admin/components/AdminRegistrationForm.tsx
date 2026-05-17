@@ -261,9 +261,22 @@ export default function AdminRegistrationForm({
                 {searchQuery.length >= 3 &&
                   users.length === 0 &&
                   !searching && (
-                    <span className="text-xs text-red-400">
-                      Nenhum utilizador encontrado.
-                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs text-red-400">
+                        Nenhum utilizador encontrado.
+                      </span>
+                      <span className="text-[0.65rem] text-white/35">
+                        Se o utilizador existe mas não aparece, usa{" "}
+                        <button
+                          type="button"
+                          className="underline hover:text-white/60"
+                          onClick={() => setUseExisting(false)}
+                        >
+                          Criar sem Conta
+                        </button>{" "}
+                        e insere o email — fica ligado à conta quando fizer login.
+                      </span>
+                    </div>
                   )}
               </div>
             ) : (
