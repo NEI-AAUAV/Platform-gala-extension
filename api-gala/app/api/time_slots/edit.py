@@ -84,7 +84,7 @@ async def edit_time_slots(
 
     res = await TimeSlots.get_collection(db).find_one_and_update(
         {"_id": TIME_SLOTS_ID},
-        {"$set": form_data.dict(exclude_unset=True)},
+        {"$set": form_data.dict(by_alias=True, exclude_unset=True)},
         return_document=ReturnDocument.AFTER,
     )
 

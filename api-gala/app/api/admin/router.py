@@ -3,6 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr
 from typing import List, Annotated, Optional, Dict, Any, Union
+from pymongo import ReturnDocument
 from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
 from app.services.storage import storage_client
 from app.services.authentik_service import fetch_all_users, AuthentikUser
@@ -892,9 +893,16 @@ async def update_time_slots(
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
     updates = body.dict(by_alias=True, exclude_unset=True)
-    await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
-    result = await collection.find_one({"_id": TIME_SLOTS_ID})
-    return TimeSlots.parse_obj(result)
+    res = await collection.find_one_and_update(
+        {"_id": TIME_SLOTS_ID},
+        {"$set": updates},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    if not res:
+        # If ReturnDocument.AFTER is not available or failed, fetch manually
+        res = await collection.find_one({"_id": TIME_SLOTS_ID})
+    return TimeSlots.parse_obj(res)
 
 
 class BusAssignBody(BaseModel):

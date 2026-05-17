@@ -14,8 +14,8 @@ router = APIRouter()
 
 class VoteCategoryCreateForm(BaseModel):
     category: str = Field(..., min_length=3)
-    options: List[str] = Field(..., min_items=2)
-    photo_paths: List[str] = Field(..., min_items=2)
+    options: List[str] = Field(default_factory=list)
+    photo_paths: List[str] = Field(default_factory=list)
 
     @validator("photo_paths")
     def validate_lengths(cls, photo_paths, values):

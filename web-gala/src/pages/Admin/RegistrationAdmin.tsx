@@ -640,6 +640,8 @@ const SYSTEM_DATE_FIELDS: [keyof TimeSlots, string][] = [
   ["nominationsEnd", "Fim das Nomeações"],
   ["votesStart", "Início das Votações"],
   ["votesEnd", "Fim das Votações"],
+  ["tablesStart", "Início das Mesas"],
+  ["tablesEnd", "Fim das Mesas"],
   ["galaStart", "Início do Jantar de Gala"],
 ];
 

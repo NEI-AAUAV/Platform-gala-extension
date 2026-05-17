@@ -10,25 +10,29 @@ export default function VoteCard({ vote }: Props) {
   const showVoting = vote.voting_open && vote.options.length > 0;
 
   return (
-    <div className="flex flex-col gap-4 border border-dark-gold bg-black/20 p-4 backdrop-blur-md">
-      <div className="text-center">
-        <h1 className="font-gala text-2xl font-semibold text-white">
+    <div className="relative overflow-hidden border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/80 via-black/60 to-[#131313]/80 p-5 backdrop-blur-md sm:p-6">
+      <div className="pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full bg-light-gold/10 blur-2xl" />
+
+      <div className="relative text-center">
+        <h1 className="font-gala text-2xl font-semibold text-white sm:text-[1.8rem]">
           {vote.category}
         </h1>
         {showNomination && !vote.already_nominated && (
-          <p className="mt-1 text-xs text-white/40">Sugere quem merece</p>
+          <p className="mt-1 font-gala text-xs uppercase tracking-[0.2em] text-white/45">
+            Sugere quem merece
+          </p>
         )}
       </div>
 
-      {showNomination && (
+      <div className="relative mt-4">{showNomination && (
         <NominationInput
           categoryId={vote._id}
           alreadyNominated={vote.already_nominated}
         />
-      )}
+      )}</div>
 
       {showVoting && (
-        <div className="flex flex-col gap-4">
+        <div className="mt-4 flex flex-col gap-4">
           {vote.options.map((option, i) => (
             <Option
               key={option}
@@ -43,7 +47,7 @@ export default function VoteCard({ vote }: Props) {
       )}
 
       {!showNomination && !showVoting && (
-        <p className="py-2 text-center text-xs text-white/25">
+        <p className="py-2 text-center font-gala text-xs text-white/35">
           Esta categoria ainda não está aberta.
         </p>
       )}

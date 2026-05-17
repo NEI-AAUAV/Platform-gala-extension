@@ -290,10 +290,7 @@ function CreateCategoryForm({
 }: Readonly<{ onSuccess: () => void }>) {
   const toast = useAppToast();
   const [categoryName, setCategoryName] = useState("");
-  const [options, setOptions] = useState<OptionState[]>([
-    { id: crypto.randomUUID(), name: "" },
-    { id: crypto.randomUUID(), name: "" },
-  ]);
+  const [options, setOptions] = useState<OptionState[]>([]);
   const [status, setStatus] = useState<UploadStatus>("idle");
 
   const optionsRef = useRef(options);
@@ -348,27 +345,23 @@ function CreateCategoryForm({
       toast.error("Por favor, dê um nome à categoria.");
       return;
     }
-    if (options.length < 2) {
-      toast.warning("Cada categoria precisa de, pelo menos, 2 opções.");
-      return;
-    }
-    for (const [i, opt] of options.entries()) {
-      if (!opt.name.trim()) {
-        toast.error(`A opção ${i + 1} precisa de um nome.`);
-        return;
-      }
-    }
+
+    // Filter out options with empty names
+    const filteredOptions = options.filter((o) => o.name.trim() !== "");
+
+    // If there are some options but not all have names, we already filtered them.
+    // The backend now accepts 0 options for the nomination-first flow.
 
     setStatus("uploading");
     try {
       const newCategory = await GalaService.vote.createCategory({
         category: categoryName.trim(),
-        options: options.map((o) => o.name.trim()),
-        photo_paths: options.map(() => ""),
+        options: filteredOptions.map((o) => o.name.trim()),
+        photo_paths: filteredOptions.map(() => ""),
       });
 
       await Promise.all(
-        options.map((opt, i) =>
+        filteredOptions.map((opt, i) =>
           opt.photo
             ? GalaService.vote.uploadOptionPhoto(newCategory._id, i, opt.photo)
             : Promise.resolve(),
@@ -378,10 +371,7 @@ function CreateCategoryForm({
       setStatus("success");
       toast.success("Categoria criada com sucesso! 🎉");
       setCategoryName("");
-      setOptions([
-        { id: crypto.randomUUID(), name: "" },
-        { id: crypto.randomUUID(), name: "" },
-      ]);
+      setOptions([]); // Reset to empty list for next category
       onSuccess();
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: unknown) {
@@ -429,7 +419,7 @@ function CreateCategoryForm({
 
       <div className="flex flex-col gap-2">
         <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
-          Opções (mín. 2)
+          Opções / Finalistas (Opcional)
         </span>
         {options.map((opt) => (
           <OptionInput
@@ -438,7 +428,7 @@ function CreateCategoryForm({
             index={options.indexOf(opt)}
             onChange={handleOptionChange}
             onRemove={handleRemoveOption}
-            canRemove={options.length > 2}
+            canRemove={true}
           />
         ))}
         <button
@@ -506,12 +496,9 @@ function CategoryRow({
       toast.warning("O nome da categoria não pode estar vazio.");
       return;
     }
-    if (editOptions.length < 2) {
-      toast.warning("São necessárias pelo menos 2 opções.");
-      return;
-    }
+    // We now allow 0 options for the nomination-first flow
     if (editOptions.some((opt) => !opt.trim())) {
-      toast.warning("Todas as opções devem ter um nome preenchido.");
+      toast.warning("Todas as opções devem ter um nome preenchido ou ser removidas.");
       return;
     }
 
@@ -716,11 +703,10 @@ function CategoryRow({
             {isEditing && (
               <button
                 type="button"
-                disabled={editOptions.length <= 2}
                 onClick={() => {
                   setEditOptions(editOptions.filter((_, idx) => idx !== i));
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400 disabled:opacity-20"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400"
               >
                 <FontAwesomeIcon icon={faXmark} />
               </button>
