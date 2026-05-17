@@ -135,6 +135,20 @@ async def update_registration_step(
             detail="A inscrição já foi concluída e não pode ser alterada.",
         )
 
+    if step == 3:
+        new_bus = data.get("bus_option", "NONE")
+        if new_bus not in ("NONE", None) and user.bus_option.value == "NONE":
+            limits = await fetch_limits(db)
+            if limits.maxBusSeats is not None:
+                taken = await User.get_collection(db).count_documents(
+                    {"bus_option": {"$ne": "NONE"}}
+                )
+                if taken >= limits.maxBusSeats:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Não há mais lugares disponíveis no autocarro.",
+                    )
+
     try:
         user = await RegistrationService.update_step(db, auth.sub, step, data)
     except ValueError as e:
