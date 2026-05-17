@@ -530,7 +530,7 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
         "companion_emails": companion_emails,
         "is_registered": True,
         "registration_step": 7,
-        "admin_created": False,
+        "admin_created": True,
         "registration_active": True,
         "payment_expired": False,
     }
