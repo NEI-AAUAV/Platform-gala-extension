@@ -341,6 +341,7 @@ export default function RegistrantsAdmin() {
         filtered={filtered}
         tables={tables}
         buses={buses}
+        mealOptions={regConfig.mealOptions}
         openDetail={openDetail}
       />
 

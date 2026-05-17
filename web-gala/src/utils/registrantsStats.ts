@@ -7,14 +7,25 @@ const DISH_TYPE_LABELS: Record<string, string> = {
   VEGAN: "Vegan",
 };
 
+const KNOWN_DISH_TYPES = new Set(["NOR", "FISH", "VEG", "VEGAN"]);
+
+function normalizeToDishType(raw: string, mealOptions: MealOption[]): string {
+  const byId = mealOptions.find((m) => m.id === raw);
+  if (byId) return byId.dishType;
+  const upper = raw.toUpperCase();
+  if (KNOWN_DISH_TYPES.has(upper)) return upper;
+  return raw;
+}
+
 function resolveMealLabel(raw: string, mealOptions: MealOption[]): string {
   if (!raw || raw === "—") return "—";
-  const byId = mealOptions.find((m) => m.id === raw);
-  if (byId) return byId.label;
-  const upper = raw.toUpperCase();
-  const byDishType = mealOptions.find((m) => m.dishType === upper);
+  // Normalize to dishType first so "meat" and "NOR" both resolve to the same label.
+  const dishType = normalizeToDishType(raw, mealOptions);
+  const byDishType = mealOptions.find(
+    (m) => m.dishType.toUpperCase() === dishType.toUpperCase(),
+  );
   if (byDishType) return byDishType.label;
-  return DISH_TYPE_LABELS[upper] ?? raw;
+  return DISH_TYPE_LABELS[dishType.toUpperCase()] ?? raw;
 }
 
 export interface RegistrantsStats {

@@ -11,26 +11,35 @@ import {
   faGhost,
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
+import type { MealOption } from "@/config/registrationConfig";
 
 const orange = { color: "#DD8500" };
 const green = { color: "#198754" };
 const red = { color: "#DC3545" };
 
-const dishIcon = new Map<string, React.ReactNode>([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  [
-    "VEG",
-    <span key="VEG" style={green}>
-      🥬
-    </span>,
-  ],
-]);
+const DISH_TYPE_ICON: Record<string, React.ReactNode> = {
+  NOR: <FrangoIcon style={orange} />,
+  FISH: <span>🐟</span>,
+  VEG: <span style={green}>🥬</span>,
+  VEGAN: <span style={green}>🌱</span>,
+};
+
+function getMealIcon(
+  mealOption: string | null | undefined,
+  mealOptions: MealOption[],
+): React.ReactNode {
+  if (!mealOption) return null;
+  const byId = mealOptions.find((m) => m.id === mealOption);
+  const dishType = byId ? byId.dishType : mealOption.toUpperCase();
+  return DISH_TYPE_ICON[dishType] ?? null;
+}
 
 interface RegistrantsTableProps {
   readonly loading: boolean;
   readonly filtered: User[];
   readonly tables: Table[];
   readonly buses: { id: string; name: string; capacity: number }[];
+  readonly mealOptions: MealOption[];
   readonly openDetail: (user: User) => void;
 }
 
@@ -39,6 +48,7 @@ export default function RegistrantsTable({
   filtered,
   tables,
   buses,
+  mealOptions,
   openDetail,
 }: RegistrantsTableProps) {
   return (
@@ -140,7 +150,7 @@ export default function RegistrantsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {dishIcon.get(user.meal_option ?? "")}
+                      {getMealIcon(user.meal_option, mealOptions)}
                       {user.food_allergies && (
                         <FontAwesomeIcon
                           icon={faHandDots}
