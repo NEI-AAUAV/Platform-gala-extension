@@ -1,3 +1,22 @@
+import type { MealOption } from "@/config/registrationConfig";
+
+const DISH_TYPE_LABELS: Record<string, string> = {
+  NOR: "Carne",
+  FISH: "Peixe",
+  VEG: "Vegetariano",
+  VEGAN: "Vegan",
+};
+
+function resolveMealLabel(raw: string, mealOptions: MealOption[]): string {
+  if (!raw || raw === "—") return "—";
+  const byId = mealOptions.find((m) => m.id === raw);
+  if (byId) return byId.label;
+  const upper = raw.toUpperCase();
+  const byDishType = mealOptions.find((m) => m.dishType === upper);
+  if (byDishType) return byDishType.label;
+  return DISH_TYPE_LABELS[upper] ?? raw;
+}
+
 export interface RegistrantsStats {
   total: number;
   totalPersons: number;
@@ -12,7 +31,10 @@ export interface RegistrantsStats {
   byBusOption: Record<string, number>;
 }
 
-export function computeStats(users: User[]): RegistrantsStats {
+export function computeStats(
+  users: User[],
+  mealOptions: MealOption[] = [],
+): RegistrantsStats {
   const byYear: Record<string, number> = {};
   const byMeal: Record<string, number> = {};
   const byBusOption: Record<string, number> = {};
@@ -22,16 +44,18 @@ export function computeStats(users: User[]): RegistrantsStats {
     const yr = u.matriculation ? `${u.matriculation}º ano` : "Alumni";
     const companionCount = u.companions?.length ?? 0;
     byYear[yr] = (byYear[yr] ?? 0) + 1 + companionCount;
-    const meal = u.meal_option ?? "—";
+    const meal = resolveMealLabel(u.meal_option ?? "—", mealOptions);
     byMeal[meal] = (byMeal[meal] ?? 0) + 1;
     byBusOption[u.bus_option] = (byBusOption[u.bus_option] ?? 0) + 1;
     totalCompanions += companionCount;
 
     for (const c of u.companions ?? []) {
-      const companionMeal =
+      const companionMeal = resolveMealLabel(
         (c as Companion & { meal?: string }).dish ||
-        (c as Companion & { meal?: string }).meal ||
-        "—";
+          (c as Companion & { meal?: string }).meal ||
+          "—",
+        mealOptions,
+      );
       byMeal[companionMeal] = (byMeal[companionMeal] ?? 0) + 1;
       byBusOption[u.bus_option] = (byBusOption[u.bus_option] ?? 0) + 1;
     }

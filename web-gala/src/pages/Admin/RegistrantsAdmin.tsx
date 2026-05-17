@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faPlus } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import { useHomepageConfig } from "@/hooks/useHomepageConfig";
+import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import useTables from "@/hooks/tableHooks/useTables";
 import { useAppToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/utils/apiError";
@@ -37,6 +38,7 @@ export default function RegistrantsAdmin() {
   const formRef = useRef<HTMLDialogElement>(null);
   const toast = useAppToast();
   const { config } = useHomepageConfig();
+  const { config: regConfig } = useRegistrationConfig();
   const { tables } = useTables();
   const { buses } = config.bus_schedule;
 
@@ -59,7 +61,10 @@ export default function RegistrantsAdmin() {
     load();
   }, []);
 
-  const stats = useMemo(() => computeStats(users), [users]);
+  const stats = useMemo(
+    () => computeStats(users, regConfig.mealOptions),
+    [users, regConfig.mealOptions],
+  );
 
   const filtered = useMemo(() => {
     const matchesSearch = (u: User, q: string) => {
