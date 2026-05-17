@@ -8,6 +8,7 @@ from app.api.vote.vote import VoteForm
 
 from app.core.config import Settings
 from app.core.db.types import DBType
+from app.models.user import User
 from app.models.vote import Vote, VoteCategory, VoteListing
 
 from ._utils import (
@@ -788,3 +789,62 @@ async def test_submit_nomination_success(
     assert db_res is not None
     category = VoteCategory(**db_res)
     assert any(n.name == "Test Person" and 0 in n.votes for n in category.nominations)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_get_nomination_suggestions_global_pool(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(_id=10, category="CAT A", options=[], photo_paths=[]).dict(by_alias=True)
+    )
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(
+            _id=11,
+            category="CAT B",
+            options=[],
+            photo_paths=[],
+            nominations=[{"name": "Joana Prime", "votes": [1]}],
+        ).dict(by_alias=True)
+    )
+
+    user = User(
+        _id=0,
+        matriculation=None,
+        nmec=1,
+        email="user0@test.com",
+        name="Joao Silva",
+        is_registered=True,
+        registration_active=True,
+        companions=[{"name": "Joana Companion", "email": "comp@test.com"}],
+    )
+    await User.get_collection(db).insert_one(user.dict(by_alias=True))
+
+    # Duplicate candidate from another source should only appear once.
+    another_user = User(
+        _id=1,
+        matriculation=None,
+        nmec=2,
+        email="user1@test.com",
+        name="joao silva",
+        is_registered=True,
+        registration_active=True,
+    )
+    await User.get_collection(db).insert_one(another_user.dict(by_alias=True))
+
+    response = await client.get(
+        f"{settings.API_V1_STR}/voting/nominees/suggest",
+        params={"q": "Joa", "category_id": 10},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert "Joao Silva" in body
+    assert "Joana Companion" in body
+    assert "Joana Prime" in body
+    assert len([name for name in body if name.lower() == "joao silva"]) == 1

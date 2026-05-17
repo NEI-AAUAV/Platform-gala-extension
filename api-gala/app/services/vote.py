@@ -1,6 +1,7 @@
 import difflib
 from typing import List, Optional
 from app.core.db.types import DBType
+from app.models.user import User
 from app.models.vote import VoteCategory, Vote
 
 
@@ -72,9 +73,42 @@ class VoteService:
         if not category_dict:
             return []
 
-        category = VoteCategory.parse_obj(category_dict)
-        names = [n.name for n in category.nominations]
-        return difflib.get_close_matches(query, names, n=5, cutoff=0.3)
+        users_collection = User.get_collection(db)
+        users_cursor = users_collection.find(
+            {},
+            projection={"name": 1, "companions.name": 1},
+        )
+        users = await users_cursor.to_list(None)
+
+        categories = await collection.find({}, projection={"nominations.name": 1}).to_list(None)
+
+        all_names: List[str] = []
+        for user in users:
+            user_name = user.get("name")
+            if user_name:
+                all_names.append(user_name)
+
+            for companion in user.get("companions", []):
+                companion_name = companion.get("name")
+                if companion_name:
+                    all_names.append(companion_name)
+
+        for category in categories:
+            for nomination in category.get("nominations", []):
+                nominee_name = nomination.get("name")
+                if nominee_name:
+                    all_names.append(nominee_name)
+
+        deduped_map = {}
+        for name in all_names:
+            cleaned = name.strip()
+            if not cleaned:
+                continue
+            normalized = cleaned.casefold()
+            if normalized not in deduped_map:
+                deduped_map[normalized] = cleaned
+
+        return difflib.get_close_matches(query, list(deduped_map.values()), n=5, cutoff=0.3)
 
     @staticmethod
     async def vote(db: DBType, user_id: int, category_id: int, option_index: int) -> bool:
