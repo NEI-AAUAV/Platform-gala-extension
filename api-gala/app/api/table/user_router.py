@@ -14,6 +14,7 @@ from app.services.table import TableService
 from app.services.storage import storage_client
 from app.services.config import ConfigService
 from app.api.table._utils import fetch_table, table_head_permissions, sanitize_table
+from app.api.limits.util import fetch_limits
 from app.core.logging import logger
 
 
@@ -47,6 +48,11 @@ async def create_table(
     user = User.parse_obj(user_dict)
     if not user.is_registered or not user.registration_active:
         raise HTTPException(status_code=403, detail="Only gala registrants can create tables")
+    limits = await fetch_limits(db)
+    if limits.maxTablesCount is not None:
+        current = await Table.get_collection(db).count_documents({})
+        if current >= limits.maxTablesCount:
+            raise HTTPException(status_code=400, detail="O limite de mesas foi atingido.")
     try:
         return await TableService.create_table(db, auth.sub, body.name, seats=body.seats)
     except ValueError as e:

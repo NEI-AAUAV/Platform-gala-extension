@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
 from typing import Annotated, Any
 
 from app.core.db.types import DBType
@@ -12,10 +12,11 @@ from app.services.table import TableService
 from app.services.config import ConfigService
 from app.core.email import send_email
 from app.core.config import SettingsDep
+from app.api.limits.util import fetch_limits
 
 router = APIRouter(prefix="/tables", tags=["admin", "tables"])
 
-@router.post("/create", responses={**auth_responses})
+@router.post("/create", responses={**auth_responses, 409: {"description": "Table limit reached"}})
 async def admin_create_table(
     name: str,
     seats: int,
@@ -24,6 +25,14 @@ async def admin_create_table(
 ) -> Table:
     """Create a new empty table."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
+    limits = await fetch_limits(db)
+    if limits.maxTablesCount is not None:
+        current = await Table.get_collection(db).count_documents({})
+        if current >= limits.maxTablesCount:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="O limite de mesas foi atingido.",
+            )
     return await TableService.create_empty_table(db, name, seats)
 
 @router.delete("/{table_id}", responses={**auth_responses, 404: {"description": "Table not found"}})
