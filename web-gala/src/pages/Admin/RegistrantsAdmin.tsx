@@ -168,7 +168,9 @@ export default function RegistrantsAdmin() {
     try {
       await GalaService.admin.unconfirmPayment(selectedUser._id, phase);
       toast.success(
-        phase ? `Confirmação fase ${phase} anulada.` : "Confirmação de pagamento anulada.",
+        phase
+          ? `Confirmação fase ${phase} anulada.`
+          : "Confirmação de pagamento anulada.",
       );
       load();
     } catch (e) {
