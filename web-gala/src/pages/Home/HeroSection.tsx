@@ -49,9 +49,8 @@ function SeatsBadge({ remaining }: { readonly remaining: number | undefined }) {
   if (remaining <= 0)
     return (
       <span className="font-gala text-xs uppercase tracking-widest text-white/40">
-        <span className="font-bold text-red-400">0</span>{" "}
-        {remaining === -1 ? "vaga disponível" : "vagas disponíveis"} -{" "}
-        <span className="text-red-400">inscrições encerradas</span>
+        <span className="font-bold text-red-400">0</span> {"vagas disponíveis"}{" "}
+        - <span className="text-red-400">inscrições encerradas</span>
       </span>
     );
   return (
@@ -201,6 +200,8 @@ function HeroContent({
 }) {
   const { time } = useTime();
 
+  const isFull = remainingSeats !== undefined && remainingSeats <= 0;
+
   if (state === State.NONE) {
     return (
       <motion.div
@@ -210,12 +211,18 @@ function HeroContent({
         className="mt-12 flex flex-col items-center justify-center gap-6"
       >
         <div className="flex flex-wrap justify-center gap-3">
-          <a
-            href={loginLink}
-            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-          >
-            Inscrever no Jantar
-          </a>
+          {isFull ? (
+            <span className="cursor-not-allowed bg-light-gold/30 px-10 py-4 font-gala text-sm font-bold text-black/40">
+              Inscrever no Jantar
+            </span>
+          ) : (
+            <a
+              href={loginLink}
+              className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+            >
+              Inscrever no Jantar
+            </a>
+          )}
           <a
             href={loginLink}
             className="border border-white/20 px-10 py-4 font-gala text-sm font-semibold text-white/60 transition-all hover:border-white/40 hover:text-white"
@@ -242,12 +249,18 @@ function HeroContent({
         transition={{ delay: 0.5, duration: 0.5 }}
         className="mt-12 flex flex-col items-center gap-6"
       >
-        <Link
-          to="/register"
-          className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
-        >
-          Inscrever no Jantar
-        </Link>
+        {isFull ? (
+          <span className="cursor-not-allowed bg-light-gold/30 px-10 py-4 font-gala text-sm font-bold text-black/40">
+            Inscrever no Jantar
+          </span>
+        ) : (
+          <Link
+            to="/register"
+            className="bg-light-gold px-10 py-4 font-gala text-sm font-bold text-black shadow-lg shadow-light-gold/20 transition-all hover:brightness-110 active:scale-95"
+          >
+            Inscrever no Jantar
+          </Link>
+        )}
         <SeatsBadge remaining={remainingSeats} />
         {time?.galaStatus === TimeStatus.OPENING && (
           <Countdown

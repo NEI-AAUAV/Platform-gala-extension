@@ -7,6 +7,7 @@ import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { useWizardState, BusOption } from "@/hooks/useWizardState";
 import type { Companion } from "@/hooks/useWizardState";
 import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
+import useCapacity from "@/hooks/useCapacity";
 import { formatDateTimePT } from "@/utils/formatDate";
 import GalaService from "@/services/GalaService";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
@@ -61,6 +62,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { config } = useRegistrationConfig();
   const { time } = useTime();
+  const { capacity } = useCapacity();
   const { mutate: mutateSession } = useSessionUser();
   const { data, update, reset } = useWizardState(sub ? String(sub) : undefined);
   const [syncing, setSyncing] = useState(false);
@@ -102,7 +104,9 @@ export default function Register() {
           });
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to fetch registration status", err);
+      });
   }, [sub]);
 
   if (!sessionLoading && sub === undefined) {
@@ -122,6 +126,21 @@ export default function Register() {
           </p>
           <p className="mt-2 text-sm text-white/40">
             As inscrições abrem a {opensAt}.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (capacity !== undefined && capacity.remaining <= 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <p className="font-gala text-xl font-bold text-white/80">
+            Inscrições encerradas
+          </p>
+          <p className="mt-2 text-sm text-white/40">
+            Não há vagas disponíveis.
           </p>
         </div>
       </div>

@@ -208,6 +208,19 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
     if host:
         real_existing = await user_coll.find_one({"_id": authentik_user_id, "is_registered": True})
         if not real_existing:
+            # Re-fetch to guard against the host removing the companion between the two queries
+            host_still_valid = await user_coll.find_one(
+                {
+                    "_id": host["_id"],
+                    "is_registered": True,
+                    "companions.email": {
+                        "$regex": rf"^\s*{email_pattern}\s*$",
+                        "$options": "i",
+                    },
+                }
+            )
+            if not host_still_valid:
+                return
             update_data = {
                 "is_registered": True,
                 "is_companion_of": host["_id"],
