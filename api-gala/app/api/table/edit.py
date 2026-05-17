@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from pydantic.fields import Field
 from pymongo import ReturnDocument
 from pymongo.errors import OperationFailure
-from typing import Annotated
+from typing import Annotated, Optional
 
 from app.models.table import Table
 from app.api.auth import AuthData, api_nei_auth, auth_responses
@@ -23,6 +23,7 @@ router = APIRouter()
 
 class TableEditForm(BaseModel):
     name: Annotated[str, Field(min_length=3, max_length=20)]
+    seats: Optional[int] = None
 
 
 @router.put(
@@ -45,7 +46,7 @@ async def edit_table(
         # Oportunistic path - Everything goes well
         res = await Table.get_collection(db).find_one_and_update(
             query_check_table_head_permissions(auth, {"_id": table_id}),
-            {"$set": form_data.dict()},
+            {"$set": form_data.dict(exclude_none=True)},
             return_document=ReturnDocument.AFTER,
         )
 

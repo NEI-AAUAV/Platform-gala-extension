@@ -286,6 +286,8 @@ function TableAdminCard({
   const [expanded, setExpanded] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(table.name ?? "");
+  const [editingSeats, setEditingSeats] = useState(false);
+  const [seatsValue, setSeatsValue] = useState(table.seats);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const toast = useAppToast();
@@ -307,6 +309,25 @@ function TableAdminCard({
       toast.error(extractApiError(e, "Erro ao guardar nome."));
     } finally {
       setEditingName(false);
+    }
+  };
+
+  const saveSeats = async () => {
+    if (seatsValue < 1) {
+      toast.error("O número de lugares deve ser positivo.");
+      return;
+    }
+    try {
+      await GalaService.table.editTable(table._id, {
+        name: table.name ?? nameValue,
+        seats: seatsValue,
+      });
+      toast.success("Lugares atualizados.");
+      onRefresh();
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao guardar lugares."));
+    } finally {
+      setEditingSeats(false);
     }
   };
 
@@ -426,6 +447,53 @@ function TableAdminCard({
                     {table.name || (
                       <span className="italic text-white/30">Sem nome</span>
                     )}
+                    <FontAwesomeIcon
+                      icon={faPen}
+                      className="text-[0.55rem] text-white/30"
+                    />
+                  </button>
+                )}
+              </div>
+
+              {/* Seats editor */}
+              <div className="flex flex-col gap-1">
+                <p className="text-[0.55rem] font-bold uppercase tracking-widest text-white/25">
+                  Lugares
+                </p>
+                {editingSeats ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={seatsValue}
+                      min={1}
+                      onChange={(e) => setSeatsValue(Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveSeats();
+                        if (e.key === "Escape") setEditingSeats(false);
+                      }}
+                      className="w-20 border border-light-gold/30 bg-white/5 px-2 py-1 text-xs text-white outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={saveSeats}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center bg-light-gold/20 text-light-gold hover:bg-light-gold/30"
+                    >
+                      <FontAwesomeIcon
+                        icon={faCheck}
+                        className="text-[0.6rem]"
+                      />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSeatsValue(table.seats);
+                      setEditingSeats(true);
+                    }}
+                    className="flex items-center gap-1.5 text-left text-xs text-white/60 transition-colors hover:text-light-gold"
+                  >
+                    {table.seats} lugares
                     <FontAwesomeIcon
                       icon={faPen}
                       className="text-[0.55rem] text-white/30"
@@ -835,7 +903,7 @@ export default function TablesAdmin() {
                 const name = prompt("Nome da mesa:");
                 if (!name) return;
                 try {
-                  await GalaService.admin.createTable({ name, seats: 10 });
+                  await GalaService.admin.createTable({ name, seats: 11 });
                   toast.success("Mesa criada.");
                   refresh();
                 } catch (e) {

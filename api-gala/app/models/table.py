@@ -56,7 +56,7 @@ class Table(BaseDocument):
     # Creator of the table (business owner of the table)
     owner_id: Optional[int] = None
     head: Optional[int] = None
-    seats: PositiveInt = 10
+    seats: PositiveInt = 11
     persons: List[TablePerson] = []
 
     @classmethod

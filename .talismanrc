@@ -23,4 +23,6 @@ fileignoreconfig:
   checksum: e833a8e70fd91f2677357e340dbafdc08f9b3e19f4ffcd664bb52a21c8bcf4eb
 - filename: web-gala/src/components/TriangleBackground/index.tsx
   checksum: 58865e72b362a2435bbe345e9aea81246f8be6646fe0e0727ceb957a81c4258d
+- filename: web-gala/src/pages/Admin/TablesAdmin.tsx
+  checksum: 1abe196cb3e36c42557f7772cda617d1d7028bb11e94c613da241d3480652fd3
 version: "1.0"

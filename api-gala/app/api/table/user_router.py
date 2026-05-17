@@ -22,7 +22,7 @@ router = APIRouter(tags=["User Tables"])
 
 class TableCreateBody(BaseModel):
     name: str
-    seats: int = 10
+    seats: int = 11
 
 
 @router.post(

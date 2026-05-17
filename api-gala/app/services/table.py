@@ -30,7 +30,7 @@ async def _user_dish(user: User, db: DBType) -> DishType:
 
 class TableService:
     @staticmethod
-    async def create_table(db: DBType, user_id: int, name: str, photo: Optional[bytes] = None, content_type: str = "image/png", seats: int = 10) -> Table:
+    async def create_table(db: DBType, user_id: int, name: str, photo: Optional[bytes] = None, content_type: str = "image/png", seats: int = 11) -> Table:
         collection = Table.get_collection(db)
         user_coll = User.get_collection(db)
         

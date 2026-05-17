@@ -147,7 +147,10 @@ const GalaService = {
       const response: Table = await client.post("/table/create", request);
       return response;
     },
-    editTable: async (id: string | number, request: { name: string }) => {
+    editTable: async (
+      id: string | number,
+      request: { name: string; seats?: number },
+    ) => {
       const response: Table = await client.put(`/table/${id}/edit`, request);
       return response;
     },
