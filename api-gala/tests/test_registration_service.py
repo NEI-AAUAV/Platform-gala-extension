@@ -274,10 +274,11 @@ async def test_update_step_2_syncs_companions():
     updated_doc = _user_doc(registration_step=2)
     db, _ = _make_db(user_doc, updated_doc)
     companions = [{"name": "Alice", "dish": "NOR", "allergies": ""}]
-    normalized = [{"name": "Alice", "dish": "NOR", "allergies": "", "email": None}]
+    normalized = [{"name": "Alice", "dish": "meat", "allergies": "", "email": None}]
 
+    meat_meal = MagicMock(id="meat", dish_type="NOR", is_active=True)
     with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
-         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[])):
+         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[meat_meal])):
         await RegistrationService.update_step(db, user_id=1, step=2, data={"companions": companions})
         mock_sync.assert_awaited_once_with(db, 1, normalized)
 
@@ -290,11 +291,12 @@ async def test_update_step_3_syncs_companions():
     updated_doc = _user_doc(registration_step=3)
     db, _ = _make_db(user_doc, updated_doc)
     companions = [{"name": "Bob", "dish": "VEG", "allergies": "gluten"}]
-    normalized = [{"name": "Bob", "dish": "VEG", "allergies": "gluten", "email": None}]
+    normalized = [{"name": "Bob", "dish": "veg", "allergies": "gluten", "email": None}]
 
+    veg_meal = MagicMock(id="veg", dish_type="VEG", is_active=True)
     with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
          patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock), \
-         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[])):
+         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[veg_meal])):
         await RegistrationService.update_step(db, user_id=1, step=3, data={"companions": companions})
         mock_sync.assert_awaited_once_with(db, 1, normalized)
 
