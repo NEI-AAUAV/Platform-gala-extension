@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
 from pydantic import BaseModel, Field, validator
@@ -14,6 +14,9 @@ router = APIRouter()
 
 class VoteCategoryCreateForm(BaseModel):
     category: str = Field(..., min_length=3)
+    description: Optional[str] = None
+    min_nominees: int = 1
+    max_nominees: int = 1
     options: List[str] = Field(default_factory=list)
     photo_paths: List[str] = Field(default_factory=list)
 
@@ -46,6 +49,9 @@ async def create_category(
     category = VoteCategory(
         _id=category_id,
         category=form_data.category,
+        description=form_data.description,
+        min_nominees=form_data.min_nominees,
+        max_nominees=form_data.max_nominees,
         options=form_data.options,
         photo_paths=form_data.photo_paths,
         votes=[],

@@ -57,6 +57,7 @@ def anonymize_category(
     return VoteListing(
         _id=category.id,
         category=category.category,
+        description=category.description,
         options=category.options,
         photo_paths=category.photo_paths,
         scores=scores if results_visible else [0] * len(category.options),
@@ -65,4 +66,6 @@ def anonymize_category(
         voting_open=is_voting_open(ts),
         results_visible=results_visible,
         already_nominated=already_nominated,
+        min_nominees=category.min_nominees,
+        max_nominees=category.max_nominees,
     )

@@ -14,7 +14,7 @@ router = APIRouter(tags=["Nominations"])
 
 
 class NominationForm(BaseModel):
-    name: str
+    names: List[str]
 
 
 @router.post(
@@ -44,7 +44,7 @@ async def submit_nomination(
         raise HTTPException(status_code=403, detail="Nominations are closed for this category")
 
     try:
-        await VoteService.nominate(db, auth.sub, category_id, form_data.name)
+        await VoteService.nominate(db, auth.sub, category_id, form_data.names)
         return {"status": "success"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
