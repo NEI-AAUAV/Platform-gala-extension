@@ -1,9 +1,9 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHandDots,
-  faSeedling,
   faFish,
   faLeaf,
+  faSeedling,
 } from "@fortawesome/free-solid-svg-icons";
 import { FrangoIcon } from "@/assets/icons";
 import { MealOption } from "@/config/registrationConfig";
@@ -18,8 +18,8 @@ export const red = { color: "#DC3545" };
 export const iconMap = new Map([
   ["NOR", <FrangoIcon key="NOR" style={orange} />],
   ["FISH", <FontAwesomeIcon key="FISH" icon={faFish} style={teal} />],
-  ["VEG", <FontAwesomeIcon key="VEG" icon={faSeedling} style={green} />],
-  ["VEGAN", <FontAwesomeIcon key="VEGAN" icon={faLeaf} style={emerald} />],
+  ["VEG", <FontAwesomeIcon key="VEG" icon={faLeaf} style={green} />],
+  ["VEGAN", <FontAwesomeIcon key="VEGAN" icon={faSeedling} style={emerald} />],
 ]);
 
 export function allergyIcon(allergies: string) {
@@ -105,13 +105,13 @@ export function CompanionSummary({ person }: Readonly<{ person: Person }>) {
         {vegCount > 0 && (
           <span className="flex items-center gap-2">
             <span className="text-sm text-base-content/70">{vegCount}</span>
-            <FontAwesomeIcon icon={faSeedling} style={green} />
+            <FontAwesomeIcon icon={faLeaf} style={green} />
           </span>
         )}
         {veganCount > 0 && (
           <span className="flex items-center gap-2">
             <span className="text-sm text-base-content/70">{veganCount}</span>
-            <FontAwesomeIcon icon={faLeaf} style={emerald} />
+            <FontAwesomeIcon icon={faSeedling} style={emerald} />
           </span>
         )}
         {allergyCount > 0 && (

@@ -10,20 +10,10 @@ import {
   faTriangleExclamation,
   faGhost,
 } from "@fortawesome/free-solid-svg-icons";
-import { FrangoIcon } from "@/assets/icons";
 import type { MealOption } from "@/config/registrationConfig";
 import { getMealDishType } from "@/utils/mealOption";
+import { iconMap, red } from "@/components/TableModal/personUtils";
 
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
-const red = { color: "#DC3545" };
-
-const DISH_TYPE_ICON: Record<string, React.ReactNode> = {
-  NOR: <FrangoIcon style={orange} />,
-  FISH: <span>🐟</span>,
-  VEG: <span style={green}>🥬</span>,
-  VEGAN: <span style={green}>🌱</span>,
-};
 
 interface RegistrantsTableProps {
   readonly loading: boolean;
@@ -141,9 +131,9 @@ export default function RegistrantsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {DISH_TYPE_ICON[
+                      {iconMap.get(
                         getMealDishType(user.meal_option, mealOptions) ?? ""
-                      ] ?? null}
+                      ) ?? null}
                       {user.food_allergies && (
                         <FontAwesomeIcon
                           icon={faHandDots}
