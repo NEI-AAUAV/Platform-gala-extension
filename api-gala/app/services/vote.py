@@ -11,13 +11,24 @@ class AlreadyVotedError(ValueError): ...
 
 class VoteService:
     @staticmethod
-    async def nominate(db: DBType, user_id: int, category_id: int, nominee_name: str) -> bool:
+    async def nominate(db: DBType, user_id: int, category_id: int, names: List[str]) -> bool:
         collection = VoteCategory.get_collection(db)
         category_dict = await collection.find_one({"_id": category_id})
         if not category_dict:
             raise ValueError("Category not found")
 
         category = VoteCategory.parse_obj(category_dict)
+
+        # Filter out empty names and strip whitespace
+        names = [n.strip() for n in names if n.strip()]
+
+        if not (category.min_nominees <= len(names) <= category.max_nominees):
+            if category.min_nominees == category.max_nominees:
+                raise ValueError(f"Esta categoria requer exatamente {category.min_nominees} nomes")
+            raise ValueError(f"Esta categoria requer entre {category.min_nominees} e {category.max_nominees} nomes")
+
+        # Sort names and join with " & " for consistent group naming
+        nominee_name = " & ".join(sorted(names))
 
         # If the user already nominated, remove their vote from the current nominee first.
         existing_nominee = next(

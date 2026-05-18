@@ -20,6 +20,9 @@ class Vote(BaseModel):
 class VoteCategory(BaseDocument):
     id: int = Field(alias="_id")
     category: str
+    description: Optional[str] = None
+    min_nominees: int = 1
+    max_nominees: int = 1
 
     # Nominations (free text)
     nominations: List[Nominee] = []
@@ -33,6 +36,7 @@ class VoteCategory(BaseDocument):
 class VoteListing(BaseModel):
     id: int = Field(alias="_id")
     category: str
+    description: Optional[str] = None
     options: List[str]
     photo_paths: List[str] = Field(default_factory=list)
     scores: List[int]
@@ -43,3 +47,5 @@ class VoteListing(BaseModel):
     voting_open: bool
     results_visible: bool = False
     already_nominated: bool = False
+    min_nominees: int = 1
+    max_nominees: int = 1
