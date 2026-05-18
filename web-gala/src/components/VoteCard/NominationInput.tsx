@@ -81,7 +81,7 @@ export default function NominationInput({
         // Filter out names already in the list
         setSuggestions(results.filter(r => !names.includes(r)));
         setIsDropdownOpen(true);
-        setActiveSuggestionIdx(results.length > 0 ? 0 : -1);
+        setActiveSuggestionIdx(-1);
       } catch {
         setSuggestions([]);
         setIsDropdownOpen(true);
