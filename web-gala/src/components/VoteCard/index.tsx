@@ -17,6 +17,11 @@ export default function VoteCard({ vote }: Props) {
         <h1 className="font-gala text-2xl font-semibold text-white sm:text-[1.8rem]">
           {vote.category}
         </h1>
+        {vote.description && (
+          <p className="mt-2 font-gala text-xs italic text-white/40">
+            {vote.description}
+          </p>
+        )}
         {showNomination && !vote.already_nominated && (
           <p className="mt-1 font-gala text-xs uppercase tracking-[0.2em] text-white/45">
             Sugere quem merece
@@ -28,7 +33,10 @@ export default function VoteCard({ vote }: Props) {
         <NominationInput
           categoryId={vote._id}
           alreadyNominated={vote.already_nominated}
+          minNominees={vote.min_nominees}
+          maxNominees={vote.max_nominees}
         />
+
       )}</div>
 
       {showVoting && (

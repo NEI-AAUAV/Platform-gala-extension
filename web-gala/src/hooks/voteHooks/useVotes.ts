@@ -1,6 +1,8 @@
 import useSWR from "swr";
 import GalaService from "@/services/GalaService";
 
+const EMPTY_VOTES: Vote[] = [];
+
 export default function useVotes() {
   const { data, error, isLoading, mutate } = useSWR<Vote[]>(
     "/votes/list",
@@ -9,7 +11,7 @@ export default function useVotes() {
   );
 
   return {
-    votes: data ?? [],
+    votes: data ?? EMPTY_VOTES,
     isLoading,
     isError: error,
     mutate,

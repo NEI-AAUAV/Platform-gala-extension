@@ -45,6 +45,9 @@ export type EditLimits = Partial<Limits>;
 
 type VoteCategoryCreate = {
   category: string;
+  description?: string;
+  min_nominees?: number;
+  max_nominees?: number;
   options: string[];
   photo_paths: string[];
 };
@@ -59,6 +62,9 @@ export type AdminNominee = {
 export type AdminVoteCategory = {
   _id: number;
   category: string;
+  description?: string;
+  min_nominees: number;
+  max_nominees: number;
   nominations: AdminNominee[];
   options: string[];
   photo_paths: string[];
@@ -417,8 +423,8 @@ const GalaService = {
       );
       return response;
     },
-    nominate: async (id: string | number, name: string): Promise<void> => {
-      await client.post(`/voting/categories/${id}/nominate`, { name });
+    nominate: async (id: string | number, names: string[]): Promise<void> => {
+      await client.post(`/voting/categories/${id}/nominate`, { names });
     },
     getSuggestions: async (
       id: string | number,

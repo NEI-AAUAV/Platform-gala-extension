@@ -86,6 +86,11 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
             <h3 className="font-gala text-[2rem] font-black leading-tight text-white sm:text-[3rem]">
               {votes[active].category}
             </h3>
+            {votes[active].description && (
+              <p className="mt-2 max-w-lg font-gala text-sm italic text-white/60">
+                {votes[active].description}
+              </p>
+            )}
             {votes[active].options.length > 0 && (
               <p className="mt-4 font-gala text-sm text-white/40">
                 {votes[active].options.length} nomeado
@@ -151,6 +156,11 @@ function CategoryNominees({
       <h3 className="mb-5 font-gala text-xl font-bold text-white">
         {vote.category}
       </h3>
+      {vote.description && (
+        <p className="mb-4 -mt-3 text-xs italic text-white/50">
+          {vote.description}
+        </p>
+      )}
       <ul className="flex flex-col gap-2">
         {nominees.map((name, i) => (
           <li

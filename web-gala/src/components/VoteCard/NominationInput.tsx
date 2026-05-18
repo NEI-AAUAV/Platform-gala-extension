@@ -7,12 +7,15 @@ import {
   faPencil,
   faSearch,
   faUserCheck,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 
 interface Props {
   readonly categoryId: number;
   readonly alreadyNominated: boolean;
+  readonly minNominees: number;
+  readonly maxNominees: number;
 }
 
 function resolveNominationError(reason: unknown): string {
@@ -35,10 +38,16 @@ const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 export default function NominationInput({
   categoryId,
   alreadyNominated,
+  minNominees,
+  maxNominees,
 }: Props) {
-  const [value, setValue] = useState(
-    () => localStorage.getItem(storageKey(categoryId)) ?? "",
-  );
+  const [value, setValue] = useState("");
+  const [names, setNames] = useState<string[]>(() => {
+    const stored = localStorage.getItem(storageKey(categoryId));
+    if (stored) return stored.split(" & ");
+    return [];
+  });
+  
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -69,7 +78,8 @@ export default function NominationInput({
           categoryId,
           value,
         );
-        setSuggestions(results);
+        // Filter out names already in the list
+        setSuggestions(results.filter(r => !names.includes(r)));
         setIsDropdownOpen(true);
         setActiveSuggestionIdx(results.length > 0 ? 0 : -1);
       } catch {
@@ -83,7 +93,7 @@ export default function NominationInput({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [value, categoryId]);
+  }, [value, categoryId, names]);
 
   useEffect(() => {
     const onDocumentMouseDown = (event: MouseEvent) => {
@@ -97,15 +107,35 @@ export default function NominationInput({
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
 
+  const addName = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || names.includes(trimmed)) return;
+    if (names.length >= maxNominees) return;
+    
+    setNames([...names, trimmed]);
+    setValue("");
+    setIsDropdownOpen(false);
+    setError(null);
+  };
+
+  const removeName = (idx: number) => {
+    setNames(names.filter((_, i) => i !== idx));
+    setError(null);
+  };
+
   const submit = async () => {
-    const name = value.trim();
-    if (!name) return;
+    if (names.length < minNominees) {
+      setError(`Precisas de adicionar pelo menos ${minNominees} ${minNominees === 1 ? "nome" : "nomes"}.`);
+      return;
+    }
+    
     setError(null);
     setSubmitting(true);
     try {
-      await GalaService.vote.nominate(categoryId, name);
-      localStorage.setItem(storageKey(categoryId), name);
-      setNominatedName(name);
+      await GalaService.vote.nominate(categoryId, names);
+      const finalName = [...names].sort().join(" & ");
+      localStorage.setItem(storageKey(categoryId), finalName);
+      setNominatedName(finalName);
       setSubmitted(true);
       setSuggestions([]);
       setIsDropdownOpen(false);
@@ -153,6 +183,8 @@ export default function NominationInput({
     );
   }
 
+  const canAddMore = names.length < maxNominees;
+
   return (
     <div className="flex flex-col gap-3">
       <div ref={wrapperRef} className="relative">
@@ -160,59 +192,84 @@ export default function NominationInput({
           htmlFor={`nomination-input-${categoryId}`}
           className="mb-1.5 block font-gala text-[0.68rem] font-bold uppercase tracking-[0.28em] text-light-gold/60"
         >
-          Nomeado
+          {maxNominees > 1 ? `Nomeados (${names.length}/${maxNominees})` : "Nomeado"}
         </label>
-        <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/35">
-            <FontAwesomeIcon icon={faSearch} className="text-xs" />
-          </span>
-          {isLoadingSuggestions && (
-            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-light-gold/60">
-              <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
+        
+        {/* Selected Names Tags */}
+        <div className="mb-2 flex flex-wrap gap-2">
+          {names.map((name, idx) => (
+            <span 
+              key={name}
+              className="flex items-center gap-2 border border-light-gold/30 bg-light-gold/10 px-3 py-1.5 font-gala text-xs text-white"
+            >
+              {name}
+              <button 
+                type="button" 
+                onClick={() => removeName(idx)}
+                className="text-white/40 hover:text-red-400"
+              >
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
             </span>
-          )}
-          <input
-            id={`nomination-input-${categoryId}`}
-            type="text"
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setError(null);
-              setIsDropdownOpen(e.target.value.trim().length >= 2);
-            }}
-            onFocus={() => {
-              if (value.trim().length >= 2) setIsDropdownOpen(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (!isDropdownOpen) setIsDropdownOpen(true);
-                setActiveSuggestionIdx((prev) =>
-                  Math.min(prev + 1, suggestions.length - 1),
-                );
-              }
-              if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setActiveSuggestionIdx((prev) => Math.max(prev - 1, 0));
-              }
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (isDropdownOpen && activeSuggestionIdx >= 0 && suggestions[activeSuggestionIdx]) {
-                  setValue(suggestions[activeSuggestionIdx]);
-                  setIsDropdownOpen(false);
-                  return;
-                }
-                submit();
-              }
-              if (e.key === "Escape") {
-                setIsDropdownOpen(false);
-                setActiveSuggestionIdx(-1);
-              }
-            }}
-            placeholder="Escreve um nome..."
-            className="w-full border border-white/15 bg-black/30 py-3 pl-10 pr-10 font-gala text-sm text-white placeholder:text-white/30 focus:border-light-gold/60 focus:outline-none"
-          />
+          ))}
         </div>
+
+        {canAddMore && (
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/35">
+              <FontAwesomeIcon icon={faSearch} className="text-xs" />
+            </span>
+            {isLoadingSuggestions && (
+              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-light-gold/60">
+                <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
+              </span>
+            )}
+            <input
+              id={`nomination-input-${categoryId}`}
+              type="text"
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                setError(null);
+                setIsDropdownOpen(e.target.value.trim().length >= 2);
+              }}
+              onFocus={() => {
+                if (value.trim().length >= 2) setIsDropdownOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (!isDropdownOpen) setIsDropdownOpen(true);
+                  setActiveSuggestionIdx((prev) =>
+                    Math.min(prev + 1, suggestions.length - 1),
+                  );
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setActiveSuggestionIdx((prev) => Math.max(prev - 1, 0));
+                }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (isDropdownOpen && activeSuggestionIdx >= 0 && suggestions[activeSuggestionIdx]) {
+                    addName(suggestions[activeSuggestionIdx]);
+                    return;
+                  }
+                  if (value.trim()) {
+                    addName(value);
+                  } else if (names.length >= minNominees) {
+                    submit();
+                  }
+                }
+                if (e.key === "Escape") {
+                  setIsDropdownOpen(false);
+                  setActiveSuggestionIdx(-1);
+                }
+              }}
+              placeholder={names.length === 0 ? "Escreve um nome..." : "Adiciona outro nome..."}
+              className="w-full border border-white/15 bg-black/30 py-3 pl-10 pr-10 font-gala text-sm text-white placeholder:text-white/30 focus:border-light-gold/60 focus:outline-none"
+            />
+          </div>
+        )}
 
         {isDropdownOpen && value.trim().length >= 2 && (
           <ul
@@ -223,11 +280,7 @@ export default function NominationInput({
               <li key={s}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setValue(s);
-                    setIsDropdownOpen(false);
-                    setActiveSuggestionIdx(-1);
-                  }}
+                  onClick={() => addName(s)}
                   className={`flex w-full items-center justify-between px-3 py-2.5 text-left font-gala text-sm transition ${
                     idx === activeSuggestionIdx
                       ? "bg-light-gold/15 text-light-gold"
@@ -242,7 +295,7 @@ export default function NominationInput({
 
             {!isLoadingSuggestions && suggestions.length === 0 && (
               <li className="px-3 py-3 font-gala text-xs text-white/45">
-                Sem sugestões para este texto. Podes continuar e submeter mesmo assim.
+                Sem sugestões para este texto. Podes continuar e adicionar mesmo assim.
               </li>
             )}
           </ul>
@@ -251,7 +304,9 @@ export default function NominationInput({
 
       <div className="flex items-center justify-between gap-3">
         <p className="font-gala text-[0.72rem] text-white/45">
-          Escreve pelo menos 2 letras para sugerir nomes
+          {maxNominees > 1 
+            ? `Adiciona entre ${minNominees} e ${maxNominees} pessoas.`
+            : "Escreve pelo menos 2 letras para sugerir nomes."}
         </p>
       </div>
 
@@ -260,7 +315,7 @@ export default function NominationInput({
       <button
         type="button"
         onClick={submit}
-        disabled={submitting || !value.trim()}
+        disabled={submitting || names.length < minNominees}
         className="flex items-center justify-center gap-2 border border-light-gold/50 bg-gradient-to-r from-light-gold/15 to-dark-gold/10 py-3 font-gala text-sm font-semibold text-light-gold transition hover:border-light-gold hover:from-light-gold/25 hover:to-dark-gold/20 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <FontAwesomeIcon icon={faPaperPlane} className="text-xs" />

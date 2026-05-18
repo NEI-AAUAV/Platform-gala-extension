@@ -290,6 +290,9 @@ function CreateCategoryForm({
 }: Readonly<{ onSuccess: () => void }>) {
   const toast = useAppToast();
   const [categoryName, setCategoryName] = useState("");
+  const [categoryDescription, setCategoryDescription] = useState("");
+  const [minNominees, setMinNominees] = useState(1);
+  const [maxNominees, setMaxNominees] = useState(1);
   const [options, setOptions] = useState<OptionState[]>([]);
   const [status, setStatus] = useState<UploadStatus>("idle");
 
@@ -346,6 +349,11 @@ function CreateCategoryForm({
       return;
     }
 
+    if (minNominees > maxNominees) {
+      toast.error("O mínimo de nomeados não pode ser superior ao máximo.");
+      return;
+    }
+
     // Filter out options with empty names
     const filteredOptions = options.filter((o) => o.name.trim() !== "");
 
@@ -356,6 +364,9 @@ function CreateCategoryForm({
     try {
       const newCategory = await GalaService.vote.createCategory({
         category: categoryName.trim(),
+        description: categoryDescription.trim() || undefined,
+        min_nominees: minNominees,
+        max_nominees: maxNominees,
         options: filteredOptions.map((o) => o.name.trim()),
         photo_paths: filteredOptions.map(() => ""),
       });
@@ -371,6 +382,9 @@ function CreateCategoryForm({
       setStatus("success");
       toast.success("Categoria criada com sucesso! 🎉");
       setCategoryName("");
+      setCategoryDescription("");
+      setMinNominees(1);
+      setMaxNominees(1);
       setOptions([]); // Reset to empty list for next category
       onSuccess();
       setTimeout(() => setStatus("idle"), 2000);
@@ -413,6 +427,49 @@ function CreateCategoryForm({
             onChange={(e) => setCategoryName(e.target.value)}
             placeholder="Ex: O mais simpático(a)"
             className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
+          />
+        </label>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="category-description" className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            Descrição da Categoria (Opcional)
+          </span>
+          <textarea
+            id="category-description"
+            value={categoryDescription}
+            onChange={(e) => setCategoryDescription(e.target.value)}
+            placeholder="Ex: Aquele que está sempre a sorrir para todos..."
+            rows={2}
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60 resize-none"
+          />
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            Min. Nomeados
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={minNominees}
+            onChange={(e) => setMinNominees(parseInt(e.target.value) || 1)}
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            Max. Nomeados
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={maxNominees}
+            onChange={(e) => setMaxNominees(parseInt(e.target.value) || 1)}
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
           />
         </label>
       </div>
@@ -466,6 +523,9 @@ function CategoryRow({
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(vote.category);
+  const [editDescription, setEditDescription] = useState(vote.description || "");
+  const [editMinNominees, setEditMinNominees] = useState(vote.min_nominees);
+  const [editMaxNominees, setEditMaxNominees] = useState(vote.max_nominees);
   const [editOptions, setEditOptions] = useState<string[]>([...vote.options]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -496,6 +556,12 @@ function CategoryRow({
       toast.warning("O nome da categoria não pode estar vazio.");
       return;
     }
+    
+    if (editMinNominees > editMaxNominees) {
+      toast.error("O mínimo de nomeados não pode ser superior ao máximo.");
+      return;
+    }
+
     // We now allow 0 options for the nomination-first flow
     if (editOptions.some((opt) => !opt.trim())) {
       toast.warning("Todas as opções devem ter um nome preenchido ou ser removidas.");
@@ -506,6 +572,9 @@ function CategoryRow({
     try {
       await GalaService.vote.editVote(vote._id, {
         category: editName.trim(),
+        description: editDescription.trim() || undefined,
+        min_nominees: editMinNominees,
+        max_nominees: editMaxNominees,
         options: editOptions.map((o) => o.trim()),
       });
       toast.success("Alterações guardadas com sucesso! ✨");
@@ -626,6 +695,58 @@ function CategoryRow({
             </>
           )}
         </div>
+      </div>
+
+      {/* Description and Nominee Limits */}
+      <div className="flex flex-col gap-3">
+        {isEditing ? (
+          <div className="flex flex-col gap-3">
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Descrição da categoria..."
+              rows={2}
+              className="w-full border border-dark-gold/30 bg-black/40 px-3 py-2 text-sm text-white/80 outline-none focus:border-dark-gold/60 resize-none"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+                  Mín. Nomeados
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={editMinNominees}
+                  onChange={(e) => setEditMinNominees(parseInt(e.target.value) || 1)}
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+                  Máx. Nomeados
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  value={editMaxNominees}
+                  onChange={(e) => setEditMaxNominees(parseInt(e.target.value) || 1)}
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+                />
+              </label>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-4">
+            {vote.description ? (
+              <p className="text-sm italic text-white/40">{vote.description}</p>
+            ) : <div />}
+            <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
+              {vote.min_nominees === vote.max_nominees 
+                ? `${vote.min_nominees} ${vote.min_nominees === 1 ? "Nomeado" : "Nomeados"}`
+                : `${vote.min_nominees}-${vote.max_nominees} Nomeados`}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Options list */}

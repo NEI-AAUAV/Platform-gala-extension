@@ -673,13 +673,40 @@ function SystemDatesEditor() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const utcEdits = Object.fromEntries(
-        Object.entries(edits).map(([k, v]) => [
-          k,
-          v ? localInputToUtcIso(v) : v,
-        ]),
-      );
-      await GalaService.time.editTimeSlots(utcEdits);
+      const utcEdits: Record<string, string | null> = {};
+      for (const [k, v] of Object.entries(edits)) {
+        if (v) {
+          utcEdits[k] = localInputToUtcIso(v);
+        } else {
+          // If the user explicitly cleared a field that had a value, we send null
+          utcEdits[k] = null;
+        }
+      }
+
+      // Filter out nulls if we want a pure PATCH (only update what is provided)
+      // Actually, let's just send what is non-empty to avoid the "empty string -> null" conversion in backend
+      // if we want to keep the old value. 
+      // But wait, if the user wants to CLEAR a date, they can't.
+      
+      // Let's do a more surgical approach: only send fields that are different from 'time'
+      const changedEdits: Record<string, string | null> = {};
+      for (const [field] of SYSTEM_DATE_FIELDS) {
+        const newValue = edits[field];
+        const oldValueIso = (time as unknown as Record<string, string>)[field];
+        const oldValueLocal = oldValueIso ? utcIsoToLocalInput(oldValueIso) : "";
+        
+        if (newValue !== oldValueLocal) {
+          changedEdits[field] = newValue ? localInputToUtcIso(newValue) : null;
+        }
+      }
+
+      if (Object.keys(changedEdits).length === 0) {
+        toast.info("Nenhuma alteração detetada.");
+        setSaving(false);
+        return;
+      }
+
+      await GalaService.time.editTimeSlots(changedEdits);
       setDirty(false);
       toast.success("Datas guardadas.");
     } catch {
