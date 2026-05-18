@@ -25,4 +25,6 @@ fileignoreconfig:
   checksum: 58865e72b362a2435bbe345e9aea81246f8be6646fe0e0727ceb957a81c4258d
 - filename: web-gala/src/pages/Admin/TablesAdmin.tsx
   checksum: 1abe196cb3e36c42557f7772cda617d1d7028bb11e94c613da241d3480652fd3
+- filename: web-gala/src/pages/Admin/TransportesAdmin.tsx
+  checksum: 12c668a7d38e4d66f78a15ce38db1218fdd991b175369b696255c4cf78b2e6f2
 version: "1.0"
