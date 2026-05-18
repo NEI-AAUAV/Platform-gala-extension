@@ -704,6 +704,9 @@ async def admin_edit_registration(
     if "meal_option" in update_data:
         await TableService.sync_user_dish(db, user_id)
 
+    if "food_allergies" in update_data:
+        await TableService.sync_user_allergies(db, user_id)
+
     if "companions" in update_data:
         await TableService.sync_companions(db, user_id, update_data["companions"])
 
