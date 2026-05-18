@@ -3,7 +3,6 @@ import { createClient } from "./client";
 
 const client = createClient(`${config.BASE_URL}/api/gala/v1`);
 
-
 type Confirmation = {
   uid: number;
   confirm: boolean;
@@ -357,6 +356,12 @@ const GalaService = {
       return client.patch(
         `/admin/voting/results-visibility?visible=${visible}`,
       );
+    },
+    pruneTables: async (): Promise<{
+      count: number;
+      removed: { user_id: number; reason: string }[];
+    }> => {
+      return client.post("/admin/tables/prune", {});
     },
   },
 

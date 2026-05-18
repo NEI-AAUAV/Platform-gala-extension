@@ -11,6 +11,7 @@ import {
   faSpinner,
   faPlus,
   faArrowRightArrowLeft,
+  faBroom,
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import useTables from "@/hooks/tableHooks/useTables";
@@ -817,6 +818,27 @@ export default function TablesAdmin() {
   const toast = useAppToast();
 
   const [movingMemberId, setMovingMemberId] = useState<number | null>(null);
+  const [pruning, setPruning] = useState(false);
+
+  const handlePrune = async () => {
+    // eslint-disable-next-line no-restricted-globals, no-alert
+    if (!confirm("Remover de todas as mesas os utilizadores não inscritos?"))
+      return;
+    setPruning(true);
+    try {
+      const result = await GalaService.admin.pruneTables();
+      refresh();
+      if (result.count === 0) {
+        toast.success("Nenhum utilizador não inscrito encontrado nas mesas.");
+      } else {
+        toast.success(`${result.count} utilizador(es) removido(s) das mesas.`);
+      }
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao limpar mesas."));
+    } finally {
+      setPruning(false);
+    }
+  };
 
   const totalOccupied = tables.reduce(
     (acc, t) =>
@@ -896,6 +918,18 @@ export default function TablesAdmin() {
                 Cheia
               </span>
             </div>
+            <button
+              type="button"
+              onClick={handlePrune}
+              disabled={pruning}
+              className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-40"
+            >
+              <FontAwesomeIcon
+                icon={pruning ? faSpinner : faBroom}
+                spin={pruning}
+              />
+              Limpar não inscritos
+            </button>
             <button
               type="button"
               onClick={async () => {
