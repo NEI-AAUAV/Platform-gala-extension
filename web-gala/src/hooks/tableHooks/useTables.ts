@@ -10,9 +10,9 @@ export default function useTables() {
   const { data, error, isLoading, mutate } = useSWR<Table[]>(
     key,
     () =>
-      state === State.NONE
-        ? GalaService.table.listTablesPublic()
-        : GalaService.table.listTables(),
+      state === State.REGISTERED
+        ? GalaService.table.listTables()
+        : GalaService.table.listTablesPublic(),
     { refreshInterval: 30_000, dedupingInterval: 15_000 },
   );
 

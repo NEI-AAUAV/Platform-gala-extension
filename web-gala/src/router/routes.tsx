@@ -47,14 +47,26 @@ const routes = [
         path: "/reserve",
         async lazy() {
           const { default: Reserve } = await import("@/pages/Reserve");
-          return { Component: Reserve };
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Reserve />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
         path: "/reserve/:tableId",
         async lazy() {
           const { default: Reserve } = await import("@/pages/Reserve");
-          return { Component: Reserve };
+          return {
+            Component: () => (
+              <ProtectedRoute>
+                <Reserve />
+              </ProtectedRoute>
+            ),
+          };
         },
       },
       {
