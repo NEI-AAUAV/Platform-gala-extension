@@ -63,7 +63,8 @@ export function countByDishType(
 
 /** @deprecated Use countByDishType for config-ID-based companion dishes. */
 export function countByDish(person: Person, dish: string) {
-  return person.companions.filter((companion) => companion.dish === dish).length;
+  return person.companions.filter((companion) => companion.dish === dish)
+    .length;
 }
 
 export function countAllergies(person: Person) {
