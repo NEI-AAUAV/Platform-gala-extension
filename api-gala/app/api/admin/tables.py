@@ -125,6 +125,44 @@ async def admin_move_member(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+async def _prune_table(
+    table_doc: dict,
+    registered_ids: set,
+    user_coll: Any,
+    table_coll: Any,
+    removed: List[dict],
+    processed: set,
+) -> None:
+    table_id = table_doc["_id"]
+    orphans = [
+        p["id"]
+        for p in table_doc.get("persons", [])
+        if p.get("id") not in registered_ids
+    ]
+    if not orphans:
+        return
+
+    for orphan_id in orphans:
+        await table_coll.update_one({"_id": table_id}, {"$pull": {"persons": {"id": orphan_id}}})
+        await user_coll.update_one({"_id": orphan_id}, {"$unset": {"table_id": ""}})
+        removed.append({"user_id": orphan_id, "reason": "not_registered"})
+        processed.add(orphan_id)
+        logger.info("Pruned non-registered person {} from table {}", orphan_id, table_id)
+
+    updated = await table_coll.find_one({"_id": table_id})
+    if not updated:
+        return
+    remaining = updated.get("persons", [])
+    if not remaining:
+        await table_coll.delete_one({"_id": table_id})
+        return
+    confirmed_ids = [p["id"] for p in remaining if p.get("confirmed")]
+    current_head = updated.get("head")
+    fallback_head = confirmed_ids[0] if confirmed_ids else None
+    new_head = current_head if current_head in confirmed_ids else fallback_head
+    await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
+
+
 @router.post(
     "/prune",
     responses={**auth_responses},
@@ -137,63 +175,35 @@ async def admin_prune_tables(
     """
     Remove from all tables any person who is not registered (is_registered=False)
     or whose user document no longer exists. Handles head transfers and deletes
-    tables that become empty as a result.
+    tables that become empty as a result. Idempotent.
     """
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
 
     user_coll = User.get_collection(db)
     table_coll = Table.get_collection(db)
     removed: List[dict] = []
+    processed: set = set()
 
-    # Case 1: users who have table_id set but are not registered
-    non_registered = await user_coll.find(
-        {"table_id": {"$exists": True}, "is_registered": {"$ne": True}}
-    ).to_list(length=None)
-
-    for user_doc in non_registered:
-        user_id = user_doc["_id"]
-        await TableService.leave_table(db, user_id)
-        removed.append({"user_id": user_id, "reason": "not_registered"})
-        logger.info("Pruned non-registered user {} from table", user_id)
-
-    # Case 2: persons in table persons array whose user document does not exist
-    all_tables = await table_coll.find({}).to_list(length=None)
     registered_ids = {
         doc["_id"]
         async for doc in user_coll.find({"is_registered": True}, {"_id": 1})
     }
 
+    all_tables = await table_coll.find({}).to_list(length=None)
     for table_doc in all_tables:
-        table_id = table_doc["_id"]
-        orphans = [
-            p["id"]
-            for p in table_doc.get("persons", [])
-            if p.get("id") not in registered_ids
-        ]
-        if not orphans:
-            continue
+        await _prune_table(table_doc, registered_ids, user_coll, table_coll, removed, processed)
 
-        for orphan_id in orphans:
-            await table_coll.update_one(
-                {"_id": table_id},
-                {"$pull": {"persons": {"id": orphan_id}}},
-            )
-            removed.append({"user_id": orphan_id, "reason": "user_not_found"})
-            logger.info("Pruned orphaned person {} from table {}", orphan_id, table_id)
-
-        # Re-fetch to fix head and clean up empty table
-        updated = await table_coll.find_one({"_id": table_id})
-        if not updated:
+    # Clean up users with a stale table_id who were not in any persons array.
+    stale_users = await user_coll.find(
+        {"table_id": {"$exists": True}, "is_registered": {"$ne": True}}
+    ).to_list(length=None)
+    for user_doc in stale_users:
+        user_id = user_doc["_id"]
+        if user_id in processed:
             continue
-        remaining_persons = updated.get("persons", [])
-        if not remaining_persons:
-            await table_coll.delete_one({"_id": table_id})
-            continue
-        confirmed_ids = [p["id"] for p in remaining_persons if p.get("confirmed")]
-        current_head = updated.get("head")
-        fallback_head = confirmed_ids[0] if confirmed_ids else None
-        new_head = current_head if current_head in confirmed_ids else fallback_head
-        await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
+        await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
+        removed.append({"user_id": user_id, "reason": "stale_table_id"})
+        logger.info("Cleared stale table_id for non-registered user {}", user_id)
 
     return {"removed": removed, "count": len(removed)}
 
