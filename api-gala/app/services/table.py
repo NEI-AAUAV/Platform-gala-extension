@@ -17,12 +17,7 @@ async def _user_dish(user: User, db: DBType) -> DishType:
         config = await ConfigService.get_config(db)
         for meal in config.meals:
             if meal.id == user.meal_option:
-                dish_map = {
-                    "FISH": DishType.FISH,
-                    "VEG": DishType.VEGETARIAN,
-                    "VEGAN": DishType.VEGAN,
-                }
-                return dish_map.get(meal.dish_type, DishType.NORMAL)
+                return meal.dish_type
     except Exception:
         pass
     return DishType.NORMAL

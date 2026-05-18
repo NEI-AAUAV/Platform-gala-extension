@@ -3,13 +3,14 @@ from pymongo import ReturnDocument
 from pymongo.errors import OperationFailure
 from app.core.db.types import DBType
 
-from app.models.table import Table, TablePerson, DishType
+from app.models.table import Table, TablePerson
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.core.db import DatabaseDep
 from app.core.logging import logger
 from app.models.user import User
 import app.queries.table as table_queries
 from app.utils import NotFoundReCheck
+from app.services.table import _user_dish
 
 from ._utils import sanitize_table, fetch_table
 
@@ -49,15 +50,9 @@ async def reserve_table(
     if not user_model.registration_active:
         raise HTTPException(status_code=403, detail="Only active registrations can reserve tables")
 
-    raw_meal = (user_model.meal_option or "NOR").strip().upper()
-    try:
-        dish = DishType(raw_meal)
-    except ValueError:
-        dish = DishType.NORMAL
-
     table_person = TablePerson(
         id=auth_data.sub,
-        dish=dish,
+        dish=await _user_dish(user_model, db),
         allergies=user_model.food_allergies or "",
         companions=user_model.companions,
         confirmed=False,

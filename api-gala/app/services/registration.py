@@ -16,34 +16,40 @@ _DEADLINE_POLICY_TTL_SECONDS = 300
 _deadline_policy_last_run: Optional[datetime] = None
 
 
+_DISH_TYPE_ALIASES: Dict[str, str] = {
+    "NOR": "NOR", "NORMAL": "NOR", "CARNE": "NOR", "MEAT": "NOR",
+    "VEG": "VEG", "VEGETARIAN": "VEG", "VEGETARIANO": "VEG",
+    "FISH": "FISH", "PEIXE": "FISH",
+    "VEGAN": "VEGAN",
+}
+
+
+def _resolve_companion_dish(raw: str, config) -> Optional[str]:
+    """Resolve a companion dish value (config meal ID or legacy DishType alias) to a config meal ID."""
+    stripped = raw.strip()
+    # Already a valid config meal ID
+    if config and any(m.id == stripped for m in config.meals):
+        return stripped
+    # Legacy DishType alias → find the first active config meal with that dish_type
+    dish_type_str = _DISH_TYPE_ALIASES.get(stripped.upper())
+    if dish_type_str and config:
+        for meal in config.meals:
+            if meal.dish_type == dish_type_str and meal.is_active:
+                return meal.id
+    return None
+
+
 class RegistrationService:
-    _DISH_ALIASES: Dict[str, str] = {
-        "NOR": "NOR", "NORMAL": "NOR", "CARNE": "NOR",
-        "VEG": "VEG", "VEGETARIAN": "VEG", "VEGETARIANO": "VEG",
-        "FISH": "FISH", "PEIXE": "FISH",
-        "VEGAN": "VEGAN",
-    }
-
-    @staticmethod
-    def _resolve_dish(raw: str, meal_to_dish: Dict[str, str]) -> Optional[str]:
-        key = raw.strip().upper()
-        return RegistrationService._DISH_ALIASES.get(key) or meal_to_dish.get(key)
-
     @staticmethod
     def _normalize_companions_payload(companions: Any, config=None) -> list:
         if not isinstance(companions, list):
             return []
-
-        meal_to_dish: Dict[str, str] = (
-            {m.id.strip().upper(): m.dish_type for m in config.meals} if config else {}
-        )
-
         normalized = []
         for c in companions:
             if not isinstance(c, dict):
                 continue
             raw_dish = c.get("dish", c.get("meal"))
-            dish = RegistrationService._resolve_dish(raw_dish, meal_to_dish) if isinstance(raw_dish, str) else None
+            dish = _resolve_companion_dish(raw_dish, config) if isinstance(raw_dish, str) else None
             normalized.append(
                 {
                     "name": str(c.get("name", "")).strip(),

@@ -14,8 +14,9 @@ import {
   faEnvelope,
   faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
-import { iconMap } from "@/components/TableModal/personUtils";
+import { getIconForMealId } from "@/components/TableModal/personUtils";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
+import { getMealLabel } from "@/utils/mealOption";
 import { INPUT_CLS } from "./AdminUI";
 
 const BUS_LABEL: Record<string, string> = {
@@ -207,10 +208,7 @@ export default function UserDetail({
   readonly onAssignTable: (tableId: string | null) => void;
 }) {
   const { config } = useRegistrationConfig();
-  const mealLabel =
-    config.mealOptions.find((m) => m.id === user.meal_option)?.label ??
-    user.meal_option ??
-    "—";
+  const mealLabel = getMealLabel(user.meal_option, config.mealOptions);
 
   const fallbackPhone =
     user.phone?.trim() ||
@@ -291,10 +289,7 @@ export default function UserDetail({
         <DetailRow
           label="Prato"
           value={mealLabel}
-          icon={iconMap.get(
-            config.mealOptions.find((m) => m.id === user.meal_option)
-              ?.dishType ?? "",
-          )}
+          icon={getIconForMealId(user.meal_option, config.mealOptions)}
         />
         {user.food_allergies && (
           <div className="col-span-2">
@@ -340,7 +335,7 @@ export default function UserDetail({
                     </span>
                   )}
                   <span className="flex items-center gap-1">
-                    {iconMap.get(companionDishId)}
+                    {getIconForMealId(companionDishId, config.mealOptions)}
                   </span>
                   <span className="text-white/65 text-xs">
                     Prato: {companionDish}
