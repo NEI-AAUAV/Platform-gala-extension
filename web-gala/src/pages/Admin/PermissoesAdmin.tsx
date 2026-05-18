@@ -99,7 +99,7 @@ function ManagerRow({
           <p className="font-semibold text-white">{manager.name}</p>
           <p className="text-xs text-white/40">{manager.email}</p>
           <p className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-widest text-white/20">
-            ID Authentik: {manager._id}
+            ID: {manager._id}
           </p>
         </div>
         <button
