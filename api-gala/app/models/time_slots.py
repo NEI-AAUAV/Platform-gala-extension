@@ -7,7 +7,7 @@ from pydantic import Field, validator
 
 TIME_SLOTS_ID = "TIME_SLOTS"
 
-_EPOCH = datetime(2026, 1, 1, tzinfo=timezone.utc)
+_EPOCH = datetime(1990, 1, 1, tzinfo=timezone.utc)
 
 
 class TimeSlots(BaseDocument):
