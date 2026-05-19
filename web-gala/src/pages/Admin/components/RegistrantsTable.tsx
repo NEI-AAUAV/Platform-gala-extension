@@ -14,7 +14,6 @@ import type { MealOption } from "@/config/registrationConfig";
 import { getMealDishType } from "@/utils/mealOption";
 import { iconMap, red } from "@/components/TableModal/personUtils";
 
-
 interface RegistrantsTableProps {
   readonly loading: boolean;
   readonly filtered: User[];
@@ -132,7 +131,7 @@ export default function RegistrantsTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       {iconMap.get(
-                        getMealDishType(user.meal_option, mealOptions) ?? ""
+                        getMealDishType(user.meal_option, mealOptions) ?? "",
                       ) ?? null}
                       {user.food_allergies && (
                         <FontAwesomeIcon
