@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
   faCircleNotch,
-  faPaperPlane,
   faPencil,
   faSearch,
   faUserCheck,
@@ -16,48 +15,30 @@ interface Props {
   readonly alreadyNominated: boolean;
   readonly minNominees: number;
   readonly maxNominees: number;
+  readonly names: string[];
+  readonly onNamesChange: (names: string[]) => void;
+  readonly error?: string | null;
+  readonly submittedName?: string | null;
+  readonly onStartEditing?: () => void;
 }
-
-function resolveNominationError(reason: unknown): string {
-  if (typeof reason === "object" && reason !== null) {
-    const r = reason as {
-      response?: { status?: number; data?: { detail?: string } };
-    };
-    if (r.response?.status === 409)
-      return "Já nomeaste alguém nesta categoria.";
-    if (r.response?.status === 403)
-      return "As nomeações desta categoria já fecharam.";
-    const detail = r.response?.data?.detail;
-    if (typeof detail === "string") return detail;
-  }
-  return "Erro ao submeter. Tenta novamente.";
-}
-
-const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 
 export default function NominationInput({
   categoryId,
   alreadyNominated,
   minNominees,
   maxNominees,
+  names,
+  onNamesChange,
+  error,
+  submittedName,
+  onStartEditing,
 }: Props) {
   const [value, setValue] = useState("");
-  const [names, setNames] = useState<string[]>(() => {
-    const stored = localStorage.getItem(storageKey(categoryId));
-    if (stored) return stored.split(" & ");
-    return [];
-  });
   
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(-1);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(alreadyNominated);
-  const [nominatedName, setNominatedName] = useState<string | null>(() =>
-    localStorage.getItem(storageKey(categoryId)),
-  );
-  const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -112,49 +93,16 @@ export default function NominationInput({
     if (!trimmed || names.includes(trimmed)) return;
     if (names.length >= maxNominees) return;
     
-    setNames([...names, trimmed]);
+    onNamesChange([...names, trimmed]);
     setValue("");
     setIsDropdownOpen(false);
-    setError(null);
   };
 
   const removeName = (idx: number) => {
-    setNames(names.filter((_, i) => i !== idx));
-    setError(null);
+    onNamesChange(names.filter((_, i) => i !== idx));
   };
 
-  const submit = async () => {
-    if (names.length < minNominees) {
-      setError(`Precisas de adicionar pelo menos ${minNominees} ${minNominees === 1 ? "nome" : "nomes"}.`);
-      return;
-    }
-    
-    setError(null);
-    setSubmitting(true);
-    try {
-      await GalaService.vote.nominate(categoryId, names);
-      const finalName = [...names].sort().join(" & ");
-      localStorage.setItem(storageKey(categoryId), finalName);
-      setNominatedName(finalName);
-      setSubmitted(true);
-      setSuggestions([]);
-      setIsDropdownOpen(false);
-    } catch (e) {
-      setError(resolveNominationError(e));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const startEditing = () => {
-    setSubmitted(false);
-    setError(null);
-    setSuggestions([]);
-    setIsDropdownOpen(false);
-    setActiveSuggestionIdx(-1);
-  };
-
-  if (submitted) {
+  if (alreadyNominated) {
     return (
       <div className="flex items-center justify-between gap-3 border border-emerald-300/30 bg-gradient-to-r from-emerald-500/10 to-transparent px-4 py-3.5">
         <div className="flex items-center gap-3">
@@ -164,7 +112,7 @@ export default function NominationInput({
           />
           <div>
             <p className="font-gala text-sm font-semibold text-white/85">
-              {nominatedName ?? "Nomeação submetida"}
+              {submittedName ?? "Nomeação submetida"}
             </p>
             <p className="font-gala text-xs text-white/45">
               Obrigado pela tua sugestão
@@ -173,7 +121,7 @@ export default function NominationInput({
         </div>
         <button
           type="button"
-          onClick={startEditing}
+          onClick={onStartEditing}
           className="shrink-0 rounded-full border border-white/10 p-2 text-white/40 transition hover:border-light-gold/40 hover:text-light-gold"
           title="Alterar nomeação"
         >
@@ -230,7 +178,6 @@ export default function NominationInput({
               value={value}
               onChange={(e) => {
                 setValue(e.target.value);
-                setError(null);
                 setIsDropdownOpen(e.target.value.trim().length >= 2);
               }}
               onFocus={() => {
@@ -256,8 +203,6 @@ export default function NominationInput({
                   }
                   if (value.trim()) {
                     addName(value);
-                  } else if (names.length >= minNominees) {
-                    submit();
                   }
                 }
                 if (e.key === "Escape") {
@@ -311,16 +256,6 @@ export default function NominationInput({
       </div>
 
       {error && <p className="text-xs text-red-400/80">{error}</p>}
-
-      <button
-        type="button"
-        onClick={submit}
-        disabled={submitting || names.length < minNominees}
-        className="flex items-center justify-center gap-2 border border-light-gold/50 bg-gradient-to-r from-light-gold/15 to-dark-gold/10 py-3 font-gala text-sm font-semibold text-light-gold transition hover:border-light-gold hover:from-light-gold/25 hover:to-dark-gold/20 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <FontAwesomeIcon icon={faPaperPlane} className="text-xs" />
-        {submitting ? "A submeter..." : "Nomear"}
-      </button>
     </div>
   );
 }

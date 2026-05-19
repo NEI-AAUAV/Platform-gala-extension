@@ -3,9 +3,23 @@ import NominationInput from "./NominationInput";
 
 export type Props = Readonly<{
   vote: Vote;
+  nominationNames?: string[];
+  onNominationNamesChange?: (names: string[]) => void;
+  error?: string | null;
+  submittedName?: string | null;
+  onStartEditing?: () => void;
+  isEditing?: boolean;
 }>;
 
-export default function VoteCard({ vote }: Props) {
+export default function VoteCard({ 
+  vote,
+  nominationNames = [],
+  onNominationNamesChange = () => {},
+  error,
+  submittedName,
+  onStartEditing = () => {},
+  isEditing,
+}: Props) {
   const showNomination = vote.nomination_open;
   const showVoting = vote.voting_open && vote.options.length > 0;
 
@@ -22,7 +36,7 @@ export default function VoteCard({ vote }: Props) {
             {vote.description}
           </p>
         )}
-        {showNomination && !vote.already_nominated && (
+        {showNomination && !(vote.already_nominated && !isEditing) && (
           <p className="mt-1 font-gala text-xs uppercase tracking-[0.2em] text-white/45">
             Sugere quem merece
           </p>
@@ -32,9 +46,14 @@ export default function VoteCard({ vote }: Props) {
       <div className="relative mt-4">{showNomination && (
         <NominationInput
           categoryId={vote._id}
-          alreadyNominated={vote.already_nominated}
+          alreadyNominated={vote.already_nominated && !isEditing}
           minNominees={vote.min_nominees}
           maxNominees={vote.max_nominees}
+          names={nominationNames}
+          onNamesChange={onNominationNamesChange}
+          error={error}
+          submittedName={submittedName}
+          onStartEditing={onStartEditing}
         />
 
       )}</div>

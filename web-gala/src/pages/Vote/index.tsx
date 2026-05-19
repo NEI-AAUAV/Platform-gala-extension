@@ -57,12 +57,12 @@ export default function Vote() {
     message: string;
   } | null>(null);
 
-  const { reset, ...methods } = useForm<FormValues>({
+  const methods = useForm<FormValues>({
     defaultValues: { votes: {} },
   });
 
   useEffect(() => {
-    reset({
+    methods.reset({
       votes: votes.reduce((obj: FormVotes, vote) => {
         const newObj = { ...obj };
         newObj[vote._id] = {
@@ -73,7 +73,7 @@ export default function Vote() {
         return newObj;
       }, {}),
     });
-  }, [votes, reset]);
+  }, [votes, methods.reset]);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
