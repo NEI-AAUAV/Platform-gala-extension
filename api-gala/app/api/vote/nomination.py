@@ -17,6 +17,15 @@ class NominationForm(BaseModel):
     names: List[str]
 
 
+class BulkNominationItem(BaseModel):
+    category_id: int
+    names: List[str]
+
+
+class BulkNominationForm(BaseModel):
+    items: List[BulkNominationItem]
+
+
 @router.post(
     "/categories/{category_id}/nominate",
     responses={
@@ -51,6 +60,47 @@ async def submit_nomination(
     except Exception as e:
         logger.error(f"Error submitting nomination: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/bulk_nominate",
+    responses={
+        **auth_responses,
+        400: {"description": "Invalid input"},
+        403: {"description": "Nominations are closed"},
+        500: {"description": "Internal server error"},
+    }
+)
+async def bulk_nominate(
+    form_data: BulkNominationForm,
+    db: DatabaseDep,
+    auth: Annotated[AuthData, Security(api_nei_auth)],
+):
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+
+    ts = await fetch_time_slots(db)
+    if not is_nominations_open(ts):
+        raise HTTPException(status_code=403, detail="Nominations are closed")
+
+    errors = []
+    for item in form_data.items:
+        try:
+            await VoteService.nominate(db, auth.sub, item.category_id, item.names)
+        except ValueError as e:
+            errors.append({"category_id": item.category_id, "error": str(e)})
+        except Exception as e:
+            logger.error(f"Error in bulk nomination for category {item.category_id}: {e}")
+            errors.append({"category_id": item.category_id, "error": "Internal server error"})
+
+    if errors:
+        return {"status": "partial_success", "errors": errors}
+    
+    return {"status": "success"}
 
 
 @router.get(

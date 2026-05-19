@@ -13,7 +13,7 @@ class DishType(str, Enum):
 
 class Companion(BaseModel):
     name: str
-    email: str
+    email: Optional[str] = None
     dish: Optional[DishType] = None
     allergies: str = ""
 

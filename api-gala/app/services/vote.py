@@ -94,21 +94,24 @@ class VoteService:
         categories = await collection.find({}, projection={"nominations.name": 1}).to_list(None)
 
         all_names: List[str] = []
+
+        def add_split_names(name: Optional[str]):
+            if not name:
+                return
+            if " & " in name:
+                all_names.extend(name.split(" & "))
+            else:
+                all_names.append(name)
+
         for user in users:
-            user_name = user.get("name")
-            if user_name:
-                all_names.append(user_name)
+            add_split_names(user.get("name"))
 
             for companion in user.get("companions", []):
-                companion_name = companion.get("name")
-                if companion_name:
-                    all_names.append(companion_name)
+                add_split_names(companion.get("name"))
 
         for category in categories:
             for nomination in category.get("nominations", []):
-                nominee_name = nomination.get("name")
-                if nominee_name:
-                    all_names.append(nominee_name)
+                add_split_names(nomination.get("name"))
 
         deduped_map = {}
         for name in all_names:
