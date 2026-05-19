@@ -6,8 +6,10 @@ import GalaService from "@/services/GalaService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane, faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 import { useAppToast } from "@/components/ui/Toast";
+import NominationGuideModal from "@/components/Modals/NominationGuideModal";
 
 const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
+const guideSeenKey = "gala_nomination_guide_seen";
 
 function NominateContent({
   categories,
@@ -71,6 +73,19 @@ export default function Nominate() {
   const [submitting, setSubmitting] = useState(false);
   const [submittedNames, setSubmittedNames] = useState<Record<number, string | null>>({});
   const [forceEdit, setForceEdit] = useState<Record<number, boolean>>({});
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem(guideSeenKey);
+    if (!hasSeenGuide) {
+      setIsGuideOpen(true);
+    }
+  }, []);
+
+  const closeGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem(guideSeenKey, "true");
+  };
 
   useEffect(() => {
     const initialNominations: Record<number, string[]> = {};
@@ -232,6 +247,8 @@ export default function Nominate() {
           </div>
         </div>
       )}
+
+      <NominationGuideModal isOpen={isGuideOpen} onClose={closeGuide} />
     </div>
   );
 }
