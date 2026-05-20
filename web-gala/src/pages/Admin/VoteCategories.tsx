@@ -32,7 +32,9 @@ export default function VoteCategories() {
           (cfg as { results_visible?: boolean }).results_visible ?? false,
         ),
       )
-      .catch(() => {});
+      .catch((error) => {
+        console.error("Failed to load voting config", error);
+      });
   }, []);
 
   const handleResultsToggle = async () => {
