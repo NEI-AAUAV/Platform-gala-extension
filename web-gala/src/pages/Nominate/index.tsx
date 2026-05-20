@@ -11,6 +11,9 @@ import NominationGuideModal from "@/components/Modals/NominationGuideModal";
 const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 const guideSeenKey = "gala_nomination_guide_seen";
 
+const formatNominationNames = (names: string[]) =>
+  [...names].sort((a, b) => a.localeCompare(b)).join(" & ");
+
 function NominateContent({
   categories,
   isRegistered,
@@ -90,24 +93,28 @@ export default function Nominate() {
   };
 
   useEffect(() => {
-    const initialNominations: Record<number, string[]> = {};
     const initialSubmittedNames: Record<number, string | null> = {};
 
     nominationCategories.forEach((cat) => {
       const stored = localStorage.getItem(storageKey(cat._id));
       if (stored) {
         initialSubmittedNames[cat._id] = stored;
-        // If already nominated, we don't necessarily want to load them into the "draft"
-        // unless we want to allow editing easily.
-        // For now, let's load them so they are visible/editable if the user wants.
-        initialNominations[cat._id] = stored.split(" & ");
-      } else {
-        initialNominations[cat._id] = [];
       }
     });
 
-    setNominations(initialNominations);
-    setSubmittedNames(initialSubmittedNames);
+    setNominations((prev) => {
+      const next = { ...prev };
+      nominationCategories.forEach((cat) => {
+        const stored = localStorage.getItem(storageKey(cat._id));
+        if (stored) {
+          next[cat._id] = stored.split(" & ");
+        } else if (next[cat._id] === undefined) {
+          next[cat._id] = [];
+        }
+      });
+      return next;
+    });
+    setSubmittedNames((prev) => ({ ...prev, ...initialSubmittedNames }));
   }, [votes]); // Re-run when votes change (e.g. after refetch)
 
   const setNames = (catId: number, names: string[]) => {
@@ -172,10 +179,10 @@ export default function Nominate() {
           .map((item) => item.category_id);
 
         successfulCatIds.forEach((id) => {
-          const finalName = [...nominations[id]]
-            .sort((a, b) => a.localeCompare(b))
-            .join(" & ");
+          const finalName = formatNominationNames(nominations[id]);
           localStorage.setItem(storageKey(id), finalName);
+          setSubmittedNames((prev) => ({ ...prev, [id]: finalName }));
+          setNominations((prev) => ({ ...prev, [id]: nominations[id] }));
           setForceEdit((prev) => ({ ...prev, [id]: false }));
         });
 
