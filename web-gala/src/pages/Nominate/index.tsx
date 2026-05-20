@@ -214,8 +214,8 @@ export default function Nominate() {
           Nomeações
         </h2>
         <p className="text-white/55 mx-auto mt-4 max-w-2xl font-gala text-sm sm:text-base">
-          Indica colegas para cada categoria usando primeiro e ultimo nome.
-          Podes preencher varias categorias e submeter tudo no final.
+          Indica colegas para cada categoria usando primeiro e último nome.
+          Podes preencher várias categorias e submeter tudo no final.
         </p>
       </div>
 
