@@ -15,7 +15,9 @@ export default function VoteCategories() {
   const toast = useAppToast();
 
   const refresh = () => {
-    setLoading(true);
+    if (categories.length === 0) {
+      setLoading(true);
+    }
     GalaService.admin
       .listVotingCategories()
       .then((data) => setCategories(data))
