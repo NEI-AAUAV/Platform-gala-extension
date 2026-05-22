@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import { useAppToast } from "@/components/ui/Toast";
+import ImageCropperModal from "@/components/Modals/ImageCropperModal";
 
 type OptionState = {
   id: string;
@@ -37,11 +39,27 @@ function OptionInput({
   canRemove: boolean;
 }>) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState("");
+  const [cropperFile, setCropperFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    onChange(index, "photo", file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImageSrc(reader.result as string);
+      setCropperFile(file);
+      setCropperOpen(true);
+      e.target.value = "";
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCroppedPhoto = (croppedFile: File) => {
+    setCropperOpen(false);
+    onChange(index, "photo", croppedFile);
   };
 
   return (
@@ -88,6 +106,17 @@ function OptionInput({
       >
         <FontAwesomeIcon icon={faXmark} />
       </button>
+
+      {cropperFile && (
+        <ImageCropperModal
+          isOpen={cropperOpen}
+          imageSrc={cropperImageSrc}
+          fileName={cropperFile.name}
+          fileType={cropperFile.type}
+          onCrop={handleCroppedPhoto}
+          onClose={() => setCropperOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -194,7 +223,8 @@ export default function CreateCategoryForm({
         ?.response?.data?.detail;
       let errorMsg = "Erro ao criar categoria.";
       if (typeof detail === "string") errorMsg = detail;
-      else if (Array.isArray(detail) && detail[0]?.msg) errorMsg = detail[0].msg;
+      else if (Array.isArray(detail) && detail[0]?.msg)
+        errorMsg = detail[0].msg;
       toast.error(errorMsg);
     }
   };
@@ -252,7 +282,7 @@ export default function CreateCategoryForm({
             type="number"
             min={1}
             value={minNominees}
-            onChange={(e) => setMinNominees(parseInt(e.target.value) || 1)}
+            onChange={(e) => setMinNominees(parseInt(e.target.value, 10) || 1)}
             className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
           />
         </label>
@@ -264,7 +294,7 @@ export default function CreateCategoryForm({
             type="number"
             min={1}
             value={maxNominees}
-            onChange={(e) => setMaxNominees(parseInt(e.target.value) || 1)}
+            onChange={(e) => setMaxNominees(parseInt(e.target.value, 10) || 1)}
             className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
           />
         </label>

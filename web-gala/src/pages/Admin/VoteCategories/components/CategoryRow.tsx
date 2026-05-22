@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +19,7 @@ import GalaService, {
   type AdminNominee,
 } from "@/services/GalaService";
 import { useAppToast } from "@/components/ui/Toast";
+import ImageCropperModal from "@/components/Modals/ImageCropperModal";
 
 function NominationsPanel({
   categoryId,
@@ -35,11 +37,17 @@ function NominationsPanel({
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [confirmFinalize, setConfirmFinalize] = useState(false);
 
-  const sorted = [...nominations].sort((a, b) => b.votes.length - a.votes.length);
+  const sorted = [...nominations].sort(
+    (a, b) => b.votes.length - a.votes.length,
+  );
   const toggleSelect = (name: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
       return next;
     });
 
@@ -70,7 +78,9 @@ function NominationsPanel({
     setIsFinalizing(true);
     try {
       await GalaService.admin.finalizeNominations(categoryId);
-      toast.success("Nomeações finalizadas. Top 4 definido como opções de votação.");
+      toast.success(
+        "Nomeações finalizadas. Top 4 definido como opções de votação.",
+      );
       setConfirmFinalize(false);
       refresh();
     } catch {
@@ -105,7 +115,7 @@ function NominationsPanel({
               className="h-3.5 w-3.5 accent-dark-gold"
             />
             <span className="flex-1 text-sm text-white/80">{nominee.name}</span>
-            <span className="text-xs text-white/35">
+            <span className="text-white/35 text-xs">
               {nominee.votes.length} voto{nominee.votes.length === 1 ? "" : "s"}
             </span>
           </label>
@@ -145,7 +155,8 @@ function NominationsPanel({
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
-              Isto define o Top 4 como opções de votação e fecha as nomeações. Irreversível.
+              Isto define o Top 4 como opções de votação e fecha as nomeações.
+              Irreversível.
             </span>
             <button
               type="button"
@@ -185,7 +196,9 @@ export default function CategoryRow({
   const toast = useAppToast();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(vote.category);
-  const [editDescription, setEditDescription] = useState(vote.description || "");
+  const [editDescription, setEditDescription] = useState(
+    vote.description || "",
+  );
   const [editMinNominees, setEditMinNominees] = useState(vote.min_nominees);
   const [editMaxNominees, setEditMaxNominees] = useState(vote.max_nominees);
   const [editOptions, setEditOptions] = useState<string[]>([...vote.options]);
@@ -194,6 +207,22 @@ export default function CategoryRow({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
 
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState("");
+  const [cropperFile, setCropperFile] = useState<File | null>(null);
+  const [cropperOptionIndex, setCropperOptionIndex] = useState<number>(0);
+
+  const triggerCropper = (optionIndex: number, file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImageSrc(reader.result as string);
+      setCropperFile(file);
+      setCropperOptionIndex(optionIndex);
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -201,8 +230,11 @@ export default function CategoryRow({
       toast.success("A categoria foi removida com sucesso.");
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
-      toast.error(typeof detail === "string" ? detail : "Erro ao apagar categoria.");
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      toast.error(
+        typeof detail === "string" ? detail : "Erro ao apagar categoria.",
+      );
       setIsDeleting(false);
       setIsConfirmingDelete(false);
     }
@@ -218,7 +250,9 @@ export default function CategoryRow({
       return;
     }
     if (editOptions.some((opt) => !opt.trim())) {
-      toast.warning("Todas as opções devem ter um nome preenchido ou ser removidas.");
+      toast.warning(
+        "Todas as opções devem ter um nome preenchido ou ser removidas.",
+      );
       return;
     }
 
@@ -235,8 +269,10 @@ export default function CategoryRow({
       setIsEditing(false);
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
-      const msg = typeof detail === "string" ? detail : "Erro ao editar categoria.";
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      const msg =
+        typeof detail === "string" ? detail : "Erro ao editar categoria.";
       toast.error(msg);
     } finally {
       setIsSaving(false);
@@ -249,12 +285,21 @@ export default function CategoryRow({
       toast.success(`Foto da opção ${optionIndex + 1} carregada!`);
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
-      let msg = typeof detail === "string" ? detail : "Erro ao carregar imagem.";
-      if (msg.includes("File too large")) msg = "A imagem é demasiado grande (máx. 5MB).";
-      if (msg.includes("Invalid file type")) msg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
+      const detail = (err as { response?: { data?: { detail?: unknown } } })
+        ?.response?.data?.detail;
+      let msg =
+        typeof detail === "string" ? detail : "Erro ao carregar imagem.";
+      if (msg.includes("File too large"))
+        msg = "A imagem é demasiado grande (máx. 5MB).";
+      if (msg.includes("Invalid file type"))
+        msg = "Formato de ficheiro inválido. Use JPG, PNG ou WebP.";
       toast.error(msg);
     }
+  };
+
+  const handleCroppedPhoto = async (croppedFile: File) => {
+    setCropperOpen(false);
+    await handlePhotoUpload(cropperOptionIndex, croppedFile);
   };
 
   const handlePhotoRemove = async (optionIndex: number) => {
@@ -285,26 +330,57 @@ export default function CategoryRow({
         <div className="flex items-center gap-2">
           {isConfirmingDelete ? (
             <>
-              <span className="mr-2 text-xs font-semibold text-red-400">Tem a certeza?</span>
-              <button type="button" onClick={handleDelete} disabled={isDeleting} className="rounded-full bg-red-500/20 px-3 py-1 text-xs text-red-500 hover:bg-red-500/40">
+              <span className="mr-2 text-xs font-semibold text-red-400">
+                Tem a certeza?
+              </span>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="rounded-full bg-red-500/20 px-3 py-1 text-xs text-red-500 hover:bg-red-500/40"
+              >
                 {isDeleting ? "A apagar..." : "Sim, apagar"}
               </button>
-              <button type="button" onClick={() => setIsConfirmingDelete(false)} disabled={isDeleting} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20">
+              <button
+                type="button"
+                onClick={() => setIsConfirmingDelete(false)}
+                disabled={isDeleting}
+                className="rounded-full bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
+              >
                 Cancelar
               </button>
             </>
           ) : (
             <>
               {isEditing ? (
-                <button type="button" title="Guardar" onClick={handleSaveEdit} disabled={isSaving} className="flex h-8 w-8 items-center justify-center rounded-full bg-green-400/10 text-green-400 transition hover:bg-green-400/20 disabled:opacity-50">
-                  <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} className={isSaving ? "animate-spin" : ""} />
+                <button
+                  type="button"
+                  title="Guardar"
+                  onClick={handleSaveEdit}
+                  disabled={isSaving}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-green-400/10 text-green-400 transition hover:bg-green-400/20 disabled:opacity-50"
+                >
+                  <FontAwesomeIcon
+                    icon={isSaving ? faSpinner : faSave}
+                    className={isSaving ? "animate-spin" : ""}
+                  />
                 </button>
               ) : (
-                <button type="button" title="Editar Categoria" onClick={() => setIsEditing(true)} className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white">
+                <button
+                  type="button"
+                  title="Editar Categoria"
+                  onClick={() => setIsEditing(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
+                >
                   <FontAwesomeIcon icon={faEdit} />
                 </button>
               )}
-              <button type="button" title="Apagar Categoria" onClick={() => setIsConfirmingDelete(true)} className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/60 transition hover:bg-red-500/20 hover:text-red-400">
+              <button
+                type="button"
+                title="Apagar Categoria"
+                onClick={() => setIsConfirmingDelete(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/60 transition hover:bg-red-500/20 hover:text-red-400"
+              >
                 <FontAwesomeIcon icon={faTrash} />
               </button>
             </>
@@ -327,13 +403,29 @@ export default function CategoryRow({
                 <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
                   Mín. Nomeados
                 </span>
-                <input type="number" min={1} value={editMinNominees} onChange={(e) => setEditMinNominees(parseInt(e.target.value) || 1)} className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60" />
+                <input
+                  type="number"
+                  min={1}
+                  value={editMinNominees}
+                  onChange={(e) =>
+                    setEditMinNominees(parseInt(e.target.value, 10) || 1)
+                  }
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+                />
               </label>
               <label className="flex flex-col gap-1">
                 <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
                   Máx. Nomeados
                 </span>
-                <input type="number" min={1} value={editMaxNominees} onChange={(e) => setEditMaxNominees(parseInt(e.target.value) || 1)} className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60" />
+                <input
+                  type="number"
+                  min={1}
+                  value={editMaxNominees}
+                  onChange={(e) =>
+                    setEditMaxNominees(parseInt(e.target.value, 10) || 1)
+                  }
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+                />
               </label>
             </div>
           </div>
@@ -346,7 +438,9 @@ export default function CategoryRow({
             )}
             <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
               {vote.min_nominees === vote.max_nominees
-                ? `${vote.min_nominees} ${vote.min_nominees === 1 ? "Nomeado" : "Nomeados"}`
+                ? `${vote.min_nominees} ${
+                    vote.min_nominees === 1 ? "Nomeado" : "Nomeados"
+                  }`
                 : `${vote.min_nominees}-${vote.max_nominees} Nomeados`}
             </div>
           </div>
@@ -355,14 +449,29 @@ export default function CategoryRow({
 
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
-          <div key={`${vote._id}-option-${option}`} className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80">
+          <div
+            key={`${vote._id}-option-${option}`}
+            className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80"
+          >
             <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
               {vote.photo_paths[i] ? (
                 <>
-                  <img src={vote.photo_paths[i]} alt={option} className="h-full w-full object-cover" />
+                  <img
+                    src={vote.photo_paths[i]}
+                    alt={option}
+                    className="h-full w-full object-cover"
+                  />
                   {!isEditing && (
-                    <button type="button" className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100" onClick={() => handlePhotoRemove(i)} title="Remover foto">
-                      <FontAwesomeIcon icon={faTrash} className="text-red-400" />
+                    <button
+                      type="button"
+                      className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100"
+                      onClick={() => handlePhotoRemove(i)}
+                      title="Remover foto"
+                    >
+                      <FontAwesomeIcon
+                        icon={faTrash}
+                        className="text-red-400"
+                      />
                     </button>
                   )}
                 </>
@@ -387,14 +496,36 @@ export default function CategoryRow({
               <span className="flex-1 font-medium">{option}</span>
             )}
             {!isEditing && (
-              <label htmlFor={`photo-upload-${vote._id}-${i}`} title="Substituir foto" className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold">
+              <label
+                htmlFor={`photo-upload-${vote._id}-${i}`}
+                title="Substituir foto"
+                className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold"
+              >
                 <FontAwesomeIcon icon={faCloudUploadAlt} className="mr-1" />
                 Foto
-                <input id={`photo-upload-${vote._id}-${i}`} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handlePhotoUpload(i, file); }} />
+                <input
+                  id={`photo-upload-${vote._id}-${i}`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      triggerCropper(i, file);
+                      e.target.value = "";
+                    }
+                  }}
+                />
               </label>
             )}
             {isEditing && (
-              <button type="button" onClick={() => setEditOptions(editOptions.filter((_, idx) => idx !== i))} className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400">
+              <button
+                type="button"
+                onClick={() =>
+                  setEditOptions(editOptions.filter((_, idx) => idx !== i))
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400"
+              >
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             )}
@@ -402,12 +533,19 @@ export default function CategoryRow({
         ))}
         {isEditing && (
           <>
-            <button type="button" onClick={() => setEditOptions([...editOptions, ""])} className="mt-2 flex items-center justify-center gap-2 rounded-full border border-dashed border-dark-gold/40 py-2 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold">
+            <button
+              type="button"
+              onClick={() => setEditOptions([...editOptions, ""])}
+              className="mt-2 flex items-center justify-center gap-2 rounded-full border border-dashed border-dark-gold/40 py-2 text-xs text-dark-gold/70 transition hover:border-dark-gold hover:text-dark-gold"
+            >
               <FontAwesomeIcon icon={faPlus} />
               Nova Opção
             </button>
             <div className="flex justify-between px-2 text-xs italic text-white/40">
-              <p>Ao editar opções, as fotos podem precisar de re-upload caso a ordem mude.</p>
+              <p>
+                Ao editar opções, as fotos podem precisar de re-upload caso a
+                ordem mude.
+              </p>
             </div>
           </>
         )}
@@ -441,6 +579,17 @@ export default function CategoryRow({
             </div>
           )}
         </div>
+      )}
+
+      {cropperFile && (
+        <ImageCropperModal
+          isOpen={cropperOpen}
+          imageSrc={cropperImageSrc}
+          fileName={cropperFile.name}
+          fileType={cropperFile.type}
+          onCrop={handleCroppedPhoto}
+          onClose={() => setCropperOpen(false)}
+        />
       )}
     </div>
   );
