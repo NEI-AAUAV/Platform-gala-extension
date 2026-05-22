@@ -14,7 +14,7 @@ export default function Home() {
   const { config: registration } = useRegistrationConfig();
 
   return (
-    <main className="relative w-full overflow-hidden">
+    <main className="relative h-screen w-full snap-y snap-proximity overflow-y-auto overflow-x-hidden">
       <HeroSection />
       <NominationsSection nominationsConfig={homepage.nominations_display} />
       <PaymentInfoSection
