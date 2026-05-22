@@ -685,16 +685,18 @@ function SystemDatesEditor() {
 
       // Filter out nulls if we want a pure PATCH (only update what is provided)
       // Actually, let's just send what is non-empty to avoid the "empty string -> null" conversion in backend
-      // if we want to keep the old value. 
+      // if we want to keep the old value.
       // But wait, if the user wants to CLEAR a date, they can't.
-      
+
       // Let's do a more surgical approach: only send fields that are different from 'time'
       const changedEdits: Record<string, string | null> = {};
       for (const [field] of SYSTEM_DATE_FIELDS) {
         const newValue = edits[field];
         const oldValueIso = (time as unknown as Record<string, string>)[field];
-        const oldValueLocal = oldValueIso ? utcIsoToLocalInput(oldValueIso) : "";
-        
+        const oldValueLocal = oldValueIso
+          ? utcIsoToLocalInput(oldValueIso)
+          : "";
+
         if (newValue !== oldValueLocal) {
           changedEdits[field] = newValue ? localInputToUtcIso(newValue) : null;
         }

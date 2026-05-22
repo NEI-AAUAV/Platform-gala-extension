@@ -53,31 +53,31 @@ export function CompanionSummary({ person }: Readonly<{ person: Person }>) {
       <span className="flex gap-2">
         {norCount > 0 && (
           <span className="flex items-center gap-2">
-            <span className="text-sm text-base-content/70">{norCount}</span>
+            <span className="text-base-content/70 text-sm">{norCount}</span>
             <FrangoIcon style={orange} />
           </span>
         )}
         {fishCount > 0 && (
           <span className="flex items-center gap-2">
-            <span className="text-sm text-base-content/70">{fishCount}</span>
+            <span className="text-base-content/70 text-sm">{fishCount}</span>
             <FontAwesomeIcon icon={faFish} style={teal} />
           </span>
         )}
         {vegCount > 0 && (
           <span className="flex items-center gap-2">
-            <span className="text-sm text-base-content/70">{vegCount}</span>
+            <span className="text-base-content/70 text-sm">{vegCount}</span>
             <FontAwesomeIcon icon={faSeedling} style={green} />
           </span>
         )}
         {veganCount > 0 && (
           <span className="flex items-center gap-2">
-            <span className="text-sm text-base-content/70">{veganCount}</span>
+            <span className="text-base-content/70 text-sm">{veganCount}</span>
             <FontAwesomeIcon icon={faLeaf} style={emerald} />
           </span>
         )}
         {allergyCount > 0 && (
           <span className="flex items-center gap-2">
-            <span className="text-sm text-base-content/70">{allergyCount}</span>
+            <span className="text-base-content/70 text-sm">{allergyCount}</span>
             <FontAwesomeIcon icon={faHandDots} style={red} />
           </span>
         )}

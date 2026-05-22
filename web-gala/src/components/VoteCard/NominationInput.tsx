@@ -34,7 +34,7 @@ export default function NominationInput({
   onStartEditing,
 }: Props) {
   const [value, setValue] = useState("");
-  
+
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function NominationInput({
           value,
         );
         // Filter out names already in the list
-        setSuggestions(results.filter(r => !names.includes(r)));
+        setSuggestions(results.filter((r) => !names.includes(r)));
         setIsDropdownOpen(true);
         setActiveSuggestionIdx(-1);
       } catch {
@@ -92,7 +92,7 @@ export default function NominationInput({
     const trimmed = name.trim();
     if (!trimmed || names.includes(trimmed)) return;
     if (names.length >= maxNominees) return;
-    
+
     onNamesChange([...names, trimmed]);
     setValue("");
     setIsDropdownOpen(false);
@@ -111,10 +111,10 @@ export default function NominationInput({
             className="shrink-0 text-emerald-300"
           />
           <div>
-            <p className="font-gala text-sm font-semibold text-white/85">
+            <p className="text-white/85 font-gala text-sm font-semibold">
               {submittedName ?? "Nomeação submetida"}
             </p>
-            <p className="font-gala text-xs text-white/45">
+            <p className="text-white/45 font-gala text-xs">
               Obrigado pela tua sugestão
             </p>
           </div>
@@ -140,19 +140,21 @@ export default function NominationInput({
           htmlFor={`nomination-input-${categoryId}`}
           className="mb-1.5 block font-gala text-[0.68rem] font-bold uppercase tracking-[0.28em] text-light-gold/60"
         >
-          {maxNominees > 1 ? `Nomeados (${names.length}/${maxNominees})` : "Nomeado"}
+          {maxNominees > 1
+            ? `Nomeados (${names.length}/${maxNominees})`
+            : "Nomeado"}
         </label>
-        
+
         {/* Selected Names Tags */}
         <div className="mb-2 flex flex-wrap gap-2">
           {names.map((name, idx) => (
-            <span 
+            <span
               key={name}
               className="flex items-center gap-2 border border-light-gold/30 bg-light-gold/10 px-3 py-1.5 font-gala text-xs text-white"
             >
               {name}
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => removeName(idx)}
                 className="text-white/40 hover:text-red-400"
               >
@@ -164,12 +166,15 @@ export default function NominationInput({
 
         {canAddMore && (
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/35">
+            <span className="text-white/35 pointer-events-none absolute inset-y-0 left-4 flex items-center">
               <FontAwesomeIcon icon={faSearch} className="text-xs" />
             </span>
             {isLoadingSuggestions && (
               <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-light-gold/60">
-                <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
+                <FontAwesomeIcon
+                  icon={faCircleNotch}
+                  className="animate-spin text-xs"
+                />
               </span>
             )}
             <input
@@ -197,7 +202,11 @@ export default function NominationInput({
                 }
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (isDropdownOpen && activeSuggestionIdx >= 0 && suggestions[activeSuggestionIdx]) {
+                  if (
+                    isDropdownOpen &&
+                    activeSuggestionIdx >= 0 &&
+                    suggestions[activeSuggestionIdx]
+                  ) {
                     addName(suggestions[activeSuggestionIdx]);
                     return;
                   }
@@ -210,8 +219,12 @@ export default function NominationInput({
                   setActiveSuggestionIdx(-1);
                 }
               }}
-              placeholder={names.length === 0 ? "Escreve um nome..." : "Adiciona outro nome..."}
-              className="w-full border border-white/15 bg-black/30 py-3 pl-10 pr-10 font-gala text-sm text-white placeholder:text-white/30 focus:border-light-gold/60 focus:outline-none"
+              placeholder={
+                names.length === 0
+                  ? "Escreve um nome..."
+                  : "Adiciona outro nome..."
+              }
+              className="border-white/15 w-full border bg-black/30 py-3 pl-10 pr-10 font-gala text-sm text-white placeholder:text-white/30 focus:border-light-gold/60 focus:outline-none"
             />
           </div>
         )}
@@ -233,14 +246,18 @@ export default function NominationInput({
                   }`}
                 >
                   <span>{s}</span>
-                  <FontAwesomeIcon icon={faUserCheck} className="text-[0.65rem] opacity-55" />
+                  <FontAwesomeIcon
+                    icon={faUserCheck}
+                    className="opacity-55 text-[0.65rem]"
+                  />
                 </button>
               </li>
             ))}
 
             {!isLoadingSuggestions && suggestions.length === 0 && (
-              <li className="px-3 py-3 font-gala text-xs text-white/45">
-                Sem sugestões para este texto. Podes continuar e adicionar mesmo assim.
+              <li className="text-white/45 px-3 py-3 font-gala text-xs">
+                Sem sugestões para este texto. Podes continuar e adicionar mesmo
+                assim.
               </li>
             )}
           </ul>
@@ -248,8 +265,8 @@ export default function NominationInput({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <p className="font-gala text-[0.72rem] text-white/45">
-          {maxNominees > 1 
+        <p className="text-white/45 font-gala text-[0.72rem]">
+          {maxNominees > 1
             ? `Adiciona entre ${minNominees} e ${maxNominees} pessoas.`
             : "Escreve pelo menos 2 letras para sugerir nomes."}
         </p>

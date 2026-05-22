@@ -11,5 +11,4 @@ type Vote = {
   already_nominated: boolean;
   min_nominees: number;
   max_nominees: number;
-  };
-
+};

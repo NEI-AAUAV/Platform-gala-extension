@@ -15,6 +15,7 @@ import VoteCard from "@/components/VoteCard";
 import useVotes from "@/hooks/voteHooks/useVotes";
 import postVoteCast from "@/hooks/voteHooks/useVoteCast";
 import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
+import VotingGuideModal from "@/components/Modals/VotingGuideModal";
 
 type FormVotes = {
   [x: number]: {
@@ -51,11 +52,30 @@ export default function Vote() {
     [allVotes],
   );
   const hasVotingCategories = votes.length > 0;
+  const allVoted = useMemo(
+    () => votes.length > 0 && votes.every((v) => v.already_voted !== null),
+    [votes],
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const guideSeenKey = "gala_voting_guide_seen";
+
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem(guideSeenKey);
+    if (!hasSeenGuide) {
+      setIsGuideOpen(true);
+    }
+  }, []);
+
+  const closeGuide = () => {
+    setIsGuideOpen(false);
+    localStorage.setItem(guideSeenKey, "true");
+  };
 
   const methods = useForm<FormValues>({
     defaultValues: { votes: {} },
@@ -144,36 +164,72 @@ export default function Vote() {
     setFeedback(null);
   };
 
+  let buttonText = "Enviar votações";
+  if (isSubmitting) {
+    buttonText = "A enviar...";
+  } else if (allVoted) {
+    buttonText = "Votações Concluídas";
+  }
+
+  const buttonIcon = allVoted ? faCheckCircle : faPaperPlane;
+
   return (
     <>
       {/* eslint-disable-next-line react/jsx-props-no-spreading */}
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)}>
-          <h2 className="pt-20 text-center text-[3rem] font-bold sm:text-[4rem]">
-            <span className="block font-gala text-light-gold">Votações</span>
-          </h2>
-
-          <div className="mx-4 mt-10 grid gap-8">
-            {state === State.REGISTERED ? (
-              votes.map((vote: Vote) => <VoteCard key={vote._id} vote={vote} />)
-            ) : (
-              <p className="py-10 text-center text-sm text-white/30">
-                Tens de estar inscrito na Gala para participar nas votações.
+          <section className="px-4 pb-28 pt-16 sm:px-8 sm:pt-20">
+            <div className="mx-auto max-w-5xl text-center">
+              <p className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.35em] text-light-gold/60">
+                Gala Awards
               </p>
-            )}
-          </div>
+              <h2 className="mt-3 font-gala text-[2.4rem] font-bold leading-tight text-white sm:text-[3.6rem]">
+                Votações
+              </h2>
+              <p className="text-white/55 mx-auto mt-4 max-w-2xl font-gala text-sm sm:text-base">
+                Escolhe quem mais se destacou em cada categoria.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-10 max-w-5xl">
+              {state === State.REGISTERED ? (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {votes.map((vote: Vote) => (
+                    <VoteCard key={vote._id} vote={vote} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
+                  Tens de estar inscrito na Gala para participar nas votações.
+                </p>
+              )}
+            </div>
+          </section>
+
           {state === State.REGISTERED && hasVotingCategories && (
-            <div className="sticky bottom-0 z-10 mx-auto mt-5 max-w-md justify-center px-4 pb-10 pt-5 font-gala">
-              <Button
-                className={classNames(
-                  "h-14 w-full text-lg shadow-[0_0_20px_rgba(255,193,7,0.3)]",
-                )}
-                submit
-                disabled={isSubmitting}
-              >
-                {!isSubmitting && <FontAwesomeIcon icon={faPaperPlane} />}
-                {isSubmitting ? "A enviar..." : "Enviar votações"}
-              </Button>
+            <div className="fixed bottom-0 left-0 z-30 w-full border-t border-light-gold/20 bg-black/80 px-4 py-4 backdrop-blur-lg sm:px-8">
+              <div className="mx-auto flex max-w-5xl items-center gap-4">
+                <p className="hidden flex-1 font-gala text-xs text-white/50 md:block">
+                  {allVoted
+                    ? "Já participaste em todas as categorias. Obrigado pela tua votação!"
+                    : "Revê as tuas escolhas e confirma as votações."}
+                </p>
+                <Button
+                  className={classNames(
+                    "h-14 w-full text-lg md:w-auto md:min-w-[320px]",
+                    allVoted
+                      ? "cursor-not-allowed border border-neutral-700 !from-neutral-800 !to-neutral-700 !text-neutral-400 shadow-none hover:!saturate-100"
+                      : "shadow-[0_0_20px_rgba(255,193,7,0.3)]",
+                  )}
+                  submit
+                  disabled={isSubmitting || allVoted}
+                >
+                  {!isSubmitting && (
+                    <FontAwesomeIcon icon={buttonIcon} className="mr-2" />
+                  )}
+                  {buttonText}
+                </Button>
+              </div>
             </div>
           )}
         </form>
@@ -274,6 +330,8 @@ export default function Vote() {
           </div>
         )}
       </AnimatePresence>
+
+      <VotingGuideModal isOpen={isGuideOpen} onClose={closeGuide} />
     </>
   );
 }

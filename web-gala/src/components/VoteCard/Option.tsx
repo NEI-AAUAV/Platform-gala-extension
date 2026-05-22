@@ -22,45 +22,99 @@ export default function Option({
     name: `votes.${catId}.option`,
   });
 
+  let checkmarkColor =
+    "border-light-gold/30 bg-black/20 text-transparent group-hover:border-light-gold/60";
+  if (currentSelected === optionIdx) {
+    checkmarkColor = disabled
+      ? "border-neutral-500 bg-neutral-600 text-neutral-300"
+      : "border-black bg-black text-light-gold";
+  }
+
   return (
     <button
       type="button"
       disabled={disabled}
       className={classNames(
-        "flex flex-row items-center gap-2 rounded-full border p-2 transition-colors duration-300 ease-in-out",
+        "group relative overflow-hidden rounded-2xl border p-2.5 text-left transition-all duration-300 ease-in-out md:p-3",
         {
-          "border-transparent bg-gradient-to-r from-[#c9a843] to-[#8a6a20]":
-            currentSelected === optionIdx, // Selected state
-          "border-dark-gold bg-black/20": currentSelected !== optionIdx, // Default state
+          "border-light-gold bg-gradient-to-br from-[#d1b05d] via-[#c9a843] to-[#8a6a20] shadow-[0_0_28px_rgba(201,168,67,0.45)]":
+            currentSelected === optionIdx && !disabled,
+          "border-light-gold/35 bg-black/30 hover:border-light-gold/70 hover:bg-black/40":
+            currentSelected !== optionIdx && !disabled,
+          // Disabled styles for already submitted votes
+          "cursor-not-allowed border-neutral-700 bg-neutral-800/40 opacity-60":
+            disabled && currentSelected !== optionIdx,
+          "cursor-not-allowed border-neutral-500 bg-neutral-700/60 shadow-none":
+            disabled && currentSelected === optionIdx,
         },
       )}
       onClick={() => {
-        setValue(`votes.${catId}.option`, optionIdx);
+        if (currentSelected === optionIdx) {
+          setValue(`votes.${catId}.option`, null);
+        } else {
+          setValue(`votes.${catId}.option`, optionIdx);
+        }
       }}
     >
-      {catId != null && catId !== 0 && (
-        <img
-          src={
-            photo_path.startsWith("http")
-              ? photo_path
-              : `${config.BASE_URL}/gala/categories/${photo_path}`
-          }
-          alt={name}
-          className="inline-block h-8 w-8 rounded-full object-cover object-center"
-        />
-      )}
-      <span
-        className={classNames(
-          "bg-clip-text text-left font-gala font-semibold transition-all duration-300 ease-in-out ",
-          {
-            "text-black": currentSelected === optionIdx, // Gradient text when selected
-            "bg-gradient-to-r from-[#c9a843] to-[#8a6a20] text-transparent":
-              currentSelected !== optionIdx, // Default text color
-          },
-        )}
-      >
-        {name}
-      </span>
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {catId != null && catId !== 0 && (
+            <div className="relative shrink-0">
+              <img
+                src={
+                  photo_path.startsWith("http")
+                    ? photo_path
+                    : `${config.BASE_URL}/gala/categories/${photo_path}`
+                }
+                alt={name}
+                className={classNames(
+                  "md:h-13 md:w-13 h-11 w-11 rounded-full border-2 object-cover object-center shadow-lg transition-all duration-300",
+                  {
+                    "scale-[1.03] border-black/50":
+                      currentSelected === optionIdx && !disabled,
+                    "scale-[1.03] border-neutral-400/50":
+                      currentSelected === optionIdx && disabled,
+                    "border-light-gold/35 hover:border-light-gold/60":
+                      currentSelected !== optionIdx && !disabled,
+                    "border-neutral-700":
+                      currentSelected !== optionIdx && disabled,
+                  },
+                )}
+              />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <span
+              className={classNames(
+                "block font-gala text-sm font-bold leading-tight transition-colors duration-300 md:text-base",
+                {
+                  "text-black": currentSelected === optionIdx && !disabled,
+                  "text-neutral-300": currentSelected === optionIdx && disabled,
+                  "bg-gradient-to-r from-[#e2c77a] to-[#b38726] bg-clip-text text-transparent":
+                    currentSelected !== optionIdx && !disabled,
+                  "text-neutral-500": currentSelected !== optionIdx && disabled,
+                },
+              )}
+            >
+              {name}
+            </span>
+          </div>
+        </div>
+
+        {/* Radio Indicator */}
+        <div className="shrink-0">
+          <div
+            className={classNames(
+              "flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-300",
+              checkmarkColor,
+            )}
+          >
+            <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
+              <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
+            </svg>
+          </div>
+        </div>
+      </div>
     </button>
   );
 }

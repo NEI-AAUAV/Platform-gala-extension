@@ -426,8 +426,13 @@ const GalaService = {
     nominate: async (id: string | number, names: string[]): Promise<void> => {
       await client.post(`/voting/categories/${id}/nominate`, { names });
     },
-    bulkNominate: async (items: { category_id: number; names: string[] }[]): Promise<{ status: string; errors?: { category_id: number; error: string }[] }> => {
-      return await client.post("/voting/bulk_nominate", { items });
+    bulkNominate: async (
+      items: { category_id: number; names: string[] }[],
+    ): Promise<{
+      status: string;
+      errors?: { category_id: number; error: string }[];
+    }> => {
+      return client.post("/voting/bulk_nominate", { items });
     },
     getSuggestions: async (
       id: string | number,

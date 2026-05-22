@@ -9,7 +9,7 @@
     "plugin:import/typescript",
     "plugin:prettier/recommended"
   ],
-  "ignorePatterns": ["e2e/**", "playwright.config.ts"],
+  "ignorePatterns": ["e2e/**", "playwright.config.ts", "dist/**"],
   "overrides": [],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {

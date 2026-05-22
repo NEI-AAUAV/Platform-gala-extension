@@ -157,7 +157,7 @@ function CategoryNominees({
         {vote.category}
       </h3>
       {vote.description && (
-        <p className="mb-4 -mt-3 text-xs italic text-white/50">
+        <p className="-mt-3 mb-4 text-xs italic text-white/50">
           {vote.description}
         </p>
       )}

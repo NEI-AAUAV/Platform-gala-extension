@@ -2,7 +2,10 @@ import useTime, { TimeStatus } from "@/hooks/timeHooks/useTime";
 
 type PhaseInfo = { label: string; color: string; dot: string };
 
-function resolvePhase(nominationsOpen: boolean, votingOpen: boolean): PhaseInfo {
+function resolvePhase(
+  nominationsOpen: boolean,
+  votingOpen: boolean,
+): PhaseInfo {
   if (nominationsOpen) {
     return {
       label: "Nomeações abertas",

@@ -11,7 +11,7 @@ export type Props = Readonly<{
   isEditing?: boolean;
 }>;
 
-export default function VoteCard({ 
+export default function VoteCard({
   vote,
   nominationNames = [],
   onNominationNamesChange = () => {},
@@ -24,42 +24,52 @@ export default function VoteCard({
   const showVoting = vote.voting_open && vote.options.length > 0;
 
   return (
-    <div className="relative overflow-hidden border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/80 via-black/60 to-[#131313]/80 p-5 backdrop-blur-md sm:p-6">
-      <div className="pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full bg-light-gold/10 blur-2xl" />
+    <article className="relative overflow-hidden border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/90 via-black/70 to-[#131313]/95 p-5 backdrop-blur-md sm:p-6">
+      <div className="bg-light-gold/15 pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-light-gold/10 blur-2xl" />
 
       <div className="relative text-center">
-        <h1 className="font-gala text-2xl font-semibold text-white sm:text-[1.8rem]">
+        <h1 className="font-gala text-2xl font-semibold text-white sm:text-[1.9rem]">
           {vote.category}
         </h1>
         {vote.description && (
-          <p className="mt-2 font-gala text-xs italic text-white/40">
+          <p className="mt-2 font-gala text-sm italic text-white/50">
             {vote.description}
           </p>
         )}
+        {vote.already_voted !== null && (
+          <div className="mt-2.5 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-gala text-[0.65rem] font-bold uppercase tracking-wider text-emerald-400">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              Votado
+            </span>
+          </div>
+        )}
         {showNomination && !(vote.already_nominated && !isEditing) && (
-          <p className="mt-1 font-gala text-xs uppercase tracking-[0.2em] text-white/45">
+          <p className="text-white/45 mt-1 font-gala text-xs uppercase tracking-[0.2em]">
             Sugere quem merece
           </p>
         )}
       </div>
 
-      <div className="relative mt-4">{showNomination && (
-        <NominationInput
-          categoryId={vote._id}
-          alreadyNominated={vote.already_nominated && !isEditing}
-          minNominees={vote.min_nominees}
-          maxNominees={vote.max_nominees}
-          names={nominationNames}
-          onNamesChange={onNominationNamesChange}
-          error={error}
-          submittedName={submittedName}
-          onStartEditing={onStartEditing}
-        />
-
-      )}</div>
+      <div className="relative mt-4">
+        {showNomination && (
+          <NominationInput
+            categoryId={vote._id}
+            alreadyNominated={vote.already_nominated && !isEditing}
+            minNominees={vote.min_nominees}
+            maxNominees={vote.max_nominees}
+            names={nominationNames}
+            onNamesChange={onNominationNamesChange}
+            error={error}
+            submittedName={submittedName}
+            onStartEditing={onStartEditing}
+          />
+        )}
+      </div>
 
       {showVoting && (
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
           {vote.options.map((option, i) => (
             <Option
               key={option}
@@ -74,10 +84,10 @@ export default function VoteCard({
       )}
 
       {!showNomination && !showVoting && (
-        <p className="py-2 text-center font-gala text-xs text-white/35">
+        <p className="text-white/35 py-2 text-center font-gala text-xs">
           Esta categoria ainda não está aberta.
         </p>
       )}
-    </div>
+    </article>
   );
 }
