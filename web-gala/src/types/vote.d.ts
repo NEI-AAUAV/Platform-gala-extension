@@ -11,4 +11,7 @@ type Vote = {
   already_nominated: boolean;
   min_nominees: number;
   max_nominees: number;
+  reveal_at?: string;
+  revealed: boolean;
+  is_hidden: boolean;
 };

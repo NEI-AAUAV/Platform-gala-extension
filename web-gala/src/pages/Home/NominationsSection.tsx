@@ -18,7 +18,8 @@ const getPhotoUrl = (photo_path: string | undefined | null) => {
 };
 
 export default function NominationsSection({ nominationsConfig }: Props) {
-  const { votes } = useVotes();
+  const { votes: allVotes } = useVotes();
+  const votes = useMemo(() => allVotes.filter((v) => v.revealed), [allVotes]);
 
   if (!nominationsConfig.visible || votes.length === 0) return null;
 
@@ -73,8 +74,10 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
 
   if (votes.length === 0) return null;
 
+  const anyVotingOpen = votes.some((v) => v.voting_open);
+
   return (
-    <div className="px-4">
+    <div className="px-4 flex flex-col items-center gap-6">
       <div className="border-light-gold/15 relative h-[280px] w-full overflow-hidden rounded-2xl border">
         <AnimatePresence mode="wait">
           <motion.div
@@ -90,6 +93,20 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
             </h3>
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      <div className="flex flex-col gap-2.5 items-center">
+        <Link
+          to="/vote"
+          className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
+        >
+          {anyVotingOpen ? "Votar nas Categorias" : "Ver Nomeados"}
+        </Link>
+        {!anyVotingOpen && (
+          <span className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.2em] text-light-gold/60">
+            Votações Abrem Brevemente
+          </span>
+        )}
       </div>
     </div>
   );
@@ -117,6 +134,15 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
   const currentPhoto = useMemo(
     () => getPhotoUrl(nominees[activeNomineeIdx]?.photoPath),
     [nominees, activeNomineeIdx],
+  );
+
+  const allVoted = useMemo(
+    () =>
+      votes.length > 0 &&
+      votes
+        .filter((v) => v.voting_open && v.options.length > 0)
+        .every((v) => v.already_voted !== null),
+    [votes],
   );
 
   const goToCategory = (nextIdx: number, nextDirection: 1 | -1) => {
@@ -173,6 +199,41 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
 
   if (!activeCategory || randomizedVotes.length === 0 || nominees.length === 0)
     return null;
+
+  const renderVoteButton = () => {
+    if (!activeCategory.voting_open) {
+      return (
+        <div className="flex flex-col gap-2 items-center">
+          <Link
+            to="/vote"
+            className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
+          >
+            Ver Nomeados
+          </Link>
+          <span className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.2em] text-light-gold/60">
+            Votações Abrem Brevemente
+          </span>
+        </div>
+      );
+    }
+
+    if (activeCategory.already_voted !== null || allVoted) {
+      return (
+        <div className="mx-auto block w-fit cursor-not-allowed rounded-full border border-white/10 bg-white/10 px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+          {allVoted ? "Votação Concluída" : "Já Votou nesta Categoria"}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        to="/vote"
+        className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
+      >
+        Votar nesta Categoria
+      </Link>
+    );
+  };
 
   return (
     <div className="w-full">
@@ -302,18 +363,7 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
         </button>
 
         <div className="absolute bottom-4 left-1/2 z-20 w-[92%] max-w-[420px] -translate-x-1/2 rounded-2xl bg-black/40 p-4 backdrop-blur-md lg:w-auto lg:max-w-none lg:rounded-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          {activeCategory.voting_open ? (
-            <Link
-              to="/vote"
-              className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
-            >
-              Votar nesta Categoria
-            </Link>
-          ) : (
-            <div className="bg-black/45 rounded-full border border-light-gold/40 px-8 py-3 font-gala text-xs font-semibold uppercase tracking-wide text-light-gold/90 backdrop-blur">
-              Votações Abrem Brevemente
-            </div>
-          )}
+          {renderVoteButton()}
         </div>
       </div>
       <div className="mt-3 flex w-full justify-center px-4">

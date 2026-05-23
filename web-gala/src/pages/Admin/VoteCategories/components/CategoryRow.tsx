@@ -194,6 +194,13 @@ export default function CategoryRow({
   refresh,
 }: Readonly<{ vote: AdminVoteCategory; refresh: () => void }>) {
   const toast = useAppToast();
+  const toLocalDatetimeString = (dateStr: string | undefined) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(vote.category);
   const [editDescription, setEditDescription] = useState(
@@ -202,6 +209,9 @@ export default function CategoryRow({
   const [editMinNominees, setEditMinNominees] = useState(vote.min_nominees);
   const [editMaxNominees, setEditMaxNominees] = useState(vote.max_nominees);
   const [editOptions, setEditOptions] = useState<string[]>([...vote.options]);
+  const [editRevealAt, setEditRevealAt] = useState(
+    toLocalDatetimeString(vote.reveal_at),
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -221,6 +231,27 @@ export default function CategoryRow({
       setCropperOpen(true);
     };
     reader.readAsDataURL(file);
+  };
+
+  const [isTogglingHidden, setIsTogglingHidden] = useState(false);
+
+  const handleToggleVisibility = async () => {
+    setIsTogglingHidden(true);
+    try {
+      await GalaService.vote.editVote(vote._id, {
+        is_hidden: !vote.is_hidden,
+      });
+      toast.success(
+        vote.is_hidden
+          ? "Categoria agora visível (de acordo com o horário agendado)."
+          : "Categoria ocultada com sucesso.",
+      );
+      refresh();
+    } catch {
+      toast.error("Erro ao alterar visibilidade da categoria.");
+    } finally {
+      setIsTogglingHidden(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -264,6 +295,7 @@ export default function CategoryRow({
         min_nominees: editMinNominees,
         max_nominees: editMaxNominees,
         options: editOptions.map((o) => o.trim()),
+        reveal_at: editRevealAt ? new Date(editRevealAt).toISOString() : null,
       });
       toast.success("Alterações guardadas com sucesso! ✨");
       setIsEditing(false);
@@ -352,6 +384,25 @@ export default function CategoryRow({
             </>
           ) : (
             <>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={handleToggleVisibility}
+                  disabled={isTogglingHidden}
+                  title={vote.is_hidden ? "Ativar categoria (mostrar de acordo com agendamento)" : "Ocultar categoria manualmente"}
+                  className={[
+                    "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
+                    vote.is_hidden
+                      ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                      : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
+                  ].join(" ")}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${vote.is_hidden ? "bg-red-400" : "bg-green-400"}`} />
+                  <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
+                    {vote.is_hidden ? "Oculta" : "Visível"}
+                  </span>
+                </button>
+              )}
               {isEditing ? (
                 <button
                   type="button"
@@ -369,7 +420,15 @@ export default function CategoryRow({
                 <button
                   type="button"
                   title="Editar Categoria"
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => {
+                    setEditName(vote.category);
+                    setEditDescription(vote.description || "");
+                    setEditMinNominees(vote.min_nominees);
+                    setEditMaxNominees(vote.max_nominees);
+                    setEditOptions([...vote.options]);
+                    setEditRevealAt(toLocalDatetimeString(vote.reveal_at));
+                    setIsEditing(true);
+                  }}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
                 >
                   <FontAwesomeIcon icon={faEdit} />
@@ -428,6 +487,19 @@ export default function CategoryRow({
                 />
               </label>
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+                  Agendar Revelação de Nomeados (Opcional)
+                </span>
+                <input
+                  type="datetime-local"
+                  value={editRevealAt}
+                  onChange={(e) => setEditRevealAt(e.target.value)}
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60 [color-scheme:dark]"
+                />
+              </label>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-4">
@@ -436,12 +508,34 @@ export default function CategoryRow({
             ) : (
               <div />
             )}
-            <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
-              {vote.min_nominees === vote.max_nominees
-                ? `${vote.min_nominees} ${
-                    vote.min_nominees === 1 ? "Nomeado" : "Nomeados"
-                  }`
-                : `${vote.min_nominees}-${vote.max_nominees} Nomeados`}
+            <div className="flex items-center gap-3">
+              {vote.is_hidden && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                  Ocultada Manualmente
+                </span>
+              )}
+              {vote.reveal_at && !vote.is_hidden && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      new Date(vote.reveal_at) <= new Date()
+                        ? "bg-green-400"
+                        : "bg-blue-400 animate-pulse"
+                    }`}
+                  />
+                  {new Date(vote.reveal_at) <= new Date()
+                    ? "Revelada"
+                    : `Revela a: ${new Date(vote.reveal_at).toLocaleString()}`}
+                </span>
+              )}
+              <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
+                {vote.min_nominees === vote.max_nominees
+                  ? `${vote.min_nominees} ${
+                      vote.min_nominees === 1 ? "Nomeado" : "Nomeados"
+                    }`
+                  : `${vote.min_nominees}-${vote.max_nominees} Nomeados`}
+              </div>
             </div>
           </div>
         )}

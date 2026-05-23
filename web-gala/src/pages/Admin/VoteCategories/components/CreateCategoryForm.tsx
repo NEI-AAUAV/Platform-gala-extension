@@ -131,6 +131,7 @@ export default function CreateCategoryForm({
   const [maxNominees, setMaxNominees] = useState(1);
   const [options, setOptions] = useState<OptionState[]>([]);
   const [status, setStatus] = useState<UploadStatus>("idle");
+  const [revealAt, setRevealAt] = useState("");
 
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -198,6 +199,7 @@ export default function CreateCategoryForm({
         max_nominees: maxNominees,
         options: filteredOptions.map((o) => o.name.trim()),
         photo_paths: filteredOptions.map(() => ""),
+        reveal_at: revealAt ? new Date(revealAt).toISOString() : undefined,
       });
 
       await Promise.all(
@@ -214,6 +216,7 @@ export default function CreateCategoryForm({
       setCategoryDescription("");
       setMinNominees(1);
       setMaxNominees(1);
+      setRevealAt("");
       setOptions([]);
       onSuccess();
       setTimeout(() => setStatus("idle"), 2000);
@@ -270,6 +273,20 @@ export default function CreateCategoryForm({
             placeholder="Ex: Aquele que está sempre a sorrir para todos..."
             rows={2}
             className="resize-none rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-dark-gold/60"
+          />
+        </label>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor="category-reveal" className="flex flex-col gap-1">
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/50">
+            Agendar Revelação de Nomeados (Opcional)
+          </span>
+          <input
+            id="category-reveal"
+            type="datetime-local"
+            value={revealAt}
+            onChange={(e) => setRevealAt(e.target.value)}
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60 [color-scheme:dark]"
           />
         </label>
       </div>

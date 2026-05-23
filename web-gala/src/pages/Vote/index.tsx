@@ -48,12 +48,16 @@ export default function Vote() {
   const { state } = useSessionUser();
   const { votes: allVotes, mutate } = useVotes();
   const votes = useMemo(
-    () => allVotes.filter((v: Vote) => v.voting_open && v.options.length > 0),
+    () => allVotes,
     [allVotes],
   );
   const hasVotingCategories = votes.length > 0;
   const allVoted = useMemo(
-    () => votes.length > 0 && votes.every((v) => v.already_voted !== null),
+    () =>
+      votes.length > 0 &&
+      votes
+        .filter((v) => v.revealed && v.options.length > 0)
+        .every((v) => v.already_voted !== null),
     [votes],
   );
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -50,6 +50,8 @@ type VoteCategoryCreate = {
   max_nominees?: number;
   options: string[];
   photo_paths: string[];
+  reveal_at?: string | null;
+  is_hidden?: boolean;
 };
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
@@ -69,6 +71,9 @@ export type AdminVoteCategory = {
   options: string[];
   photo_paths: string[];
   votes: { uid: number; option: number }[];
+  reveal_at?: string;
+  revealed?: boolean;
+  is_hidden: boolean;
 };
 
 export type MergeNomineesBody = {

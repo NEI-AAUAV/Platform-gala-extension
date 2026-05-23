@@ -48,7 +48,8 @@ export default function Navbar() {
 
     if (homeScrollContainer instanceof HTMLElement) {
       homeScrollContainer.addEventListener("scroll", handleScroll);
-      return () => homeScrollContainer.removeEventListener("scroll", handleScroll);
+      return () =>
+        homeScrollContainer.removeEventListener("scroll", handleScroll);
     }
 
     window.addEventListener("scroll", handleScroll);

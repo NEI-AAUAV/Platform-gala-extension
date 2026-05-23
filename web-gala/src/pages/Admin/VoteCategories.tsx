@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner, faList, faChartBar } from "@fortawesome/free-solid-svg-icons";
+import {
+  faSpinner,
+  faList,
+  faChartBar,
+} from "@fortawesome/free-solid-svg-icons";
 import GalaService, { type AdminVoteCategory } from "@/services/GalaService";
 import { useAppToast } from "@/components/ui/Toast";
 import CreateCategoryForm from "./VoteCategories/components/CreateCategoryForm";
@@ -61,21 +65,23 @@ export default function VoteCategories() {
     ? "Resultados visíveis"
     : "Resultados ocultos";
 
-  const [activeSubTab, setActiveSubTab] = useState<"manage" | "results">("manage");
+  const [activeSubTab, setActiveSubTab] = useState<"manage" | "results">(
+    "manage",
+  );
 
   return (
     <div className="flex flex-col gap-8">
       {/* Sub-Tabs Control */}
       <div className="flex justify-center border-b border-light-gold/10 pb-4">
-        <div className="inline-flex rounded-full bg-black/40 p-1 border border-light-gold/20 shadow-inner">
+        <div className="inline-flex rounded-full border border-light-gold/20 bg-black/40 p-1 shadow-inner">
           <button
             type="button"
             onClick={() => setActiveSubTab("manage")}
             className={[
               "flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300",
               activeSubTab === "manage"
-                ? "bg-dark-gold/25 text-dark-gold border border-dark-gold/30 shadow-md shadow-black/25"
-                : "text-white/40 hover:text-white/80 border border-transparent"
+                ? "border border-dark-gold/30 bg-dark-gold/25 text-dark-gold shadow-md shadow-black/25"
+                : "border border-transparent text-white/40 hover:text-white/80",
             ].join(" ")}
           >
             <FontAwesomeIcon icon={faList} className="text-[0.7rem]" />
@@ -87,8 +93,8 @@ export default function VoteCategories() {
             className={[
               "flex items-center gap-2 rounded-full px-5 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300",
               activeSubTab === "results"
-                ? "bg-dark-gold/25 text-dark-gold border border-dark-gold/30 shadow-md shadow-black/25"
-                : "text-white/40 hover:text-white/80 border border-transparent"
+                ? "border border-dark-gold/30 bg-dark-gold/25 text-dark-gold shadow-md shadow-black/25"
+                : "border border-transparent text-white/40 hover:text-white/80",
             ].join(" ")}
           >
             <FontAwesomeIcon icon={faChartBar} className="text-[0.7rem]" />
