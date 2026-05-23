@@ -44,6 +44,17 @@ def anonymize_category(
     ts: TimeSlots,
     results_visible: bool = False,
 ) -> VoteListing:
+    # Check if category is revealed
+    now = _now()
+    revealed = True
+    
+    if getattr(category, "is_hidden", False):
+        revealed = False
+    elif category.reveal_at:
+        reveal_at_utc = _ensure_utc(category.reveal_at)
+        if now < reveal_at_utc:
+            revealed = False
+
     already_voted = None
     scores = [0] * len(category.options)
 
@@ -58,13 +69,16 @@ def anonymize_category(
         _id=category.id,
         category=category.category,
         description=category.description,
-        options=category.options,
-        photo_paths=category.photo_paths,
-        scores=scores if results_visible else [0] * len(category.options),
+        options=category.options if revealed else [],
+        photo_paths=category.photo_paths if revealed else [],
+        scores=scores if (results_visible and revealed) else [0] * len(category.options),
         already_voted=already_voted,
-        nomination_open=is_nominations_open(ts),
-        voting_open=is_voting_open(ts),
-        results_visible=results_visible,
+        reveal_at=category.reveal_at,
+        revealed=revealed,
+        is_hidden=getattr(category, "is_hidden", False),
+        nomination_open=is_nominations_open(ts) if revealed else False,
+        voting_open=is_voting_open(ts) if revealed else False,
+        results_visible=results_visible and revealed,
         already_nominated=already_nominated,
         min_nominees=category.min_nominees,
         max_nominees=category.max_nominees,

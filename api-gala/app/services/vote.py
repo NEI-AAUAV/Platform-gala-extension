@@ -1,4 +1,5 @@
 import difflib
+from datetime import datetime, timezone
 from typing import List, Optional
 from app.core.db.types import DBType
 from app.models.user import User
@@ -18,6 +19,14 @@ class VoteService:
             raise ValueError("Category not found")
 
         category = VoteCategory.parse_obj(category_dict)
+
+        if getattr(category, "is_hidden", False):
+            raise ValueError("Category not found")
+
+        if category.reveal_at:
+            reveal_at_utc = category.reveal_at if category.reveal_at.tzinfo is not None else category.reveal_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) < reveal_at_utc:
+                raise ValueError("Category not found")
 
         # Filter out empty names and strip whitespace
         names = [n.strip() for n in names if n.strip()]
@@ -84,6 +93,14 @@ class VoteService:
         if not category_dict:
             return []
 
+        category = VoteCategory.parse_obj(category_dict)
+        if getattr(category, "is_hidden", False):
+            return []
+        if category.reveal_at:
+            reveal_at_utc = category.reveal_at if category.reveal_at.tzinfo is not None else category.reveal_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) < reveal_at_utc:
+                return []
+
         users_collection = User.get_collection(db)
         users_cursor = users_collection.find(
             {},
@@ -132,6 +149,14 @@ class VoteService:
             raise ValueError("Category not found")
 
         category = VoteCategory.parse_obj(category_dict)
+
+        if getattr(category, "is_hidden", False):
+            raise ValueError("Category not found")
+
+        if category.reveal_at:
+            reveal_at_utc = category.reveal_at if category.reveal_at.tzinfo is not None else category.reveal_at.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) < reveal_at_utc:
+                raise ValueError("Category not found")
 
         if option_index < 0 or option_index >= len(category.options):
             raise ValueError("Invalid option index")
