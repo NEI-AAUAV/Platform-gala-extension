@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import Option from "./Option";
 import NominationInput from "./NominationInput";
+import { getRandomizedVoteOptions } from "@/utils/randomizeVoteOptions";
 
 export type Props = Readonly<{
   vote: Vote;
@@ -22,6 +24,7 @@ export default function VoteCard({
 }: Props) {
   const showNomination = vote.nomination_open;
   const showVoting = vote.voting_open && vote.options.length > 0;
+  const votingOptions = useMemo(() => getRandomizedVoteOptions(vote), [vote]);
 
   return (
     <article className="relative overflow-hidden border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/90 via-black/70 to-[#131313]/95 p-5 backdrop-blur-md sm:p-6">
@@ -70,12 +73,12 @@ export default function VoteCard({
 
       {showVoting && (
         <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-          {vote.options.map((option, i) => (
+          {votingOptions.map((option) => (
             <Option
-              key={option}
-              name={option}
-              photo_path={vote.photo_paths[i]}
-              optionIdx={i}
+              key={`${vote._id}-${option.name}-${option.originalIndex}`}
+              name={option.name}
+              photo_path={option.photoPath}
+              optionIdx={option.originalIndex}
               disabled={vote.already_voted !== null}
               catId={vote._id}
             />
