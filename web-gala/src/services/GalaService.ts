@@ -68,6 +68,7 @@ export type AdminVoteCategory = {
   nominations: AdminNominee[];
   options: string[];
   photo_paths: string[];
+  votes: { uid: number; option: number }[];
 };
 
 export type MergeNomineesBody = {

@@ -30,10 +30,30 @@ export default function Navbar() {
   const location = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const isHome = location.pathname === "/";
+    const homeScrollContainer = isHome
+      ? document.querySelector("main.overflow-y-auto")
+      : null;
+
+    const getScrollY = () => {
+      if (homeScrollContainer instanceof HTMLElement) {
+        return homeScrollContainer.scrollTop;
+      }
+      return window.scrollY;
+    };
+
+    const handleScroll = () => setIsScrolled(getScrollY() > 50);
+
+    handleScroll();
+
+    if (homeScrollContainer instanceof HTMLElement) {
+      homeScrollContainer.addEventListener("scroll", handleScroll);
+      return () => homeScrollContainer.removeEventListener("scroll", handleScroll);
+    }
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
