@@ -42,8 +42,14 @@ export default function RegistrantsTable({
   onSort,
 }: RegistrantsTableProps) {
   const sortIcon = (field: SortField) => {
-    if (sortField !== field) return <FontAwesomeIcon icon={faSort} className="opacity-30" />;
-    return <FontAwesomeIcon icon={sortDir === "asc" ? faSortUp : faSortDown} className="text-light-gold/70" />;
+    if (sortField !== field)
+      return <FontAwesomeIcon icon={faSort} className="opacity-30" />;
+    return (
+      <FontAwesomeIcon
+        icon={sortDir === "asc" ? faSortUp : faSortDown}
+        className="text-light-gold/70"
+      />
+    );
   };
 
   return (
@@ -52,30 +58,54 @@ export default function RegistrantsTable({
         <thead className="border-light-gold/15 border-b">
           <tr>
             <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
-              <button type="button" onClick={() => onSort("nmec")} className="flex items-center gap-1.5 hover:text-white/50">
+              <button
+                type="button"
+                onClick={() => onSort("nmec")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
                 NMec {sortIcon("nmec")}
               </button>
             </th>
             <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
-              <button type="button" onClick={() => onSort("name")} className="flex items-center gap-1.5 hover:text-white/50">
+              <button
+                type="button"
+                onClick={() => onSort("name")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
                 Nome {sortIcon("name")}
               </button>
             </th>
             <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
-              <button type="button" onClick={() => onSort("year")} className="flex items-center gap-1.5 hover:text-white/50">
+              <button
+                type="button"
+                onClick={() => onSort("year")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
                 Matrícula {sortIcon("year")}
               </button>
             </th>
-            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">Prato</th>
-            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">Autocarro</th>
-            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">Mesa</th>
-            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">Pagamento</th>
             <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
-              <button type="button" onClick={() => onSort("id")} className="flex items-center gap-1.5 hover:text-white/50">
+              Prato
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Autocarro
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Mesa
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Pagamento
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              <button
+                type="button"
+                onClick={() => onSort("id")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
                 Registo {sortIcon("id")}
               </button>
             </th>
-            <th className="px-4 py-3" />
+            <th className="px-4 py-3" aria-label="Ações" />
           </tr>
         </thead>
         <tbody className="divide-white/4 divide-y">
