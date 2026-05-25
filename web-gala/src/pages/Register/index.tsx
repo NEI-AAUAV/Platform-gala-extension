@@ -296,6 +296,7 @@ export default function Register() {
                   onNext={next}
                   onBack={back}
                   syncing={syncing}
+                  busRemaining={capacity?.bus_remaining ?? null}
                 />
               )}
               {currentStep === 4 && (

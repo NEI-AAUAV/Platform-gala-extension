@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, File, HTTPException, status
 from pydantic import BaseModel
-from typing import Dict, Any, Annotated
+from typing import Dict, Any, Annotated, Optional
 from app.api.auth import api_nei_auth, AuthData, auth_responses
 from app.core.db import get_db
 from app.core.db.types import DBType
@@ -51,17 +51,26 @@ async def _require_registration_open(db: DBType) -> None:
 class RegistrationCapacity(BaseModel):
     remaining: int
     total: int
+    bus_remaining: Optional[int] = None  # None = no limit configured
 
 
 @router.get("/capacity", response_model=RegistrationCapacity)
 async def get_registration_capacity(
     db: Annotated[DBType, Depends(get_db)],
 ):
-    """Returns the number of remaining and total seats. No auth required."""
+    """Returns the number of remaining registration and bus seats. No auth required."""
     limits = await fetch_limits(db)
     total = await RegistrationService.count_registered_attendees(db)
     remaining = max(0, limits.maxRegistrations - total)
-    return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations)
+
+    bus_remaining: Optional[int] = None
+    if limits.maxBusSeats is not None:
+        taken = await User.get_collection(db).count_documents(
+            {"bus_option": {"$ne": "NONE"}}
+        )
+        bus_remaining = max(0, limits.maxBusSeats - taken)
+
+    return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations, bus_remaining=bus_remaining)
 
 
 @router.get("/status", response_model=User, responses={**auth_responses})

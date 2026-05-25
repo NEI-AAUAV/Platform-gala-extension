@@ -19,6 +19,7 @@ interface Props {
   readonly onNext: () => void;
   readonly onBack: () => void;
   readonly syncing?: boolean;
+  readonly busRemaining: number | null;
 }
 
 const BUS_OPTIONS: {
@@ -48,6 +49,7 @@ export default function Step3Logistics({
   onNext,
   onBack,
   syncing,
+  busRemaining,
 }: Readonly<Props>) {
   const updateCompanion = (i: number, patch: Partial<Companion>) => {
     const next = data.companions.map((c, idx) =>
@@ -73,7 +75,12 @@ export default function Step3Logistics({
       className="flex flex-col gap-8"
     >
       {config.busEnabled && (
-        <BusSection config={config} data={data} onUpdate={onUpdate} />
+        <BusSection
+          config={config}
+          data={data}
+          onUpdate={onUpdate}
+          busRemaining={busRemaining}
+        />
       )}
 
       <PersonMealSection
@@ -124,11 +131,17 @@ function BusSection({
   config,
   data,
   onUpdate,
+  busRemaining,
 }: Readonly<{
   config: RegistrationConfig;
   data: WizardData;
   onUpdate: (updates: Partial<WizardData>) => void;
+  busRemaining: number | null;
 }>) {
+  // Only block selection if user doesn't already have a bus slot reserved
+  const busFull =
+    busRemaining !== null && busRemaining === 0 && data.bus === "none";
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -137,23 +150,33 @@ function BusSection({
           Transporte
         </h3>
       </div>
+      {busFull && (
+        <p className="text-xs text-red-400/70">
+          Não há mais lugares disponíveis no autocarro.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {BUS_OPTIONS.map((opt) => {
           const isSelected = data.bus === opt.value;
+          const isDisabled = busFull && opt.value !== "none";
           const showPrice =
             opt.value === "round_trip" && config.busRoundTripPrice > 0;
           const included =
             opt.value === "round_trip" && config.busRoundTripPrice === 0;
+          const selectedClass = isSelected
+            ? "bg-light-gold/8 border-light-gold/60"
+            : "bg-white/3 border-light-gold/20 hover:border-white/20";
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => onUpdate({ bus: opt.value })}
+              onClick={() => !isDisabled && onUpdate({ bus: opt.value })}
+              disabled={isDisabled}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                isSelected
-                  ? "bg-light-gold/8 border-light-gold/60"
-                  : "bg-white/3 border-light-gold/20 hover:border-white/20",
+                isDisabled
+                  ? "bg-white/2 cursor-not-allowed border-light-gold/10 opacity-40"
+                  : selectedClass,
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
