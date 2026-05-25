@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import GalaService from "@/services/GalaService";
 
-export type Capacity = { remaining: number; total: number };
+export type Capacity = { remaining: number; total: number; bus_remaining: number | null };
 
 export default function useCapacity() {
   const { data, error, isLoading } = useSWR<Capacity>(
