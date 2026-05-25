@@ -266,6 +266,7 @@ class RegistrationService:
                 update_data["phased_payment"] = data["phased_payment"]
         elif step == 6:
             update_data["is_registered"] = True
+            update_data["registered_at"] = datetime.now(tz=timezone.utc)
 
     @staticmethod
     async def update_step(db: DBType, user_id: int, step: int, data: Dict[str, Any]) -> User:
