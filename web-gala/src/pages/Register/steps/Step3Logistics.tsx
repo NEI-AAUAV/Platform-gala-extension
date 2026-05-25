@@ -139,7 +139,8 @@ function BusSection({
   busRemaining: number | null;
 }>) {
   // Only block selection if user doesn't already have a bus slot reserved
-  const busFull = busRemaining !== null && busRemaining === 0 && data.bus === "none";
+  const busFull =
+    busRemaining !== null && busRemaining === 0 && data.bus === "none";
 
   return (
     <div className="flex flex-col gap-4">
