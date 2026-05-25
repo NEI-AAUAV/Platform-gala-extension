@@ -83,6 +83,24 @@ class RegistrationService:
         return row["registrations"] + row["companions"]
 
     @staticmethod
+    async def count_bus_seats_taken(db: DBType, exclude_user_id: Optional[int] = None) -> int:
+        """Counts bus seats occupied by all users with a non-NONE bus option.
+        Each user takes 1 seat plus 1 per companion.
+        Pass exclude_user_id to exclude a specific user (e.g. before re-saving their own entry).
+        """
+        match: Dict[str, Any] = {"bus_option": {"$ne": "NONE"}}
+        if exclude_user_id is not None:
+            match["_id"] = {"$ne": exclude_user_id}
+        result = await User.get_collection(db).aggregate([
+            {"$match": match},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": {"$add": [1, {"$size": {"$ifNull": ["$companions", []]}}]}},
+            }},
+        ]).to_list(1)
+        return result[0]["total"] if result else 0
+
+    @staticmethod
     async def get_user_registration(db: DBType, user_id: int) -> Optional[User]:
         collection = User.get_collection(db)
         user_dict = await collection.find_one({"_id": user_id})
