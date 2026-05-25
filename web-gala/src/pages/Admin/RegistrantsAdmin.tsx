@@ -125,8 +125,11 @@ export default function RegistrantsAdmin() {
 
     result.sort((a, b) => {
       let cmp = 0;
-      if (sortField === "id") cmp = a._id - b._id;
-      else if (sortField === "nmec") cmp = a.nmec - b.nmec;
+      if (sortField === "id") {
+        const ta = a.registered_at ? new Date(a.registered_at).getTime() : a._id;
+        const tb = b.registered_at ? new Date(b.registered_at).getTime() : b._id;
+        cmp = ta - tb;
+      } else if (sortField === "nmec") cmp = a.nmec - b.nmec;
       else if (sortField === "name") cmp = a.name.localeCompare(b.name);
       else if (sortField === "year")
         cmp = (a.matriculation ?? 0) - (b.matriculation ?? 0);

@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Annotated, Optional, List
 from pydantic import BaseModel, Field
@@ -25,6 +26,7 @@ class User(BaseDocument):
     # Registration Wizard State
     registration_step: int = 1
     is_registered: bool = False
+    registered_at: Optional[datetime] = None
     
     # Logistics
     phone: Optional[str] = None
