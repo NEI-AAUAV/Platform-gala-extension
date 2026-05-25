@@ -152,6 +152,15 @@ async def update_registration_step(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="As inscrições estão encerradas.",
             )
+        if user.bus_option.value != "NONE" and limits.maxBusSeats is not None:
+            taken = await User.get_collection(db).count_documents(
+                {"bus_option": {"$ne": "NONE"}}
+            )
+            if taken > limits.maxBusSeats:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Não há mais lugares disponíveis no autocarro. Volta ao passo 3 e escolhe deslocação própria.",
+                )
 
     if step == 3:
         new_bus = data.get("bus_option", "NONE")
