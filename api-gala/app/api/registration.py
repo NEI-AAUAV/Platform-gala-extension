@@ -65,9 +65,7 @@ async def get_registration_capacity(
 
     bus_remaining: Optional[int] = None
     if limits.maxBusSeats is not None:
-        taken = await User.get_collection(db).count_documents(
-            {"bus_option": {"$ne": "NONE"}}
-        )
+        taken = await RegistrationService.count_bus_seats_taken(db)
         bus_remaining = max(0, limits.maxBusSeats - taken)
 
     return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations, bus_remaining=bus_remaining)
@@ -153,10 +151,9 @@ async def update_registration_step(
                 detail="As inscrições estão encerradas.",
             )
         if user.bus_option.value != "NONE" and limits.maxBusSeats is not None:
-            taken = await User.get_collection(db).count_documents(
-                {"bus_option": {"$ne": "NONE"}}
-            )
-            if taken > limits.maxBusSeats:
+            taken = await RegistrationService.count_bus_seats_taken(db, exclude_user_id=auth.sub)
+            my_seats = 1 + len(user.companions)
+            if taken + my_seats > limits.maxBusSeats:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Não há mais lugares disponíveis no autocarro. Volta ao passo 3 e escolhe deslocação própria.",
@@ -164,13 +161,13 @@ async def update_registration_step(
 
     if step == 3:
         new_bus = data.get("bus_option", "NONE")
-        if new_bus not in ("NONE", None) and user.bus_option.value == "NONE":
+        if new_bus not in ("NONE", None):
             limits = await fetch_limits(db)
             if limits.maxBusSeats is not None:
-                taken = await User.get_collection(db).count_documents(
-                    {"bus_option": {"$ne": "NONE"}}
-                )
-                if taken >= limits.maxBusSeats:
+                taken = await RegistrationService.count_bus_seats_taken(db, exclude_user_id=auth.sub)
+                new_companions = data.get("companions") or []
+                seats_needed = 1 + len(new_companions)
+                if taken + seats_needed > limits.maxBusSeats:
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
                         detail="Não há mais lugares disponíveis no autocarro.",
