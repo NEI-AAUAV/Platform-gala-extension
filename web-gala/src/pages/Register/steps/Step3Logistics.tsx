@@ -75,7 +75,12 @@ export default function Step3Logistics({
       className="flex flex-col gap-8"
     >
       {config.busEnabled && (
-        <BusSection config={config} data={data} onUpdate={onUpdate} busRemaining={busRemaining} />
+        <BusSection
+          config={config}
+          data={data}
+          onUpdate={onUpdate}
+          busRemaining={busRemaining}
+        />
       )}
 
       <PersonMealSection
@@ -157,6 +162,9 @@ function BusSection({
             opt.value === "round_trip" && config.busRoundTripPrice > 0;
           const included =
             opt.value === "round_trip" && config.busRoundTripPrice === 0;
+          const selectedClass = isSelected
+            ? "bg-light-gold/8 border-light-gold/60"
+            : "bg-white/3 border-light-gold/20 hover:border-white/20";
           return (
             <button
               key={opt.value}
@@ -166,10 +174,8 @@ function BusSection({
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
                 isDisabled
-                  ? "cursor-not-allowed border-light-gold/10 bg-white/2 opacity-40"
-                  : isSelected
-                    ? "bg-light-gold/8 border-light-gold/60"
-                    : "bg-white/3 border-light-gold/20 hover:border-white/20",
+                  ? "bg-white/2 cursor-not-allowed border-light-gold/10 opacity-40"
+                  : selectedClass,
               ].join(" ")}
             >
               <div className="flex items-center justify-between">
