@@ -105,6 +105,6 @@ test.describe('Payment deadline flow', () => {
     await expect(phasedButton).toBeDisabled();
     await expect(page.getByText('Comprovativo de Pagamento')).toBeVisible();
     await expect(page.getByText('Fase 2')).not.toBeVisible();
-    await expect(page.getByText('Deadline:').locator('..')).toContainText('2030-01-01');
+    await expect(page.getByText('Deadline:').locator('..')).toContainText('1 de janeiro de 2030');
   });
 });

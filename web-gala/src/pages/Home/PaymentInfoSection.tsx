@@ -140,7 +140,10 @@ function PriceCard({
       </p>
       {deadline && deadline !== "A anunciar" && (
         <p className="mt-4 font-gala text-xs text-white/40">
-          Até <span className="text-white/65">{formatPaymentDeadline(deadline)}</span>
+          Até{" "}
+          <span className="text-white/65">
+            {formatPaymentDeadline(deadline)}
+          </span>
         </p>
       )}
     </motion.div>
