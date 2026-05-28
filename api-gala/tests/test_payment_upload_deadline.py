@@ -3,10 +3,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException, UploadFile
+from starlette.datastructures import Headers
 
 
 def _upload_file() -> UploadFile:
-    return UploadFile(filename="proof.pdf", file=BytesIO(b"proof"), content_type="application/pdf")
+    return UploadFile(
+        filename="proof.pdf",
+        file=BytesIO(b"proof"),
+        headers=Headers({"content-type": "application/pdf"}),
+    )
 
 
 def _config():
