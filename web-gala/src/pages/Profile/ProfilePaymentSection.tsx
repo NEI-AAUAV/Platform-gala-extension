@@ -59,6 +59,8 @@ export default function ProfilePaymentSection({
 
   const phase1Passed = isPaymentDeadlinePassed(phase1Deadline);
   const phase2Passed = isPaymentDeadlinePassed(phase2Deadline);
+  const paymentLocked =
+    sessionUser?.payment_expired || sessionUser?.registration_active === false;
   const showMBWay =
     (config.paymentMethod === "mbway" || config.paymentMethod === "both") &&
     Boolean(contact);
@@ -115,7 +117,7 @@ export default function ProfilePaymentSection({
               : "Comprovativo de Pagamento"
           }
           deadline={phase1Deadline}
-          deadlinePassed={phase1Passed}
+          deadlinePassed={phase1Passed || paymentLocked}
           proofName={proofName}
           confirmed={sessionUser?.payment_phase1_confirmed ?? false}
           onProofChange={onProofChange}
@@ -127,7 +129,7 @@ export default function ProfilePaymentSection({
             phase={2}
             label="Comprovativo - Fase 2"
             deadline={phase2Deadline}
-            deadlinePassed={phase2Passed}
+            deadlinePassed={phase2Passed || paymentLocked}
             proofName={phase2ProofName}
             confirmed={sessionUser?.payment_phase2_confirmed ?? false}
             onProofChange={onProofChange}
