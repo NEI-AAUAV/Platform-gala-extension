@@ -34,7 +34,7 @@ class TableService:
         if not user_dict:
             raise ValueError("User must complete registration before creating a table.")
         user = User.parse_obj(user_dict)
-        if user.table_id:
+        if user.table_id is not None:
             raise ValueError("You are already in a table.")
 
         # 2. Upload photo if provided
@@ -83,16 +83,15 @@ class TableService:
         if not user_dict:
             raise ValueError("User must complete registration before joining a table.")
         user = User.parse_obj(user_dict)
-        if user.table_id:
+        if user.table_id is not None:
             raise ValueError("You are already in a table.")
 
         query = {}
-        if table_id and token:
-            # Both provided: validate that the token matches the table
+        if table_id is not None and token is not None:
             query = {"_id": table_id, "invite_token": token}
-        elif table_id:
+        elif table_id is not None:
             query = {"_id": table_id}
-        elif token:
+        elif token is not None:
             query = {"invite_token": token}
         else:
             raise ValueError("Specify table_id or token.")
