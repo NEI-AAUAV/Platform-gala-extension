@@ -78,12 +78,12 @@ export default function Step4Payment({
   const handleUpload = async (phase: 1 | 2, file: File) => {
     setUploadError(null);
 
-    const deadlinePassed =
-      phase === 1
-        ? userChosePhased
-          ? phase1DeadlinePassed
-          : fullPaymentDeadlinePassed
-        : phase2DeadlinePassed;
+    let deadlinePassed = phase2DeadlinePassed;
+    if (phase === 1) {
+      deadlinePassed = userChosePhased
+        ? phase1DeadlinePassed
+        : fullPaymentDeadlinePassed;
+    }
     if (deadlinePassed) {
       setUploadError("O prazo para envio do comprovativo já passou.");
       return;
@@ -368,7 +368,7 @@ export default function Step4Payment({
               disabled={!phasedPaymentAvailable}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                !phasedPaymentAvailable ? "cursor-not-allowed opacity-45" : "",
+                !phasedPaymentAvailable ? "opacity-45 cursor-not-allowed" : "",
                 userChosePhased
                   ? "bg-light-gold/8 border-light-gold/60"
                   : "bg-white/3 border-light-gold/20 hover:border-white/20",
@@ -516,7 +516,7 @@ function PhaseCard({
         disabled={uploading || deadlinePassed}
         className={[
           "mt-2 flex items-center justify-center gap-2 border py-3 text-sm font-bold transition-all",
-          deadlinePassed ? "cursor-not-allowed opacity-45" : "",
+          deadlinePassed ? "opacity-45 cursor-not-allowed" : "",
           hasProof
             ? "border-green-500/50 bg-green-500/10 text-green-400"
             : "border-light-gold/40 text-light-gold hover:bg-light-gold/10",

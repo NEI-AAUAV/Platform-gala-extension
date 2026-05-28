@@ -328,7 +328,11 @@ function ProofUpload({
     }
     setError(null);
     try {
-      await GalaService.registration.uploadPaymentProof(file, phase, phasedPayment);
+      await GalaService.registration.uploadPaymentProof(
+        file,
+        phase,
+        phasedPayment,
+      );
       await mutate();
       onProofChange(file.name);
     } catch {
