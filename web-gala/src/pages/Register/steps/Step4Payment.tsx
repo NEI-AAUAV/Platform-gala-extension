@@ -15,7 +15,10 @@ import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
 import { useUserStore } from "@/stores/useUserStore";
 import type { UserState } from "@/stores/useUserStore";
-import { isPaymentDeadlinePassed } from "@/utils/paymentDeadline";
+import {
+  formatPaymentDeadline,
+  isPaymentDeadlinePassed,
+} from "@/utils/paymentDeadline";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -389,9 +392,11 @@ export default function Step4Payment({
                   "Indisponível: o prazo da fase 1 já passou."
                 ) : (
                   <>
-                    Fase 1: {totalPhase1Price}€ até {config.phase1Deadline}
+                    Fase 1: {totalPhase1Price}€ até{" "}
+                    {formatPaymentDeadline(config.phase1Deadline)}
                     <br />
-                    Fase 2: {totalPhase2Price}€ até {config.phase2Deadline}
+                    Fase 2: {totalPhase2Price}€ até{" "}
+                    {formatPaymentDeadline(config.phase2Deadline)}
                   </>
                 )}
               </p>
@@ -499,7 +504,7 @@ function PhaseCard({
       <p className="text-xs text-white/40">
         Deadline:{" "}
         <span className={deadlinePassed ? "text-red-400/80" : "text-white/60"}>
-          {deadline}
+          {formatPaymentDeadline(deadline)}
         </span>
         {deadlinePassed && (
           <span className="ml-2 text-red-400/70">Prazo expirado</span>

@@ -11,7 +11,10 @@ import {
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import GalaService from "@/services/GalaService";
-import { isPaymentDeadlinePassed } from "@/utils/paymentDeadline";
+import {
+  formatPaymentDeadline,
+  isPaymentDeadlinePassed,
+} from "@/utils/paymentDeadline";
 
 const ALLOWED_TYPES = new Set([
   "application/pdf",
@@ -353,7 +356,7 @@ function ProofUpload({
             deadlinePassed ? "text-red-400/80" : "text-white/60",
           ].join(" ")}
         >
-          {deadline}
+          {formatPaymentDeadline(deadline)}
         </span>
         {deadlinePassed && (
           <span className="ml-2 text-red-400/70">— Prazo expirado</span>

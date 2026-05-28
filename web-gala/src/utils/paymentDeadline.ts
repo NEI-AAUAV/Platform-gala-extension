@@ -39,3 +39,31 @@ export function localInputToDeadline(value: string): string {
   if (!value) return "";
   return new Date(value).toISOString();
 }
+
+export function formatPaymentDeadline(deadline: string): string {
+  if (!deadline || deadline === "A anunciar") return "A anunciar";
+
+  if (ISO_DATE_RE.test(deadline)) {
+    const parsed = new Date(`${deadline}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return deadline;
+    return parsed.toLocaleDateString("pt-PT", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  const utcIso =
+    deadline.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(deadline)
+      ? deadline
+      : `${deadline}Z`;
+  const parsed = new Date(utcIso);
+  if (Number.isNaN(parsed.getTime())) return deadline;
+  return parsed.toLocaleString("pt-PT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
