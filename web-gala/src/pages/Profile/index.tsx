@@ -251,7 +251,7 @@ function RegistrationTab({
       <div className="border-light-gold/15 bg-white/3 border px-5 py-4">
         <p className="text-xs text-white/40">
           Para alterar os dados da inscrição (prato, autocarro, acompanhantes),
-          contacta a organização por email.
+          contacta a organização por email ou mensagem.
         </p>
       </div>
     </div>
