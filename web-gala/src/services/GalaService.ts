@@ -470,11 +470,14 @@ const GalaService = {
     uploadPaymentProof: async (
       file: File,
       phase: 1 | 2 = 1,
+      phasedPayment?: boolean,
     ): Promise<{ url: string }> => {
       const formData = new FormData();
       formData.append("file", file);
+      const phasedSuffix =
+        phasedPayment === undefined ? "" : `&phased_payment=${phasedPayment}`;
       return client.post(
-        `/registration/payment-proof?phase=${phase}`,
+        `/registration/payment-proof?phase=${phase}${phasedSuffix}`,
         formData,
       );
     },

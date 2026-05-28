@@ -11,6 +11,7 @@ import {
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
 import GalaService from "@/services/GalaService";
+import { isPaymentDeadlinePassed } from "@/utils/paymentDeadline";
 
 const ALLOWED_TYPES = new Set([
   "application/pdf",
@@ -24,19 +25,6 @@ interface Props {
   readonly config: RegistrationConfig;
   readonly proofName: string | null;
   readonly onProofChange: (name: string) => void;
-}
-
-function isDeadlinePassed(dateStr: string): boolean {
-  if (!dateStr || dateStr === "A anunciar") return false;
-  try {
-    const utcIso =
-      dateStr.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(dateStr)
-        ? dateStr
-        : `${dateStr}Z`;
-    return new Date() > new Date(utcIso);
-  } catch {
-    return false;
-  }
 }
 
 export default function ProfilePaymentSection({
@@ -69,8 +57,8 @@ export default function ProfilePaymentSection({
       ? config.phase2Deadline
       : config.paymentDeadlineDate;
 
-  const phase1Passed = isDeadlinePassed(phase1Deadline);
-  const phase2Passed = isDeadlinePassed(phase2Deadline);
+  const phase1Passed = isPaymentDeadlinePassed(phase1Deadline);
+  const phase2Passed = isPaymentDeadlinePassed(phase2Deadline);
   const showMBWay =
     (config.paymentMethod === "mbway" || config.paymentMethod === "both") &&
     Boolean(contact);
@@ -132,6 +120,7 @@ export default function ProfilePaymentSection({
           confirmed={sessionUser?.payment_phase1_confirmed ?? false}
           onProofChange={onProofChange}
           config={config}
+          phasedPayment={userChosePhased}
         />
         {userChosePhased && (
           <ProofUpload
@@ -143,6 +132,7 @@ export default function ProfilePaymentSection({
             confirmed={sessionUser?.payment_phase2_confirmed ?? false}
             onProofChange={onProofChange}
             config={config}
+            phasedPayment={userChosePhased}
           />
         )}
       </div>
@@ -300,6 +290,7 @@ function ProofUpload({
   confirmed,
   onProofChange,
   config,
+  phasedPayment,
 }: Readonly<{
   phase: 1 | 2;
   label: string;
@@ -309,6 +300,7 @@ function ProofUpload({
   confirmed: boolean;
   onProofChange: (name: string) => void;
   config: RegistrationConfig;
+  phasedPayment: boolean;
 }>) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -331,7 +323,7 @@ function ProofUpload({
     }
     setError(null);
     try {
-      await GalaService.registration.uploadPaymentProof(file, phase);
+      await GalaService.registration.uploadPaymentProof(file, phase, phasedPayment);
       await mutate();
       onProofChange(file.name);
     } catch {

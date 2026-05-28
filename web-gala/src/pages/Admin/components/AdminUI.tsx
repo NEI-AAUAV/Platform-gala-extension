@@ -103,6 +103,23 @@ export function DateTimeInput({
   );
 }
 
+export function DateInput({
+  value,
+  onChange,
+}: {
+  readonly value: string;
+  readonly onChange: (v: string) => void;
+}) {
+  return (
+    <input
+      type="date"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`${INPUT_CLS} w-full [color-scheme:dark]`}
+    />
+  );
+}
+
 export function Toggle({
   enabled,
   onChange,

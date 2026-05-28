@@ -217,13 +217,22 @@ async def upload_payment_proof(
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     file: Annotated[UploadFile, File(...)],
     phase: Annotated[int, Query(ge=1, le=2)] = 1,
+    phased_payment: Annotated[Optional[bool], Query()] = None,
 ):
     """Uploads a payment proof file to R2 storage. Use phase=1 or phase=2."""
     config = await ConfigService.get_config(db)
     prices = config.prices
 
+    user = await RegistrationService.get_user_registration(db, auth.sub)
+    user_chose_phased = (
+        phased_payment if phased_payment is not None else bool(user and user.phased_payment)
+    )
     if phase == 1:
-        deadline = prices.phase1_deadline if prices.phased_payment_enabled and prices.phase1_deadline else config.payment_deadline_date
+        deadline = (
+            prices.phase1_deadline
+            if user_chose_phased and prices.phased_payment_enabled and prices.phase1_deadline
+            else config.payment_deadline_date
+        )
     else:
         deadline = prices.phase2_deadline if prices.phase2_deadline else config.payment_deadline_date
 

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,6 +15,7 @@ import { WizardData } from "@/hooks/useWizardState";
 import GalaService from "@/services/GalaService";
 import { useUserStore } from "@/stores/useUserStore";
 import type { UserState } from "@/stores/useUserStore";
+import { isPaymentDeadlinePassed } from "@/utils/paymentDeadline";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -52,15 +53,38 @@ export default function Step4Payment({
   const fileInputRef1 = useRef<HTMLInputElement>(null);
   const fileInputRef2 = useRef<HTMLInputElement>(null);
 
-  // Determine if user CHOSE phased payment (only possible when admin enabled it)
-  const userChosePhased = config.phasedPaymentEnabled && data.phasedPayment;
   const totalPersons = 1 + data.companions.length;
   const totalEventPrice = config.eventPrice * totalPersons;
   const totalPhase1Price = config.phase1Price * totalPersons;
   const totalPhase2Price = config.phase2Price * totalPersons;
+  const fullPaymentDeadlinePassed = isPaymentDeadlinePassed(
+    config.paymentDeadlineDate,
+  );
+  const phase1DeadlinePassed = isPaymentDeadlinePassed(config.phase1Deadline);
+  const phase2DeadlinePassed = isPaymentDeadlinePassed(config.phase2Deadline);
+  const phasedPaymentAvailable =
+    config.phasedPaymentEnabled && !phase1DeadlinePassed;
+  const userChosePhased = phasedPaymentAvailable && data.phasedPayment;
+
+  useEffect(() => {
+    if (!phasedPaymentAvailable && data.phasedPayment) {
+      onUpdate({ phasedPayment: false });
+    }
+  }, [data.phasedPayment, onUpdate, phasedPaymentAvailable]);
 
   const handleUpload = async (phase: 1 | 2, file: File) => {
     setUploadError(null);
+
+    const deadlinePassed =
+      phase === 1
+        ? userChosePhased
+          ? phase1DeadlinePassed
+          : fullPaymentDeadlinePassed
+        : phase2DeadlinePassed;
+    if (deadlinePassed) {
+      setUploadError("O prazo para envio do comprovativo já passou.");
+      return;
+    }
 
     if (!ALLOWED_TYPES.has(file.type)) {
       setUploadError("Tipo de ficheiro não permitido. Usa imagens ou PDF.");
@@ -80,6 +104,7 @@ export default function Step4Payment({
       const { url } = await GalaService.registration.uploadPaymentProof(
         file,
         phase,
+        userChosePhased,
       );
       if (phase === 1) onUpdate({ paymentProofPhase1: url });
       else onUpdate({ paymentProofPhase2: url });
@@ -311,7 +336,7 @@ export default function Step4Payment({
               onClick={() => onUpdate({ phasedPayment: false })}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                data.phasedPayment === false
+                !userChosePhased
                   ? "bg-light-gold/8 border-light-gold/60"
                   : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
@@ -320,12 +345,12 @@ export default function Step4Payment({
                 <span
                   className={[
                     "text-sm font-bold",
-                    data.phasedPayment ? "text-white/60" : "text-light-gold",
+                    userChosePhased ? "text-white/60" : "text-light-gold",
                   ].join(" ")}
                 >
                   Pagamento Total
                 </span>
-                {data.phasedPayment === false && (
+                {!userChosePhased && (
                   <span className="h-2 w-2 rounded-full bg-light-gold" />
                 )}
               </div>
@@ -337,9 +362,11 @@ export default function Step4Payment({
             <button
               type="button"
               onClick={() => onUpdate({ phasedPayment: true })}
+              disabled={!phasedPaymentAvailable}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                data.phasedPayment
+                !phasedPaymentAvailable ? "cursor-not-allowed opacity-45" : "",
+                userChosePhased
                   ? "bg-light-gold/8 border-light-gold/60"
                   : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
@@ -348,19 +375,25 @@ export default function Step4Payment({
                 <span
                   className={[
                     "text-sm font-bold",
-                    data.phasedPayment ? "text-light-gold" : "text-white/60",
+                    userChosePhased ? "text-light-gold" : "text-white/60",
                   ].join(" ")}
                 >
                   Pagamento em 2 Fases
                 </span>
-                {data.phasedPayment && (
+                {userChosePhased && (
                   <span className="h-2 w-2 rounded-full bg-light-gold" />
                 )}
               </div>
               <p className="text-white/35 text-xs">
-                Fase 1: {totalPhase1Price}€ até {config.phase1Deadline}
-                <br />
-                Fase 2: {totalPhase2Price}€ até {config.phase2Deadline}
+                {phase1DeadlinePassed ? (
+                  "Indisponível: o prazo da fase 1 já passou."
+                ) : (
+                  <>
+                    Fase 1: {totalPhase1Price}€ até {config.phase1Deadline}
+                    <br />
+                    Fase 2: {totalPhase2Price}€ até {config.phase2Deadline}
+                  </>
+                )}
               </p>
             </button>
           </div>
@@ -380,6 +413,9 @@ export default function Step4Payment({
           deadline={
             userChosePhased ? config.phase1Deadline : config.paymentDeadlineDate
           }
+          deadlinePassed={
+            userChosePhased ? phase1DeadlinePassed : fullPaymentDeadlinePassed
+          }
           hasProof={!!data.paymentProofPhase1}
           uploading={uploading === 1}
           onUpload={() => triggerUpload(1)}
@@ -389,6 +425,7 @@ export default function Step4Payment({
             label="Fase 2"
             price={totalPhase2Price}
             deadline={config.phase2Deadline}
+            deadlinePassed={phase2DeadlinePassed}
             hasProof={!!data.paymentProofPhase2}
             uploading={uploading === 2}
             onUpload={() => triggerUpload(2)}
@@ -430,6 +467,7 @@ function PhaseCard({
   label,
   price,
   deadline,
+  deadlinePassed,
   hasProof,
   uploading,
   onUpload,
@@ -437,6 +475,7 @@ function PhaseCard({
   label: string;
   price: number;
   deadline: string;
+  deadlinePassed: boolean;
   hasProof: boolean;
   uploading: boolean;
   onUpload: () => void;
@@ -458,14 +497,21 @@ function PhaseCard({
         <span className="text-xl font-bold text-light-gold">{price}€</span>
       </div>
       <p className="text-xs text-white/40">
-        Deadline: <span className="text-white/60">{deadline}</span>
+        Deadline:{" "}
+        <span className={deadlinePassed ? "text-red-400/80" : "text-white/60"}>
+          {deadline}
+        </span>
+        {deadlinePassed && (
+          <span className="ml-2 text-red-400/70">Prazo expirado</span>
+        )}
       </p>
       <button
         type="button"
         onClick={onUpload}
-        disabled={uploading}
+        disabled={uploading || deadlinePassed}
         className={[
           "mt-2 flex items-center justify-center gap-2 border py-3 text-sm font-bold transition-all",
+          deadlinePassed ? "cursor-not-allowed opacity-45" : "",
           hasProof
             ? "border-green-500/50 bg-green-500/10 text-green-400"
             : "border-light-gold/40 text-light-gold hover:bg-light-gold/10",
