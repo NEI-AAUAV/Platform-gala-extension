@@ -68,6 +68,8 @@ export default function Step4Payment({
   const phasedPaymentAvailable =
     config.phasedPaymentEnabled && !phase1DeadlinePassed;
   const userChosePhased = phasedPaymentAvailable && data.phasedPayment;
+  const userChoseFullPayment = !userChosePhased;
+  const phasedPaymentUnavailable = !phasedPaymentAvailable;
 
   useEffect(() => {
     if (!phasedPaymentAvailable && data.phasedPayment) {
@@ -132,135 +134,6 @@ export default function Step4Payment({
       : "Avançar sem comprovativo →";
   const nextButtonLabel = syncing ? "A guardar..." : phaseLabel;
 
-  const renderPaymentMethods = () => {
-    let yearLabel = "1";
-    if (data.year) {
-      yearLabel = data.year >= 5 ? "5" : String(data.year);
-    }
-    const contact =
-      config.paymentContacts.find((c) => c.year.startsWith(yearLabel)) ??
-      config.paymentContacts[0];
-
-    return (
-      <div className="space-y-3">
-        {(config.paymentMethod === "mbway" ||
-          config.paymentMethod === "both") &&
-          contact && (
-            <>
-              <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
-                MB Way
-              </p>
-              <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
-                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-                  {contact.name} ({contact.year})
-                </span>
-                <div className="flex items-center justify-between">
-                  <a
-                    href={`tel:${contact.phone.replaceAll(" ", "")}`}
-                    className="font-mono text-sm text-white/80 underline-offset-2 hover:text-light-gold hover:underline"
-                  >
-                    {contact.phone}
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigator.clipboard.writeText(
-                        contact.phone.replaceAll(" ", ""),
-                      )
-                    }
-                    className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
-                  >
-                    <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
-                    COPIAR
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-
-        {(config.paymentMethod === "iban" || config.paymentMethod === "both") &&
-          config.ibanNumber && (
-            <>
-              <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
-                Transferência Bancária (IBAN)
-              </p>
-              <div className="flex flex-col gap-2 border border-white/5 bg-white/5 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-                    Titular
-                  </span>
-                  <span className="text-sm text-white/80">
-                    {config.ibanHolder}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-                    IBAN
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm text-white/80">
-                      {config.ibanNumber}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigator.clipboard.writeText(config.ibanNumber)
-                      }
-                      className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
-                    >
-                      <FontAwesomeIcon
-                        icon={faCopy}
-                        className="text-[0.5rem]"
-                      />{" "}
-                      COPIAR
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-                    Montante
-                  </span>
-                  <span className="font-mono text-sm text-white/80">
-                    {config.phasedPaymentEnabled && data.phasedPayment
-                      ? `${totalPhase1Price}€ (Fase 1)`
-                      : `${totalEventPrice}€`}
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
-
-        <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
-              Assunto / Descritivo
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                const desc = config.paymentDescription
-                  .replace("<Nome>", userName || "")
-                  .replace("<Nmec>", data.nmec ? String(data.nmec) : "");
-                navigator.clipboard.writeText(desc);
-              }}
-              className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
-            >
-              <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" /> COPIAR
-            </button>
-          </div>
-          <span className="text-xs italic text-white/80">
-            {config.paymentDescription
-              .replace("<Nome>", userName || "Teu Nome")
-              .replace("<Nmec>", data.nmec ? String(data.nmec) : "Teu Nmec")}
-          </span>
-          <span className="text-[0.6rem] text-white/25">
-            {config.paymentDescription}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -308,7 +181,13 @@ export default function Step4Payment({
           </div>
         </div>
 
-        {renderPaymentMethods()}
+        <PaymentMethods
+          config={config}
+          data={data}
+          totalEventPrice={totalEventPrice}
+          totalPhase1Price={totalPhase1Price}
+          userName={userName}
+        />
       </div>
 
       {uploadError && (
@@ -339,7 +218,7 @@ export default function Step4Payment({
               onClick={() => onUpdate({ phasedPayment: false })}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                !userChosePhased
+                userChoseFullPayment
                   ? "bg-light-gold/8 border-light-gold/60"
                   : "bg-white/3 border-light-gold/20 hover:border-white/20",
               ].join(" ")}
@@ -348,12 +227,12 @@ export default function Step4Payment({
                 <span
                   className={[
                     "text-sm font-bold",
-                    userChosePhased ? "text-white/60" : "text-light-gold",
+                    userChoseFullPayment ? "text-light-gold" : "text-white/60",
                   ].join(" ")}
                 >
                   Pagamento Total
                 </span>
-                {!userChosePhased && (
+                {userChoseFullPayment && (
                   <span className="h-2 w-2 rounded-full bg-light-gold" />
                 )}
               </div>
@@ -365,10 +244,10 @@ export default function Step4Payment({
             <button
               type="button"
               onClick={() => onUpdate({ phasedPayment: true })}
-              disabled={!phasedPaymentAvailable}
+              disabled={phasedPaymentUnavailable}
               className={[
                 "flex flex-col gap-2 border p-4 text-left transition-all",
-                !phasedPaymentAvailable ? "opacity-45 cursor-not-allowed" : "",
+                phasedPaymentUnavailable ? "opacity-45 cursor-not-allowed" : "",
                 userChosePhased
                   ? "bg-light-gold/8 border-light-gold/60"
                   : "bg-white/3 border-light-gold/20 hover:border-white/20",
@@ -465,6 +344,142 @@ export default function Step4Payment({
         </button>
       </div>
     </motion.div>
+  );
+}
+
+function PaymentMethods({
+  config,
+  data,
+  totalEventPrice,
+  totalPhase1Price,
+  userName,
+}: Readonly<{
+  config: RegistrationConfig;
+  data: WizardData;
+  totalEventPrice: number;
+  totalPhase1Price: number;
+  userName: string;
+}>) {
+  let yearLabel = "1";
+  if (data.year) {
+    yearLabel = data.year >= 5 ? "5" : String(data.year);
+  }
+  const contact =
+    config.paymentContacts.find((c) => c.year.startsWith(yearLabel)) ??
+    config.paymentContacts[0];
+
+  return (
+    <div className="space-y-3">
+      {["mbway", "both"].includes(config.paymentMethod) && contact && (
+        <>
+          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
+            MB Way
+          </p>
+          <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
+            <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+              {contact.name} ({contact.year})
+            </span>
+            <div className="flex items-center justify-between">
+              <a
+                href={`tel:${contact.phone.replaceAll(" ", "")}`}
+                className="font-mono text-sm text-white/80 underline-offset-2 hover:text-light-gold hover:underline"
+              >
+                {contact.phone}
+              </a>
+              <button
+                type="button"
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    contact.phone.replaceAll(" ", ""),
+                  )
+                }
+                className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+              >
+                <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
+                COPIAR
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {(config.paymentMethod === "iban" || config.paymentMethod === "both") &&
+        config.ibanNumber && (
+          <>
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-white/25">
+              Transferência Bancária (IBAN)
+            </p>
+            <div className="flex flex-col gap-2 border border-white/5 bg-white/5 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+                  Titular
+                </span>
+                <span className="text-sm text-white/80">
+                  {config.ibanHolder}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+                  IBAN
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm text-white/80">
+                    {config.ibanNumber}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigator.clipboard.writeText(config.ibanNumber)
+                    }
+                    className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+                  >
+                    <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" />{" "}
+                    COPIAR
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+                  Montante
+                </span>
+                <span className="font-mono text-sm text-white/80">
+                  {config.phasedPaymentEnabled && data.phasedPayment
+                    ? `${totalPhase1Price}€ (Fase 1)`
+                    : `${totalEventPrice}€`}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+      <div className="flex flex-col gap-1 border border-white/5 bg-white/5 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/30">
+            Assunto / Descritivo
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const desc = config.paymentDescription
+                .replace("<Nome>", userName || "")
+                .replace("<Nmec>", data.nmec ? String(data.nmec) : "");
+              navigator.clipboard.writeText(desc);
+            }}
+            className="flex items-center gap-1 text-[0.6rem] font-bold text-light-gold/60 hover:text-light-gold"
+          >
+            <FontAwesomeIcon icon={faCopy} className="text-[0.5rem]" /> COPIAR
+          </button>
+        </div>
+        <span className="text-xs italic text-white/80">
+          {config.paymentDescription
+            .replace("<Nome>", userName || "Teu Nome")
+            .replace("<Nmec>", data.nmec ? String(data.nmec) : "Teu Nmec")}
+        </span>
+        <span className="text-[0.6rem] text-white/25">
+          {config.paymentDescription}
+        </span>
+      </div>
+    </div>
   );
 }
 
