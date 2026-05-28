@@ -338,3 +338,69 @@ async def test_update_step_6_marks_registered():
     await RegistrationService.update_step(db, user_id=1, step=6, data={})
     update_call = user_coll.update_one.call_args
     assert update_call[0][1]["$set"].get("is_registered") is True
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_expired_deadline():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    # Reset the last run global variable to bypass TTL
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    # Setup mock config
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-05-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-05-20",
+        )
+    )
+
+    # Mock DB and collection
+    user_coll = AsyncMock()
+    user_coll.update_many.return_value = MagicMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=True) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        # ConfigService.get_config should be called
+        # is_deadline_passed should be called for each deadline
+        # user_coll.update_many should be called for expired deadlines
+        assert mock_passed.call_count == 3
+        assert user_coll.update_many.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_no_deadline_passed():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-06-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-06-10",
+            phase2_deadline="2026-06-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=False) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        assert mock_passed.call_count == 3
+        user_coll.update_many.assert_not_called()
+
