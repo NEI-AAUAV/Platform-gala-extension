@@ -22,3 +22,20 @@ export function isPaymentDeadlinePassed(deadline: string): boolean {
 export function dateInputValue(value: string): string {
   return ISO_DATE_RE.test(value) ? value : "";
 }
+
+export function deadlineToLocalInput(value: string): string {
+  if (!value || value === "A anunciar") return "";
+  if (ISO_DATE_RE.test(value)) return `${value}T23:59`;
+
+  const utcIso =
+    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
+  const parsed = new Date(utcIso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const localMs = parsed.getTime() - parsed.getTimezoneOffset() * 60000;
+  return new Date(localMs).toISOString().slice(0, 16);
+}
+
+export function localInputToDeadline(value: string): string {
+  if (!value) return "";
+  return new Date(value).toISOString();
+}

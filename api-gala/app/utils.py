@@ -1,6 +1,6 @@
 import secrets
 import string
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any, Set, TypeVar, Callable, Type
 from pydantic import BaseModel
 
@@ -36,10 +36,22 @@ class NotFoundReCheck(Exception):
 
 
 def is_deadline_passed(deadline_str: str) -> bool:
-    """Returns True if today is past the given ISO date string (YYYY-MM-DD)."""
+    """Returns True if the given ISO date/datetime payment deadline has passed.
+
+    Date-only strings (YYYY-MM-DD) remain valid until the day after the date,
+    preserving the previous inclusive-date behavior.
+    """
     try:
-        deadline = date.fromisoformat(deadline_str)
-        return date.today() > deadline
+        if "T" not in deadline_str:
+            deadline = date.fromisoformat(deadline_str)
+            return date.today() > deadline
+
+        normalized = deadline_str.replace("Z", "+00:00")
+        deadline_dt = datetime.fromisoformat(normalized)
+        now = datetime.now(tz=timezone.utc)
+        if deadline_dt.tzinfo is None:
+            deadline_dt = deadline_dt.replace(tzinfo=timezone.utc)
+        return now > deadline_dt.astimezone(timezone.utc)
     except (ValueError, TypeError):
         return False
 
