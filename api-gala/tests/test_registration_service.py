@@ -375,6 +375,46 @@ async def test_apply_payment_deadline_policy_expired_deadline():
         assert mock_passed.call_count == 3
         assert user_coll.update_many.call_count == 3
 
+        full_payment_filter, full_payment_update = user_coll.update_many.call_args_list[0].args
+        phase1_filter, phase1_update = user_coll.update_many.call_args_list[1].args
+        phase2_filter, phase2_update = user_coll.update_many.call_args_list[2].args
+
+        expected_update = {"$set": {"registration_active": False, "payment_expired": True}}
+        assert full_payment_update == expected_update
+        assert phase1_update == expected_update
+        assert phase2_update == expected_update
+
+        assert full_payment_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": {"$ne": True},
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert phase1_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert phase2_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url_phase2": None},
+                {"payment_proof_url_phase2": {"$exists": False}},
+            ],
+        }
+
 
 @pytest.mark.asyncio
 async def test_apply_payment_deadline_policy_no_deadline_passed():
@@ -404,3 +444,109 @@ async def test_apply_payment_deadline_policy_no_deadline_passed():
         assert mock_passed.call_count == 3
         user_coll.update_many.assert_not_called()
 
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_keeps_pending_proofs_active():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-05-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-05-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=True):
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        for call in user_coll.update_many.call_args_list:
+            filter_doc = call.args[0]
+            assert {"payment_proof_url": {"$ne": None}} not in filter_doc.get("$or", [])
+            assert {"payment_proof_url_phase2": {"$ne": None}} not in filter_doc.get("$or", [])
+            assert filter_doc["has_payed"] == {"$ne": True}
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_only_expires_phase1_when_only_phase1_deadline_passed():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-06-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-06-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", side_effect=[False, True, False]) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        assert mock_passed.call_count == 3
+        user_coll.update_many.assert_called_once()
+        filter_doc, update_doc = user_coll.update_many.call_args.args
+        assert filter_doc == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert update_doc == {"$set": {"registration_active": False, "payment_expired": True}}
+
+
+@pytest.mark.asyncio
+async def test_count_registered_attendees_includes_inactive_payment_expired_users():
+    from app.services.registration import RegistrationService
+
+    aggregate_result = [
+        {
+            "_id": None,
+            "registrations": 1,
+            "companions": 2,
+        }
+    ]
+    aggregate_cursor = MagicMock()
+    aggregate_cursor.to_list = AsyncMock(return_value=aggregate_result)
+
+    user_coll = MagicMock()
+    user_coll.aggregate.return_value = aggregate_cursor
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    count = await RegistrationService.count_registered_attendees(db)
+
+    assert count == 3
+    user_coll.aggregate.assert_called_once_with([
+        {"$match": {"is_registered": True}},
+        {
+            "$group": {
+                "_id": None,
+                "registrations": {"$sum": 1},
+                "companions": {"$sum": {"$size": {"$ifNull": ["$companions", []]}}},
+            }
+        },
+    ])
