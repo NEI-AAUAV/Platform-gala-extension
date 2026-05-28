@@ -160,6 +160,40 @@ async def test_payment_review_state_review_phase2():
 
 
 # ---------------------------------------------------------------------------
+# upload_payment_proof
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_upload_payment_proof_reactivates_registration_while_reviewing():
+    from app.services.registration import RegistrationService
+
+    db, user_coll = _make_db()
+
+    with patch("app.services.registration.storage_client.upload_image", return_value="https://proof"):
+        url = await RegistrationService.upload_payment_proof(
+            db,
+            user_id=1,
+            file_data=b"proof",
+            content_type="application/pdf",
+            phase=1,
+        )
+
+    assert url == "https://proof"
+    user_coll.update_one.assert_awaited_once_with(
+        {"_id": 1},
+        {
+            "$set": {
+                "payment_proof_url": "https://proof",
+                "payment_phase1_confirmed": False,
+                "payment_expired": False,
+                "registration_active": True,
+            }
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # _handle_step_5 - table selection logic
 # ---------------------------------------------------------------------------
 

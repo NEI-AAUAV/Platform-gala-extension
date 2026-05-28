@@ -1,5 +1,12 @@
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+function toDeadlineDate(value: string): Date | null {
+  const utcIso =
+    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
+  const parsed = new Date(utcIso);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function todayLocalIsoDate(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -14,8 +21,8 @@ export function isPaymentDeadlinePassed(deadline: string): boolean {
     return todayLocalIsoDate() > deadline;
   }
 
-  const parsed = new Date(deadline);
-  if (Number.isNaN(parsed.getTime())) return false;
+  const parsed = toDeadlineDate(deadline);
+  if (!parsed) return false;
   return new Date() > parsed;
 }
 
@@ -27,10 +34,8 @@ export function deadlineToLocalInput(value: string): string {
   if (!value || value === "A anunciar") return "";
   if (ISO_DATE_RE.test(value)) return `${value}T23:59`;
 
-  const utcIso =
-    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
-  const parsed = new Date(utcIso);
-  if (Number.isNaN(parsed.getTime())) return "";
+  const parsed = toDeadlineDate(value);
+  if (!parsed) return "";
   const localMs = parsed.getTime() - parsed.getTimezoneOffset() * 60000;
   return new Date(localMs).toISOString().slice(0, 16);
 }
@@ -53,12 +58,8 @@ export function formatPaymentDeadline(deadline: string): string {
     });
   }
 
-  const utcIso =
-    deadline.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(deadline)
-      ? deadline
-      : `${deadline}Z`;
-  const parsed = new Date(utcIso);
-  if (Number.isNaN(parsed.getTime())) return deadline;
+  const parsed = toDeadlineDate(deadline);
+  if (!parsed) return deadline;
   return parsed.toLocaleString("pt-PT", {
     day: "numeric",
     month: "long",

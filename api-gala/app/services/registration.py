@@ -315,6 +315,13 @@ class RegistrationService:
         collection = User.get_collection(db)
         await collection.update_one(
             {"_id": user_id},
-            {"$set": {field: url, confirmed_field: False, "payment_expired": False}}
+            {
+                "$set": {
+                    field: url,
+                    confirmed_field: False,
+                    "payment_expired": False,
+                    "registration_active": True,
+                }
+            },
         )
         return url
