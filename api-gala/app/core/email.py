@@ -108,7 +108,7 @@ async def send_email(
             _logo_bytes,
             maintype="image",
             subtype="png",
-            cid="<nei-logo>",
+            cid="<logo>",
             filename=_LOGO_FILENAME,
             disposition="inline",
         )

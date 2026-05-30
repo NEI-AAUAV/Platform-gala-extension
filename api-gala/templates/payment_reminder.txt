@@ -6,10 +6,13 @@ Ainda não temos o teu pagamento do Jantar de Gala confirmado.
 Prazos:
 - Fase 1: {{ phase1_deadline or payment_deadline or "a anunciar" }}
 - Fase 2: {{ phase2_deadline or payment_deadline or "a anunciar" }}
+
+Se escolheste pagamento faseado, deves enviar o comprovativo do pagamento integral até à data limite do mesmo.
 {% else %}
 Prazo: {{ payment_deadline or "a anunciar" }}
 {% endif %}
 
+Se deixas-te passar o prazo e escolheste pagamento faseado, deves enviar o comprovativo do pagamento integral até à data limite do mesmo.<
 Envia o comprovativo no teu perfil para que a inscrição possa ser validada.
 
 Até já,
