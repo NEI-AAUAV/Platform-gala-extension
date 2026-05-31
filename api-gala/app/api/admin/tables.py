@@ -208,6 +208,70 @@ async def admin_prune_tables(
     return {"removed": removed, "count": len(removed)}
 
 
+@router.post(
+    "/repair",
+    responses={**auth_responses},
+    summary="Repair table/user membership inconsistencies",
+)
+async def admin_repair_tables(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+) -> Any:
+    """
+    Fix two-way inconsistencies between user.table_id and table.persons[]:
+    - User is in table.persons but user.table_id is null or points elsewhere → fix user.table_id
+    - User.table_id is set but they're not in that table's persons → clear user.table_id
+    Idempotent. Returns a report of every change made.
+    """
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
+
+    user_coll = User.get_collection(db)
+    table_coll = Table.get_collection(db)
+    fixed: List[dict] = []
+
+    # Build ground truth: userId → tableId from all table.persons arrays
+    persons_table: dict = {}
+    async for table_doc in table_coll.find({}, {"_id": 1, "persons": 1}):
+        for person in table_doc.get("persons") or []:
+            pid = person.get("id")
+            if pid is not None:
+                persons_table[pid] = table_doc["_id"]
+
+    async for user_doc in user_coll.find({"is_registered": True}, {"_id": 1, "table_id": 1}):
+        user_id = user_doc["_id"]
+        stored_table_id = user_doc.get("table_id")
+        actual_table_id = persons_table.get(user_id)
+
+        if actual_table_id is not None and stored_table_id != actual_table_id:
+            # In a table's persons but user.table_id is wrong or null
+            await user_coll.update_one(
+                {"_id": user_id}, {"$set": {"table_id": actual_table_id}}
+            )
+            fixed.append({
+                "user_id": user_id,
+                "action": "set_table_id",
+                "from": stored_table_id,
+                "to": actual_table_id,
+            })
+            logger.info(
+                "Repaired user {} table_id {} → {}", user_id, stored_table_id, actual_table_id
+            )
+        elif actual_table_id is None and stored_table_id is not None:
+            # user.table_id is set but they're not in any table's persons
+            await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
+            fixed.append({
+                "user_id": user_id,
+                "action": "clear_table_id",
+                "from": stored_table_id,
+                "to": None,
+            })
+            logger.info(
+                "Repaired user {} had stale table_id {}", user_id, stored_table_id
+            )
+
+    return {"fixed": fixed, "count": len(fixed)}
+
+
 @router.delete("/{table_id}/members/{user_id}", responses={**auth_responses, 400: {"description": "User is not in this table"}})
 async def admin_remove_member(
     table_id: int,

@@ -363,6 +363,17 @@ const GalaService = {
     }> => {
       return client.post("/admin/tables/prune", {});
     },
+    repairTables: async (): Promise<{
+      count: number;
+      fixed: {
+        user_id: number;
+        action: string;
+        from: number | null;
+        to: number | null;
+      }[];
+    }> => {
+      return client.post("/admin/tables/repair", {});
+    },
   },
 
   time: {

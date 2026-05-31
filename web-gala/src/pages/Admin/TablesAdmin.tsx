@@ -12,6 +12,7 @@ import {
   faPlus,
   faArrowRightArrowLeft,
   faBroom,
+  faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService from "@/services/GalaService";
 import useTables from "@/hooks/tableHooks/useTables";
@@ -819,6 +820,7 @@ export default function TablesAdmin() {
 
   const [movingMemberId, setMovingMemberId] = useState<number | null>(null);
   const [pruning, setPruning] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   const handlePrune = async () => {
     // eslint-disable-next-line no-restricted-globals, no-alert
@@ -837,6 +839,23 @@ export default function TablesAdmin() {
       toast.error(extractApiError(e, "Erro ao limpar mesas."));
     } finally {
       setPruning(false);
+    }
+  };
+
+  const handleRepair = async () => {
+    setRepairing(true);
+    try {
+      const result = await GalaService.admin.repairTables();
+      refresh();
+      if (result.count === 0) {
+        toast.success("Nenhuma inconsistência encontrada.");
+      } else {
+        toast.success(`${result.count} inconsistência(s) corrigida(s).`);
+      }
+    } catch (e) {
+      toast.error(extractApiError(e, "Erro ao reparar mesas."));
+    } finally {
+      setRepairing(false);
     }
   };
 
@@ -929,6 +948,18 @@ export default function TablesAdmin() {
                 spin={pruning}
               />
               Limpar não inscritos
+            </button>
+            <button
+              type="button"
+              onClick={handleRepair}
+              disabled={repairing}
+              className="flex items-center gap-2 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-400 transition hover:bg-yellow-500/20 disabled:opacity-40"
+            >
+              <FontAwesomeIcon
+                icon={repairing ? faSpinner : faWrench}
+                spin={repairing}
+              />
+              Reparar inconsistências
             </button>
             <button
               type="button"
