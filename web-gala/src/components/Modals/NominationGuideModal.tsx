@@ -132,7 +132,7 @@ export default function NominationGuideModal({ isOpen, onClose }: Props) {
                     <span className="relative z-10">Entendido!</span>
                   </button>
                   <p className="font-gala text-[0.54rem] uppercase tracking-[0.16em] text-gala-white/20 sm:text-[0.65rem] sm:tracking-[0.2em]">
-                    Fecha este guia e comeca a nomear
+                    Fecha este guia e começa a nomear
                   </p>
                 </div>
               </div>
