@@ -22,6 +22,15 @@ import GalaService, {
 import { useAppToast } from "@/components/ui/Toast";
 import ImageCropperModal from "@/components/Modals/ImageCropperModal";
 
+const toIsoOrNull = (value: string) =>
+  value ? new Date(value).toISOString() : null;
+
+const isValidWindow = (start: string, end: string) => {
+  if (!start && !end) return true;
+  if (!start || !end) return false;
+  return new Date(start) < new Date(end);
+};
+
 function NominationsPanel({
   categoryId,
   nominations,
@@ -38,6 +47,8 @@ function NominationsPanel({
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isCreatingRunoff, setIsCreatingRunoff] = useState(false);
   const [confirmFinalize, setConfirmFinalize] = useState(false);
+  const [runoffVotesStart, setRunoffVotesStart] = useState("");
+  const [runoffVotesEnd, setRunoffVotesEnd] = useState("");
 
   const sorted = [...nominations].sort(
     (a, b) => b.votes.length - a.votes.length,
@@ -109,11 +120,17 @@ function NominationsPanel({
   };
 
   const handleCreateRunoff = async () => {
+    if (!isValidWindow(runoffVotesStart, runoffVotesEnd)) {
+      toast.error("Define início e fim válidos para a 2.ª volta.");
+      return;
+    }
     setIsCreatingRunoff(true);
     try {
       await GalaService.admin.createRunoff(categoryId, {
         nominee_names: tiedNominees.map((nominee) => nominee.name),
         slots: runoffSlots,
+        votes_start: toIsoOrNull(runoffVotesStart),
+        votes_end: toIsoOrNull(runoffVotesEnd),
       });
       toast.success("2.ª volta criada com os nomeados empatados.");
       refresh();
@@ -192,6 +209,30 @@ function NominationsPanel({
               Há {tiedNominees.length} nomeados empatados para {runoffSlots}{" "}
               lugar{runoffSlots === 1 ? "" : "es"} no Top 4.
             </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+                  Início da 2.ª volta
+                </span>
+                <input
+                  type="datetime-local"
+                  value={runoffVotesStart}
+                  onChange={(e) => setRunoffVotesStart(e.target.value)}
+                  className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+                  Fim da 2.ª volta
+                </span>
+                <input
+                  type="datetime-local"
+                  value={runoffVotesEnd}
+                  onChange={(e) => setRunoffVotesEnd(e.target.value)}
+                  className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+                />
+              </label>
+            </div>
             <button
               type="button"
               onClick={handleCreateRunoff}
@@ -270,11 +311,19 @@ export default function CategoryRow({
   const [editRevealAt, setEditRevealAt] = useState(
     toLocalDatetimeString(vote.reveal_at),
   );
+  const [editVotesStart, setEditVotesStart] = useState(
+    toLocalDatetimeString(vote.votes_start || undefined),
+  );
+  const [editVotesEnd, setEditVotesEnd] = useState(
+    toLocalDatetimeString(vote.votes_end || undefined),
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
   const [isCreatingVoteRunoff, setIsCreatingVoteRunoff] = useState(false);
+  const [voteRunoffStart, setVoteRunoffStart] = useState("");
+  const [voteRunoffEnd, setVoteRunoffEnd] = useState("");
 
   const [cropperOpen, setCropperOpen] = useState(false);
   const [cropperImageSrc, setCropperImageSrc] = useState("");
@@ -295,9 +344,16 @@ export default function CategoryRow({
     tiedWinningIndexes.length > 1;
 
   const handleCreateVoteRunoff = async () => {
+    if (!isValidWindow(voteRunoffStart, voteRunoffEnd)) {
+      toast.error("Define início e fim válidos para o desempate.");
+      return;
+    }
     setIsCreatingVoteRunoff(true);
     try {
-      await GalaService.admin.createVoteRunoff(vote._id);
+      await GalaService.admin.createVoteRunoff(vote._id, {
+        votes_start: toIsoOrNull(voteRunoffStart),
+        votes_end: toIsoOrNull(voteRunoffEnd),
+      });
       toast.success("2.ª volta criada para desempatar o vencedor.");
       refresh();
     } catch {
@@ -371,6 +427,10 @@ export default function CategoryRow({
       );
       return;
     }
+    if (!isValidWindow(editVotesStart, editVotesEnd)) {
+      toast.error("O início da votação deve ser anterior ao fim.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -381,6 +441,10 @@ export default function CategoryRow({
         max_nominees: editMaxNominees,
         options: editOptions.map((o) => o.trim()),
         reveal_at: editRevealAt ? new Date(editRevealAt).toISOString() : null,
+        votes_start: editVotesStart
+          ? new Date(editVotesStart).toISOString()
+          : null,
+        votes_end: editVotesEnd ? new Date(editVotesEnd).toISOString() : null,
       });
       toast.success("Alterações guardadas com sucesso! ✨");
       setIsEditing(false);
@@ -520,6 +584,12 @@ export default function CategoryRow({
                     setEditMaxNominees(vote.max_nominees);
                     setEditOptions([...vote.options]);
                     setEditRevealAt(toLocalDatetimeString(vote.reveal_at));
+                    setEditVotesStart(
+                      toLocalDatetimeString(vote.votes_start || undefined),
+                    );
+                    setEditVotesEnd(
+                      toLocalDatetimeString(vote.votes_end || undefined),
+                    );
                     setIsEditing(true);
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
@@ -589,6 +659,30 @@ export default function CategoryRow({
                   type="datetime-local"
                   value={editRevealAt}
                   onChange={(e) => setEditRevealAt(e.target.value)}
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
+                />
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+                  Início Votação
+                </span>
+                <input
+                  type="datetime-local"
+                  value={editVotesStart}
+                  onChange={(e) => setEditVotesStart(e.target.value)}
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+                  Fim Votação
+                </span>
+                <input
+                  type="datetime-local"
+                  value={editVotesEnd}
+                  onChange={(e) => setEditVotesEnd(e.target.value)}
                   className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
                 />
               </label>
@@ -759,6 +853,30 @@ export default function CategoryRow({
                 {vote.options[index]}
               </span>
             ))}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+                Início do desempate
+              </span>
+              <input
+                type="datetime-local"
+                value={voteRunoffStart}
+                onChange={(e) => setVoteRunoffStart(e.target.value)}
+                className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+                Fim do desempate
+              </span>
+              <input
+                type="datetime-local"
+                value={voteRunoffEnd}
+                onChange={(e) => setVoteRunoffEnd(e.target.value)}
+                className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+              />
+            </label>
           </div>
           <button
             type="button"

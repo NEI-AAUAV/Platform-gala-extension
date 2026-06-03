@@ -51,6 +51,8 @@ type VoteCategoryCreate = {
   options: string[];
   photo_paths: string[];
   reveal_at?: string | null;
+  votes_start?: string | null;
+  votes_end?: string | null;
   is_hidden?: boolean;
 };
 
@@ -72,6 +74,8 @@ export type AdminVoteCategory = {
   photo_paths: string[];
   votes: { uid: number; option: number }[];
   reveal_at?: string;
+  votes_start?: string | null;
+  votes_end?: string | null;
   revealed?: boolean;
   is_hidden: boolean;
 };
@@ -84,6 +88,13 @@ export type MergeNomineesBody = {
 export type CreateRunoffBody = {
   nominee_names: string[];
   slots: number;
+  votes_start?: string | null;
+  votes_end?: string | null;
+};
+
+export type CreateVoteRunoffBody = {
+  votes_start?: string | null;
+  votes_end?: string | null;
 };
 
 export type ManagerPermissionKey =
@@ -394,10 +405,11 @@ const GalaService = {
     },
     createVoteRunoff: async (
       categoryId: number,
+      body: CreateVoteRunoffBody = {},
     ): Promise<AdminVoteCategory> => {
       return client.post(
         `/admin/voting/categories/${categoryId}/vote-runoff`,
-        {},
+        body,
       );
     },
     setResultsVisibility: async (visible: boolean): Promise<void> => {
