@@ -99,10 +99,10 @@ export default function VoteCard({
       )}
 
       {!vote.revealed && (
-        <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-light-gold/30 bg-black/30 py-8 px-4 text-center">
+        <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-light-gold/30 bg-black/30 px-4 py-8 text-center">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-light-gold opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-light-gold" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-light-gold opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-light-gold" />
           </span>
           <p className="mt-3 font-gala text-sm font-semibold text-light-gold">
             A Revelar em Breve...
