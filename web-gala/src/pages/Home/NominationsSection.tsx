@@ -4,7 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import useVotes from "@/hooks/voteHooks/useVotes";
 import type { NominationsDisplayConfig } from "@/hooks/useHomepageConfig";
 import config from "@/config";
-import { getRandomizedVoteOptions } from "@/utils/randomizeVoteOptions";
+import {
+  getRandomizedVoteOptions,
+  type RandomizedVoteOption,
+} from "@/utils/randomizeVoteOptions";
 
 interface Props {
   readonly nominationsConfig: NominationsDisplayConfig;
@@ -15,6 +18,24 @@ const getPhotoUrl = (photo_path: string | undefined | null) => {
   return photo_path.startsWith("http")
     ? photo_path
     : `${config.BASE_URL}/gala/categories/${photo_path}`;
+};
+
+const getVisibleWinners = (vote: Vote) => {
+  if (!vote.results_visible || vote.scores.length === 0) return [];
+
+  const totalVotes = vote.scores.reduce((total, score) => total + score, 0);
+  const topScore = Math.max(...vote.scores);
+  if (totalVotes === 0 || topScore === 0) return [];
+
+  return vote.options
+    .map((name, index) => ({
+      name,
+      index,
+      score: vote.scores[index] ?? 0,
+      percentage: Math.round(((vote.scores[index] ?? 0) / totalVotes) * 100),
+      photoPath: vote.photo_paths[index],
+    }))
+    .filter((candidate) => candidate.score === topScore);
 };
 
 export default function NominationsSection({ nominationsConfig }: Props) {
@@ -75,6 +96,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
   if (votes.length === 0) return null;
 
   const anyVotingOpen = votes.some((v) => v.voting_open);
+  const activeWinners = getVisibleWinners(votes[active]);
 
   return (
     <div className="px-4 flex flex-col items-center gap-6">
@@ -91,6 +113,18 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
             <h3 className="font-gala text-[2rem] font-black leading-tight text-white sm:text-[3rem]">
               {votes[active].category}
             </h3>
+            {activeWinners.length > 0 && (
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {activeWinners.map((winner) => (
+                  <span
+                    key={`${votes[active]._id}-${winner.index}`}
+                    className="rounded-full border border-light-gold/40 bg-light-gold/10 px-4 py-2 font-gala text-sm font-bold uppercase tracking-wider text-light-gold"
+                  >
+                    Vencedor: {winner.name} · {winner.percentage}%
+                  </span>
+                ))}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -112,6 +146,46 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
   );
 }
 
+function NomineeButton({
+  nominee,
+  isActive,
+  isWinner,
+  index,
+  onClick,
+}: Readonly<{
+  nominee: RandomizedVoteOption;
+  isActive: boolean;
+  isWinner: boolean;
+  index: number;
+  onClick: () => void;
+}>) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      layout
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: index * 0.04 }}
+      className={[
+        "relative block text-left font-gala text-[2.5rem] font-semibold leading-[1.05] transition-all duration-300 sm:text-3xl lg:text-4xl",
+        isActive || isWinner
+          ? "translate-x-3 text-light-gold drop-shadow-[0_0_18px_rgba(209,176,93,0.35)]"
+          : "text-white/70 hover:translate-x-1 hover:text-white",
+      ].join(" ")}
+    >
+      <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+        {nominee.name}
+        {isWinner && (
+          <span className="rounded-full border border-light-gold/35 bg-black/35 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-light-gold">
+            Vencedor
+          </span>
+        )}
+      </span>
+    </motion.button>
+  );
+}
+
 function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
   const [activeCategoryIdx, setActiveCategoryIdx] = useState(0);
   const [activeNomineeIdx, setActiveNomineeIdx] = useState(0);
@@ -120,16 +194,24 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
   const touchStartX = useRef<number | null>(null);
   const randomizedVotes = useMemo(
     () =>
-      votes.map((vote) => ({
-        vote,
-        nominees: getRandomizedVoteOptions(vote),
-      })),
+      votes.map((vote) => {
+        const winners = getVisibleWinners(vote);
+        const nominees = getRandomizedVoteOptions(vote);
+        return {
+          vote,
+          nominees,
+          winners,
+          winnerIndexes: new Set(winners.map((winner) => winner.index)),
+        };
+      }),
     [votes],
   );
 
   const activeCategoryGroup = randomizedVotes[activeCategoryIdx];
   const activeCategory = activeCategoryGroup?.vote;
   const nominees = activeCategoryGroup?.nominees ?? [];
+  const winners = activeCategoryGroup?.winners ?? [];
+  const winnerIndexes = activeCategoryGroup?.winnerIndexes ?? new Set<number>();
 
   const currentPhoto = useMemo(
     () => getPhotoUrl(nominees[activeNomineeIdx]?.photoPath),
@@ -274,27 +356,31 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
                     {activeCategory.description}
                   </p>
                 )}
+                {winners.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {winners.map((winner) => (
+                      <span
+                        key={`${activeCategory._id}-winner-${winner.index}`}
+                        className="rounded-full border border-light-gold/40 bg-light-gold/10 px-3 py-1.5 font-gala text-[0.7rem] font-bold uppercase tracking-wider text-light-gold"
+                      >
+                        Vencedor: {winner.name} · {winner.percentage}% ·{" "}
+                        {winner.score} {winner.score === 1 ? "voto" : "votos"}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="z-20 mt-8 max-w-2xl space-y-2.5 lg:mt-10">
                 {nominees.map((nominee, i) => (
-                  <motion.button
+                  <NomineeButton
                     key={`${nominee.name}-${nominee.originalIndex}`}
-                    type="button"
+                    nominee={nominee}
+                    isActive={i === activeNomineeIdx}
+                    isWinner={winnerIndexes.has(nominee.originalIndex)}
+                    index={i}
                     onClick={() => goToNominee(i)}
-                    layout
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: i * 0.04 }}
-                    className={[
-                      "relative block text-left font-gala text-[2.5rem] font-semibold leading-[1.05] transition-all duration-300 sm:text-3xl lg:text-4xl",
-                      i === activeNomineeIdx
-                        ? "translate-x-3 text-light-gold drop-shadow-[0_0_18px_rgba(209,176,93,0.35)]"
-                        : "text-white/70 hover:translate-x-1 hover:text-white",
-                    ].join(" ")}
-                  >
-                    {nominee.name}
-                  </motion.button>
+                  />
                 ))}
               </div>
             </div>
