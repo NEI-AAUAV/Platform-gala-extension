@@ -79,3 +79,47 @@ def test_is_voting_open_uses_category_specific_window(monkeypatch):
 
     assert _utils.is_voting_open(ts, category) is True
     assert _utils.is_voting_open(ts) is False
+
+
+def test_anonymize_category_ignores_invalid_stored_vote_options():
+    from app.api.auth import AuthData
+    from app.api.vote._utils import anonymize_category
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime.now(timezone.utc)
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=1),
+        nominationsEnd=now + timedelta(days=1),
+        votesStart=now - timedelta(days=1),
+        votesEnd=now + timedelta(days=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(
+        _id=1,
+        category="Best Person",
+        options=["A", "B"],
+        votes=[
+            {"uid": 1, "option": 0},
+            {"uid": 2, "option": 5},
+            {"uid": 3, "option": -1},
+        ],
+        results_visible=True,
+    )
+    auth = AuthData(
+        sub=1,
+        nmec=None,
+        name="Alice",
+        email="alice@example.com",
+        surname="Example",
+        scopes=[],
+    )
+
+    listing = anonymize_category(category, auth, ts, results_visible=True)
+
+    assert listing.scores == [1, 0]
