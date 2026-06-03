@@ -11,6 +11,10 @@ def _nominee(name, votes):
     return {"name": name, "votes": votes}
 
 
+def _vote(uid, option):
+    return {"uid": uid, "option": option}
+
+
 def _category_doc(**kwargs):
     base = {
         "_id": 1,
@@ -34,6 +38,7 @@ def _make_db(finds=()):
     elif len(finds) > 1:
         coll.find_one.side_effect = list(finds)
     coll.update_one.return_value = MagicMock()
+    coll.insert_one.return_value = MagicMock()
     db = MagicMock()
     db.__getitem__ = MagicMock(return_value=coll)
     return db, coll
@@ -158,6 +163,48 @@ async def test_finalize_nominations_takes_all_when_fewer_than_4():
 
 
 @pytest.mark.asyncio
+async def test_finalize_nominations_accepts_admin_selected_names():
+    from app.services.admin_vote import AdminVoteService
+
+    nominations = [
+        _nominee("Alice", [1, 2, 3]),
+        _nominee("Bob", [4, 5]),
+        _nominee("Carol", [6, 7]),
+        _nominee("Dave", [8, 9]),
+        _nominee("Eve", [10, 11]),
+    ]
+    doc = _category_doc(nominations=nominations)
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.finalize_nominations(
+        db,
+        1,
+        selected_names=["Alice", "Bob", "Dave", "Eve"],
+    )
+
+    assert result is True
+    update = coll.update_one.call_args[0][1]["$set"]
+    assert update["options"] == ["Alice", "Bob", "Dave", "Eve"]
+
+
+@pytest.mark.asyncio
+async def test_finalize_nominations_rejects_unknown_selected_names():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(nominations=[_nominee("Alice", [1])])
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.finalize_nominations(
+        db,
+        1,
+        selected_names=["Alice", "Mallory"],
+    )
+
+    assert result is False
+    coll.update_one.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_finalize_nominations_returns_false_when_category_missing():
     from app.services.admin_vote import AdminVoteService
 
@@ -167,3 +214,106 @@ async def test_finalize_nominations_returns_false_when_category_missing():
 
     assert result is False
     coll.update_one.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# create_runoff_category
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_create_runoff_category_for_three_tied_nominees_two_slots(monkeypatch):
+    from app.services import admin_vote
+    from app.services.admin_vote import AdminVoteService
+
+    nominations = [
+        _nominee("Alice", [1, 2, 3]),
+        _nominee("Bob", [4, 5, 6]),
+        _nominee("Carol", [7, 8]),
+        _nominee("Dave", [9, 10]),
+        _nominee("Eve", [11, 12]),
+    ]
+    doc = _category_doc(category="Melhor Traje", nominations=nominations)
+    db, coll = _make_db(finds=(doc,))
+    monkeypatch.setattr(admin_vote, "get_next_vote_category_id", AsyncMock(return_value=42))
+
+    result = await AdminVoteService.create_runoff_category(
+        db,
+        1,
+        nominee_names=["Carol", "Dave", "Eve"],
+        slots=2,
+    )
+
+    assert result is not None
+    assert result.id == 42
+    assert result.category == "Desempate - Melhor Traje"
+    assert result.options == ["Carol", "Dave", "Eve"]
+    assert result.photo_paths == ["", "", ""]
+    coll.insert_one.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_runoff_category_rejects_invalid_slot_count():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(nominations=[_nominee("Alice", [1]), _nominee("Bob", [2])])
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.create_runoff_category(
+        db,
+        1,
+        nominee_names=["Alice", "Bob"],
+        slots=2,
+    )
+
+    assert result is None
+    coll.insert_one.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# create_vote_runoff_category
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_create_vote_runoff_category_for_tied_winners(monkeypatch):
+    from app.services import admin_vote
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(
+        category="Melhor Momento",
+        options=["Alice", "Bob", "Carol"],
+        photo_paths=["alice.jpg", "bob.jpg", "carol.jpg"],
+        votes=[
+            _vote(1, 0),
+            _vote(2, 0),
+            _vote(3, 1),
+            _vote(4, 1),
+            _vote(5, 2),
+        ],
+    )
+    db, coll = _make_db(finds=(doc,))
+    monkeypatch.setattr(admin_vote, "get_next_vote_category_id", AsyncMock(return_value=43))
+
+    result = await AdminVoteService.create_vote_runoff_category(db, 1)
+
+    assert result is not None
+    assert result.id == 43
+    assert result.category == "Desempate - Melhor Momento"
+    assert result.options == ["Alice", "Bob"]
+    assert result.photo_paths == ["alice.jpg", "bob.jpg"]
+    coll.insert_one.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_vote_runoff_category_rejects_clear_winner():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(
+        options=["Alice", "Bob"],
+        votes=[_vote(1, 0), _vote(2, 0), _vote(3, 1)],
+    )
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.create_vote_runoff_category(db, 1)
+
+    assert result is None
+    coll.insert_one.assert_not_called()
