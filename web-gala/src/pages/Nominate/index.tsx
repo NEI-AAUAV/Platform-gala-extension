@@ -36,7 +36,7 @@ function NominateContent({
   if (!isRegistered) {
     return (
       <p className="col-span-full border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm text-white/50">
-        Tens de estar inscrito no Gala para participar nas nomeações.
+        Tens de estar inscrito na Gala para participar nas nomeações.
       </p>
     );
   }
