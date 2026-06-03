@@ -17,12 +17,7 @@ async def _user_dish(user: User, db: DBType) -> DishType:
         config = await ConfigService.get_config(db)
         for meal in config.meals:
             if meal.id == user.meal_option:
-                dish_map = {
-                    "FISH": DishType.FISH,
-                    "VEG": DishType.VEGETARIAN,
-                    "VEGAN": DishType.VEGAN,
-                }
-                return dish_map.get(meal.dish_type, DishType.NORMAL)
+                return meal.dish_type
     except Exception:
         pass
     return DishType.NORMAL
@@ -39,7 +34,7 @@ class TableService:
         if not user_dict:
             raise ValueError("User must complete registration before creating a table.")
         user = User.parse_obj(user_dict)
-        if user.table_id:
+        if user.table_id is not None:
             raise ValueError("You are already in a table.")
 
         # 2. Upload photo if provided
@@ -88,16 +83,15 @@ class TableService:
         if not user_dict:
             raise ValueError("User must complete registration before joining a table.")
         user = User.parse_obj(user_dict)
-        if user.table_id:
+        if user.table_id is not None:
             raise ValueError("You are already in a table.")
 
         query = {}
-        if table_id and token:
-            # Both provided: validate that the token matches the table
+        if table_id is not None and token is not None:
             query = {"_id": table_id, "invite_token": token}
-        elif table_id:
+        elif table_id is not None:
             query = {"_id": table_id}
-        elif token:
+        elif token is not None:
             query = {"invite_token": token}
         else:
             raise ValueError("Specify table_id or token.")
@@ -309,6 +303,17 @@ class TableService:
         await Table.get_collection(db).update_one(
             {"_id": user.table_id, "persons.id": user_id},
             {"$set": {"persons.$.dish": dish.value}},
+        )
+
+    @staticmethod
+    async def sync_user_allergies(db: DBType, user_id: int) -> None:
+        user_dict = await User.get_collection(db).find_one({"_id": user_id})
+        if not user_dict or not user_dict.get("table_id"):
+            return
+        allergies = user_dict.get("food_allergies") or ""
+        await Table.get_collection(db).update_one(
+            {"_id": user_dict["table_id"], "persons.id": user_id},
+            {"$set": {"persons.$.allergies": allergies}},
         )
 
     @staticmethod

@@ -27,6 +27,10 @@ export default function RegistrantsAdmin() {
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
   const [tableFilter, setTableFilter] = useState<TableFilter>("all");
+  const [sortField, setSortField] = useState<"id" | "name" | "nmec" | "year">(
+    "id",
+  );
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [autoStrategy, setAutoStrategy] = useState<"year" | "order">("year");
   const [assigning, setAssigning] = useState(false);
@@ -114,13 +118,40 @@ export default function RegistrantsAdmin() {
       return true;
     };
 
-    return users.filter((u) => {
+    const result = users.filter((u) => {
       if (search && !matchesSearch(u, search)) return false;
       if (!matchesPayment(u, paymentFilter)) return false;
       if (!matchesTable(u, tableFilter)) return false;
       return true;
     });
-  }, [users, search, paymentFilter, tableFilter]);
+
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "id") {
+        const ta = a.registered_at
+          ? new Date(a.registered_at).getTime()
+          : a._id;
+        const tb = b.registered_at
+          ? new Date(b.registered_at).getTime()
+          : b._id;
+        cmp = ta - tb;
+      } else if (sortField === "nmec") cmp = a.nmec - b.nmec;
+      else if (sortField === "name") cmp = a.name.localeCompare(b.name);
+      else if (sortField === "year")
+        cmp = (a.matriculation ?? 0) - (b.matriculation ?? 0);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return result;
+  }, [users, search, paymentFilter, tableFilter, sortField, sortDir]);
+
+  const toggleSort = (field: "id" | "name" | "nmec" | "year") => {
+    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
 
   const openDetail = (user: User) => {
     setSelectedUser(user);
@@ -341,7 +372,11 @@ export default function RegistrantsAdmin() {
         filtered={filtered}
         tables={tables}
         buses={buses}
+        mealOptions={regConfig.mealOptions}
         openDetail={openDetail}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={toggleSort}
       />
 
       {filtered.length < users.length && (

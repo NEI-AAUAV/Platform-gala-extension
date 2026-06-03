@@ -1,4 +1,3 @@
-import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEye,
@@ -9,29 +8,26 @@ import {
   faCircleHalfStroke,
   faTriangleExclamation,
   faGhost,
+  faSort,
+  faSortUp,
+  faSortDown,
 } from "@fortawesome/free-solid-svg-icons";
-import { FrangoIcon } from "@/assets/icons";
+import type { MealOption } from "@/config/registrationConfig";
+import { getMealDishType } from "@/utils/mealOption";
+import { iconMap, red } from "@/components/TableModal/personUtils";
 
-const orange = { color: "#DD8500" };
-const green = { color: "#198754" };
-const red = { color: "#DC3545" };
-
-const dishIcon = new Map<string, React.ReactNode>([
-  ["NOR", <FrangoIcon key="NOR" style={orange} />],
-  [
-    "VEG",
-    <span key="VEG" style={green}>
-      🥬
-    </span>,
-  ],
-]);
+type SortField = "id" | "name" | "nmec" | "year";
 
 interface RegistrantsTableProps {
   readonly loading: boolean;
   readonly filtered: User[];
   readonly tables: Table[];
   readonly buses: { id: string; name: string; capacity: number }[];
+  readonly mealOptions: MealOption[];
   readonly openDetail: (user: User) => void;
+  readonly sortField: SortField;
+  readonly sortDir: "asc" | "desc";
+  readonly onSort: (field: SortField) => void;
 }
 
 export default function RegistrantsTable({
@@ -39,30 +35,77 @@ export default function RegistrantsTable({
   filtered,
   tables,
   buses,
+  mealOptions,
   openDetail,
+  sortField,
+  sortDir,
+  onSort,
 }: RegistrantsTableProps) {
+  const sortIcon = (field: SortField) => {
+    if (sortField !== field)
+      return <FontAwesomeIcon icon={faSort} className="opacity-30" />;
+    return (
+      <FontAwesomeIcon
+        icon={sortDir === "asc" ? faSortUp : faSortDown}
+        className="text-light-gold/70"
+      />
+    );
+  };
+
   return (
     <div className="overflow-x-auto border border-light-gold/20">
       <table className="w-full text-left text-sm">
         <thead className="border-light-gold/15 border-b">
           <tr>
-            {[
-              "NMec",
-              "Nome",
-              "Matrícula",
-              "Prato",
-              "Autocarro",
-              "Mesa",
-              "Pagamento",
-              "",
-            ].map((h) => (
-              <th
-                key={h}
-                className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25"
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              <button
+                type="button"
+                onClick={() => onSort("nmec")}
+                className="flex items-center gap-1.5 hover:text-white/50"
               >
-                {h}
-              </th>
-            ))}
+                NMec {sortIcon("nmec")}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              <button
+                type="button"
+                onClick={() => onSort("name")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
+                Nome {sortIcon("name")}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              <button
+                type="button"
+                onClick={() => onSort("year")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
+                Matrícula {sortIcon("year")}
+              </button>
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Prato
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Autocarro
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Mesa
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              Pagamento
+            </th>
+            <th className="px-4 py-3 text-[0.58rem] font-bold uppercase tracking-widest text-white/25">
+              <button
+                type="button"
+                onClick={() => onSort("id")}
+                className="flex items-center gap-1.5 hover:text-white/50"
+              >
+                Registo {sortIcon("id")}
+              </button>
+            </th>
+            <th className="px-4 py-3" aria-label="Ações" />
           </tr>
         </thead>
         <tbody className="divide-white/4 divide-y">
@@ -71,7 +114,7 @@ export default function RegistrantsTable({
               return (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-sm text-white/25"
                   >
                     A carregar...
@@ -83,7 +126,7 @@ export default function RegistrantsTable({
               return (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-sm text-white/25"
                   >
                     Nenhum inscrito encontrado.
@@ -140,7 +183,9 @@ export default function RegistrantsTable({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {dishIcon.get(user.meal_option ?? "")}
+                      {iconMap.get(
+                        getMealDishType(user.meal_option, mealOptions) ?? "",
+                      ) ?? null}
                       {user.food_allergies && (
                         <FontAwesomeIcon
                           icon={faHandDots}
@@ -211,6 +256,9 @@ export default function RegistrantsTable({
                         </span>
                       );
                     })()}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-white/30">
+                    #{user._id}
                   </td>
                   <td className="px-4 py-3">
                     <button

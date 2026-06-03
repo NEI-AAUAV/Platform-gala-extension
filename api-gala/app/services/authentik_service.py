@@ -173,9 +173,11 @@ async def sync_email_based_registrations(db, authentik_user_id: int, email: str)
     email_normalized = email.strip()
     email_lower = email_normalized.lower()
 
-    # Case 1: admin created a registration with this email (no real account)
+    # Case 1: admin created a registration for this email stored under a different _id
+    # (either a scratch-created phantom with admin_created=True, or an Authentik-PK-keyed
+    # doc where the Authentik PK differs from the platform user ID in the JWT sub).
     phantom = await user_coll.find_one(
-        {"email": email_lower, "admin_created": True, "is_registered": True}
+        {"email": email_lower, "is_registered": True, "_id": {"$ne": authentik_user_id}}
     )
     if phantom:
         phantom_id = phantom["_id"]

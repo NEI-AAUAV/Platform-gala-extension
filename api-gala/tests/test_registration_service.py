@@ -160,6 +160,40 @@ async def test_payment_review_state_review_phase2():
 
 
 # ---------------------------------------------------------------------------
+# upload_payment_proof
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_upload_payment_proof_reactivates_registration_while_reviewing():
+    from app.services.registration import RegistrationService
+
+    db, user_coll = _make_db()
+
+    with patch("app.services.registration.storage_client.upload_image", return_value="https://proof"):
+        url = await RegistrationService.upload_payment_proof(
+            db,
+            user_id=1,
+            file_data=b"proof",
+            content_type="application/pdf",
+            phase=1,
+        )
+
+    assert url == "https://proof"
+    user_coll.update_one.assert_awaited_once_with(
+        {"_id": 1},
+        {
+            "$set": {
+                "payment_proof_url": "https://proof",
+                "payment_phase1_confirmed": False,
+                "payment_expired": False,
+                "registration_active": True,
+            }
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
 # _handle_step_5 - table selection logic
 # ---------------------------------------------------------------------------
 
@@ -274,10 +308,11 @@ async def test_update_step_2_syncs_companions():
     updated_doc = _user_doc(registration_step=2)
     db, _ = _make_db(user_doc, updated_doc)
     companions = [{"name": "Alice", "dish": "NOR", "allergies": ""}]
-    normalized = [{"name": "Alice", "dish": "NOR", "allergies": "", "email": None}]
+    normalized = [{"name": "Alice", "dish": "meat", "allergies": "", "email": None}]
 
+    meat_meal = MagicMock(id="meat", dish_type="NOR", is_active=True)
     with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
-         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[])):
+         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[meat_meal])):
         await RegistrationService.update_step(db, user_id=1, step=2, data={"companions": companions})
         mock_sync.assert_awaited_once_with(db, 1, normalized)
 
@@ -290,11 +325,13 @@ async def test_update_step_3_syncs_companions():
     updated_doc = _user_doc(registration_step=3)
     db, _ = _make_db(user_doc, updated_doc)
     companions = [{"name": "Bob", "dish": "VEG", "allergies": "gluten"}]
-    normalized = [{"name": "Bob", "dish": "VEG", "allergies": "gluten", "email": None}]
+    normalized = [{"name": "Bob", "dish": "veg", "allergies": "gluten", "email": None}]
 
+    veg_meal = MagicMock(id="veg", dish_type="VEG", is_active=True)
     with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
          patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock), \
-         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[])):
+         patch("app.services.registration.TableService.sync_user_allergies", new_callable=AsyncMock), \
+         patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=MagicMock(meals=[veg_meal])):
         await RegistrationService.update_step(db, user_id=1, step=3, data={"companions": companions})
         mock_sync.assert_awaited_once_with(db, 1, normalized)
 
@@ -308,7 +345,8 @@ async def test_update_step_no_sync_without_companions_key():
     db, _ = _make_db(user_doc, updated_doc)
 
     with patch("app.services.registration.TableService.sync_companions", new_callable=AsyncMock) as mock_sync, \
-         patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock):
+         patch("app.services.registration.TableService.sync_user_dish", new_callable=AsyncMock), \
+         patch("app.services.registration.TableService.sync_user_allergies", new_callable=AsyncMock):
         # no "companions" key in data → sync_companions must not be called (no config fetch either)
         await RegistrationService.update_step(db, user_id=1, step=3, data={"bus_option": "ROUND_TRIP"})
         mock_sync.assert_not_awaited()
@@ -334,3 +372,215 @@ async def test_update_step_6_marks_registered():
     await RegistrationService.update_step(db, user_id=1, step=6, data={})
     update_call = user_coll.update_one.call_args
     assert update_call[0][1]["$set"].get("is_registered") is True
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_expired_deadline():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    # Reset the last run global variable to bypass TTL
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    # Setup mock config
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-05-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-05-20",
+        )
+    )
+
+    # Mock DB and collection
+    user_coll = AsyncMock()
+    user_coll.update_many.return_value = MagicMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=True) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        # ConfigService.get_config should be called
+        # is_deadline_passed should be called for each deadline
+        # user_coll.update_many should be called for expired deadlines
+        assert mock_passed.call_count == 3
+        assert user_coll.update_many.call_count == 3
+
+        full_payment_filter, full_payment_update = user_coll.update_many.call_args_list[0].args
+        phase1_filter, phase1_update = user_coll.update_many.call_args_list[1].args
+        phase2_filter, phase2_update = user_coll.update_many.call_args_list[2].args
+
+        expected_update = {"$set": {"registration_active": False, "payment_expired": True}}
+        assert full_payment_update == expected_update
+        assert phase1_update == expected_update
+        assert phase2_update == expected_update
+
+        assert full_payment_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": {"$ne": True},
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert phase1_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert phase2_filter == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url_phase2": None},
+                {"payment_proof_url_phase2": {"$exists": False}},
+            ],
+        }
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_no_deadline_passed():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-06-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-06-10",
+            phase2_deadline="2026-06-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=False) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        assert mock_passed.call_count == 3
+        user_coll.update_many.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_keeps_pending_proofs_active():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-05-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-05-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", return_value=True):
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        for call in user_coll.update_many.call_args_list:
+            filter_doc = call.args[0]
+            assert {"payment_proof_url": {"$ne": None}} not in filter_doc.get("$or", [])
+            assert {"payment_proof_url_phase2": {"$ne": None}} not in filter_doc.get("$or", [])
+            assert filter_doc["has_payed"] == {"$ne": True}
+
+
+@pytest.mark.asyncio
+async def test_apply_payment_deadline_policy_only_expires_phase1_when_only_phase1_deadline_passed():
+    from app.services.registration import RegistrationService
+    from app.models.config import GlobalConfig, PriceConfig
+
+    import app.services.registration
+    app.services.registration._deadline_policy_last_run = None
+
+    mock_config = GlobalConfig(
+        payment_deadline_date="2026-06-15",
+        prices=PriceConfig(
+            phase1_deadline="2026-05-10",
+            phase2_deadline="2026-06-20",
+        )
+    )
+
+    user_coll = AsyncMock()
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    with patch("app.services.registration.ConfigService.get_config", new_callable=AsyncMock, return_value=mock_config), \
+         patch("app.services.registration.is_deadline_passed", side_effect=[False, True, False]) as mock_passed:
+
+        await RegistrationService.apply_payment_deadline_policy(db)
+
+        assert mock_passed.call_count == 3
+        user_coll.update_many.assert_called_once()
+        filter_doc, update_doc = user_coll.update_many.call_args.args
+        assert filter_doc == {
+            "is_registered": True,
+            "registration_active": {"$ne": False},
+            "has_payed": {"$ne": True},
+            "phased_payment": True,
+            "$or": [
+                {"payment_proof_url": None},
+                {"payment_proof_url": {"$exists": False}},
+            ],
+        }
+        assert update_doc == {"$set": {"registration_active": False, "payment_expired": True}}
+
+
+@pytest.mark.asyncio
+async def test_count_registered_attendees_includes_inactive_payment_expired_users():
+    from app.services.registration import RegistrationService
+
+    aggregate_result = [
+        {
+            "_id": None,
+            "registrations": 1,
+            "companions": 2,
+        }
+    ]
+    aggregate_cursor = MagicMock()
+    aggregate_cursor.to_list = AsyncMock(return_value=aggregate_result)
+
+    user_coll = MagicMock()
+    user_coll.aggregate.return_value = aggregate_cursor
+    db = MagicMock()
+    db.__getitem__ = MagicMock(return_value=user_coll)
+
+    count = await RegistrationService.count_registered_attendees(db)
+
+    assert count == 3
+    user_coll.aggregate.assert_called_once_with([
+        {"$match": {"is_registered": True}},
+        {
+            "$group": {
+                "_id": None,
+                "registrations": {"$sum": 1},
+                "companions": {"$sum": {"$size": {"$ifNull": ["$companions", []]}}},
+            }
+        },
+    ])

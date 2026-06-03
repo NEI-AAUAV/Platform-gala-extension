@@ -9,6 +9,7 @@ import type { RegistrationConfig } from "@/config/registrationConfig";
 import type { PaymentInfoConfig } from "@/hooks/useHomepageConfig";
 import useTime from "@/hooks/timeHooks/useTime";
 import { formatDateTimePT } from "@/utils/formatDate";
+import { formatPaymentDeadline } from "@/utils/paymentDeadline";
 
 interface Props {
   readonly paymentInfoConfig: PaymentInfoConfig;
@@ -139,7 +140,10 @@ function PriceCard({
       </p>
       {deadline && deadline !== "A anunciar" && (
         <p className="mt-4 font-gala text-xs text-white/40">
-          Até <span className="text-white/65">{deadline}</span>
+          Até{" "}
+          <span className="text-white/65">
+            {formatPaymentDeadline(deadline)}
+          </span>
         </p>
       )}
     </motion.div>
@@ -174,7 +178,7 @@ function DeadlineCard({
         <InfoLine label="Fecho das inscrições" value={registrationCloseDate} />
         <InfoLine
           label="Pagamento até"
-          value={registrationConfig.paymentDeadlineDate}
+          value={formatPaymentDeadline(registrationConfig.paymentDeadlineDate)}
         />
       </div>
     </motion.div>

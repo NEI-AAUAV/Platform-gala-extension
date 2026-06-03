@@ -34,7 +34,7 @@ const defaultData: WizardData = {
   nmec: "",
   phone: "",
   year: null,
-  bus: "round_trip",
+  bus: "none",
   meal: "",
   allergies: "",
   companions: [],

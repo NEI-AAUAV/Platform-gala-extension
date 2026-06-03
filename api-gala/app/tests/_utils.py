@@ -2,6 +2,7 @@ from datetime import MAXYEAR, datetime
 from typing import List
 from app.models.time_slots import TIME_SLOTS_ID, TimeSlots
 
+from app.models.table import Companion
 from app.models.user import User
 from app.core.db.types import DBType
 from app.api.auth import AuthData, ScopeEnum
@@ -20,10 +21,17 @@ async def create_test_user(*, id: int, db: DBType) -> None:
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
 
 
-async def create_registered_test_user(*, id: int, db: DBType) -> None:
+async def create_registered_test_user(
+    *, id: int, db: DBType, companions: List[Companion] = []
+) -> None:
     test_user = User(
-        _id=id, matriculation=None, nmec=1, email=_TEST_EMAIL, name="J",
+        _id=id,
+        matriculation=None,
+        nmec=1,
+        email=_TEST_EMAIL,
+        name="J",
         is_registered=True,
+        companions=companions,
     )
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
 

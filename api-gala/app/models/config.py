@@ -1,9 +1,27 @@
+from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from app.models import BaseDocument
 
 
 CONFIG_ID = "GLOBAL_CONFIG"
+
+
+class DishType(str, Enum):
+    NORMAL = "NOR"
+    FISH = "FISH"
+    VEGETARIAN = "VEG"
+    VEGAN = "VEGAN"
+
+    @classmethod
+    def _missing_(cls, value):
+        upper = str(value).strip().upper()
+        _aliases = {
+            "NORMAL": cls.NORMAL, "CARNE": cls.NORMAL, "MEAT": cls.NORMAL,
+            "PEIXE": cls.FISH,
+            "VEG": cls.VEGETARIAN, "VEGETARIAN": cls.VEGETARIAN, "VEGETARIANO": cls.VEGETARIAN,
+        }
+        return _aliases.get(upper)
 
 
 class MealOption(BaseModel):
@@ -11,7 +29,18 @@ class MealOption(BaseModel):
     name: str
     description: str
     is_active: bool = True
-    dish_type: str = "NOR"
+    dish_type: DishType = DishType.NORMAL
+
+    @validator("dish_type", pre=True)
+    def coerce_dish_type(cls, v):
+        if isinstance(v, DishType):
+            return v
+        if isinstance(v, str):
+            try:
+                return DishType(v.strip())
+            except ValueError:
+                return DishType.NORMAL
+        return DishType.NORMAL
 
 
 class DJConfig(BaseModel):

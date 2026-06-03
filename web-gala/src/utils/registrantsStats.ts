@@ -1,21 +1,5 @@
 import type { MealOption } from "@/config/registrationConfig";
-
-const DISH_TYPE_LABELS: Record<string, string> = {
-  NOR: "Carne",
-  FISH: "Peixe",
-  VEG: "Vegetariano",
-  VEGAN: "Vegan",
-};
-
-function resolveMealLabel(raw: string, mealOptions: MealOption[]): string {
-  if (!raw || raw === "—") return "—";
-  const byId = mealOptions.find((m) => m.id === raw);
-  if (byId) return byId.label;
-  const upper = raw.toUpperCase();
-  const byDishType = mealOptions.find((m) => m.dishType === upper);
-  if (byDishType) return byDishType.label;
-  return DISH_TYPE_LABELS[upper] ?? raw;
-}
+import { getMealLabel } from "./mealOption";
 
 export interface RegistrantsStats {
   total: number;
@@ -44,16 +28,17 @@ export function computeStats(
     const yr = u.matriculation ? `${u.matriculation}º ano` : "Alumni";
     const companionCount = u.companions?.length ?? 0;
     byYear[yr] = (byYear[yr] ?? 0) + 1 + companionCount;
-    const meal = resolveMealLabel(u.meal_option ?? "—", mealOptions);
+
+    const meal = getMealLabel(u.meal_option, mealOptions);
     byMeal[meal] = (byMeal[meal] ?? 0) + 1;
+
     byBusOption[u.bus_option] = (byBusOption[u.bus_option] ?? 0) + 1;
     totalCompanions += companionCount;
 
     for (const c of u.companions ?? []) {
-      const companionMeal = resolveMealLabel(
+      const companionMeal = getMealLabel(
         (c as Companion & { meal?: string }).dish ||
-          (c as Companion & { meal?: string }).meal ||
-          "—",
+          (c as Companion & { meal?: string }).meal,
         mealOptions,
       );
       byMeal[companionMeal] = (byMeal[companionMeal] ?? 0) + 1;

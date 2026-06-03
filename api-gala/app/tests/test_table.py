@@ -6,7 +6,6 @@ from app.api.table.confirm import TableApprovalForm
 from app.api.table.create import TableCreateForm
 from app.api.table.edit import TableEditForm
 from app.api.table.merge import TableMergeForm
-from app.api.table.reserve import TableReservationForm
 from app.api.table.transfer import TableTransferForm
 
 from app.core.config import Settings
@@ -541,10 +540,7 @@ async def test_reserve_table_not_found(
 ) -> None:
     await mark_open_timeslot(db=db)
     await create_registered_test_user(id=0, db=db)
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/1/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/1/reserve")
     assert response.status_code == 404
 
 
@@ -561,10 +557,7 @@ async def test_reserve_table_empty(
     await create_registered_test_user(id=0, db=db)
     await Table.get_collection(db).insert_one(test_table.dict(by_alias=True))
 
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table.id}/reserve")
     assert response.status_code == 200
     table_res = Table(**response.json())
 
@@ -600,10 +593,7 @@ async def test_reserve_table_non_empty(
     ]
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
 
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table2.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table2.id}/reserve")
     assert response.status_code == 200
     table_res = Table(**response.json())
 
@@ -642,10 +632,7 @@ async def test_reserve_table_already_in_another_table(
     test_table3.id += 1
     await Table.get_collection(db).insert_one(test_table3.dict(by_alias=True))
 
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table3.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table3.id}/reserve")
     assert response.status_code == 409
 
     db_res = await Table.get_collection(db).find_one({"_id": test_table2.id})
@@ -669,18 +656,13 @@ async def test_reserve_table_full_companions(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_registered_test_user(id=0, db=db)
+    companions = [Companion(name="", email="", dish=DishType.NORMAL)]
+    await create_registered_test_user(id=0, db=db, companions=companions)
     test_table2 = test_table.copy()
     test_table2.seats = 2
     await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
 
-    companions = [
-        Companion(name="", email="", dish=DishType.NORMAL),
-    ]
-    form = TableReservationForm(dish=DishType.NORMAL, companions=companions)
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table2.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table2.id}/reserve")
     assert response.status_code == 200
     table_res = Table(**response.json())
 
@@ -708,19 +690,16 @@ async def test_reserve_table_too_many_companions(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
     await mark_open_timeslot(db=db)
-    await create_registered_test_user(id=0, db=db)
-    test_table2 = test_table.copy()
-    test_table2.seats = 2
-    await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
-
     companions = [
         Companion(name="", email="", dish=DishType.NORMAL),
         Companion(name="", email="", dish=DishType.NORMAL),
     ]
-    form = TableReservationForm(dish=DishType.NORMAL, companions=companions)
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table2.id}/reserve", json=form.dict()
-    )
+    await create_registered_test_user(id=0, db=db, companions=companions)
+    test_table2 = test_table.copy()
+    test_table2.seats = 2
+    await Table.get_collection(db).insert_one(test_table2.dict(by_alias=True))
+
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table2.id}/reserve")
     assert response.status_code == 400
 
     db_res = await Table.get_collection(db).find_one({"_id": test_table2.id})
@@ -741,10 +720,7 @@ async def test_reserve_table_no_user(
     await mark_open_timeslot(db=db)
     await Table.get_collection(db).insert_one(test_table.dict(by_alias=True))
 
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table.id}/reserve")
     assert response.status_code == 400
 
     db_res = await Table.get_collection(db).find_one({"_id": test_table.id})
@@ -766,10 +742,7 @@ async def test_reserve_table_time_slot_closed(
     await create_test_user(id=0, db=db)
     await Table.get_collection(db).insert_one(test_table.dict(by_alias=True))
 
-    form = TableReservationForm(dish=DishType.NORMAL, companions=[])
-    response = await client.post(
-        f"{settings.API_V1_STR}/table/{test_table.id}/reserve", json=form.dict()
-    )
+    response = await client.post(f"{settings.API_V1_STR}/table/{test_table.id}/reserve")
     assert response.status_code == 409
 
     db_res = await Table.get_collection(db).find_one({"_id": test_table.id})

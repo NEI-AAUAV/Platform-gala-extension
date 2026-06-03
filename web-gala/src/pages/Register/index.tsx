@@ -104,9 +104,7 @@ export default function Register() {
           });
         }
       })
-      .catch((err) => {
-        console.error("Failed to fetch registration status", err);
-      });
+      .catch(() => {});
   }, [sub]);
 
   if (!sessionLoading && sub === undefined) {
@@ -298,6 +296,7 @@ export default function Register() {
                   onNext={next}
                   onBack={back}
                   syncing={syncing}
+                  busRemaining={capacity?.bus_remaining ?? null}
                 />
               )}
               {currentStep === 4 && (

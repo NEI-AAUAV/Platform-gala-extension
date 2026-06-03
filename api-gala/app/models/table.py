@@ -1,41 +1,14 @@
-from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, PositiveInt, Field, validator
+from pydantic import BaseModel, PositiveInt, Field
 from app.models import BaseDocument
-
-
-class DishType(str, Enum):
-    NORMAL = "NOR"
-    FISH = "FISH"
-    VEGETARIAN = "VEG"
-    VEGAN = "VEGAN"
+from app.models.config import DishType
 
 
 class Companion(BaseModel):
     name: str
-    email: Optional[str] = None
-    dish: Optional[DishType] = None
+    email: str
+    dish: Optional[str] = None
     allergies: str = ""
-
-    @validator("dish", pre=True)
-    def normalize_dish(cls, value):
-        if value in (None, "", "NONE"):
-            return None
-        if isinstance(value, str):
-            normalized = value.strip().upper()
-            mapping = {
-                "NOR": DishType.NORMAL,
-                "NORMAL": DishType.NORMAL,
-                "CARNE": DishType.NORMAL,
-                "FISH": DishType.FISH,
-                "PEIXE": DishType.FISH,
-                "VEG": DishType.VEGETARIAN,
-                "VEGETARIAN": DishType.VEGETARIAN,
-                "VEGETARIANO": DishType.VEGETARIAN,
-                "VEGAN": DishType.VEGAN,
-            }
-            return mapping.get(normalized, None)
-        return value
 
 
 class TablePerson(BaseModel):

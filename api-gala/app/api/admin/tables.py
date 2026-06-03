@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
-from typing import Annotated, Any
+from typing import Annotated, Any, List
 
 from app.core.db.types import DBType
 from app.core.db import get_db
@@ -124,6 +124,153 @@ async def admin_move_member(
         return table
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+async def _prune_table(
+    table_doc: dict,
+    registered_ids: set,
+    user_coll: Any,
+    table_coll: Any,
+    removed: List[dict],
+    processed: set,
+) -> None:
+    table_id = table_doc["_id"]
+    orphans = [
+        p["id"]
+        for p in table_doc.get("persons", [])
+        if p.get("id") not in registered_ids
+    ]
+    if not orphans:
+        return
+
+    for orphan_id in orphans:
+        await table_coll.update_one({"_id": table_id}, {"$pull": {"persons": {"id": orphan_id}}})
+        await user_coll.update_one({"_id": orphan_id}, {"$unset": {"table_id": ""}})
+        removed.append({"user_id": orphan_id, "reason": "not_registered"})
+        processed.add(orphan_id)
+        logger.info("Pruned non-registered person {} from table {}", orphan_id, table_id)
+
+    updated = await table_coll.find_one({"_id": table_id})
+    if not updated:
+        return
+    remaining = updated.get("persons", [])
+    if not remaining:
+        await table_coll.delete_one({"_id": table_id})
+        return
+    confirmed_ids = [p["id"] for p in remaining if p.get("confirmed")]
+    current_head = updated.get("head")
+    fallback_head = confirmed_ids[0] if confirmed_ids else None
+    new_head = current_head if current_head in confirmed_ids else fallback_head
+    await table_coll.update_one({"_id": table_id}, {"$set": {"head": new_head}})
+
+
+@router.post(
+    "/prune",
+    responses={**auth_responses},
+    summary="Remove non-registered users from all tables",
+)
+async def admin_prune_tables(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+) -> Any:
+    """
+    Remove from all tables any person who is not registered (is_registered=False)
+    or whose user document no longer exists. Handles head transfers and deletes
+    tables that become empty as a result. Idempotent.
+    """
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
+
+    user_coll = User.get_collection(db)
+    table_coll = Table.get_collection(db)
+    removed: List[dict] = []
+    processed: set = set()
+
+    registered_ids = {
+        doc["_id"]
+        async for doc in user_coll.find({"is_registered": True}, {"_id": 1})
+    }
+
+    all_tables = await table_coll.find({}).to_list(length=None)
+    for table_doc in all_tables:
+        await _prune_table(table_doc, registered_ids, user_coll, table_coll, removed, processed)
+
+    # Clean up users with a stale table_id who were not in any persons array.
+    stale_users = await user_coll.find(
+        {"table_id": {"$exists": True}, "is_registered": {"$ne": True}}
+    ).to_list(length=None)
+    for user_doc in stale_users:
+        user_id = user_doc["_id"]
+        if user_id in processed:
+            continue
+        await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
+        removed.append({"user_id": user_id, "reason": "stale_table_id"})
+        logger.info("Cleared stale table_id for non-registered user {}", user_id)
+
+    return {"removed": removed, "count": len(removed)}
+
+
+@router.post(
+    "/repair",
+    responses={**auth_responses},
+    summary="Repair table/user membership inconsistencies",
+)
+async def admin_repair_tables(
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+) -> Any:
+    """
+    Fix two-way inconsistencies between user.table_id and table.persons[]:
+    - User is in table.persons but user.table_id is null or points elsewhere → fix user.table_id
+    - User.table_id is set but they're not in that table's persons → clear user.table_id
+    Idempotent. Returns a report of every change made.
+    """
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.TABLES)
+
+    user_coll = User.get_collection(db)
+    table_coll = Table.get_collection(db)
+    fixed: List[dict] = []
+
+    # Build ground truth: userId → tableId from all table.persons arrays
+    persons_table: dict = {}
+    async for table_doc in table_coll.find({}, {"_id": 1, "persons": 1}):
+        for person in table_doc.get("persons") or []:
+            pid = person.get("id")
+            if pid is not None:
+                persons_table[pid] = table_doc["_id"]
+
+    async for user_doc in user_coll.find({"is_registered": True}, {"_id": 1, "table_id": 1}):
+        user_id = user_doc["_id"]
+        stored_table_id = user_doc.get("table_id")
+        actual_table_id = persons_table.get(user_id)
+
+        if actual_table_id is not None and stored_table_id != actual_table_id:
+            # In a table's persons but user.table_id is wrong or null
+            await user_coll.update_one(
+                {"_id": user_id}, {"$set": {"table_id": actual_table_id}}
+            )
+            fixed.append({
+                "user_id": user_id,
+                "action": "set_table_id",
+                "from": stored_table_id,
+                "to": actual_table_id,
+            })
+            logger.info(
+                "Repaired user {} table_id {} → {}", user_id, stored_table_id, actual_table_id
+            )
+        elif actual_table_id is None and stored_table_id is not None:
+            # user.table_id is set but they're not in any table's persons
+            await user_coll.update_one({"_id": user_id}, {"$unset": {"table_id": ""}})
+            fixed.append({
+                "user_id": user_id,
+                "action": "clear_table_id",
+                "from": stored_table_id,
+                "to": None,
+            })
+            logger.info(
+                "Repaired user {} had stale table_id {}", user_id, stored_table_id
+            )
+
+    return {"fixed": fixed, "count": len(fixed)}
+
 
 @router.delete("/{table_id}/members/{user_id}", responses={**auth_responses, 400: {"description": "User is not in this table"}})
 async def admin_remove_member(

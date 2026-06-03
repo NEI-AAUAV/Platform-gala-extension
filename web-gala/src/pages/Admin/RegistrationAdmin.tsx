@@ -27,6 +27,10 @@ import {
   INPUT_CLS,
 } from "./components/AdminUI";
 import { utcIsoToLocalInput, localInputToUtcIso } from "@/utils/datetime";
+import {
+  deadlineToLocalInput,
+  localInputToDeadline,
+} from "@/utils/paymentDeadline";
 
 // ─── Types (local) - TimeSlots and User are global ambient types from .d.ts ──
 
@@ -480,11 +484,12 @@ export default function RegistrationAdmin() {
               </div>
             )}
 
-            <Field label="Data limite de pagamento (texto)">
-              <TextInput
-                value={config.paymentDeadlineDate}
-                onChange={(v) => save({ paymentDeadlineDate: v })}
-                placeholder="Ex: 16 de junho (15h)"
+            <Field label="Data limite de pagamento">
+              <DateTimeInput
+                value={deadlineToLocalInput(config.paymentDeadlineDate)}
+                onChange={(v) =>
+                  save({ paymentDeadlineDate: localInputToDeadline(v) })
+                }
               />
             </Field>
             <Field label="Email para comprovativo">
@@ -533,9 +538,11 @@ export default function RegistrationAdmin() {
                     />
                   </Field>
                   <Field label="Deadline Fase 1">
-                    <TextInput
-                      value={config.phase1Deadline}
-                      onChange={(v) => save({ phase1Deadline: v })}
+                    <DateTimeInput
+                      value={deadlineToLocalInput(config.phase1Deadline)}
+                      onChange={(v) =>
+                        save({ phase1Deadline: localInputToDeadline(v) })
+                      }
                     />
                   </Field>
                 </div>
@@ -550,9 +557,11 @@ export default function RegistrationAdmin() {
                     />
                   </Field>
                   <Field label="Deadline Fase 2">
-                    <TextInput
-                      value={config.phase2Deadline}
-                      onChange={(v) => save({ phase2Deadline: v })}
+                    <DateTimeInput
+                      value={deadlineToLocalInput(config.phase2Deadline)}
+                      onChange={(v) =>
+                        save({ phase2Deadline: localInputToDeadline(v) })
+                      }
                     />
                   </Field>
                 </div>

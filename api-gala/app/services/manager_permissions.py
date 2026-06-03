@@ -13,6 +13,16 @@ class ManagerPermissionsService:
     @staticmethod
     async def upsert_manager(db: DBType, auth: AuthData) -> None:
         coll = ManagerPermissions.get_collection(db)
+        # If no record exists at the platform user ID yet, check whether permissions were
+        # previously saved under a different ID (e.g., Authentik PK used by the admin editor
+        # before the user ever logged in). Migrate the record if found.
+        if not await coll.find_one({"_id": auth.sub}):
+            other = await coll.find_one({"email": auth.email, "_id": {"$ne": auth.sub}})
+            if other:
+                new_doc = {**other, "_id": auth.sub, "name": auth.name, "email": auth.email}
+                await coll.replace_one({"_id": auth.sub}, new_doc, upsert=True)
+                await coll.delete_one({"_id": other["_id"]})
+                return
         await coll.update_one(
             {"_id": auth.sub},
             {"$setOnInsert": {"permissions": []}, "$set": {"name": auth.name, "email": auth.email}},
@@ -57,16 +67,16 @@ class ManagerPermissionsService:
         coll = ManagerPermissions.get_collection(db)
         db_docs = await coll.find({}).to_list(length=200)
         db_by_id = {doc["_id"]: doc for doc in db_docs}
+        db_by_email = {doc["email"].lower(): doc for doc in db_docs if doc.get("email")}
 
         if not authentik_users:
             return [ManagerPermissions.parse_obj(d) for d in db_docs]
 
         return [
             ManagerPermissions.parse_obj(
-                db_by_id.get(
-                    user.pk,
-                    {"_id": user.pk, "name": user.name, "email": user.email, "permissions": []},
-                )
+                db_by_id.get(user.pk)
+                or db_by_email.get(user.email.lower())
+                or {"_id": user.pk, "name": user.name, "email": user.email, "permissions": []}
             )
             for user in authentik_users
         ]

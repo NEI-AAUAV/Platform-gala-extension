@@ -3,15 +3,6 @@ import { createClient } from "./client";
 
 const client = createClient(`${config.BASE_URL}/api/gala/v1`);
 
-type ReserveTable = {
-  dish: string;
-  allergies: string;
-  companions: {
-    dish: string;
-    allergies: string;
-  }[];
-};
-
 type Confirmation = {
   uid: number;
   confirm: boolean;
@@ -184,11 +175,8 @@ const GalaService = {
       const response: Table = await client.put(`/table/${id}/edit`, request);
       return response;
     },
-    reserveTable: async (id: string | number, request: ReserveTable) => {
-      const response: Table = await client.post(
-        `/table/${id}/reserve`,
-        request,
-      );
+    reserveTable: async (id: string | number) => {
+      const response: Table = await client.post(`/table/${id}/reserve`);
       return response;
     },
     confirmTable: async (id: string | number, request: Confirmation) => {
@@ -419,6 +407,23 @@ const GalaService = {
         `/admin/voting/results-visibility?visible=${visible}`,
       );
     },
+    pruneTables: async (): Promise<{
+      count: number;
+      removed: { user_id: number; reason: string }[];
+    }> => {
+      return client.post("/admin/tables/prune", {});
+    },
+    repairTables: async (): Promise<{
+      count: number;
+      fixed: {
+        user_id: number;
+        action: string;
+        from: number | null;
+        to: number | null;
+      }[];
+    }> => {
+      return client.post("/admin/tables/repair", {});
+    },
   },
 
   time: {
@@ -515,7 +520,11 @@ const GalaService = {
   },
 
   registration: {
-    getCapacity: async (): Promise<{ remaining: number; total: number }> => {
+    getCapacity: async (): Promise<{
+      remaining: number;
+      total: number;
+      bus_remaining: number | null;
+    }> => {
       return client.get("/registration/capacity");
     },
     getStatus: async (): Promise<User> => {
@@ -530,11 +539,14 @@ const GalaService = {
     uploadPaymentProof: async (
       file: File,
       phase: 1 | 2 = 1,
+      phasedPayment?: boolean,
     ): Promise<{ url: string }> => {
       const formData = new FormData();
       formData.append("file", file);
+      const phasedSuffix =
+        phasedPayment === undefined ? "" : `&phased_payment=${phasedPayment}`;
       return client.post(
-        `/registration/payment-proof?phase=${phase}`,
+        `/registration/payment-proof?phase=${phase}${phasedSuffix}`,
         formData,
       );
     },

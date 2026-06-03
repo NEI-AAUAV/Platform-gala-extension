@@ -7,6 +7,7 @@ type User = {
   phone: string | null;
   registration_step: number;
   is_registered: boolean;
+  registered_at: string | null;
   bus_option: "ROUND_TRIP" | "ONE_WAY" | "NONE";
   bus_assignment: string | null;
   meal_option: string | null;

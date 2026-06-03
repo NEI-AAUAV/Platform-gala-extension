@@ -488,7 +488,20 @@ async def list_authentik_users(
     return [{"id": u.pk, "name": u.name, "email": u.email} for u in users]
 
 
-async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: SettingsDep, user_coll) -> User:
+def _build_companions(companions_input, config: GlobalConfig) -> list:
+    from app.services.registration import _resolve_companion_dish
+    return [
+        Companion(
+            name=c.name,
+            dish=_resolve_companion_dish(c.dish, config) if c.dish else None,
+            allergies=c.allergies,
+            email=c.email,
+        ).dict()
+        for c in companions_input
+    ]
+
+
+async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: SettingsDep, user_coll, config: GlobalConfig) -> User:
     # Check if already registered
     existing = await user_coll.find_one({"_id": body.authentik_user_id, "is_registered": True})
     if existing:
@@ -507,15 +520,7 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
     # Upsert: the user may already have a skeleton doc from logging in
     user_dict = await user_coll.find_one({"_id": user_db_id})
     mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
-    companions = [
-        Companion(
-            name=c.name,
-            dish=c.dish,
-            allergies=c.allergies,
-            email=c.email,
-        ).dict()
-        for c in body.companions
-    ]
+    companions = _build_companions(body.companions, config)
     companion_emails = [c.email for c in body.companions if c.email]
 
     update_data = {
@@ -532,7 +537,7 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
         "companion_emails": companion_emails,
         "is_registered": True,
         "registration_step": 7,
-        "admin_created": False,
+        "admin_created": True,
         "registration_active": True,
         "payment_expired": False,
     }
@@ -546,7 +551,7 @@ async def _create_from_authentik(body: AdminCreateRegistrationBody, settings: Se
     result = await user_coll.find_one({"_id": user_db_id})
     return User.parse_obj(result)
 
-async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, user_coll) -> User:
+async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, user_coll, config: GlobalConfig) -> User:
     if not body.name or not body.email:
         raise HTTPException(
             status_code=400,
@@ -562,15 +567,7 @@ async def _create_from_scratch(body: AdminCreateRegistrationBody, db: DBType, us
 
     new_id = await get_next_id(db, "user")
     mat = Matriculation(__root__=body.matriculation) if body.matriculation else None
-    companions = [
-        Companion(
-            name=c.name,
-            dish=c.dish,
-            allergies=c.allergies,
-            email=c.email,
-        ).dict()
-        for c in body.companions
-    ]
+    companions = _build_companions(body.companions, config)
     companion_emails = [c.email for c in body.companions if c.email]
 
     doc = {
@@ -620,14 +617,14 @@ async def admin_create_registration(
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
 
     user_coll = User.get_collection(db)
+    config = await ConfigService.get_config(db)
 
     if body.authentik_user_id is not None:
-        user = await _create_from_authentik(body, settings, user_coll)
+        user = await _create_from_authentik(body, settings, user_coll, config)
     else:
-        user = await _create_from_scratch(body, db, user_coll)
+        user = await _create_from_scratch(body, db, user_coll, config)
 
     # Send notification
-    config = await ConfigService.get_config(db)
     if config.email_notifications.registration_confirmed:
         bus_labels = {"ROUND_TRIP": "Autocarro (Ida e Volta)", "ONE_WAY": "Autocarro (Apenas Ida)", "NONE": "Deslocação própria"}
         year_label = f"{user.matriculation.__root__}º Ano" if user.matriculation else "Alumni / Outro"
@@ -652,7 +649,7 @@ async def admin_create_registration(
     return user
 
 
-def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, Any]) -> Dict[str, Any]:
+def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, Any], config: Optional[GlobalConfig] = None) -> Dict[str, Any]:
     update_data: Dict[str, Any] = {}
     for field in ["name", "email", "nmec", "phone", "bus_option", "meal_option", "food_allergies", "phased_payment"]:
         if (val := getattr(body, field)) is not None:
@@ -675,7 +672,7 @@ def _prepare_update_data(body: AdminEditRegistrationBody, user_dict: Dict[str, A
             update_data.update({"registration_active": True, "payment_expired": False})
 
     if body.companions is not None:
-        update_data["companions"] = [Companion.parse_obj(c).dict() for c in body.companions]
+        update_data["companions"] = _build_companions(body.companions, config)
         update_data["companion_emails"] = [c.email for c in body.companions if c.email]
 
     return update_data
@@ -700,13 +697,17 @@ async def admin_edit_registration(
     if not user_dict:
         raise HTTPException(status_code=404, detail=ERROR_USER_NOT_FOUND)
 
-    update_data = _prepare_update_data(body, user_dict)
+    config = await ConfigService.get_config(db)
+    update_data = _prepare_update_data(body, user_dict, config)
 
     if update_data:
         await user_coll.update_one({"_id": user_id}, {"$set": update_data})
 
     if "meal_option" in update_data:
         await TableService.sync_user_dish(db, user_id)
+
+    if "food_allergies" in update_data:
+        await TableService.sync_user_allergies(db, user_id)
 
     if "companions" in update_data:
         await TableService.sync_companions(db, user_id, update_data["companions"])

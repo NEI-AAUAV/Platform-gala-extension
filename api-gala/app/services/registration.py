@@ -16,34 +16,40 @@ _DEADLINE_POLICY_TTL_SECONDS = 300
 _deadline_policy_last_run: Optional[datetime] = None
 
 
+_DISH_TYPE_ALIASES: Dict[str, str] = {
+    "NOR": "NOR", "NORMAL": "NOR", "CARNE": "NOR", "MEAT": "NOR",
+    "VEG": "VEG", "VEGETARIAN": "VEG", "VEGETARIANO": "VEG",
+    "FISH": "FISH", "PEIXE": "FISH",
+    "VEGAN": "VEGAN",
+}
+
+
+def _resolve_companion_dish(raw: str, config) -> Optional[str]:
+    """Resolve a companion dish value (config meal ID or legacy DishType alias) to a config meal ID."""
+    stripped = raw.strip()
+    # Already a valid config meal ID
+    if config and any(m.id == stripped for m in config.meals):
+        return stripped
+    # Legacy DishType alias → find the first active config meal with that dish_type
+    dish_type_str = _DISH_TYPE_ALIASES.get(stripped.upper())
+    if dish_type_str and config:
+        for meal in config.meals:
+            if meal.dish_type == dish_type_str and meal.is_active:
+                return meal.id
+    return None
+
+
 class RegistrationService:
-    _DISH_ALIASES: Dict[str, str] = {
-        "NOR": "NOR", "NORMAL": "NOR", "CARNE": "NOR",
-        "VEG": "VEG", "VEGETARIAN": "VEG", "VEGETARIANO": "VEG",
-        "FISH": "FISH", "PEIXE": "FISH",
-        "VEGAN": "VEGAN",
-    }
-
-    @staticmethod
-    def _resolve_dish(raw: str, meal_to_dish: Dict[str, str]) -> Optional[str]:
-        key = raw.strip().upper()
-        return RegistrationService._DISH_ALIASES.get(key) or meal_to_dish.get(key)
-
     @staticmethod
     def _normalize_companions_payload(companions: Any, config=None) -> list:
         if not isinstance(companions, list):
             return []
-
-        meal_to_dish: Dict[str, str] = (
-            {m.id.strip().upper(): m.dish_type for m in config.meals} if config else {}
-        )
-
         normalized = []
         for c in companions:
             if not isinstance(c, dict):
                 continue
             raw_dish = c.get("dish", c.get("meal"))
-            dish = RegistrationService._resolve_dish(raw_dish, meal_to_dish) if isinstance(raw_dish, str) else None
+            dish = _resolve_companion_dish(raw_dish, config) if isinstance(raw_dish, str) else None
             normalized.append(
                 {
                     "name": str(c.get("name", "")).strip(),
@@ -75,6 +81,24 @@ class RegistrationService:
             return 0
         row = result[0]
         return row["registrations"] + row["companions"]
+
+    @staticmethod
+    async def count_bus_seats_taken(db: DBType, exclude_user_id: Optional[int] = None) -> int:
+        """Counts bus seats occupied by all users with a non-NONE bus option.
+        Each user takes 1 seat plus 1 per companion.
+        Pass exclude_user_id to exclude a specific user (e.g. before re-saving their own entry).
+        """
+        match: Dict[str, Any] = {"bus_option": {"$ne": "NONE"}}
+        if exclude_user_id is not None:
+            match["_id"] = {"$ne": exclude_user_id}
+        result = await User.get_collection(db).aggregate([
+            {"$match": match},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": {"$add": [1, {"$size": {"$ifNull": ["$companions", []]}}]}},
+            }},
+        ]).to_list(1)
+        return result[0]["total"] if result else 0
 
     @staticmethod
     async def get_user_registration(db: DBType, user_id: int) -> Optional[User]:
@@ -242,6 +266,7 @@ class RegistrationService:
                 update_data["phased_payment"] = data["phased_payment"]
         elif step == 6:
             update_data["is_registered"] = True
+            update_data["registered_at"] = datetime.now(tz=timezone.utc)
 
     @staticmethod
     async def update_step(db: DBType, user_id: int, step: int, data: Dict[str, Any]) -> User:
@@ -272,6 +297,9 @@ class RegistrationService:
         if step == 3 and "meal_option" in update_data:
             await TableService.sync_user_dish(db, user_id)
 
+        if step == 3 and "food_allergies" in update_data:
+            await TableService.sync_user_allergies(db, user_id)
+
         updated_dict = await collection.find_one({"_id": user_id})
         return User.parse_obj(updated_dict)
 
@@ -287,6 +315,13 @@ class RegistrationService:
         collection = User.get_collection(db)
         await collection.update_one(
             {"_id": user_id},
-            {"$set": {field: url, confirmed_field: False, "payment_expired": False}}
+            {
+                "$set": {
+                    field: url,
+                    confirmed_field: False,
+                    "payment_expired": False,
+                    "registration_active": True,
+                }
+            },
         )
         return url

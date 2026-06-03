@@ -47,8 +47,8 @@ export default function BusAssignmentAdmin() {
       <div className="bg-white/3 border border-light-gold/20 px-5 py-8 text-center">
         <FontAwesomeIcon icon={faBus} className="text-white/15 mb-3 text-3xl" />
         <p className="font-gala text-sm text-white/40">
-          Configura primeiro os autocarros na tab{" "}
-          <span className="text-white/60">Homepage</span>.
+          Adiciona primeiro os autocarros na secção de{" "}
+          <span className="text-white/60">Configuração</span> acima.
         </p>
       </div>
     );

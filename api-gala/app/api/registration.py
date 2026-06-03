@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, File, HTTPException, status
 from pydantic import BaseModel
-from typing import Dict, Any, Annotated
+from typing import Dict, Any, Annotated, Optional
 from app.api.auth import api_nei_auth, AuthData, auth_responses
 from app.core.db import get_db
 from app.core.db.types import DBType
@@ -51,17 +51,24 @@ async def _require_registration_open(db: DBType) -> None:
 class RegistrationCapacity(BaseModel):
     remaining: int
     total: int
+    bus_remaining: Optional[int] = None  # None = no limit configured
 
 
 @router.get("/capacity", response_model=RegistrationCapacity)
 async def get_registration_capacity(
     db: Annotated[DBType, Depends(get_db)],
 ):
-    """Returns the number of remaining and total seats. No auth required."""
+    """Returns the number of remaining registration and bus seats. No auth required."""
     limits = await fetch_limits(db)
     total = await RegistrationService.count_registered_attendees(db)
     remaining = max(0, limits.maxRegistrations - total)
-    return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations)
+
+    bus_remaining: Optional[int] = None
+    if limits.maxBusSeats is not None:
+        taken = await RegistrationService.count_bus_seats_taken(db)
+        bus_remaining = max(0, limits.maxBusSeats - taken)
+
+    return RegistrationCapacity(remaining=remaining, total=limits.maxRegistrations, bus_remaining=bus_remaining)
 
 
 @router.get("/status", response_model=User, responses={**auth_responses})
@@ -143,16 +150,24 @@ async def update_registration_step(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="As inscrições estão encerradas.",
             )
+        if user.bus_option.value != "NONE" and limits.maxBusSeats is not None:
+            taken = await RegistrationService.count_bus_seats_taken(db, exclude_user_id=auth.sub)
+            my_seats = 1 + len(user.companions)
+            if taken + my_seats > limits.maxBusSeats:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Não há mais lugares disponíveis no autocarro. Volta ao passo 3 e escolhe deslocação própria.",
+                )
 
     if step == 3:
         new_bus = data.get("bus_option", "NONE")
-        if new_bus not in ("NONE", None) and user.bus_option.value == "NONE":
+        if new_bus not in ("NONE", None):
             limits = await fetch_limits(db)
             if limits.maxBusSeats is not None:
-                taken = await User.get_collection(db).count_documents(
-                    {"bus_option": {"$ne": "NONE"}}
-                )
-                if taken >= limits.maxBusSeats:
+                taken = await RegistrationService.count_bus_seats_taken(db, exclude_user_id=auth.sub)
+                new_companions = data.get("companions") or []
+                seats_needed = 1 + len(new_companions)
+                if taken + seats_needed > limits.maxBusSeats:
                     raise HTTPException(
                         status_code=status.HTTP_409_CONFLICT,
                         detail="Não há mais lugares disponíveis no autocarro.",
@@ -202,13 +217,22 @@ async def upload_payment_proof(
     auth: Annotated[AuthData, Depends(api_nei_auth)],
     file: Annotated[UploadFile, File(...)],
     phase: Annotated[int, Query(ge=1, le=2)] = 1,
+    phased_payment: Annotated[Optional[bool], Query()] = None,
 ):
     """Uploads a payment proof file to R2 storage. Use phase=1 or phase=2."""
     config = await ConfigService.get_config(db)
     prices = config.prices
 
+    user = await RegistrationService.get_user_registration(db, auth.sub)
+    user_chose_phased = (
+        phased_payment if phased_payment is not None else bool(user and user.phased_payment)
+    )
     if phase == 1:
-        deadline = prices.phase1_deadline if prices.phased_payment_enabled and prices.phase1_deadline else config.payment_deadline_date
+        deadline = (
+            prices.phase1_deadline
+            if user_chose_phased and prices.phased_payment_enabled and prices.phase1_deadline
+            else config.payment_deadline_date
+        )
     else:
         deadline = prices.phase2_deadline if prices.phase2_deadline else config.payment_deadline_date
 

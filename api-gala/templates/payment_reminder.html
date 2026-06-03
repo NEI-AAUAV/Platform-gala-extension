@@ -6,21 +6,24 @@
   <div class="band">
     <p class="band-label">Pagamento</p>
     <p class="band-title">Lembrete de pagamento</p>
-    <p class="band-sub">Ola, {{name}}. Ainda nao temos o teu pagamento confirmado.</p>
+    <p class="band-sub">Olá, {{ name }}. Ainda não temos o teu pagamento confirmado.</p>
   </div>
 
   <div class="sec">
     <p class="sec-label">Prazos</p>
     <div class="card">
       {% if phased_payment %}
-      <div class="row"><span class="rl">Fase 1</span><span class="rv">{{phase1_deadline or payment_deadline or "A anunciar"}}</span></div>
-      <div class="row"><span class="rl">Fase 2</span><span class="rv">{{phase2_deadline or payment_deadline or "A anunciar"}}</span></div>
+      <div class="row"><span class="rl">Fase 1: </span> <span class="rv">{{ phase1_deadline or payment_deadline or "A anunciar" }}</span></div>
+      <div class="row"><span class="rl">Fase 2: </span> <span class="rv">{{ phase2_deadline or payment_deadline or "A anunciar" }}</span></div>
       {% else %}
-      <div class="row"><span class="rl">Prazo</span><span class="rv">{{payment_deadline or "A anunciar"}}</span></div>
+      <div class="row"><span class="rl">Prazo: </span> <span class="rv">{{ payment_deadline or "A anunciar" }}</span></div>
       {% endif %}
     </div>
   </div>
 
   <hr/>
-  <p class="notice">Envia o comprovativo no teu perfil para validarmos a inscricao.</p>
+  {% if phased_payment %}
+  <p class="notice">Se deixas-te passar o prazo e escolheste pagamento faseado, deves enviar o comprovativo do pagamento integral até à data limite do mesmo.</p>
+  {% endif %}
+  <p class="notice">Envia o comprovativo no teu perfil para validarmos a inscrição.</p>
 {% endblock %}

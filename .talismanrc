@@ -18,11 +18,13 @@ fileignoreconfig:
 - filename: web-gala/src/pages/Reserve/index.tsx
   checksum: 5567614e0c1cae17742fe8b476f312f98d35a23afb2ee840f66b1c5bfb0af922
 - filename: web-gala/src/components/TableModal/personUtils.tsx
-  checksum: dd9a34db2b5ae34ee68a8de1d89b1c67808056a569fb8b9462f437a269f4ffd1
+  checksum: 83b75000b5a43c71fdee5c93c4b1cdfa221459808bf0cff272072299b71e3598
 - filename: web-gala/src/pages/Admin/RegistrationAdmin.tsx
   checksum: e833a8e70fd91f2677357e340dbafdc08f9b3e19f4ffcd664bb52a21c8bcf4eb
 - filename: web-gala/src/components/TriangleBackground/index.tsx
   checksum: 58865e72b362a2435bbe345e9aea81246f8be6646fe0e0727ceb957a81c4258d
 - filename: web-gala/src/pages/Admin/TablesAdmin.tsx
   checksum: 1abe196cb3e36c42557f7772cda617d1d7028bb11e94c613da241d3480652fd3
+- filename: web-gala/src/pages/Admin/TransportesAdmin.tsx
+  checksum: 12c668a7d38e4d66f78a15ce38db1218fdd991b175369b696255c4cf78b2e6f2
 version: "1.0"

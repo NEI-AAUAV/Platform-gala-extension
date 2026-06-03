@@ -13,6 +13,7 @@ import {
   faBars,
   faXmark,
   faUsers,
+  faBus,
 } from "@fortawesome/free-solid-svg-icons";
 import VoteCategories from "./VoteCategories";
 import TablesAdmin from "./TablesAdmin";
@@ -20,7 +21,7 @@ import RegistrationAdmin from "./RegistrationAdmin";
 import HomepageAdmin from "./HomepageAdmin";
 import PermissoesAdmin from "./PermissoesAdmin";
 import RegistrantsAdmin from "./RegistrantsAdmin";
-import BusAssignmentAdmin from "./BusAssignmentAdmin";
+import TransportesAdmin from "./TransportesAdmin";
 import { useConfigStore } from "@/stores/useConfigStore";
 import { useManagerPermissions } from "@/hooks/useManagerPermissions";
 import { ManagerPermissionKey } from "@/services/GalaService";
@@ -31,6 +32,7 @@ type Tab =
   | "tables"
   | "categories"
   | "homepage"
+  | "transportes"
   | "permissoes";
 
 type TabDefinition = {
@@ -54,7 +56,7 @@ const ALL_TABS: TabDefinition[] = [
     id: "inscritos",
     label: "Inscritos",
     icon: faUsers,
-    description: "Gestão de inscritos, mesas e autocarros",
+    description: "Gestão de inscritos e confirmação de pagamentos",
     permission: "registration",
   },
   {
@@ -79,6 +81,13 @@ const ALL_TABS: TabDefinition[] = [
     permission: "homepage",
   },
   {
+    id: "transportes",
+    label: "Transportes",
+    icon: faBus,
+    description: "Configuração e atribuição de autocarros",
+    permission: "buses",
+  },
+  {
     id: "permissoes",
     label: "Permissões",
     icon: faShieldHalved,
@@ -101,7 +110,7 @@ const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
   },
   inscritos: {
     title: "Gestão de Inscritos",
-    sub: "Estatísticas, inscritos, confirmação de pagamentos, mesas e autocarros.",
+    sub: "Estatísticas, inscritos e confirmação de pagamentos.",
   },
   tables: {
     title: "Mesas e Reservas",
@@ -114,6 +123,10 @@ const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
   homepage: {
     title: "Conteúdo da Homepage",
     sub: "Controla o que aparece na página inicial do evento.",
+  },
+  transportes: {
+    title: "Transportes",
+    sub: "Configuração dos autocarros e atribuição de lugares.",
   },
   permissoes: {
     title: "Permissões de Managers",
@@ -370,12 +383,7 @@ export default function Admin() {
                     transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
                   >
                     {activeTab === "registration" && <RegistrationAdmin />}
-                    {activeTab === "inscritos" && (
-                      <div className="flex flex-col gap-10">
-                        <RegistrantsAdmin />
-                        <BusAssignmentAdmin />
-                      </div>
-                    )}
+                    {activeTab === "inscritos" && <RegistrantsAdmin />}
                     {activeTab === "tables" && <TablesAdmin />}
                     {activeTab === "categories" && (
                       <div className="mx-auto max-w-5xl">
@@ -387,6 +395,7 @@ export default function Admin() {
                         <HomepageAdmin />
                       </div>
                     )}
+                    {activeTab === "transportes" && <TransportesAdmin />}
                     {activeTab === "permissoes" && (
                       <div className="mx-auto max-w-3xl">
                         <PermissoesAdmin />
