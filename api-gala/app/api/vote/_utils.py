@@ -70,14 +70,23 @@ def anonymize_category(
     category_results_visible = (
         results_visible and getattr(category, "results_visible", False) and revealed
     )
+    visible_options = category.options if revealed else []
+    visible_photo_paths = []
+    if revealed:
+        visible_photo_paths = list(category.photo_paths[: len(category.options)])
+        if len(visible_photo_paths) < len(category.options):
+            visible_photo_paths.extend(
+                [""] * (len(category.options) - len(visible_photo_paths))
+            )
+    visible_scores = scores if category_results_visible else [0] * len(visible_options)
 
     return VoteListing(
         _id=category.id,
         category=category.category,
         description=category.description,
-        options=category.options if revealed else [],
-        photo_paths=category.photo_paths if revealed else [],
-        scores=scores if category_results_visible else [0] * len(category.options),
+        options=visible_options,
+        photo_paths=visible_photo_paths,
+        scores=visible_scores,
         already_voted=already_voted,
         reveal_at=category.reveal_at,
         votes_start=category.votes_start,

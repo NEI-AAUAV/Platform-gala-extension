@@ -123,3 +123,89 @@ def test_anonymize_category_ignores_invalid_stored_vote_options():
     listing = anonymize_category(category, auth, ts, results_visible=True)
 
     assert listing.scores == [1, 0]
+
+
+def test_anonymize_category_hides_scores_with_hidden_options():
+    from app.api.auth import AuthData
+    from app.api.vote._utils import anonymize_category
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime.now(timezone.utc)
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=1),
+        nominationsEnd=now + timedelta(days=1),
+        votesStart=now - timedelta(days=1),
+        votesEnd=now + timedelta(days=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(
+        _id=1,
+        category="Best Person",
+        options=["A", "B"],
+        photo_paths=["/a.jpg"],
+        votes=[{"uid": 1, "option": 0}],
+        is_hidden=True,
+        results_visible=True,
+    )
+    auth = AuthData(
+        sub=1,
+        nmec=None,
+        name="Alice",
+        email="alice@example.com",
+        surname="Example",
+        scopes=[],
+    )
+
+    listing = anonymize_category(category, auth, ts, results_visible=True)
+
+    assert listing.revealed is False
+    assert listing.options == []
+    assert listing.photo_paths == []
+    assert listing.scores == []
+
+
+def test_anonymize_category_pads_photo_paths_to_option_count():
+    from app.api.auth import AuthData
+    from app.api.vote._utils import anonymize_category
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime.now(timezone.utc)
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=1),
+        nominationsEnd=now + timedelta(days=1),
+        votesStart=now - timedelta(days=1),
+        votesEnd=now + timedelta(days=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(
+        _id=1,
+        category="Best Person",
+        options=["A", "B", "C"],
+        photo_paths=["/a.jpg"],
+    )
+    auth = AuthData(
+        sub=1,
+        nmec=None,
+        name="Alice",
+        email="alice@example.com",
+        surname="Example",
+        scopes=[],
+    )
+
+    listing = anonymize_category(category, auth, ts, results_visible=False)
+
+    assert listing.options == ["A", "B", "C"]
+    assert listing.photo_paths == ["/a.jpg", "", ""]
+    assert listing.scores == [0, 0, 0]
