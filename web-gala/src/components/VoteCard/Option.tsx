@@ -35,7 +35,8 @@ export default function Option({
       ? "border-neutral-500 bg-neutral-600 text-neutral-300"
       : "border-black bg-black text-light-gold";
   }
-  const percentage = totalVotes > 0 ? Math.round((score / totalVotes) * 100) : 0;
+  const percentage =
+    totalVotes > 0 ? Math.round((score / totalVotes) * 100) : 0;
 
   return (
     <button
@@ -119,7 +120,7 @@ export default function Option({
                 </span>
                 <span
                   className={classNames(
-                    "font-gala text-[0.65rem] font-semibold uppercase tracking-wider leading-none md:text-xs",
+                    "font-gala text-[0.65rem] font-semibold uppercase leading-none tracking-wider md:text-xs",
                     currentSelected === optionIdx && !disabled
                       ? "text-black/55"
                       : "text-white/45",
