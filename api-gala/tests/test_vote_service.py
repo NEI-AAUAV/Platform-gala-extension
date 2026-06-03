@@ -236,3 +236,61 @@ async def test_nominate_service_does_not_enforce_time_window():
     result = await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
     assert result is True
     coll.update_one.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_get_suggestions_filters_in_db_and_deduplicates_results():
+    from app.services.vote import VoteService
+
+    category_coll = AsyncMock()
+    category_coll.find_one.return_value = {
+        "_id": 10,
+        "category": "Best",
+        "options": [],
+        "nominations": [],
+        "votes": [],
+        "results_visible": False,
+        "photo_paths": [],
+    }
+    category_cursor = AsyncMock()
+    category_cursor.to_list.return_value = [
+        {"nominations": [{"name": "Joana Prime"}]},
+    ]
+    category_coll.find.return_value = category_cursor
+
+    user_coll = AsyncMock()
+    user_cursor = AsyncMock()
+    user_cursor.to_list.return_value = [
+        {
+            "name": "Joao Silva",
+            "companions": [
+                {"name": "Joana Companion"},
+                {"name": "Maria"},
+            ],
+        },
+        {"name": "joao silva", "companions": []},
+    ]
+    user_coll.find.return_value = user_cursor
+
+    db = MagicMock()
+    db.__getitem__ = MagicMock(side_effect=lambda name: {
+        "vote_category": category_coll,
+        "user": user_coll,
+    }[name])
+
+    result = await VoteService.get_suggestions(db, category_id=10, query="Joa")
+
+    assert "Joao Silva" in result
+    assert "Joana Companion" in result
+    assert "Joana Prime" in result
+    assert len([name for name in result if name.lower() == "joao silva"]) == 1
+
+    user_filter = user_coll.find.call_args[0][0]
+    assert user_filter == {
+        "$or": [
+            {"name": {"$regex": "Joa", "$options": "i"}},
+            {"companions.name": {"$regex": "Joa", "$options": "i"}},
+        ]
+    }
+    category_filter = category_coll.find.call_args[0][0]
+    assert category_filter == {"nominations.name": {"$regex": "Joa", "$options": "i"}}

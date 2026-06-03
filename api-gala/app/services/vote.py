@@ -1,4 +1,5 @@
 import difflib
+import re
 from datetime import datetime, timezone
 from typing import List, Optional
 from app.core.db.types import DBType
@@ -11,6 +12,17 @@ class AlreadyVotedError(ValueError): ...
 
 
 class VoteService:
+    @staticmethod
+    def _add_split_names(target: List[str], name: Optional[str]) -> None:
+        if not name:
+            return
+        if " & " in name:
+            target.extend(part.strip() for part in name.split(" & ") if part.strip())
+            return
+        cleaned = name.strip()
+        if cleaned:
+            target.append(cleaned)
+
     @staticmethod
     async def nominate(db: DBType, user_id: int, category_id: int, names: List[str]) -> bool:
         collection = VoteCategory.get_collection(db)
@@ -101,45 +113,72 @@ class VoteService:
             if datetime.now(timezone.utc) < reveal_at_utc:
                 return []
 
+        escaped_query = re.escape(query.strip())
+        if not escaped_query:
+            return []
+        query_regex = {"$regex": escaped_query, "$options": "i"}
+
         users_collection = User.get_collection(db)
         users_cursor = users_collection.find(
-            {},
+            {"$or": [{"name": query_regex}, {"companions.name": query_regex}]},
             projection={"name": 1, "companions.name": 1},
         )
         users = await users_cursor.to_list(None)
 
-        categories = await collection.find({}, projection={"nominations.name": 1}).to_list(None)
+        categories = await collection.find(
+            {"nominations.name": query_regex},
+            projection={"nominations": {"$elemMatch": {"name": query_regex}}},
+        ).to_list(None)
 
         all_names: List[str] = []
 
-        def add_split_names(name: Optional[str]):
-            if not name:
-                return
-            if " & " in name:
-                all_names.extend(name.split(" & "))
-            else:
-                all_names.append(name)
-
         for user in users:
-            add_split_names(user.get("name"))
+            VoteService._add_split_names(all_names, user.get("name"))
 
             for companion in user.get("companions", []):
-                add_split_names(companion.get("name"))
+                companion_name = companion.get("name")
+                if companion_name and re.search(escaped_query, companion_name, re.IGNORECASE):
+                    VoteService._add_split_names(all_names, companion_name)
 
         for category in categories:
             for nomination in category.get("nominations", []):
-                add_split_names(nomination.get("name"))
+                VoteService._add_split_names(all_names, nomination.get("name"))
 
         deduped_map = {}
         for name in all_names:
-            cleaned = name.strip()
-            if not cleaned:
-                continue
-            normalized = cleaned.casefold()
+            normalized = name.casefold()
             if normalized not in deduped_map:
-                deduped_map[normalized] = cleaned
+                deduped_map[normalized] = name
 
-        return difflib.get_close_matches(query, list(deduped_map.values()), n=5, cutoff=0.3)
+        candidates = list(deduped_map.values())
+        query_folded = query.casefold()
+        direct_matches = [
+            name for name in candidates if query_folded in name.casefold()
+        ]
+        direct_matches.sort(
+            key=lambda name: (
+                not name.casefold().startswith(query_folded),
+                len(name),
+                name.casefold(),
+            )
+        )
+        if len(direct_matches) >= 5:
+            return direct_matches[:5]
+
+        fuzzy_matches = difflib.get_close_matches(
+            query, candidates, n=5, cutoff=0.3
+        )
+        results = []
+        seen = set()
+        for name in direct_matches + fuzzy_matches:
+            normalized = name.casefold()
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            results.append(name)
+            if len(results) == 5:
+                break
+        return results
 
     @staticmethod
     async def vote(db: DBType, user_id: int, category_id: int, option_index: int) -> bool:
