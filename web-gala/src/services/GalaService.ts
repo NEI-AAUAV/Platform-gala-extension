@@ -81,6 +81,11 @@ export type MergeNomineesBody = {
   source_names: string[];
 };
 
+export type CreateRunoffBody = {
+  nominee_names: string[];
+  slots: number;
+};
+
 export type ManagerPermissionKey =
   | "registration"
   | "tables"
@@ -367,14 +372,25 @@ const GalaService = {
     listVotingCategories: async (): Promise<AdminVoteCategory[]> => {
       return client.get("/admin/voting/categories");
     },
-    finalizeNominations: async (categoryId: number): Promise<void> => {
-      return client.post(`/admin/voting/categories/${categoryId}/finalize`, {});
+    finalizeNominations: async (
+      categoryId: number,
+      selectedNames?: string[],
+    ): Promise<void> => {
+      return client.post(`/admin/voting/categories/${categoryId}/finalize`, {
+        selected_names: selectedNames,
+      });
     },
     mergeNominees: async (
       categoryId: number,
       body: MergeNomineesBody,
     ): Promise<void> => {
       return client.post(`/admin/voting/categories/${categoryId}/merge`, body);
+    },
+    createRunoff: async (
+      categoryId: number,
+      body: CreateRunoffBody,
+    ): Promise<AdminVoteCategory> => {
+      return client.post(`/admin/voting/categories/${categoryId}/runoff`, body);
     },
     setResultsVisibility: async (visible: boolean): Promise<void> => {
       return client.patch(

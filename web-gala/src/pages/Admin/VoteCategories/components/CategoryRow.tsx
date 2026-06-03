@@ -35,11 +35,24 @@ function NominationsPanel({
   const [mergeTarget, setMergeTarget] = useState("");
   const [isMerging, setIsMerging] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isCreatingRunoff, setIsCreatingRunoff] = useState(false);
   const [confirmFinalize, setConfirmFinalize] = useState(false);
 
   const sorted = [...nominations].sort(
     (a, b) => b.votes.length - a.votes.length,
   );
+  const cutoff = sorted[3]?.votes.length;
+  const hasRunoffTie =
+    sorted.length > 4 &&
+    cutoff !== undefined &&
+    sorted[4].votes.length === cutoff;
+  const automaticFinalists = hasRunoffTie
+    ? sorted.filter((nominee) => nominee.votes.length > cutoff)
+    : [];
+  const tiedNominees = hasRunoffTie
+    ? sorted.filter((nominee) => nominee.votes.length === cutoff)
+    : [];
+  const runoffSlots = hasRunoffTie ? 4 - automaticFinalists.length : 0;
   const toggleSelect = (name: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -77,16 +90,36 @@ function NominationsPanel({
   const handleFinalize = async () => {
     setIsFinalizing(true);
     try {
-      await GalaService.admin.finalizeNominations(categoryId);
+      const selectedNames = selected.size > 0 ? [...selected] : undefined;
+      await GalaService.admin.finalizeNominations(categoryId, selectedNames);
       toast.success(
-        "Nomeações finalizadas. Top 4 definido como opções de votação.",
+        selectedNames
+          ? "Nomeações finalizadas com a seleção indicada."
+          : "Nomeações finalizadas. Top 4 definido como opções de votação.",
       );
       setConfirmFinalize(false);
+      setSelected(new Set());
       refresh();
     } catch {
       toast.error("Erro ao finalizar nomeações.");
     } finally {
       setIsFinalizing(false);
+    }
+  };
+
+  const handleCreateRunoff = async () => {
+    setIsCreatingRunoff(true);
+    try {
+      await GalaService.admin.createRunoff(categoryId, {
+        nominee_names: tiedNominees.map((nominee) => nominee.name),
+        slots: runoffSlots,
+      });
+      toast.success("2.ª volta criada com os nomeados empatados.");
+      refresh();
+    } catch {
+      toast.error("Erro ao criar 2.ª volta.");
+    } finally {
+      setIsCreatingRunoff(false);
     }
   };
 
@@ -152,10 +185,30 @@ function NominationsPanel({
       )}
 
       <div className="border-t border-light-gold/20 pt-3">
+        {hasRunoffTie && (
+          <div className="mb-3 flex flex-col gap-2 border border-yellow-500/20 bg-yellow-500/5 p-3">
+            <p className="text-xs text-yellow-100/70">
+              Há {tiedNominees.length} nomeados empatados para {runoffSlots}{" "}
+              lugar{runoffSlots === 1 ? "" : "es"} no Top 4.
+            </p>
+            <button
+              type="button"
+              onClick={handleCreateRunoff}
+              disabled={isCreatingRunoff}
+              className="w-fit rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-50"
+            >
+              {isCreatingRunoff
+                ? "A criar..."
+                : `Criar 2.ª volta entre ${tiedNominees.length}`}
+            </button>
+          </div>
+        )}
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
-              Isto define o Top 4 como opções de votação e fecha as nomeações.
+              {selected.size > 0
+                ? `Isto define os ${selected.size} nomes selecionados como opções de votação.`
+                : "Isto define o Top 4 como opções de votação e fecha as nomeações."}{" "}
               Irreversível.
             </span>
             <button
@@ -181,7 +234,11 @@ function NominationsPanel({
             className="flex items-center gap-2 rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400"
           >
             <FontAwesomeIcon icon={faCheckDouble} />
-            Finalizar nomeações → Top 4
+            {selected.size > 0
+              ? `Finalizar com ${selected.size} selecionado${
+                  selected.size === 1 ? "" : "s"
+                }`
+              : "Finalizar nomeações → Top 4"}
           </button>
         )}
       </div>
@@ -389,7 +446,11 @@ export default function CategoryRow({
                   type="button"
                   onClick={handleToggleVisibility}
                   disabled={isTogglingHidden}
-                  title={vote.is_hidden ? "Ativar categoria (mostrar de acordo com agendamento)" : "Ocultar categoria manualmente"}
+                  title={
+                    vote.is_hidden
+                      ? "Ativar categoria (mostrar de acordo com agendamento)"
+                      : "Ocultar categoria manualmente"
+                  }
                   className={[
                     "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
                     vote.is_hidden
@@ -397,7 +458,11 @@ export default function CategoryRow({
                       : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
                   ].join(" ")}
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full ${vote.is_hidden ? "bg-red-400" : "bg-green-400"}`} />
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      vote.is_hidden ? "bg-red-400" : "bg-green-400"
+                    }`}
+                  />
                   <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
                     {vote.is_hidden ? "Oculta" : "Visível"}
                   </span>
@@ -496,7 +561,7 @@ export default function CategoryRow({
                   type="datetime-local"
                   value={editRevealAt}
                   onChange={(e) => setEditRevealAt(e.target.value)}
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60 [color-scheme:dark]"
+                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
                 />
               </label>
             </div>
@@ -521,7 +586,7 @@ export default function CategoryRow({
                     className={`h-1.5 w-1.5 rounded-full ${
                       new Date(vote.reveal_at) <= new Date()
                         ? "bg-green-400"
-                        : "bg-blue-400 animate-pulse"
+                        : "animate-pulse bg-blue-400"
                     }`}
                   />
                   {new Date(vote.reveal_at) <= new Date()
