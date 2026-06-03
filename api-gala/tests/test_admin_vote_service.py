@@ -161,6 +161,7 @@ async def test_finalize_nominations_takes_all_when_fewer_than_4():
     assert result is True
     update = coll.update_one.call_args[0][1]["$set"]
     assert set(update["options"]) == {"Alice", "Bob"}
+    assert update["photo_paths"] == ["", ""]
 
 
 @pytest.mark.asyncio
@@ -186,6 +187,35 @@ async def test_finalize_nominations_accepts_admin_selected_names():
     assert result is True
     update = coll.update_one.call_args[0][1]["$set"]
     assert update["options"] == ["Alice", "Bob", "Dave", "Eve"]
+    assert update["photo_paths"] == ["", "", "", ""]
+
+
+@pytest.mark.asyncio
+async def test_finalize_nominations_preserves_existing_photos_by_option_name():
+    from app.services.admin_vote import AdminVoteService
+
+    nominations = [
+        _nominee("Alice", [1, 2, 3]),
+        _nominee("Bob", [4, 5]),
+        _nominee("Carol", [6, 7]),
+    ]
+    doc = _category_doc(
+        nominations=nominations,
+        options=["Carol", "Alice", "Mallory"],
+        photo_paths=["carol.jpg", "alice.jpg", "mallory.jpg"],
+    )
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.finalize_nominations(
+        db,
+        1,
+        selected_names=["Alice", "Bob", "Carol"],
+    )
+
+    assert result is True
+    update = coll.update_one.call_args[0][1]["$set"]
+    assert update["options"] == ["Alice", "Bob", "Carol"]
+    assert update["photo_paths"] == ["alice.jpg", "", "carol.jpg"]
 
 
 @pytest.mark.asyncio

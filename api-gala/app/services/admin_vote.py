@@ -78,9 +78,15 @@ class AdminVoteService:
             sorted_nominations = sorted(category.nominations, key=lambda x: len(x.votes), reverse=True)
             options = [n.name for n in sorted_nominations[:4]]
 
+        existing_photo_paths = {
+            option: category.photo_paths[index] if index < len(category.photo_paths) else ""
+            for index, option in enumerate(category.options)
+        }
+        photo_paths = [existing_photo_paths.get(option, "") for option in options]
+
         await collection.update_one(
             {"_id": category_id},
-            {"$set": {"options": options}}
+            {"$set": {"options": options, "photo_paths": photo_paths}}
         )
         return True
 
