@@ -1,5 +1,6 @@
 import pytest
 from httpx import AsyncClient
+from datetime import datetime, timedelta, timezone
 
 @pytest.fixture
 def mock_vote_category():
@@ -46,3 +47,35 @@ async def test_cast_vote(async_client: AsyncClient, test_db, mock_vote_category)
 
     resp = await async_client.post("/api/gala/v1/voting/categories/1/vote", json={"option": 0})
     assert resp.status_code in [200, 400, 403, 409]
+
+
+def test_is_voting_open_uses_category_specific_window(monkeypatch):
+    from app.api.vote import _utils
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(_utils, "_now", lambda: now)
+
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=1),
+        nominationsEnd=now + timedelta(days=1),
+        votesStart=now + timedelta(days=1),
+        votesEnd=now + timedelta(days=2),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(
+        _id=1,
+        category="Desempate",
+        options=["A", "B"],
+        votes_start=now - timedelta(hours=1),
+        votes_end=now + timedelta(hours=1),
+    )
+
+    assert _utils.is_voting_open(ts, category) is True
+    assert _utils.is_voting_open(ts) is False

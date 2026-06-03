@@ -1,4 +1,5 @@
 """Unit tests for AdminVoteService - merge_nominees and finalize_nominations."""
+from datetime import datetime, timezone
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
@@ -241,6 +242,8 @@ async def test_create_runoff_category_for_three_tied_nominees_two_slots(monkeypa
         1,
         nominee_names=["Carol", "Dave", "Eve"],
         slots=2,
+        votes_start=datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc),
+        votes_end=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
     )
 
     assert result is not None
@@ -248,6 +251,8 @@ async def test_create_runoff_category_for_three_tied_nominees_two_slots(monkeypa
     assert result.category == "Desempate - Melhor Traje"
     assert result.options == ["Carol", "Dave", "Eve"]
     assert result.photo_paths == ["", "", ""]
+    assert result.votes_start == datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    assert result.votes_end == datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc)
     coll.insert_one.assert_called_once()
 
 
@@ -313,6 +318,26 @@ async def test_create_runoff_category_rejects_invalid_slot_count():
     coll.insert_one.assert_not_called()
 
 
+@pytest.mark.asyncio
+async def test_create_runoff_category_rejects_invalid_vote_window():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(nominations=[_nominee("Alice", [1]), _nominee("Bob", [2])])
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.create_runoff_category(
+        db,
+        1,
+        nominee_names=["Alice", "Bob"],
+        slots=1,
+        votes_start=datetime(2026, 6, 12, 12, 0, tzinfo=timezone.utc),
+        votes_end=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert result is None
+    coll.insert_one.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # create_vote_runoff_category
 # ---------------------------------------------------------------------------
@@ -337,13 +362,20 @@ async def test_create_vote_runoff_category_for_tied_winners(monkeypatch):
     db, coll = _make_db(finds=(doc,))
     monkeypatch.setattr(admin_vote, "get_next_vote_category_id", AsyncMock(return_value=43))
 
-    result = await AdminVoteService.create_vote_runoff_category(db, 1)
+    result = await AdminVoteService.create_vote_runoff_category(
+        db,
+        1,
+        votes_start=datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc),
+        votes_end=datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc),
+    )
 
     assert result is not None
     assert result.id == 43
     assert result.category == "Desempate - Melhor Momento"
     assert result.options == ["Alice", "Bob"]
     assert result.photo_paths == ["alice.jpg", "bob.jpg"]
+    assert result.votes_start == datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    assert result.votes_end == datetime(2026, 6, 11, 12, 0, tzinfo=timezone.utc)
     coll.insert_one.assert_called_once()
 
 
@@ -398,6 +430,26 @@ async def test_create_vote_runoff_category_rejects_zero_vote_tie():
     db, coll = _make_db(finds=(doc,))
 
     result = await AdminVoteService.create_vote_runoff_category(db, 1)
+
+    assert result is None
+    coll.insert_one.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_create_vote_runoff_category_rejects_partial_vote_window():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(
+        options=["Alice", "Bob"],
+        votes=[_vote(1, 0), _vote(2, 1)],
+    )
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.create_vote_runoff_category(
+        db,
+        1,
+        votes_start=datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc),
+    )
 
     assert result is None
     coll.insert_one.assert_not_called()
