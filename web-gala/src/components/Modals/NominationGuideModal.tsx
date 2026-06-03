@@ -38,7 +38,7 @@ export default function NominationGuideModal({ isOpen, onClose }: Props) {
       icon: faListCheck,
       title: "Respeita os limites da categoria",
       description:
-        "Cada categoria mostra o numero minímo e máximo de nomeados permitidos.",
+        "Cada categoria mostra o número mínimo e máximo de nomeados permitidos.",
     },
     {
       icon: faCircleCheck,
