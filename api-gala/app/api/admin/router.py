@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, UploadFile, File, status, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr
@@ -805,6 +806,13 @@ class FinalizeNominationsBody(BaseModel):
 class CreateRunoffBody(BaseModel):
     nominee_names: List[str]
     slots: int
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+
+
+class CreateVoteRunoffBody(BaseModel):
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
 
 
 @router.post(
@@ -876,6 +884,8 @@ async def admin_create_runoff_category(
         category_id,
         body.nominee_names,
         body.slots,
+        body.votes_start,
+        body.votes_end,
     )
     if category is None:
         raise HTTPException(status_code=400, detail="Runoff creation failed")
@@ -892,12 +902,18 @@ async def admin_create_runoff_category(
 )
 async def admin_create_vote_runoff_category(
     category_id: int,
+    body: CreateVoteRunoffBody,
     db: Annotated[DBType, Depends(get_db)],
     auth: Annotated[AuthData, Depends(api_nei_auth)]
 ) -> VoteCategory:
     """Creates a 2nd-round vote category for options tied in 1st place."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    category = await AdminVoteService.create_vote_runoff_category(db, category_id)
+    category = await AdminVoteService.create_vote_runoff_category(
+        db,
+        category_id,
+        body.votes_start,
+        body.votes_end,
+    )
     if category is None:
         raise HTTPException(status_code=400, detail="Vote runoff creation failed")
     return category

@@ -21,6 +21,8 @@ class VoteCategoryCreateForm(BaseModel):
     options: List[str] = Field(default_factory=list)
     photo_paths: List[str] = Field(default_factory=list)
     reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
     is_hidden: bool = False
 
     @validator("photo_paths")
@@ -56,6 +58,8 @@ async def create_category(
         min_nominees=form_data.min_nominees,
         max_nominees=form_data.max_nominees,
         reveal_at=form_data.reveal_at,
+        votes_start=form_data.votes_start,
+        votes_end=form_data.votes_end,
         is_hidden=form_data.is_hidden,
         options=form_data.options,
         photo_paths=form_data.photo_paths,

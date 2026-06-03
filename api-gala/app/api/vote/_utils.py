@@ -31,11 +31,13 @@ def is_nominations_open(ts: TimeSlots) -> bool:
     return _ensure_utc(ts.nominations_start) <= now <= _ensure_utc(ts.nominations_end)
 
 
-def is_voting_open(ts: TimeSlots) -> bool:
-    if ts.votes_start is None or ts.votes_end is None:
+def is_voting_open(ts: TimeSlots, category: VoteCategory = None) -> bool:
+    votes_start = category.votes_start if category and category.votes_start else ts.votes_start
+    votes_end = category.votes_end if category and category.votes_end else ts.votes_end
+    if votes_start is None or votes_end is None:
         return False
     now = _now()
-    return _ensure_utc(ts.votes_start) <= now <= _ensure_utc(ts.votes_end)
+    return _ensure_utc(votes_start) <= now <= _ensure_utc(votes_end)
 
 
 def anonymize_category(
@@ -74,10 +76,12 @@ def anonymize_category(
         scores=scores if (results_visible and revealed) else [0] * len(category.options),
         already_voted=already_voted,
         reveal_at=category.reveal_at,
+        votes_start=category.votes_start,
+        votes_end=category.votes_end,
         revealed=revealed,
         is_hidden=getattr(category, "is_hidden", False),
         nomination_open=is_nominations_open(ts) if revealed else False,
-        voting_open=is_voting_open(ts) if revealed else False,
+        voting_open=is_voting_open(ts, category) if revealed else False,
         results_visible=results_visible and revealed,
         already_nominated=already_nominated,
         min_nominees=category.min_nominees,

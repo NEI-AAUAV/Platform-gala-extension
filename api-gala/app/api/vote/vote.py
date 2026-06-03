@@ -43,7 +43,8 @@ async def cast_vote(
         raise HTTPException(status_code=403, detail="Only gala registrants can vote")
 
     ts = await fetch_time_slots(db)
-    if not is_voting_open(ts):
+    category = await fetch_category(category_id, db)
+    if not is_voting_open(ts, category):
         raise HTTPException(status_code=403, detail="Voting is closed for this category")
 
     try:
@@ -57,5 +58,4 @@ async def cast_vote(
         raise HTTPException(status_code=500, detail="Internal server error")
 
     config = await ConfigService.get_config(db)
-    category = await fetch_category(category_id, db)
     return anonymize_category(category, auth, ts, config.results_visible)

@@ -1,7 +1,18 @@
+from datetime import datetime, timezone
 from typing import List, Optional
 from app.core.db.types import DBType
 from app.core.db.counters import get_next_vote_category_id
 from app.models.vote import VoteCategory, Nominee
+
+
+def _valid_vote_window(votes_start: Optional[datetime], votes_end: Optional[datetime]) -> bool:
+    if votes_start is None and votes_end is None:
+        return True
+    if votes_start is None or votes_end is None:
+        return False
+    start = votes_start if votes_start.tzinfo is not None else votes_start.replace(tzinfo=timezone.utc)
+    end = votes_end if votes_end.tzinfo is not None else votes_end.replace(tzinfo=timezone.utc)
+    return start < end
 
 
 class AdminVoteService:
@@ -79,6 +90,8 @@ class AdminVoteService:
         source_category_id: int,
         nominee_names: List[str],
         slots: int,
+        votes_start: Optional[datetime] = None,
+        votes_end: Optional[datetime] = None,
     ) -> Optional[VoteCategory]:
         collection = VoteCategory.get_collection(db)
         category_dict = await collection.find_one({"_id": source_category_id})
@@ -95,6 +108,8 @@ class AdminVoteService:
 
         if len(cleaned_names) < 2 or slots < 1 or slots >= len(cleaned_names):
             return None
+        if not _valid_vote_window(votes_start, votes_end):
+            return None
 
         category_id = await get_next_vote_category_id(db)
         category = VoteCategory(
@@ -104,6 +119,8 @@ class AdminVoteService:
             min_nominees=source.min_nominees,
             max_nominees=source.max_nominees,
             reveal_at=source.reveal_at,
+            votes_start=votes_start,
+            votes_end=votes_end,
             is_hidden=source.is_hidden,
             nominations=[],
             options=cleaned_names,
@@ -118,6 +135,8 @@ class AdminVoteService:
     async def create_vote_runoff_category(
         db: DBType,
         source_category_id: int,
+        votes_start: Optional[datetime] = None,
+        votes_end: Optional[datetime] = None,
     ) -> Optional[VoteCategory]:
         collection = VoteCategory.get_collection(db)
         category_dict = await collection.find_one({"_id": source_category_id})
@@ -126,6 +145,8 @@ class AdminVoteService:
 
         source = VoteCategory.parse_obj(category_dict)
         if len(source.options) < 2:
+            return None
+        if not _valid_vote_window(votes_start, votes_end):
             return None
 
         scores = [0] * len(source.options)
@@ -137,6 +158,9 @@ class AdminVoteService:
             return None
 
         top_score = max(scores)
+        if top_score == 0:
+            return None
+
         tied_indexes = [
             index for index, score in enumerate(scores) if score == top_score
         ]
@@ -157,6 +181,8 @@ class AdminVoteService:
             min_nominees=source.min_nominees,
             max_nominees=source.max_nominees,
             reveal_at=source.reveal_at,
+            votes_start=votes_start,
+            votes_end=votes_end,
             is_hidden=source.is_hidden,
             nominations=[],
             options=options,

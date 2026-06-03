@@ -25,6 +25,8 @@ class VoteCategory(BaseDocument):
     min_nominees: int = 1
     max_nominees: int = 1
     reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
     is_hidden: bool = False
 
     # Nominations (free text)
@@ -45,6 +47,8 @@ class VoteListing(BaseModel):
     scores: List[int]
     already_voted: Optional[int] = None
     reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
     revealed: bool = True
     is_hidden: bool = False
     
