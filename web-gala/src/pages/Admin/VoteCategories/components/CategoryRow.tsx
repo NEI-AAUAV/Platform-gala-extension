@@ -375,6 +375,7 @@ export default function CategoryRow({
   };
 
   const [isTogglingHidden, setIsTogglingHidden] = useState(false);
+  const [isTogglingResults, setIsTogglingResults] = useState(false);
 
   const handleToggleVisibility = async () => {
     setIsTogglingHidden(true);
@@ -392,6 +393,25 @@ export default function CategoryRow({
       toast.error("Erro ao alterar visibilidade da categoria.");
     } finally {
       setIsTogglingHidden(false);
+    }
+  };
+
+  const handleToggleResultsVisibility = async () => {
+    setIsTogglingResults(true);
+    try {
+      await GalaService.vote.editVote(vote._id, {
+        results_visible: !vote.results_visible,
+      });
+      toast.success(
+        vote.results_visible
+          ? "Resultados desta categoria ocultados aos utilizadores."
+          : "Resultados desta categoria visíveis aos utilizadores.",
+      );
+      refresh();
+    } catch {
+      toast.error("Erro ao alterar visibilidade dos resultados.");
+    } finally {
+      setIsTogglingResults(false);
     }
   };
 
@@ -534,31 +554,58 @@ export default function CategoryRow({
           ) : (
             <>
               {!isEditing && (
-                <button
-                  type="button"
-                  onClick={handleToggleVisibility}
-                  disabled={isTogglingHidden}
-                  title={
-                    vote.is_hidden
-                      ? "Ativar categoria (mostrar de acordo com agendamento)"
-                      : "Ocultar categoria manualmente"
-                  }
-                  className={[
-                    "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
-                    vote.is_hidden
-                      ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                      : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
-                  ].join(" ")}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      vote.is_hidden ? "bg-red-400" : "bg-green-400"
-                    }`}
-                  />
-                  <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
-                    {vote.is_hidden ? "Oculta" : "Visível"}
-                  </span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={handleToggleResultsVisibility}
+                    disabled={isTogglingResults}
+                    title={
+                      vote.results_visible
+                        ? "Ocultar resultados desta categoria aos utilizadores"
+                        : "Mostrar resultados desta categoria aos utilizadores"
+                    }
+                    className={[
+                      "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
+                      vote.results_visible
+                        ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                        : "border-white/15 bg-white/5 text-white/45 hover:bg-white/10 hover:text-white/70",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        vote.results_visible ? "bg-blue-400" : "bg-white/35"
+                      }`}
+                    />
+                    <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
+                      Resultados
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleToggleVisibility}
+                    disabled={isTogglingHidden}
+                    title={
+                      vote.is_hidden
+                        ? "Ativar categoria (mostrar de acordo com agendamento)"
+                        : "Ocultar categoria manualmente"
+                    }
+                    className={[
+                      "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
+                      vote.is_hidden
+                        ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                        : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        vote.is_hidden ? "bg-red-400" : "bg-green-400"
+                      }`}
+                    />
+                    <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
+                      {vote.is_hidden ? "Oculta" : "Visível"}
+                    </span>
+                  </button>
+                </>
               )}
               {isEditing ? (
                 <button
@@ -700,6 +747,12 @@ export default function CategoryRow({
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
                   Ocultada Manualmente
+                </span>
+              )}
+              {vote.results_visible && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                  Resultados Visíveis
                 </span>
               )}
               {vote.reveal_at && !vote.is_hidden && (

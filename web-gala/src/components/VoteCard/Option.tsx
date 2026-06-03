@@ -8,6 +8,9 @@ type OptionProps = Readonly<{
   disabled?: boolean;
   optionIdx?: number;
   catId?: number;
+  score?: number;
+  totalVotes?: number;
+  showResults?: boolean;
 }>;
 
 export default function Option({
@@ -16,6 +19,9 @@ export default function Option({
   optionIdx,
   disabled,
   catId,
+  score = 0,
+  totalVotes = 0,
+  showResults = false,
 }: OptionProps) {
   const { setValue } = useFormContext();
   const currentSelected = useWatch({
@@ -29,6 +35,7 @@ export default function Option({
       ? "border-neutral-500 bg-neutral-600 text-neutral-300"
       : "border-black bg-black text-light-gold";
   }
+  const percentage = totalVotes > 0 ? Math.round((score / totalVotes) * 100) : 0;
 
   return (
     <button
@@ -84,20 +91,48 @@ export default function Option({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <span
-              className={classNames(
-                "block font-gala text-sm font-bold leading-tight transition-colors duration-300 md:text-base",
-                {
-                  "text-black": currentSelected === optionIdx && !disabled,
-                  "text-neutral-300": currentSelected === optionIdx && disabled,
-                  "bg-gradient-to-r from-[#e2c77a] to-[#b38726] bg-clip-text text-transparent":
-                    currentSelected !== optionIdx && !disabled,
-                  "text-neutral-500": currentSelected !== optionIdx && disabled,
-                },
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className={classNames(
+                  "block font-gala text-sm font-bold leading-tight transition-colors duration-300 md:text-base",
+                  {
+                    "text-black": currentSelected === optionIdx && !disabled,
+                    "text-neutral-300":
+                      currentSelected === optionIdx && disabled,
+                    "bg-gradient-to-r from-[#e2c77a] to-[#b38726] bg-clip-text text-transparent":
+                      currentSelected !== optionIdx && !disabled,
+                    "text-neutral-500": currentSelected !== optionIdx && disabled,
+                  },
+                )}
+              >
+                {name}
+              </span>
+              {showResults && (
+                <span
+                  className={classNames(
+                    "shrink-0 font-gala text-xs font-bold tabular-nums",
+                    currentSelected === optionIdx && !disabled
+                      ? "text-black/70"
+                      : "text-light-gold/80",
+                  )}
+                >
+                  {percentage}% · {score} votos
+                </span>
               )}
-            >
-              {name}
-            </span>
+            </div>
+            {showResults && (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={classNames(
+                    "h-full rounded-full transition-all duration-500",
+                    currentSelected === optionIdx && !disabled
+                      ? "bg-black/60"
+                      : "bg-light-gold/70",
+                  )}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -123,4 +158,7 @@ Option.defaultProps = {
   disabled: false,
   optionIdx: 0,
   catId: 0,
+  score: 0,
+  totalVotes: 0,
+  showResults: false,
 };

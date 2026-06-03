@@ -24,6 +24,8 @@ export default function VoteCard({
 }: Props) {
   const showNomination = vote.nomination_open && vote.revealed;
   const showVoting = vote.revealed && vote.options.length > 0;
+  const showResults = vote.results_visible && vote.scores.length > 0;
+  const totalVotes = vote.scores.reduce((total, score) => total + score, 0);
   const votingOptions = useMemo(() => getRandomizedVoteOptions(vote), [vote]);
 
   return (
@@ -82,6 +84,9 @@ export default function VoteCard({
                 optionIdx={option.originalIndex}
                 disabled={!vote.voting_open || vote.already_voted !== null}
                 catId={vote._id}
+                score={vote.scores[option.originalIndex] ?? 0}
+                totalVotes={totalVotes}
+                showResults={showResults}
               />
             ))}
           </div>

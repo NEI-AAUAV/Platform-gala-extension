@@ -54,6 +54,7 @@ type VoteCategoryCreate = {
   votes_start?: string | null;
   votes_end?: string | null;
   is_hidden?: boolean;
+  results_visible?: boolean;
 };
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
@@ -78,6 +79,7 @@ export type AdminVoteCategory = {
   votes_end?: string | null;
   revealed?: boolean;
   is_hidden: boolean;
+  results_visible: boolean;
 };
 
 export type MergeNomineesBody = {
