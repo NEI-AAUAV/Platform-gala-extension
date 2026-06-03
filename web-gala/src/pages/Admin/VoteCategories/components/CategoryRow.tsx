@@ -568,7 +568,7 @@ export default function CategoryRow({
                       "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
                       vote.results_visible
                         ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                        : "border-white/15 bg-white/5 text-white/45 hover:bg-white/10 hover:text-white/70",
+                        : "border-white/15 text-white/45 bg-white/5 hover:bg-white/10 hover:text-white/70",
                     ].join(" ")}
                   >
                     <span
