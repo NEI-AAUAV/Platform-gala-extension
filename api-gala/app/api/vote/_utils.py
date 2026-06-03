@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from typing import List
+
 from fastapi import HTTPException
 
 from app.api.auth import AuthData
@@ -40,23 +42,32 @@ def is_voting_open(ts: TimeSlots, category: VoteCategory = None) -> bool:
     return _ensure_utc(votes_start) <= now <= _ensure_utc(votes_end)
 
 
+def _is_category_revealed(category: VoteCategory) -> bool:
+    if getattr(category, "is_hidden", False):
+        return False
+
+    if category.reveal_at is None:
+        return True
+
+    return _now() >= _ensure_utc(category.reveal_at)
+
+
+def _visible_photo_paths(category: VoteCategory, revealed: bool) -> List[str]:
+    if not revealed:
+        return []
+
+    visible_photo_paths = list(category.photo_paths[: len(category.options)])
+    visible_photo_paths.extend([""] * (len(category.options) - len(visible_photo_paths)))
+    return visible_photo_paths
+
+
 def anonymize_category(
     category: VoteCategory,
     auth: AuthData,
     ts: TimeSlots,
     results_visible: bool = False,
 ) -> VoteListing:
-    # Check if category is revealed
-    now = _now()
-    revealed = True
-    
-    if getattr(category, "is_hidden", False):
-        revealed = False
-    elif category.reveal_at:
-        reveal_at_utc = _ensure_utc(category.reveal_at)
-        if now < reveal_at_utc:
-            revealed = False
-
+    revealed = _is_category_revealed(category)
     already_voted = None
     scores = [0] * len(category.options)
 
@@ -71,13 +82,7 @@ def anonymize_category(
         results_visible and getattr(category, "results_visible", False) and revealed
     )
     visible_options = category.options if revealed else []
-    visible_photo_paths = []
-    if revealed:
-        visible_photo_paths = list(category.photo_paths[: len(category.options)])
-        if len(visible_photo_paths) < len(category.options):
-            visible_photo_paths.extend(
-                [""] * (len(category.options) - len(visible_photo_paths))
-            )
+    visible_photo_paths = _visible_photo_paths(category, revealed)
     visible_scores = scores if category_results_visible else [0] * len(visible_options)
 
     return VoteListing(
