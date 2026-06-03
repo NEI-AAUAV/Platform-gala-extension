@@ -882,6 +882,27 @@ async def admin_create_runoff_category(
     return category
 
 
+@router.post(
+    "/voting/categories/{category_id}/vote-runoff",
+    responses={
+        **auth_responses,
+        400: {"description": "Vote runoff creation failed"},
+        403: {"description": ERROR_FORBIDDEN}
+    }
+)
+async def admin_create_vote_runoff_category(
+    category_id: int,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+) -> VoteCategory:
+    """Creates a 2nd-round vote category for options tied in 1st place."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    category = await AdminVoteService.create_vote_runoff_category(db, category_id)
+    if category is None:
+        raise HTTPException(status_code=400, detail="Vote runoff creation failed")
+    return category
+
+
 @router.patch(
     "/voting/results-visibility",
     responses={**auth_responses, 403: {"description": ERROR_FORBIDDEN}}

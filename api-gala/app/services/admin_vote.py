@@ -113,3 +113,56 @@ class AdminVoteService:
 
         await collection.insert_one(category.dict(by_alias=True))
         return category
+
+    @staticmethod
+    async def create_vote_runoff_category(
+        db: DBType,
+        source_category_id: int,
+    ) -> Optional[VoteCategory]:
+        collection = VoteCategory.get_collection(db)
+        category_dict = await collection.find_one({"_id": source_category_id})
+        if not category_dict:
+            return None
+
+        source = VoteCategory.parse_obj(category_dict)
+        if len(source.options) < 2:
+            return None
+
+        scores = [0] * len(source.options)
+        for vote in source.votes:
+            if 0 <= vote.option < len(scores):
+                scores[vote.option] += 1
+
+        if not scores:
+            return None
+
+        top_score = max(scores)
+        tied_indexes = [
+            index for index, score in enumerate(scores) if score == top_score
+        ]
+        if len(tied_indexes) < 2:
+            return None
+
+        options = [source.options[index] for index in tied_indexes]
+        photo_paths = [
+            source.photo_paths[index] if index < len(source.photo_paths) else ""
+            for index in tied_indexes
+        ]
+
+        category_id = await get_next_vote_category_id(db)
+        category = VoteCategory(
+            _id=category_id,
+            category=f"Desempate - {source.category}",
+            description=f"2.ª volta para decidir o vencedor entre {len(options)} opções empatadas com {top_score} votos.",
+            min_nominees=source.min_nominees,
+            max_nominees=source.max_nominees,
+            reveal_at=source.reveal_at,
+            is_hidden=source.is_hidden,
+            nominations=[],
+            options=options,
+            photo_paths=photo_paths,
+            votes=[],
+        )
+
+        await collection.insert_one(category.dict(by_alias=True))
+        return category
