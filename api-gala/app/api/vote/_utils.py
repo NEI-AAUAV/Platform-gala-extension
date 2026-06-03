@@ -61,7 +61,8 @@ def anonymize_category(
     scores = [0] * len(category.options)
 
     for vote in category.votes:
-        scores[vote.option] += 1
+        if 0 <= vote.option < len(scores):
+            scores[vote.option] += 1
         if vote.uid == auth.sub:
             already_voted = vote.option
 
