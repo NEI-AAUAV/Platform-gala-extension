@@ -66,6 +66,9 @@ def anonymize_category(
             already_voted = vote.option
 
     already_nominated = any(auth.sub in n.votes for n in category.nominations)
+    category_results_visible = (
+        results_visible and getattr(category, "results_visible", False) and revealed
+    )
 
     return VoteListing(
         _id=category.id,
@@ -73,7 +76,7 @@ def anonymize_category(
         description=category.description,
         options=category.options if revealed else [],
         photo_paths=category.photo_paths if revealed else [],
-        scores=scores if (results_visible and revealed) else [0] * len(category.options),
+        scores=scores if category_results_visible else [0] * len(category.options),
         already_voted=already_voted,
         reveal_at=category.reveal_at,
         votes_start=category.votes_start,
@@ -82,7 +85,7 @@ def anonymize_category(
         is_hidden=getattr(category, "is_hidden", False),
         nomination_open=is_nominations_open(ts) if revealed else False,
         voting_open=is_voting_open(ts, category) if revealed else False,
-        results_visible=results_visible and revealed,
+        results_visible=category_results_visible,
         already_nominated=already_nominated,
         min_nominees=category.min_nominees,
         max_nominees=category.max_nominees,

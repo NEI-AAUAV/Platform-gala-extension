@@ -24,6 +24,7 @@ class VoteCategoryCreateForm(BaseModel):
     votes_start: Optional[datetime] = None
     votes_end: Optional[datetime] = None
     is_hidden: bool = False
+    results_visible: bool = False
 
     @validator("photo_paths")
     def validate_lengths(cls, photo_paths, values):
@@ -61,6 +62,7 @@ async def create_category(
         votes_start=form_data.votes_start,
         votes_end=form_data.votes_end,
         is_hidden=form_data.is_hidden,
+        results_visible=form_data.results_visible,
         options=form_data.options,
         photo_paths=form_data.photo_paths,
         votes=[],

@@ -28,6 +28,7 @@ class VoteCategory(BaseDocument):
     votes_start: Optional[datetime] = None
     votes_end: Optional[datetime] = None
     is_hidden: bool = False
+    results_visible: bool = False
 
     # Nominations (free text)
     nominations: List[Nominee] = []
