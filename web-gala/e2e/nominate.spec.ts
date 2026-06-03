@@ -14,7 +14,7 @@ test.describe('Nomination System', () => {
     await page.goto('./nominate');
 
     await expect(
-      page.locator('text=Tens de estar inscrito no Gala para participar nas nomeações.')
+      page.locator('text=Tens de estar inscrito na Gala para participar nas nomeações.')
     ).toBeVisible();
   });
 
