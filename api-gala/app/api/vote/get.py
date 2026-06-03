@@ -47,13 +47,15 @@ async def get_category(
     """Get a single vote category"""
     ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
     category = await fetch_category(category_id, db)
-    
-    # If not revealed yet, raise 404
+
+    # Hidden and not-yet-revealed categories should not disclose their existence.
+    if getattr(category, "is_hidden", False):
+        raise HTTPException(status_code=404, detail="Category not found")
     if category.reveal_at:
         reveal_at_utc = _ensure_utc(category.reveal_at)
         if _now() < reveal_at_utc:
             raise HTTPException(status_code=404, detail="Category not found")
-            
+
     return anonymize_category(category, auth, ts, config.results_visible)
 
 

@@ -49,6 +49,31 @@ async def test_cast_vote(async_client: AsyncClient, test_db, mock_vote_category)
     assert resp.status_code in [200, 400, 403, 409]
 
 
+@pytest.mark.asyncio
+async def test_get_hidden_vote_category_returns_404(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    test_db.vote_category.find_one.return_value = {
+        **mock_vote_category,
+        "is_hidden": True,
+    }
+    test_db.time_slots.find_one.return_value = {
+        "registrationStart": "2020-01-01T00:00:00Z",
+        "registrationEnd": "2030-01-01T00:00:00Z",
+        "nominationsStart": "2020-01-01T00:00:00Z",
+        "nominationsEnd": "2030-01-01T00:00:00Z",
+        "votesStart": "2020-01-01T00:00:00Z",
+        "votesEnd": "2030-01-01T00:00:00Z",
+        "tablesStart": "2020-01-01T00:00:00Z",
+        "tablesEnd": "2030-01-01T00:00:00Z",
+        "galaStart": "2030-12-31T00:00:00Z",
+    }
+
+    resp = await async_client.get("/api/gala/v1/voting/categories/1")
+
+    assert resp.status_code == 404
+
+
 def test_is_voting_open_uses_category_specific_window(monkeypatch):
     from app.api.vote import _utils
     from app.models.time_slots import TimeSlots
