@@ -798,6 +798,15 @@ class MergeNomineesBody(BaseModel):
     source_names: List[str]
 
 
+class FinalizeNominationsBody(BaseModel):
+    selected_names: Optional[List[str]] = None
+
+
+class CreateRunoffBody(BaseModel):
+    nominee_names: List[str]
+    slots: int
+
+
 @router.post(
     "/voting/categories/{category_id}/merge",
     responses={
@@ -831,14 +840,46 @@ async def admin_merge_nominees(
 async def admin_finalize_nominations(
     category_id: int,
     db: Annotated[DBType, Depends(get_db)],
-    auth: Annotated[AuthData, Depends(api_nei_auth)]
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    body: Optional[FinalizeNominationsBody] = None,
 ):
     """Finalizes nominations for a category, selecting the top 4."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await AdminVoteService.finalize_nominations(db, category_id)
+    success = await AdminVoteService.finalize_nominations(
+        db,
+        category_id,
+        body.selected_names if body else None,
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Category not found or has no nominations to finalize")
     return {"status": "success"}
+
+
+@router.post(
+    "/voting/categories/{category_id}/runoff",
+    responses={
+        **auth_responses,
+        400: {"description": "Runoff creation failed"},
+        403: {"description": ERROR_FORBIDDEN}
+    }
+)
+async def admin_create_runoff_category(
+    category_id: int,
+    body: CreateRunoffBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+) -> VoteCategory:
+    """Creates a 2nd-round vote category for tied nominees."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    category = await AdminVoteService.create_runoff_category(
+        db,
+        category_id,
+        body.nominee_names,
+        body.slots,
+    )
+    if category is None:
+        raise HTTPException(status_code=400, detail="Runoff creation failed")
+    return category
 
 
 @router.patch(

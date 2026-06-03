@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Optional
 from app.core.db.types import DBType
+from app.core.db.counters import get_next_vote_category_id
 from app.models.vote import VoteCategory, Nominee
 
 
@@ -39,7 +40,7 @@ class AdminVoteService:
         return True
 
     @staticmethod
-    async def finalize_nominations(db: DBType, category_id: int) -> bool:
+    async def finalize_nominations(db: DBType, category_id: int, selected_names: Optional[List[str]] = None) -> bool:
         collection = VoteCategory.get_collection(db)
         category_dict = await collection.find_one({"_id": category_id})
         if not category_dict:
@@ -50,11 +51,65 @@ class AdminVoteService:
         if not category.nominations:
             return False
 
-        sorted_nominations = sorted(category.nominations, key=lambda x: len(x.votes), reverse=True)
-        top_4 = sorted_nominations[:4]
+        if selected_names is not None:
+            available_names = {n.name for n in category.nominations}
+            cleaned_names = []
+            for name in selected_names:
+                if name not in available_names or name in cleaned_names:
+                    return False
+                cleaned_names.append(name)
+
+            if not (1 <= len(cleaned_names) <= 4):
+                return False
+
+            options = cleaned_names
+        else:
+            sorted_nominations = sorted(category.nominations, key=lambda x: len(x.votes), reverse=True)
+            options = [n.name for n in sorted_nominations[:4]]
 
         await collection.update_one(
             {"_id": category_id},
-            {"$set": {"options": [n.name for n in top_4]}}
+            {"$set": {"options": options}}
         )
         return True
+
+    @staticmethod
+    async def create_runoff_category(
+        db: DBType,
+        source_category_id: int,
+        nominee_names: List[str],
+        slots: int,
+    ) -> Optional[VoteCategory]:
+        collection = VoteCategory.get_collection(db)
+        category_dict = await collection.find_one({"_id": source_category_id})
+        if not category_dict:
+            return None
+
+        source = VoteCategory.parse_obj(category_dict)
+        available_names = {n.name for n in source.nominations}
+        cleaned_names = []
+        for name in nominee_names:
+            if name not in available_names or name in cleaned_names:
+                return None
+            cleaned_names.append(name)
+
+        if len(cleaned_names) < 2 or slots < 1 or slots >= len(cleaned_names):
+            return None
+
+        category_id = await get_next_vote_category_id(db)
+        category = VoteCategory(
+            _id=category_id,
+            category=f"Desempate - {source.category}",
+            description=f"2.ª volta para escolher {slots} de {len(cleaned_names)} nomeados empatados.",
+            min_nominees=source.min_nominees,
+            max_nominees=source.max_nominees,
+            reveal_at=source.reveal_at,
+            is_hidden=source.is_hidden,
+            nominations=[],
+            options=cleaned_names,
+            photo_paths=["" for _ in cleaned_names],
+            votes=[],
+        )
+
+        await collection.insert_one(category.dict(by_alias=True))
+        return category
