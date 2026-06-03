@@ -99,7 +99,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
   const activeWinners = getVisibleWinners(votes[active]);
 
   return (
-    <div className="px-4 flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-6 px-4">
       <div className="border-light-gold/15 relative h-[280px] w-full overflow-hidden rounded-2xl border">
         <AnimatePresence mode="wait">
           <motion.div
@@ -129,7 +129,7 @@ function CategoriesCarousel({ votes }: { readonly votes: Vote[] }) {
         </AnimatePresence>
       </div>
 
-      <div className="flex flex-col gap-2.5 items-center">
+      <div className="flex flex-col items-center gap-2.5">
         <Link
           to="/vote"
           className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
@@ -177,7 +177,7 @@ function NomineeButton({
       <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
         {nominee.name}
         {isWinner && (
-          <span className="rounded-full border border-light-gold/35 bg-black/35 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-light-gold">
+          <span className="border-light-gold/35 bg-black/35 rounded-full border px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-light-gold">
             Vencedor
           </span>
         )}
@@ -285,7 +285,7 @@ function NomineesVisualShowcase({ votes }: { readonly votes: Vote[] }) {
   const renderVoteButton = () => {
     if (!activeCategory.voting_open) {
       return (
-        <div className="flex flex-col gap-2 items-center">
+        <div className="flex flex-col items-center gap-2">
           <Link
             to="/vote"
             className="mx-auto block w-fit rounded-full bg-gradient-to-r from-[#f3d892] to-[#b8842f] px-8 py-3 font-gala text-sm font-bold uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:from-[#f7e1a8] hover:to-[#c8953e]"
