@@ -392,6 +392,14 @@ const GalaService = {
     ): Promise<AdminVoteCategory> => {
       return client.post(`/admin/voting/categories/${categoryId}/runoff`, body);
     },
+    createVoteRunoff: async (
+      categoryId: number,
+    ): Promise<AdminVoteCategory> => {
+      return client.post(
+        `/admin/voting/categories/${categoryId}/vote-runoff`,
+        {},
+      );
+    },
     setResultsVisibility: async (visible: boolean): Promise<void> => {
       return client.patch(
         `/admin/voting/results-visibility?visible=${visible}`,

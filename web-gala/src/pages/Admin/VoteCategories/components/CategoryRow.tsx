@@ -13,6 +13,7 @@ import {
   faCheckDouble,
   faSpinner,
   faXmark,
+  faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 import GalaService, {
   type AdminVoteCategory,
@@ -273,11 +274,38 @@ export default function CategoryRow({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [showNominations, setShowNominations] = useState(false);
+  const [isCreatingVoteRunoff, setIsCreatingVoteRunoff] = useState(false);
 
   const [cropperOpen, setCropperOpen] = useState(false);
   const [cropperImageSrc, setCropperImageSrc] = useState("");
   const [cropperFile, setCropperFile] = useState<File | null>(null);
   const [cropperOptionIndex, setCropperOptionIndex] = useState<number>(0);
+
+  const voteScores = vote.options.map(
+    (_, optionIndex) =>
+      vote.votes.filter((castVote) => castVote.option === optionIndex).length,
+  );
+  const topVoteScore = voteScores.length > 0 ? Math.max(...voteScores) : 0;
+  const tiedWinningIndexes = voteScores
+    .map((score, index) => ({ score, index }))
+    .filter(({ score }) => score === topVoteScore);
+  const hasWinningVoteTie =
+    vote.options.length > 1 &&
+    topVoteScore > 0 &&
+    tiedWinningIndexes.length > 1;
+
+  const handleCreateVoteRunoff = async () => {
+    setIsCreatingVoteRunoff(true);
+    try {
+      await GalaService.admin.createVoteRunoff(vote._id);
+      toast.success("2.ª volta criada para desempatar o vencedor.");
+      refresh();
+    } catch {
+      toast.error("Erro ao criar desempate da votação.");
+    } finally {
+      setIsCreatingVoteRunoff(false);
+    }
+  };
 
   const triggerCropper = (optionIndex: number, file: File) => {
     const reader = new FileReader();
@@ -709,6 +737,41 @@ export default function CategoryRow({
           </>
         )}
       </div>
+
+      {!isEditing && hasWinningVoteTie && (
+        <div className="flex flex-col gap-2 border border-yellow-500/20 bg-yellow-500/5 p-3">
+          <div className="flex items-start gap-2">
+            <FontAwesomeIcon
+              icon={faTrophy}
+              className="mt-0.5 text-xs text-yellow-400/80"
+            />
+            <p className="flex-1 text-xs text-yellow-100/70">
+              Há {tiedWinningIndexes.length} opções empatadas em 1.º lugar com{" "}
+              {topVoteScore} voto{topVoteScore === 1 ? "" : "s"}.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tiedWinningIndexes.map(({ index }) => (
+              <span
+                key={`${vote._id}-vote-tie-${vote.options[index]}`}
+                className="rounded-full bg-black/20 px-2.5 py-1 text-xs text-white/60"
+              >
+                {vote.options[index]}
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleCreateVoteRunoff}
+            disabled={isCreatingVoteRunoff}
+            className="w-fit rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-50"
+          >
+            {isCreatingVoteRunoff
+              ? "A criar..."
+              : `Criar desempate entre ${tiedWinningIndexes.length}`}
+          </button>
+        </div>
+      )}
 
       {!isEditing && (
         <div className="border-t border-light-gold/20 pt-3">
