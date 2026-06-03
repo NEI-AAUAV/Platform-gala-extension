@@ -91,35 +91,44 @@ export default function Option({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={classNames(
-                  "block font-gala text-sm font-bold leading-tight transition-colors duration-300 md:text-base",
-                  {
-                    "text-black": currentSelected === optionIdx && !disabled,
-                    "text-neutral-300":
-                      currentSelected === optionIdx && disabled,
-                    "bg-gradient-to-r from-[#e2c77a] to-[#b38726] bg-clip-text text-transparent":
-                      currentSelected !== optionIdx && !disabled,
-                    "text-neutral-500": currentSelected !== optionIdx && disabled,
-                  },
-                )}
-              >
-                {name}
-              </span>
-              {showResults && (
+            <span
+              className={classNames(
+                "block break-words font-gala text-sm font-bold leading-tight transition-colors duration-300 md:text-base",
+                {
+                  "text-black": currentSelected === optionIdx && !disabled,
+                  "text-neutral-300": currentSelected === optionIdx && disabled,
+                  "bg-gradient-to-r from-[#e2c77a] to-[#b38726] bg-clip-text text-transparent":
+                    currentSelected !== optionIdx && !disabled,
+                  "text-neutral-500": currentSelected !== optionIdx && disabled,
+                },
+              )}
+            >
+              {name}
+            </span>
+            {showResults && (
+              <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span
                   className={classNames(
-                    "shrink-0 font-gala text-xs font-bold tabular-nums",
+                    "font-gala text-xs font-bold tabular-nums leading-none md:text-sm",
                     currentSelected === optionIdx && !disabled
-                      ? "text-black/70"
-                      : "text-light-gold/80",
+                      ? "text-black/75"
+                      : "text-light-gold/90",
                   )}
                 >
-                  {percentage}% · {score} votos
+                  {percentage}%
                 </span>
-              )}
-            </div>
+                <span
+                  className={classNames(
+                    "font-gala text-[0.65rem] font-semibold uppercase tracking-wider leading-none md:text-xs",
+                    currentSelected === optionIdx && !disabled
+                      ? "text-black/55"
+                      : "text-white/45",
+                  )}
+                >
+                  {score} {score === 1 ? "voto" : "votos"}
+                </span>
+              </div>
+            )}
             {showResults && (
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
