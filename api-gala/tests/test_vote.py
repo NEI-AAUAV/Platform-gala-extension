@@ -2,6 +2,51 @@ import pytest
 from httpx import AsyncClient
 from datetime import datetime, timedelta, timezone
 
+
+def active_time_slot_payload():
+    return {
+        "registrationStart": "2020-01-01T00:00:00Z",
+        "registrationEnd": "2030-01-01T00:00:00Z",
+        "nominationsStart": "2020-01-01T00:00:00Z",
+        "nominationsEnd": "2030-01-01T00:00:00Z",
+        "votesStart": "2020-01-01T00:00:00Z",
+        "votesEnd": "2030-01-01T00:00:00Z",
+        "tablesStart": "2020-01-01T00:00:00Z",
+        "tablesEnd": "2030-01-01T00:00:00Z",
+        "galaStart": "2030-12-31T00:00:00Z",
+    }
+
+
+def make_time_slots(now):
+    from app.models.time_slots import TimeSlots
+
+    return TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=1),
+        nominationsEnd=now + timedelta(days=1),
+        votesStart=now - timedelta(days=1),
+        votesEnd=now + timedelta(days=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+
+
+def make_auth():
+    from app.api.auth import AuthData
+
+    return AuthData(
+        sub=1,
+        nmec=None,
+        name="Alice",
+        email="alice@example.com",
+        surname="Example",
+        scopes=[],
+    )
+
+
 @pytest.fixture
 def mock_vote_category():
     return {
@@ -15,6 +60,7 @@ def mock_vote_category():
         "photo_paths": [],
         "votes": [],
     }
+
 
 @pytest.mark.asyncio
 async def test_get_vote_categories(async_client: AsyncClient, test_db, mock_vote_category):
@@ -30,20 +76,11 @@ async def test_get_vote_categories(async_client: AsyncClient, test_db, mock_vote
     assert len(data) == 1
     assert data[0]["category"] == "Best Person"
 
+
 @pytest.mark.asyncio
 async def test_cast_vote(async_client: AsyncClient, test_db, mock_vote_category):
     test_db.vote_category.find_one.return_value = mock_vote_category
-    test_db.time_slots.find_one.return_value = {
-        "registrationStart": "2020-01-01T00:00:00Z",
-        "registrationEnd": "2030-01-01T00:00:00Z",
-        "nominationsStart": "2020-01-01T00:00:00Z",
-        "nominationsEnd": "2030-01-01T00:00:00Z",
-        "votesStart": "2020-01-01T00:00:00Z",
-        "votesEnd": "2030-01-01T00:00:00Z",
-        "tablesStart": "2020-01-01T00:00:00Z",
-        "tablesEnd": "2030-01-01T00:00:00Z",
-        "galaStart": "2030-12-31T00:00:00Z",
-    }
+    test_db.time_slots.find_one.return_value = active_time_slot_payload()
 
     resp = await async_client.post("/api/gala/v1/voting/categories/1/vote", json={"option": 0})
     assert resp.status_code in [200, 400, 403, 409]
@@ -57,17 +94,7 @@ async def test_get_hidden_vote_category_returns_404(
         **mock_vote_category,
         "is_hidden": True,
     }
-    test_db.time_slots.find_one.return_value = {
-        "registrationStart": "2020-01-01T00:00:00Z",
-        "registrationEnd": "2030-01-01T00:00:00Z",
-        "nominationsStart": "2020-01-01T00:00:00Z",
-        "nominationsEnd": "2030-01-01T00:00:00Z",
-        "votesStart": "2020-01-01T00:00:00Z",
-        "votesEnd": "2030-01-01T00:00:00Z",
-        "tablesStart": "2020-01-01T00:00:00Z",
-        "tablesEnd": "2030-01-01T00:00:00Z",
-        "galaStart": "2030-12-31T00:00:00Z",
-    }
+    test_db.time_slots.find_one.return_value = active_time_slot_payload()
 
     resp = await async_client.get("/api/gala/v1/voting/categories/1")
 
@@ -107,24 +134,10 @@ def test_is_voting_open_uses_category_specific_window(monkeypatch):
 
 
 def test_anonymize_category_ignores_invalid_stored_vote_options():
-    from app.api.auth import AuthData
     from app.api.vote._utils import anonymize_category
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime.now(timezone.utc)
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=1),
-        nominationsEnd=now + timedelta(days=1),
-        votesStart=now - timedelta(days=1),
-        votesEnd=now + timedelta(days=1),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
-    )
     category = VoteCategory(
         _id=1,
         category="Best Person",
@@ -136,39 +149,19 @@ def test_anonymize_category_ignores_invalid_stored_vote_options():
         ],
         results_visible=True,
     )
-    auth = AuthData(
-        sub=1,
-        nmec=None,
-        name="Alice",
-        email="alice@example.com",
-        surname="Example",
-        scopes=[],
-    )
 
-    listing = anonymize_category(category, auth, ts, results_visible=True)
+    listing = anonymize_category(
+        category, make_auth(), make_time_slots(now), results_visible=True
+    )
 
     assert listing.scores == [1, 0]
 
 
 def test_anonymize_category_hides_scores_with_hidden_options():
-    from app.api.auth import AuthData
     from app.api.vote._utils import anonymize_category
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime.now(timezone.utc)
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=1),
-        nominationsEnd=now + timedelta(days=1),
-        votesStart=now - timedelta(days=1),
-        votesEnd=now + timedelta(days=1),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
-    )
     category = VoteCategory(
         _id=1,
         category="Best Person",
@@ -178,16 +171,10 @@ def test_anonymize_category_hides_scores_with_hidden_options():
         is_hidden=True,
         results_visible=True,
     )
-    auth = AuthData(
-        sub=1,
-        nmec=None,
-        name="Alice",
-        email="alice@example.com",
-        surname="Example",
-        scopes=[],
-    )
 
-    listing = anonymize_category(category, auth, ts, results_visible=True)
+    listing = anonymize_category(
+        category, make_auth(), make_time_slots(now), results_visible=True
+    )
 
     assert listing.revealed is False
     assert listing.options == []
@@ -196,40 +183,20 @@ def test_anonymize_category_hides_scores_with_hidden_options():
 
 
 def test_anonymize_category_pads_photo_paths_to_option_count():
-    from app.api.auth import AuthData
     from app.api.vote._utils import anonymize_category
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime.now(timezone.utc)
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=1),
-        nominationsEnd=now + timedelta(days=1),
-        votesStart=now - timedelta(days=1),
-        votesEnd=now + timedelta(days=1),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
-    )
     category = VoteCategory(
         _id=1,
         category="Best Person",
         options=["A", "B", "C"],
         photo_paths=["/a.jpg"],
     )
-    auth = AuthData(
-        sub=1,
-        nmec=None,
-        name="Alice",
-        email="alice@example.com",
-        surname="Example",
-        scopes=[],
-    )
 
-    listing = anonymize_category(category, auth, ts, results_visible=False)
+    listing = anonymize_category(
+        category, make_auth(), make_time_slots(now), results_visible=False
+    )
 
     assert listing.options == ["A", "B", "C"]
     assert listing.photo_paths == ["/a.jpg", "", ""]
