@@ -31,8 +31,7 @@ function VoteResults() {
           setData(res);
           setFetchError(false);
         })
-        .catch((err) => {
-          console.error("Erro ao carregar resultados:", err);
+        .catch(() => {
           setFetchError(true);
         })
         .finally(() => {
@@ -137,7 +136,7 @@ function VoteResults() {
       {/* Grid of Results */}
       {filteredData.length === 0 ? (
         <div className="rounded-2xl border border-white/5 bg-black/20 p-8 text-center text-sm text-white/40">
-          Nenhuma categoria encontrada para "{searchTerm}".
+          Nenhuma categoria encontrada para &quot;{searchTerm}&quot;.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

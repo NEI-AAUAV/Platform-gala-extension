@@ -128,7 +128,10 @@ function RegisteredHeroContent({
   readonly remainingSeats: number | undefined;
 }) {
   const { votes } = useVotes();
-  const hasRevealedCategories = useMemo(() => votes.some((v) => v.revealed), [votes]);
+  const hasRevealedCategories = useMemo(
+    () => votes.some((v) => v.revealed),
+    [votes],
+  );
 
   const isRegistrationOpen = time?.registrationStatus === TimeStatus.OPEN;
   const isNominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;

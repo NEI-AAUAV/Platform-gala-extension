@@ -39,8 +39,8 @@ export default function VoteCategories() {
           (cfg as { results_visible?: boolean }).results_visible ?? false,
         ),
       )
-      .catch((error) => {
-        console.error("Failed to load voting config", error);
+      .catch(() => {
+        setResultsVisible(false);
       });
   }, []);
 

@@ -76,7 +76,7 @@ export default function Option({
                 }
                 alt={name}
                 className={classNames(
-                  "md:h-14 md:w-14 h-11 w-11 rounded-full border-2 object-cover object-center shadow-lg transition-all duration-300",
+                  "h-11 w-11 rounded-full border-2 object-cover object-center shadow-lg transition-all duration-300 md:h-14 md:w-14",
                   {
                     "scale-[1.03] border-black/50":
                       currentSelected === optionIdx && !disabled,

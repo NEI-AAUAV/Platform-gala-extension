@@ -47,10 +47,7 @@ function resolveVoteError(reason: unknown): string {
 export default function Vote() {
   const { state } = useSessionUser();
   const { votes: allVotes, mutate } = useVotes();
-  const votes = useMemo(
-    () => allVotes,
-    [allVotes],
-  );
+  const votes = useMemo(() => allVotes, [allVotes]);
   const hasVotingCategories = votes.length > 0;
   const allVoted = useMemo(
     () =>

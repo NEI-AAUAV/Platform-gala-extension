@@ -19,6 +19,9 @@ export default {
         "green-dark": "#203836",
         "green-light": "#355a56",
         "gala-white": "#c1cac9",
+        "base-100": "#203836",
+        "base-200": "#182c2a",
+        "base-content": "#c1cac9",
       },
       backgroundImage: () => ({
         "gradient-radial":

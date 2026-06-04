@@ -286,7 +286,7 @@ export default function CreateCategoryForm({
             type="datetime-local"
             value={revealAt}
             onChange={(e) => setRevealAt(e.target.value)}
-            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60 [color-scheme:dark]"
+            className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
           />
         </label>
       </div>
