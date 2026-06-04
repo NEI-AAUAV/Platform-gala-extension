@@ -11,6 +11,8 @@ from app.models.user import User
 from app.services.vote import VoteService
 
 router = APIRouter(tags=["Nominations"])
+GALA_REGISTRANTS_CAN_NOMINATE_ERROR = "Only gala registrants can nominate"
+INTERNAL_SERVER_ERROR = "Internal server error"
 
 
 class NominationForm(BaseModel):
@@ -32,7 +34,7 @@ class BulkNominationForm(BaseModel):
         **auth_responses,
         400: {"description": "Invalid input"},
         403: {"description": "Nominations are closed"},
-        500: {"description": "Internal server error"},
+        500: {"description": INTERNAL_SERVER_ERROR},
     }
 )
 async def submit_nomination(
@@ -43,10 +45,10 @@ async def submit_nomination(
 ):
     user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
     if not user_dict:
-        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+        raise HTTPException(status_code=403, detail=GALA_REGISTRANTS_CAN_NOMINATE_ERROR)
     user = User.parse_obj(user_dict)
     if not user.is_registered or not user.registration_active:
-        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+        raise HTTPException(status_code=403, detail=GALA_REGISTRANTS_CAN_NOMINATE_ERROR)
 
     ts = await fetch_time_slots(db)
     if not is_nominations_open(ts):
@@ -59,7 +61,7 @@ async def submit_nomination(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error submitting nomination: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
 
 
 @router.post(
@@ -68,7 +70,7 @@ async def submit_nomination(
         **auth_responses,
         400: {"description": "Invalid input"},
         403: {"description": "Nominations are closed"},
-        500: {"description": "Internal server error"},
+        500: {"description": INTERNAL_SERVER_ERROR},
     }
 )
 async def bulk_nominate(
@@ -78,10 +80,10 @@ async def bulk_nominate(
 ):
     user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
     if not user_dict:
-        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+        raise HTTPException(status_code=403, detail=GALA_REGISTRANTS_CAN_NOMINATE_ERROR)
     user = User.parse_obj(user_dict)
     if not user.is_registered or not user.registration_active:
-        raise HTTPException(status_code=403, detail="Only gala registrants can nominate")
+        raise HTTPException(status_code=403, detail=GALA_REGISTRANTS_CAN_NOMINATE_ERROR)
 
     ts = await fetch_time_slots(db)
     if not is_nominations_open(ts):
@@ -95,7 +97,7 @@ async def bulk_nominate(
             errors.append({"category_id": item.category_id, "error": str(e)})
         except Exception as e:
             logger.error(f"Error in bulk nomination for category {item.category_id}: {e}")
-            errors.append({"category_id": item.category_id, "error": "Internal server error"})
+            errors.append({"category_id": item.category_id, "error": INTERNAL_SERVER_ERROR})
 
     if errors:
         return {"status": "partial_success", "errors": errors}
@@ -108,7 +110,7 @@ async def bulk_nominate(
     responses={
         **auth_responses,
         403: {"description": "Only gala registrants can access nominations"},
-        500: {"description": "Internal server error"},
+        500: {"description": INTERNAL_SERVER_ERROR},
     },
     response_model=List[str]
 )
@@ -128,4 +130,4 @@ async def get_nomination_suggestions(
         return await VoteService.get_suggestions(db, category_id, q)
     except Exception as e:
         logger.error(f"Error getting suggestions: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR)
