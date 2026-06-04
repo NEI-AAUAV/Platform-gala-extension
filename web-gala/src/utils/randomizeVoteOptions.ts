@@ -4,21 +4,32 @@ export type RandomizedVoteOption = {
   originalIndex: number;
 };
 
-const randomValue = () => {
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const values = new Uint32Array(1);
-    crypto.getRandomValues(values);
-    return values[0] / 2 ** 32;
+const getCrypto = () => {
+  if (typeof globalThis.crypto !== "undefined") {
+    return globalThis.crypto;
   }
 
-  return Math.random();
+  throw new Error("Secure random number generation is not available.");
+};
+
+const randomIndex = (maxExclusive: number) => {
+  const maxUint32 = 2 ** 32;
+  const limit = maxUint32 - (maxUint32 % maxExclusive);
+  const values = new Uint32Array(1);
+  const cryptoApi = getCrypto();
+
+  do {
+    cryptoApi.getRandomValues(values);
+  } while (values[0] >= limit);
+
+  return values[0] % maxExclusive;
 };
 
 export function shuffleItems<T>(items: readonly T[]) {
   const shuffled = [...items];
 
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(randomValue() * (i + 1));
+    const j = randomIndex(i + 1);
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
