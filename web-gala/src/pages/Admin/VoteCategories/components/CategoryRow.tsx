@@ -677,7 +677,7 @@ export default function CategoryRow({
                   min={1}
                   value={editMinNominees}
                   onChange={(e) =>
-                    setEditMinNominees(parseInt(e.target.value, 10) || 1)
+                    setEditMinNominees(Number.parseInt(e.target.value, 10) || 1)
                   }
                   className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
                 />
@@ -691,7 +691,7 @@ export default function CategoryRow({
                   min={1}
                   value={editMaxNominees}
                   onChange={(e) =>
-                    setEditMaxNominees(parseInt(e.target.value, 10) || 1)
+                    setEditMaxNominees(Number.parseInt(e.target.value, 10) || 1)
                   }
                   className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
                 />
@@ -746,12 +746,14 @@ export default function CategoryRow({
               {vote.is_hidden && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                  {" "}
                   Ocultada Manualmente
                 </span>
               )}
               {vote.results_visible && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                  {" "}
                   Resultados Visíveis
                 </span>
               )}
