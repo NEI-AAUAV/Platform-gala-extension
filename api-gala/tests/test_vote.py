@@ -133,6 +133,62 @@ def test_is_voting_open_uses_category_specific_window(monkeypatch):
     assert _utils.is_voting_open(ts) is False
 
 
+def test_cast_vote_window_allows_category_specific_window_when_global_closed(monkeypatch):
+    from app.api.vote import vote as vote_api
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr("app.api.vote._utils._now", lambda: now)
+
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=2),
+        nominationsEnd=now - timedelta(days=1),
+        votesStart=now - timedelta(days=2),
+        votesEnd=now - timedelta(days=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(
+        _id=1,
+        category="Desempate",
+        options=["A", "B"],
+        votes_start=now - timedelta(hours=1),
+        votes_end=now + timedelta(hours=1),
+    )
+
+    assert vote_api._is_category_vote_open(ts, category) is True
+
+
+def test_cast_vote_window_falls_back_to_global_window(monkeypatch):
+    from app.api.vote import vote as vote_api
+    from app.models.time_slots import TimeSlots
+    from app.models.vote import VoteCategory
+
+    now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr("app.api.vote._utils._now", lambda: now)
+
+    ts = TimeSlots(
+        _id="TIME_SLOTS",
+        registrationStart=now - timedelta(days=1),
+        registrationEnd=now + timedelta(days=1),
+        nominationsStart=now - timedelta(days=2),
+        nominationsEnd=now - timedelta(days=1),
+        votesStart=now - timedelta(hours=1),
+        votesEnd=now + timedelta(hours=1),
+        tablesStart=now - timedelta(days=1),
+        tablesEnd=now + timedelta(days=1),
+        galaStart=now + timedelta(days=30),
+    )
+    category = VoteCategory(_id=1, category="Regular", options=["A", "B"])
+
+    assert vote_api._is_category_vote_open(ts, category) is True
+
+
 def test_anonymize_category_ignores_invalid_stored_vote_options():
     from app.api.vote._utils import anonymize_category
     from app.models.vote import VoteCategory
