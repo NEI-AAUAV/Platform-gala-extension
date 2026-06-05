@@ -15,10 +15,6 @@ async def fetch_time_slots(db: DBType) -> TimeSlots:
     res = await TimeSlots.get_collection(db).find_one({"_id": TIME_SLOTS_ID})
     if res is None:
         return TimeSlots()
-    for field_name, model_field in TimeSlots.__fields__.items():
-        alias = model_field.alias
-        if alias not in res and field_name in res:
-            res[alias] = res[field_name]
     return TimeSlots.parse_obj(res)
 
 
