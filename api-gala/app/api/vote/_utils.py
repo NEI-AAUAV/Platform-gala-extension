@@ -78,7 +78,7 @@ def anonymize_category(
             already_voted = vote.option
 
     already_nominated = any(auth.sub in n.votes for n in category.nominations)
-    category_results_visible = results_visible and revealed
+    category_results_visible = (results_visible or category.results_visible) and revealed
     visible_options = category.options if revealed else []
     visible_photo_paths = _visible_photo_paths(category, revealed)
     visible_scores = scores if category_results_visible else [0] * len(visible_options)

@@ -265,6 +265,27 @@ def test_anonymize_category_hides_scores_with_hidden_options():
     assert listing.scores == []
 
 
+def test_anonymize_category_shows_scores_when_category_results_visible():
+    from app.api.vote._utils import anonymize_category
+    from app.models.vote import VoteCategory
+
+    now = datetime.now(timezone.utc)
+    category = VoteCategory(
+        _id=1,
+        category="Best Person",
+        options=["A", "B"],
+        votes=[{"uid": 1, "option": 0}],
+        results_visible=True,
+    )
+
+    listing = anonymize_category(
+        category, make_auth(), make_time_slots(now), results_visible=False
+    )
+
+    assert listing.results_visible is True
+    assert listing.scores == [1, 0]
+
+
 def test_anonymize_category_pads_photo_paths_to_option_count():
     from app.api.vote._utils import anonymize_category
     from app.models.vote import VoteCategory
