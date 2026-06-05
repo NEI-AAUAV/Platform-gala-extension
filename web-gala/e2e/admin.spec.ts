@@ -222,7 +222,7 @@ test.describe("Admin Panel as Manager-Gala (categories only)", () => {
     await page.getByLabel("Fim da 2.ª volta").fill("2026-06-11T12:00");
     await page.getByRole("button", { name: "Criar 2.ª volta entre 3" }).click();
 
-    expect(requestedRunoff).toEqual(
+    await expect.poll(() => requestedRunoff).toEqual(
       expect.objectContaining({
         nominee_names: ["Carol", "Dave", "Eve"],
         slots: 2,
@@ -280,7 +280,9 @@ test.describe("Admin Panel as Manager-Gala (categories only)", () => {
       .click();
     await page.getByRole("button", { name: "Confirmar" }).click();
 
-    expect(requestedFinalize).toEqual({ selected_names: ["Alice", "Carol"] });
+    await expect
+      .poll(() => requestedFinalize)
+      .toEqual({ selected_names: ["Alice", "Carol"] });
     await expect(
       page.getByText("Nomeações finalizadas com a seleção indicada."),
     ).toBeVisible();
@@ -333,7 +335,7 @@ test.describe("Admin Panel as Manager-Gala (categories only)", () => {
     await page.getByLabel("Fim do desempate").fill("2026-06-13T12:00");
     await page.getByRole("button", { name: "Criar desempate entre 2" }).click();
 
-    expect(requestedVoteRunoff).toEqual(
+    await expect.poll(() => requestedVoteRunoff).toEqual(
       expect.objectContaining({
         votes_start: expect.any(String),
         votes_end: expect.any(String),

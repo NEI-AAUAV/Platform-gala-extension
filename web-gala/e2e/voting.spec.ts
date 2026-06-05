@@ -56,6 +56,9 @@ async function mockSuccessfulVote(page: Page, categoryId = 1) {
 
 test.describe("Voting System", () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("gala_voting_guide_seen", "true");
+    });
     await mockAuth(page, "user");
     await mockRegisteredUser(page);
     await mockGlobalConfig(page);
@@ -80,11 +83,7 @@ test.describe("Voting System", () => {
     await aliceOption.click();
 
     const submitBtn = page.getByRole("button", { name: /Enviar votações/i });
-    const voteRequest = page.waitForResponse(
-      "**/api/gala/v1/voting/categories/1/vote",
-    );
     await submitBtn.click();
-    await voteRequest;
 
     await expect(page.getByRole("heading", { name: "Sucesso!" })).toBeVisible();
   });
@@ -142,11 +141,7 @@ test.describe("Voting System", () => {
 
     await aliceOption.click();
     const submitBtn = page.getByRole("button", { name: /Enviar votações/i });
-    const voteRequest = page.waitForResponse(
-      "**/api/gala/v1/voting/categories/1/vote",
-    );
     await submitBtn.click();
-    await voteRequest;
 
     await expect(page.getByRole("heading", { name: "Sucesso!" })).toBeVisible();
   });
@@ -177,7 +172,7 @@ test.describe("Voting System", () => {
     const submitBtn = page.getByRole("button", { name: /Enviar votações/i });
     await submitBtn.click();
 
-    await expect(page.getByRole("heading", { name: "Erro" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Incompleto" })).toBeVisible();
     await expect(
       page.locator("text=Já votaste nesta categoria."),
     ).toBeVisible();

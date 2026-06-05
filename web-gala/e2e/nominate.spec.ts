@@ -52,6 +52,9 @@ test.describe('Nomination System', () => {
 
   test('should show guide modal on first visit and save seen state', async ({ page }) => {
     await mockRegisteredUser(page);
+    await page.addInitScript(() => {
+      localStorage.removeItem('gala_nomination_guide_seen');
+    });
 
     await page.route('**/api/gala/v1/voting/categories', async route => {
       await route.fulfill({
@@ -76,19 +79,11 @@ test.describe('Nomination System', () => {
 
     await page.goto('./nominate');
 
-    // Guide modal should open automatically
-    await expect(page.locator('text=Guia de Nomeações')).toBeVisible();
+    const guideTitle = page.getByRole('heading', { name: 'Como funcionam as nomeações?' });
+    await expect(guideTitle).toBeVisible();
 
-    // Click the close/confirm guide button
-    const closeBtn = page.getByRole('button', { name: /Entendido/i }).or(page.locator('button', { hasText: 'Fechar' })).first();
-    if (await closeBtn.isVisible()) {
-      await closeBtn.click();
-    } else {
-      // Fallback click on modal close button or backdrop
-      await page.locator('text=Guia de Nomeações').locator('xpath=..').locator('button').first().click();
-    }
-
-    await expect(page.locator('text=Guia de Nomeações')).not.toBeVisible();
+    await page.getByRole('button', { name: /Entendido/i }).click();
+    await expect(guideTitle).not.toBeVisible();
 
     // Verify local storage has been updated
     const isSeen = await page.evaluate(() => localStorage.getItem('gala_nomination_guide_seen'));
