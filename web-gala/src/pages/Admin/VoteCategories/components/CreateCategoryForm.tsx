@@ -49,7 +49,7 @@ function OptionInput({
 
     const reader = new FileReader();
     reader.onload = () => {
-      setCropperImageSrc(reader.result as string);
+      setCropperImageSrc(String(reader.result ?? ""));
       setCropperFile(file);
       setCropperOpen(true);
       e.target.value = "";
@@ -299,7 +299,9 @@ export default function CreateCategoryForm({
             type="number"
             min={1}
             value={minNominees}
-            onChange={(e) => setMinNominees(parseInt(e.target.value, 10) || 1)}
+            onChange={(e) =>
+              setMinNominees(Number.parseInt(e.target.value, 10) || 1)
+            }
             className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
           />
         </label>
@@ -311,7 +313,9 @@ export default function CreateCategoryForm({
             type="number"
             min={1}
             value={maxNominees}
-            onChange={(e) => setMaxNominees(parseInt(e.target.value, 10) || 1)}
+            onChange={(e) =>
+              setMaxNominees(Number.parseInt(e.target.value, 10) || 1)
+            }
             className="rounded-lg border border-light-gold/20 bg-transparent px-4 py-2 text-sm text-white outline-none focus:border-dark-gold/60"
           />
         </label>
