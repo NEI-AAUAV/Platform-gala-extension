@@ -453,6 +453,10 @@ const GalaService = {
       const response: Vote[] = await client.get("/voting/categories");
       return response;
     },
+    listPublicCategories: async () => {
+      const response: Vote[] = await client.get("/voting/categories/public");
+      return response;
+    },
     getCategory: async (id: string | number) => {
       const response: Vote = await client.get(`/voting/${id}`);
       return response;

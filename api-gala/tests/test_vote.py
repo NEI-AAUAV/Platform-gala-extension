@@ -105,6 +105,27 @@ async def test_list_vote_categories_excludes_hidden_and_unrevealed(
 
 
 @pytest.mark.asyncio
+async def test_list_public_vote_categories_does_not_require_auth(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    from unittest.mock import MagicMock, AsyncMock
+
+    cursor_mock = MagicMock()
+    cursor_mock.to_list = AsyncMock(
+        return_value=[
+            mock_vote_category,
+            {**mock_vote_category, "_id": 2, "category": "Hidden", "is_hidden": True},
+        ]
+    )
+    test_db.vote_category.find = MagicMock(return_value=cursor_mock)
+
+    resp = await async_client.get("/api/gala/v1/voting/categories/public")
+
+    assert resp.status_code == 200
+    assert [category["category"] for category in resp.json()] == ["Best Person"]
+
+
+@pytest.mark.asyncio
 async def test_cast_vote(async_client: AsyncClient, test_db, mock_vote_category):
     test_db.vote_category.find_one.return_value = mock_vote_category
     test_db.time_slots.find_one.return_value = active_time_slot_payload()

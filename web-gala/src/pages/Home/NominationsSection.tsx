@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import useVotes from "@/hooks/voteHooks/useVotes";
+import usePublicVotes from "@/hooks/voteHooks/usePublicVotes";
 import type { NominationsDisplayConfig } from "@/hooks/useHomepageConfig";
 import config from "@/config";
 import {
@@ -39,7 +39,7 @@ const getVisibleWinners = (vote: Vote) => {
 };
 
 export default function NominationsSection({ nominationsConfig }: Props) {
-  const { votes: allVotes } = useVotes();
+  const { votes: allVotes } = usePublicVotes();
   const votes = useMemo(() => allVotes.filter((v) => v.revealed), [allVotes]);
 
   if (!nominationsConfig.visible || votes.length === 0) return null;

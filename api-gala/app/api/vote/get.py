@@ -18,6 +18,27 @@ from ._utils import (
 router = APIRouter()
 
 
+PUBLIC_AUTH = AuthData(
+    sub=-1,
+    nmec=None,
+    name="Public",
+    email="",
+    surname="",
+    scopes=[],
+)
+
+
+async def _list_visible_categories(db: DatabaseDep, auth: AuthData) -> List[VoteListing]:
+    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
+
+    def mapper(category: VoteCategory) -> VoteListing:
+        return anonymize_category(category, auth, ts, config.results_visible)
+
+    res = await VoteCategory.get_collection(db).find().to_list(None)
+    categories = [VoteCategory(**category_res) for category_res in res]
+    return [mapper(category) for category in categories if _is_category_revealed(category)]
+
+
 @router.get(
     "/categories",
     responses={
@@ -30,14 +51,13 @@ async def list_categories(
     auth: AuthData = Security(api_nei_auth),
 ) -> List[VoteListing]:
     """Lists all vote categories"""
-    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
+    return await _list_visible_categories(db, auth)
 
-    def mapper(category: VoteCategory) -> VoteListing:
-        return anonymize_category(category, auth, ts, config.results_visible)
 
-    res = await VoteCategory.get_collection(db).find().to_list(None)
-    categories = [VoteCategory(**category_res) for category_res in res]
-    return [mapper(category) for category in categories if _is_category_revealed(category)]
+@router.get("/categories/public")
+async def list_public_categories(*, db: DatabaseDep) -> List[VoteListing]:
+    """Lists revealed vote categories for public homepage displays."""
+    return await _list_visible_categories(db, PUBLIC_AUTH)
 
 
 @router.get(
