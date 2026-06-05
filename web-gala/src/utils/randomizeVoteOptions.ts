@@ -5,7 +5,7 @@ export type RandomizedVoteOption = {
 };
 
 const getCrypto = () => {
-  if (typeof globalThis.crypto !== "undefined") {
+  if (globalThis.crypto !== undefined) {
     return globalThis.crypto;
   }
 
