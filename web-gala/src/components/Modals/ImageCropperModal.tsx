@@ -292,7 +292,9 @@ export default function ImageCropperModal({
               max="5"
               step="0.01"
               value={zoom}
-              onChange={(e) => handleZoomChange(Number.parseFloat(e.target.value))}
+              onChange={(e) =>
+                handleZoomChange(Number.parseFloat(e.target.value))
+              }
               className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-white/10 accent-dark-gold focus:outline-none"
             />
             <button

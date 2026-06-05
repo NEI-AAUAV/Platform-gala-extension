@@ -14,6 +14,14 @@ const guideSeenKey = "gala_nomination_guide_seen";
 const formatNominationNames = (names: string[]) =>
   [...names].sort((a, b) => a.localeCompare(b)).join(" & ");
 
+const getSubmissionErrorMessage = (error: unknown) => {
+  const detail = (error as { response?: { data?: { detail?: unknown } } })
+    ?.response?.data?.detail;
+  return typeof detail === "string"
+    ? detail
+    : "Erro ao submeter nomeações. Tenta novamente.";
+};
+
 function NominateContent({
   categories,
   isRegistered,
@@ -199,8 +207,7 @@ export default function Nominate() {
         mutate();
       }
     } catch (e) {
-      console.error("Failed to submit nominations", e);
-      toast.error("Erro ao submeter nomeações. Tenta novamente.");
+      toast.error(getSubmissionErrorMessage(e));
     } finally {
       setSubmitting(false);
     }

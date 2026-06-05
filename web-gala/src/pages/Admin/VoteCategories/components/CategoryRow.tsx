@@ -282,8 +282,7 @@ function NominationsPanel({
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
-              {getFinalizeWarning(selected.size)}{" "}
-              Irreversível.
+              {getFinalizeWarning(selected.size)} Irreversível.
             </span>
             <button
               type="button"
@@ -770,15 +769,13 @@ export default function CategoryRow({
             <div className="flex items-center gap-3">
               {vote.is_hidden && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                  {" "}
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />{" "}
                   Ocultada Manualmente
                 </span>
               )}
               {vote.results_visible && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                  {" "}
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />{" "}
                   Resultados Visíveis
                 </span>
               )}
@@ -788,8 +785,7 @@ export default function CategoryRow({
                     className={`h-1.5 w-1.5 rounded-full ${
                       getRevealStatus(vote.reveal_at).dotClassName
                     }`}
-                  />
-                  {" "}
+                  />{" "}
                   {getRevealStatus(vote.reveal_at).label}
                 </span>
               )}

@@ -83,7 +83,8 @@ export default function Option({
                   "h-11 w-11 rounded-full border-2 object-cover object-center shadow-lg transition-all duration-300 md:h-14 md:w-14",
                   {
                     "scale-[1.03] border-black/50": isSelected && isEnabled,
-                    "scale-[1.03] border-neutral-400/50": isSelected && disabled,
+                    "scale-[1.03] border-neutral-400/50":
+                      isSelected && disabled,
                     "border-light-gold/35 hover:border-light-gold/60":
                       !isSelected && isEnabled,
                     "border-neutral-700": !isSelected && disabled,
@@ -112,7 +113,9 @@ export default function Option({
                 <span
                   className={classNames(
                     "font-gala text-xs font-bold tabular-nums leading-none md:text-sm",
-                    isSelected && isEnabled ? "text-black/75" : "text-light-gold/90",
+                    isSelected && isEnabled
+                      ? "text-black/75"
+                      : "text-light-gold/90",
                   )}
                 >
                   {percentage}%
@@ -132,7 +135,9 @@ export default function Option({
                 <div
                   className={classNames(
                     "h-full rounded-full transition-all duration-500",
-                    isSelected && isEnabled ? "bg-black/60" : "bg-light-gold/70",
+                    isSelected && isEnabled
+                      ? "bg-black/60"
+                      : "bg-light-gold/70",
                   )}
                   style={{ width: `${percentage}%` }}
                 />

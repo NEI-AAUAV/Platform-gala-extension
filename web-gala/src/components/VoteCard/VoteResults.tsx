@@ -127,8 +127,7 @@ function VoteResults() {
 
         {fetchError && (
           <span className="flex animate-pulse items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-[0.65rem] text-red-400">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
-            {" "}
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />{" "}
             Erro na ligação. A tentar restabelecer ligação...
           </span>
         )}
