@@ -44,6 +44,8 @@ async def cast_vote(
 
     ts = await fetch_time_slots(db)
     category = await fetch_category(category_id, db)
+    if ts.votes_start is None or ts.votes_end is None:
+        raise HTTPException(status_code=409, detail="Votes aren't open")
     if not is_voting_open(ts, category):
         raise HTTPException(status_code=403, detail="Voting is closed for this category")
 

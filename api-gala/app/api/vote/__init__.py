@@ -1,6 +1,4 @@
-from fastapi import APIRouter, Depends
-
-from app.api.time_slots.util import check_votes_open
+from fastapi import APIRouter
 
 from . import get, create, edit, vote, photo, delete, nomination
 
@@ -11,4 +9,4 @@ router.include_router(edit.router)
 router.include_router(photo.router)
 router.include_router(delete.router)
 router.include_router(nomination.router)
-router.include_router(vote.router, dependencies=[Depends(check_votes_open)])
+router.include_router(vote.router)

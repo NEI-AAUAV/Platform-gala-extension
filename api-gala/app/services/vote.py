@@ -1,4 +1,5 @@
 import difflib
+import inspect
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
@@ -141,12 +142,18 @@ class VoteService:
 
     @staticmethod
     async def nominate(
-        db: DBType, user_id: int, category_id: int, names: List[str]
+        db: DBType,
+        user_id: int,
+        category_id: int,
+        names: Optional[List[str]] = None,
+        nominee_name: Optional[str] = None,
     ) -> bool:
         collection = VoteCategory.get_collection(db)
         category = await VoteService._get_visible_category_or_raise(db, category_id)
 
         # Filter out empty names and strip whitespace
+        if names is None:
+            names = [nominee_name] if nominee_name is not None else []
         names = [n.strip() for n in names if n.strip()]
 
         if not (category.min_nominees <= len(names) <= category.max_nominees):
@@ -232,12 +239,17 @@ class VoteService:
             {"$or": [{"name": query_regex}, {"companions.name": query_regex}]},
             projection={"name": 1, "companions.name": 1},
         )
+        if inspect.isawaitable(users_cursor):
+            users_cursor = await users_cursor
         users = await users_cursor.to_list(None)
 
-        categories = await collection.find(
+        categories_cursor = collection.find(
             {NOMINATIONS_NAME_FIELD: query_regex},
             projection={"nominations": {"$elemMatch": {"name": query_regex}}},
-        ).to_list(None)
+        )
+        if inspect.isawaitable(categories_cursor):
+            categories_cursor = await categories_cursor
+        categories = await categories_cursor.to_list(None)
 
         all_names = (
             VoteService._collect_user_suggestion_names(users, escaped_query)

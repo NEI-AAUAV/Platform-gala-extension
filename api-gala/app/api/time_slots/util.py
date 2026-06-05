@@ -15,6 +15,10 @@ async def fetch_time_slots(db: DBType) -> TimeSlots:
     res = await TimeSlots.get_collection(db).find_one({"_id": TIME_SLOTS_ID})
     if res is None:
         return TimeSlots()
+    for field_name, model_field in TimeSlots.__fields__.items():
+        alias = model_field.alias
+        if alias not in res and field_name in res:
+            res[alias] = res[field_name]
     return TimeSlots.parse_obj(res)
 
 
@@ -28,7 +32,7 @@ async def check_tables_open(
         return time_slots
 
     if time_slots.tables_start is None or time_slots.tables_end is None:
-        raise HTTPException(status_code=409, detail="Tables aren't open")
+        return time_slots
     now = datetime.now(timezone.utc)
     if now < _ensure_utc(time_slots.tables_start) or now > _ensure_utc(time_slots.tables_end):
         raise HTTPException(status_code=409, detail="Tables aren't open")

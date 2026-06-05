@@ -1,7 +1,7 @@
 from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, Security, Query
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
@@ -17,6 +17,12 @@ INTERNAL_SERVER_ERROR = "Internal server error"
 
 class NominationForm(BaseModel):
     names: List[str]
+
+    @root_validator(pre=True)
+    def accept_legacy_name(cls, values):
+        if "names" not in values and "name" in values:
+            values["names"] = [values["name"]]
+        return values
 
 
 class BulkNominationItem(BaseModel):
