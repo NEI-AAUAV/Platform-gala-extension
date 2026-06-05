@@ -61,6 +61,10 @@ def _visible_photo_paths(category: VoteCategory, revealed: bool) -> List[str]:
     return visible_photo_paths
 
 
+def _is_category_accepting_nominations(category: VoteCategory, ts: TimeSlots) -> bool:
+    return not category.options and is_nominations_open(ts)
+
+
 def anonymize_category(
     category: VoteCategory,
     auth: AuthData,
@@ -96,7 +100,9 @@ def anonymize_category(
         votes_end=category.votes_end,
         revealed=revealed,
         is_hidden=getattr(category, "is_hidden", False),
-        nomination_open=is_nominations_open(ts) if revealed else False,
+        nomination_open=(
+            _is_category_accepting_nominations(category, ts) if revealed else False
+        ),
         voting_open=is_voting_open(ts, category) if revealed else False,
         results_visible=category_results_visible,
         already_nominated=already_nominated,

@@ -151,6 +151,9 @@ class VoteService:
         collection = VoteCategory.get_collection(db)
         category = await VoteService._get_visible_category_or_raise(db, category_id)
 
+        if category.options:
+            raise ValueError("Nominations are closed for this category")
+
         # Filter out empty names and strip whitespace
         if names is None:
             names = [nominee_name] if nominee_name is not None else []

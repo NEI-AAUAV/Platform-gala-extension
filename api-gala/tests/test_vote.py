@@ -305,3 +305,19 @@ def test_anonymize_category_pads_photo_paths_to_option_count():
     assert listing.options == ["A", "B", "C"]
     assert listing.photo_paths == ["/a.jpg", "", ""]
     assert listing.scores == [0, 0, 0]
+
+
+def test_anonymize_category_closes_nominations_when_options_exist():
+    from app.api.vote._utils import anonymize_category
+    from app.models.vote import VoteCategory
+
+    now = datetime.now(timezone.utc)
+    category = VoteCategory(
+        _id=1,
+        category="Best Person",
+        options=["A", "B"],
+    )
+
+    listing = anonymize_category(category, make_auth(), make_time_slots(now))
+
+    assert listing.nomination_open is False

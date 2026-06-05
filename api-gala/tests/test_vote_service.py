@@ -239,6 +239,27 @@ async def test_nominate_service_does_not_enforce_time_window():
 
 
 @pytest.mark.asyncio
+async def test_nominate_rejects_finalized_category():
+    from app.services.vote import VoteService
+
+    category = {
+        "_id": 2,
+        "category": "Funniest",
+        "options": ["Ana", "Carlos"],
+        "nominations": [{"name": "Ana", "votes": [1]}],
+        "votes": [],
+        "results_visible": False,
+        "photo_paths": [],
+    }
+    db, coll = _make_db(category)
+
+    with pytest.raises(ValueError, match="Nominations are closed"):
+        await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
+
+    coll.update_one.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_get_suggestions_filters_in_db_and_deduplicates_results():
     from app.services.vote import VoteService
 
