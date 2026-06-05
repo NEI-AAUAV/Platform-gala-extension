@@ -848,6 +848,7 @@ async def test_submit_nomination_success(
 async def test_get_nomination_suggestions_global_pool(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await mark_open_nominations_timeslot(db=db)
     await VoteCategory.get_collection(db).insert_one(
         VoteCategory(_id=10, category="CAT A", options=[], photo_paths=[]).dict(by_alias=True)
     )
@@ -896,3 +897,26 @@ async def test_get_nomination_suggestions_global_pool(
     assert "Joana Companion" in body
     assert "Joana Prime" in body
     assert len([name for name in body if name.lower() == "joao silva"]) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_get_nomination_suggestions_rejects_closed_window(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    await create_registered_test_user(id=0, db=db)
+    await mark_closed_timeslot(db=db)
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(_id=10, category="CAT A", options=[], photo_paths=[]).dict(by_alias=True)
+    )
+
+    response = await client.get(
+        f"{settings.API_V1_STR}/voting/nominees/suggest",
+        params={"q": "Joa", "category_id": 10},
+    )
+
+    assert response.status_code == 403

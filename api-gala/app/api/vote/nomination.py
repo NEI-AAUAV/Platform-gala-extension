@@ -132,6 +132,9 @@ async def get_nomination_suggestions(
     user = User.parse_obj(user_dict)
     if not user.is_registered or not user.registration_active:
         raise HTTPException(status_code=403, detail="Only gala registrants can access nominations")
+    ts = await fetch_time_slots(db)
+    if not is_nominations_open(ts):
+        raise HTTPException(status_code=403, detail="Nominations are closed")
     try:
         return await VoteService.get_suggestions(db, category_id, q)
     except Exception as e:

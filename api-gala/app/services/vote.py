@@ -120,7 +120,9 @@ class VoteService:
     ) -> List[str]:
         all_names: List[str] = []
         for user in users:
-            VoteService._add_split_names(all_names, user.get("name"))
+            user_name = user.get("name")
+            if user_name and re.search(escaped_query, user_name, re.IGNORECASE):
+                VoteService._add_split_names(all_names, user_name)
 
             for companion in user.get("companions", []):
                 companion_name = companion.get("name")
@@ -239,7 +241,11 @@ class VoteService:
 
         users_collection = User.get_collection(db)
         users_cursor = users_collection.find(
-            {"$or": [{"name": query_regex}, {"companions.name": query_regex}]},
+            {
+                "is_registered": True,
+                "registration_active": {"$ne": False},
+                "$or": [{"name": query_regex}, {"companions.name": query_regex}],
+            },
             projection={"name": 1, "companions.name": 1},
         )
         if inspect.isawaitable(users_cursor):

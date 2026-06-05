@@ -308,6 +308,8 @@ async def test_get_suggestions_filters_in_db_and_deduplicates_results():
 
     user_filter = user_coll.find.call_args[0][0]
     assert user_filter == {
+        "is_registered": True,
+        "registration_active": {"$ne": False},
         "$or": [
             {"name": {"$regex": "Joa", "$options": "i"}},
             {"companions.name": {"$regex": "Joa", "$options": "i"}},
@@ -315,3 +317,22 @@ async def test_get_suggestions_filters_in_db_and_deduplicates_results():
     }
     category_filter = category_coll.find.call_args[0][0]
     assert category_filter == {"nominations.name": {"$regex": "Joa", "$options": "i"}}
+
+
+def test_collect_user_suggestion_names_only_adds_matching_user_names():
+    from app.services.vote import VoteService
+
+    users = [
+        {
+            "name": "Host Person",
+            "companions": [{"name": "Maria Companion"}],
+        },
+        {
+            "name": "Maria Host",
+            "companions": [{"name": "Other Companion"}],
+        },
+    ]
+
+    result = VoteService._collect_user_suggestion_names(users, "Maria")
+
+    assert result == ["Maria Companion", "Maria Host"]
