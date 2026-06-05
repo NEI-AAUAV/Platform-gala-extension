@@ -84,6 +84,9 @@ class AdminVoteService:
         }
         photo_paths = [existing_photo_paths.get(option, "") for option in options]
 
+        if category.votes and options != category.options:
+            return False
+
         await collection.update_one(
             {"_id": category_id},
             {"$set": {"options": options, "photo_paths": photo_paths}}

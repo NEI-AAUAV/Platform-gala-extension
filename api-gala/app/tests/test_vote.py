@@ -413,6 +413,54 @@ async def test_edit_category(
     [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
+async def test_edit_category_rejects_option_changes_after_votes(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    category = test_category.copy()
+    category.votes = [Vote(uid=1, option=0)]
+    await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
+
+    form = VoteCategoryEditForm(options=["Option 2", "Option 1"])
+    response = await client.put(
+        f"{settings.API_V1_STR}/voting/{category.id}/edit",
+        json=form.dict(exclude_unset=True),
+    )
+
+    assert response.status_code == 400
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": category.id})
+    assert VoteCategory(**db_res).options == category.options
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
+    indirect=["client"],
+)
+async def test_edit_category_allows_non_option_changes_after_votes(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    category = test_category.copy()
+    category.votes = [Vote(uid=1, option=0)]
+    await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
+
+    form = VoteCategoryEditForm(description="Updated")
+    response = await client.put(
+        f"{settings.API_V1_STR}/voting/{category.id}/edit",
+        json=form.dict(exclude_unset=True),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["description"] == "Updated"
+    assert response.json()["options"] == category.options
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
+    indirect=["client"],
+)
 async def test_edit_category_same_name(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
