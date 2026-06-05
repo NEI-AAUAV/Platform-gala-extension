@@ -199,6 +199,7 @@ export default function Nominate() {
         mutate();
       }
     } catch (e) {
+      console.error("Failed to submit nominations", e);
       toast.error("Erro ao submeter nomeações. Tenta novamente.");
     } finally {
       setSubmitting(false);
