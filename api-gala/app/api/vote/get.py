@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import List
 from fastapi import APIRouter, Security, HTTPException
 
 from app.api.auth import AuthData, ScopeEnum, api_nei_auth, auth_responses
@@ -7,7 +7,13 @@ from app.core.db import DatabaseDep
 from app.models.vote import Vote, VoteCategory, VoteListing
 from app.services.config import ConfigService
 
-from ._utils import fetch_category, anonymize_category, _now, _ensure_utc
+from ._utils import (
+    fetch_category,
+    anonymize_category,
+    _now,
+    _ensure_utc,
+    _is_category_revealed,
+)
 
 router = APIRouter()
 
@@ -26,12 +32,12 @@ async def list_categories(
     """Lists all vote categories"""
     ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
 
-    def mapper(category_res: Any) -> VoteListing:
-        category = VoteCategory(**category_res)
+    def mapper(category: VoteCategory) -> VoteListing:
         return anonymize_category(category, auth, ts, config.results_visible)
 
     res = await VoteCategory.get_collection(db).find().to_list(None)
-    return list(map(mapper, res))
+    categories = [VoteCategory(**category_res) for category_res in res]
+    return [mapper(category) for category in categories if _is_category_revealed(category)]
 
 
 @router.get(
