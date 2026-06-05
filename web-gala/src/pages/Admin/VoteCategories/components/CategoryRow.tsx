@@ -31,6 +31,40 @@ const isValidWindow = (start: string, end: string) => {
   return new Date(start) < new Date(end);
 };
 
+const getErrorDetail = (err: unknown) =>
+  (err as { response?: { data?: { detail?: unknown } } })?.response?.data
+    ?.detail;
+
+const getFinalizeWarning = (selectedCount: number) => {
+  if (selectedCount > 0) {
+    return `Isto define os ${selectedCount} nomes selecionados como opções de votação.`;
+  }
+  return "Isto define o Top 4 como opções de votação e fecha as nomeações.";
+};
+
+const getFinalizeButtonLabel = (selectedCount: number) => {
+  if (selectedCount === 0) return "Finalizar nomeações → Top 4";
+  return `Finalizar com ${selectedCount} selecionado${
+    selectedCount === 1 ? "" : "s"
+  }`;
+};
+
+const getNomineeCountLabel = (minNominees: number, maxNominees: number) => {
+  if (minNominees !== maxNominees) {
+    return `${minNominees}-${maxNominees} Nomeados`;
+  }
+  return `${minNominees} ${minNominees === 1 ? "Nomeado" : "Nomeados"}`;
+};
+
+const getRevealStatus = (revealAt: string) => {
+  const revealDate = new Date(revealAt);
+  const isRevealed = revealDate <= new Date();
+  return {
+    dotClassName: isRevealed ? "bg-green-400" : "animate-pulse bg-blue-400",
+    label: isRevealed ? "Revelada" : `Revela a: ${revealDate.toLocaleString()}`,
+  };
+};
+
 function NominationsPanel({
   categoryId,
   nominations,
@@ -248,9 +282,7 @@ function NominationsPanel({
         {confirmFinalize ? (
           <div className="flex items-center gap-3">
             <span className="flex-1 text-xs text-yellow-400/80">
-              {selected.size > 0
-                ? `Isto define os ${selected.size} nomes selecionados como opções de votação.`
-                : "Isto define o Top 4 como opções de votação e fecha as nomeações."}{" "}
+              {getFinalizeWarning(selected.size)}{" "}
               Irreversível.
             </span>
             <button
@@ -276,11 +308,7 @@ function NominationsPanel({
             className="flex items-center gap-2 rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400"
           >
             <FontAwesomeIcon icon={faCheckDouble} />
-            {selected.size > 0
-              ? `Finalizar com ${selected.size} selecionado${
-                  selected.size === 1 ? "" : "s"
-                }`
-              : "Finalizar nomeações → Top 4"}
+            {getFinalizeButtonLabel(selected.size)}
           </button>
         )}
       </div>
@@ -366,7 +394,7 @@ export default function CategoryRow({
   const triggerCropper = (optionIndex: number, file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
-      setCropperImageSrc(reader.result as string);
+      setCropperImageSrc(String(reader.result ?? ""));
       setCropperFile(file);
       setCropperOptionIndex(optionIndex);
       setCropperOpen(true);
@@ -422,8 +450,7 @@ export default function CategoryRow({
       toast.success("A categoria foi removida com sucesso.");
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })
-        ?.response?.data?.detail;
+      const detail = getErrorDetail(err);
       toast.error(
         typeof detail === "string" ? detail : "Erro ao apagar categoria.",
       );
@@ -470,8 +497,7 @@ export default function CategoryRow({
       setIsEditing(false);
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })
-        ?.response?.data?.detail;
+      const detail = getErrorDetail(err);
       const msg =
         typeof detail === "string" ? detail : "Erro ao editar categoria.";
       toast.error(msg);
@@ -486,8 +512,7 @@ export default function CategoryRow({
       toast.success(`Foto da opção ${optionIndex + 1} carregada!`);
       refresh();
     } catch (err: unknown) {
-      const detail = (err as { response?: { data?: { detail?: unknown } } })
-        ?.response?.data?.detail;
+      const detail = getErrorDetail(err);
       let msg =
         typeof detail === "string" ? detail : "Erro ao carregar imagem.";
       if (msg.includes("File too large"))
@@ -761,22 +786,15 @@ export default function CategoryRow({
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
-                      new Date(vote.reveal_at) <= new Date()
-                        ? "bg-green-400"
-                        : "animate-pulse bg-blue-400"
+                      getRevealStatus(vote.reveal_at).dotClassName
                     }`}
                   />
-                  {new Date(vote.reveal_at) <= new Date()
-                    ? "Revelada"
-                    : `Revela a: ${new Date(vote.reveal_at).toLocaleString()}`}
+                  {" "}
+                  {getRevealStatus(vote.reveal_at).label}
                 </span>
               )}
               <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
-                {vote.min_nominees === vote.max_nominees
-                  ? `${vote.min_nominees} ${
-                      vote.min_nominees === 1 ? "Nomeado" : "Nomeados"
-                    }`
-                  : `${vote.min_nominees}-${vote.max_nominees} Nomeados`}
+                {getNomineeCountLabel(vote.min_nominees, vote.max_nominees)}
               </div>
             </div>
           </div>
