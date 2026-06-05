@@ -28,9 +28,9 @@ class TimeSlots(BaseDocument):
         normalized = dict(values)
         for field_name, model_field in cls.__fields__.items():
             alias = model_field.alias
-            if alias not in normalized and field_name in normalized:
+            if field_name in normalized:
                 normalized[alias] = normalized[field_name]
-            if field_name not in normalized and alias in normalized:
+            elif alias in normalized:
                 normalized[field_name] = normalized[alias]
         return normalized
 
