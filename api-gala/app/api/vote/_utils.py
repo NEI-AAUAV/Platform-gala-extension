@@ -1,12 +1,29 @@
 from datetime import datetime, timezone
-from typing import List
+from typing import Annotated, List
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException, Security
 
-from app.api.auth import AuthData
+from app.api.auth import AuthData, api_nei_auth
+from app.core.db import DatabaseDep
 from app.core.db.types import DBType
 from app.models.time_slots import TimeSlots
+from app.models.user import User
 from app.models.vote import VoteCategory, VoteListing
+
+
+async def require_registered_user(
+    auth: Annotated[AuthData, Security(api_nei_auth)],
+    db: DatabaseDep,
+) -> None:
+    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
+    if not user_dict:
+        raise HTTPException(status_code=403, detail="Only gala registrants can perform this action")
+    user = User.parse_obj(user_dict)
+    if not user.is_registered or not user.registration_active:
+        raise HTTPException(status_code=403, detail="Only gala registrants can perform this action")
+
+
+GalaRegistrantDep = Annotated[None, Depends(require_registered_user)]
 
 
 async def fetch_category(category_id: int, db: DBType) -> VoteCategory:

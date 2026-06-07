@@ -5,9 +5,14 @@ from pydantic import BaseModel, NonNegativeInt
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
-from app.api.vote._utils import fetch_category, anonymize_category, is_voting_open, _is_category_revealed
+from app.api.vote._utils import (
+    GalaRegistrantDep,
+    fetch_category,
+    anonymize_category,
+    is_voting_open,
+    _is_category_revealed,
+)
 from app.core.db import DatabaseDep
-from app.models.user import User
 from app.models.vote import VoteCategory, VoteListing
 from app.services.config import ConfigService
 from app.services.vote import VoteService, AlreadyVotedError
@@ -45,14 +50,8 @@ async def cast_vote(
     form_data: VoteForm,
     db: DatabaseDep,
     auth: Annotated[AuthData, Security(api_nei_auth)],
+    _: GalaRegistrantDep,
 ) -> VoteListing:
-    user_dict = await User.get_collection(db).find_one({"_id": auth.sub})
-    if not user_dict:
-        raise HTTPException(status_code=403, detail="Only gala registrants can vote")
-    user = User.parse_obj(user_dict)
-    if not user.is_registered or not user.registration_active:
-        raise HTTPException(status_code=403, detail="Only gala registrants can vote")
-
     ts = await fetch_time_slots(db)
     category = await fetch_category(category_id, db)
     if not _is_category_revealed(category):

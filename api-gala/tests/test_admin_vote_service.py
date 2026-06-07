@@ -431,6 +431,25 @@ async def test_create_runoff_category_rejects_invalid_vote_window():
     coll.insert_one.assert_not_called()
 
 
+@pytest.mark.asyncio
+async def test_create_runoff_category_rejects_partial_vote_window():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(nominations=[_nominee("Alice", [1]), _nominee("Bob", [2])])
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.create_runoff_category(
+        db,
+        1,
+        nominee_names=["Alice", "Bob"],
+        slots=1,
+        votes_start=datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert result is None
+    coll.insert_one.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # create_vote_runoff_category
 # ---------------------------------------------------------------------------
