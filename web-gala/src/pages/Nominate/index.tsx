@@ -249,7 +249,7 @@ export default function Nominate() {
           </p>
           <Button
             onClick={() => {
-              window.location.href = loginLink;
+              globalThis.location.href = loginLink;
             }}
             className="flex h-12 w-full items-center justify-center"
           >
