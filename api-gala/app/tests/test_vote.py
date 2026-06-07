@@ -920,3 +920,101 @@ async def test_get_nomination_suggestions_rejects_closed_window(
     )
 
     assert response.status_code == 403
+
+
+# ====================
+# == NOMINATION LOGIC ==
+# ====================
+
+nomination_category = VoteCategory(
+    _id=20,
+    category="NOMINATION CAT",
+    options=[],
+    photo_paths=[],
+    nominations=[],
+)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_nomination_change_replaces_previous(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    """User who already nominated someone can change their nomination."""
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    # First nomination
+    await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["Alice Costa"]},
+    )
+
+    # Change nomination
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["Bob Ferreira"]},
+    )
+    assert response.status_code == 200
+
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": nomination_category.id})
+    assert db_res is not None
+    category = VoteCategory(**db_res)
+    names_with_user = [n.name for n in category.nominations if 0 in n.votes]
+    assert names_with_user == ["Bob Ferreira"]
+    assert not any(n.name == "Alice Costa" and 0 in n.votes for n in category.nominations)
+
+
+@pytest.mark.asyncio
+async def test_nomination_case_insensitive_dedup(db: DBType) -> None:
+    """Two users nominating the same name in different case end up on the same nominee."""
+    from app.services.vote import VoteService
+
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await create_registered_test_user(id=1, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    await VoteService.nominate(db, 0, nomination_category.id, ["Alice Costa"])
+    await VoteService.nominate(db, 1, nomination_category.id, ["alice costa"])
+
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": nomination_category.id})
+    assert db_res is not None
+    category = VoteCategory(**db_res)
+    # Both users should be on the same nominee (case-insensitive match)
+    alice_nominees = [n for n in category.nominations if n.name.lower() == "alice costa"]
+    assert len(alice_nominees) == 1
+    assert 0 in alice_nominees[0].votes
+    assert 1 in alice_nominees[0].votes
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_nomination_empty_names_rejected(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    """Empty or whitespace-only names are rejected with 422."""
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["   "]},
+    )
+    assert response.status_code == 422
+
+    response2 = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": []},
+    )
+    assert response2.status_code == 400

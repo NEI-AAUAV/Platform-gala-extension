@@ -36,7 +36,7 @@ export default function VoteCategories() {
       .getConfig()
       .then((cfg) =>
         setResultsVisible(
-          (cfg as { results_visible?: boolean }).results_visible ?? false,
+          (cfg.results_visible as boolean | undefined) ?? false,
         ),
       )
       .catch(() => {

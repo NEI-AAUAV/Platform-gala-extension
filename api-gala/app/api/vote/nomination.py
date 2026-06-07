@@ -1,7 +1,7 @@
 from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, Security, Query
 from loguru import logger
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, validator
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
@@ -24,10 +24,24 @@ class NominationForm(BaseModel):
             values["names"] = [values["name"]]
         return values
 
+    @validator("names", each_item=True)
+    def strip_and_validate_name(cls, v):
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Names cannot be empty.")
+        return stripped
+
 
 class BulkNominationItem(BaseModel):
     category_id: int
     names: List[str]
+
+    @validator("names", each_item=True)
+    def strip_and_validate_name(cls, v):
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Names cannot be empty.")
+        return stripped
 
 
 class BulkNominationForm(BaseModel):

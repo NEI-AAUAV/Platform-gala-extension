@@ -64,7 +64,13 @@ const useUserStore = create<UserState>((set) => ({
 
   logout: () => {
     Object.keys(localStorage)
-      .filter((k) => k.startsWith("gala-wizard-state"))
+      .filter(
+        (k) =>
+          k.startsWith("gala-wizard-state") ||
+          k.startsWith("gala_nomination_") ||
+          k === "gala_nomination_guide_seen" ||
+          k === "gala_voting_guide_seen",
+      )
       .forEach((k) => localStorage.removeItem(k));
     set(() => ({
       sessionLoading: false,

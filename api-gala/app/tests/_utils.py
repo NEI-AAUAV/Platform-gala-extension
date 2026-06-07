@@ -22,7 +22,7 @@ async def create_test_user(*, id: int, db: DBType) -> None:
 
 
 async def create_registered_test_user(
-    *, id: int, db: DBType, companions: List[Companion] = []
+    *, id: int, db: DBType, companions: List[Companion] | None = None
 ) -> None:
     test_user = User(
         _id=id,
@@ -31,7 +31,7 @@ async def create_registered_test_user(
         email=_TEST_EMAIL,
         name="J",
         is_registered=True,
-        companions=companions,
+        companions=companions or [],
     )
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))
 

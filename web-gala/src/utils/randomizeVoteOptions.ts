@@ -40,7 +40,7 @@ export function getRandomizedVoteOptions(vote: Vote): RandomizedVoteOption[] {
   return shuffleItems(
     vote.options.map((name, originalIndex) => ({
       name,
-      photoPath: vote.photo_paths[originalIndex],
+      photoPath: vote.photo_paths[originalIndex] ?? "",
       originalIndex,
     })),
   );

@@ -116,11 +116,18 @@ function NominationsPanel({
       return;
     }
     const target = mergeTarget.trim() || [...selected][0];
+    const sourceNames = [...selected].filter((n) => n !== target);
+    if (sourceNames.length === 0) {
+      toast.warning(
+        "Seleciona pelo menos dois nomes, ou especifica um nome destino diferente.",
+      );
+      return;
+    }
     setIsMerging(true);
     try {
       await GalaService.admin.mergeNominees(categoryId, {
         target_name: target,
-        source_names: [...selected].filter((n) => n !== target),
+        source_names: sourceNames,
       });
       toast.success("Nomes fundidos com sucesso.");
       setSelected(new Set());
@@ -800,7 +807,7 @@ export default function CategoryRow({
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
           <div
-            key={`${vote._id}-option-${option}`}
+            key={`${vote._id}-option-${isEditing ? i : option}`}
             className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80"
           >
             <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
