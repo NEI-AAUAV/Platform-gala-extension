@@ -51,7 +51,10 @@ export default function Vote() {
   const { token } = useUserStore();
   const loginLink = useLoginLink();
   const { votes: allVotes, mutate } = useVotes();
-  const votes = useMemo(() => allVotes, [allVotes]);
+  const votes = useMemo(
+    () => allVotes.filter((v) => !v.nomination_open),
+    [allVotes],
+  );
   const hasVotingCategories = votes.length > 0;
   const allVoted = useMemo(
     () =>
@@ -227,6 +230,10 @@ export default function Vote() {
               ) : sessionUser?.registration_active === false ? (
                 <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
                   A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não podes participar nas votações.
+                </p>
+              ) : votes.length === 0 ? (
+                <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
+                  Não há categorias de votação abertas de momento.
                 </p>
               ) : (
                 <div className="grid gap-6 lg:grid-cols-2">
