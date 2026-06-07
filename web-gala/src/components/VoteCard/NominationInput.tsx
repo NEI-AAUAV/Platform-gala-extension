@@ -78,7 +78,10 @@ export default function NominationInput({
 
   useEffect(() => {
     const onDocumentMouseDown = (event: MouseEvent) => {
-      if (!wrapperRef.current?.contains(event.target as Node)) {
+      if (
+        !(event.target instanceof Node) ||
+        !wrapperRef.current?.contains(event.target)
+      ) {
         setIsDropdownOpen(false);
         setActiveSuggestionIdx(-1);
       }

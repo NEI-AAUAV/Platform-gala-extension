@@ -25,6 +25,13 @@ import ImageCropperModal from "@/components/Modals/ImageCropperModal";
 const toIsoOrNull = (value: string) =>
   value ? new Date(value).toISOString() : null;
 
+const toLocalDatetimeString = (dateStr: string | undefined) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+};
+
 const isValidWindow = (start: string, end: string) => {
   if (!start && !end) return true;
   if (!start || !end) return false;
@@ -64,6 +71,230 @@ const getRevealStatus = (revealAt: string) => {
     label: isRevealed ? "Revelada" : `Revela a: ${revealDate.toLocaleString()}`,
   };
 };
+
+type OptionItemProps = Readonly<{
+  option: string;
+  index: number;
+  isEditing: boolean;
+  voteId: number;
+  photoPath: string | undefined;
+  editOptions: string[];
+  onEditOptions: (opts: string[]) => void;
+  onRemove: () => void;
+  onPhotoRemove: () => void;
+  onTriggerCropper: (file: File) => void;
+}>;
+
+function OptionItem({
+  option,
+  index,
+  isEditing,
+  voteId,
+  photoPath,
+  editOptions,
+  onEditOptions,
+  onRemove,
+  onPhotoRemove,
+  onTriggerCropper,
+}: OptionItemProps) {
+  return (
+    <div className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80">
+      <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
+        {photoPath ? (
+          <>
+            <img
+              src={photoPath}
+              alt={option}
+              className="h-full w-full object-cover"
+            />
+            {!isEditing && (
+              <button
+                type="button"
+                className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100"
+                onClick={onPhotoRemove}
+                title="Remover foto"
+              >
+                <FontAwesomeIcon icon={faTrash} className="text-red-400" />
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-white/5 text-white/20">
+            <FontAwesomeIcon icon={faCloudUploadAlt} size="xs" />
+          </div>
+        )}
+      </div>
+      {isEditing ? (
+        <input
+          type="text"
+          value={editOptions[index]}
+          onChange={(e) => {
+            const newOpts = [...editOptions];
+            newOpts[index] = e.target.value;
+            onEditOptions(newOpts);
+          }}
+          className="flex-1 rounded border border-dark-gold/30 bg-black/40 px-3 py-2 text-white outline-none"
+        />
+      ) : (
+        <span className="flex-1 font-medium">{option}</span>
+      )}
+      {!isEditing && (
+        <label
+          htmlFor={`photo-upload-${voteId}-${index}`}
+          title="Substituir foto"
+          className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold"
+        >
+          <FontAwesomeIcon icon={faCloudUploadAlt} className="mr-1" />
+          Foto
+          <input
+            id={`photo-upload-${voteId}-${index}`}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onTriggerCropper(file);
+                e.target.value = "";
+              }
+            }}
+          />
+        </label>
+      )}
+      {isEditing && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400"
+        >
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+type WinningVoteTiePanelProps = Readonly<{
+  vote: AdminVoteCategory;
+  tiedWinningIndexes: Array<{ score: number; index: number }>;
+  topVoteScore: number;
+  voteRunoffStart: string;
+  voteRunoffEnd: string;
+  isCreating: boolean;
+  onStartChange: (v: string) => void;
+  onEndChange: (v: string) => void;
+  onCreate: () => void;
+}>;
+
+function WinningVoteTiePanel({
+  vote,
+  tiedWinningIndexes,
+  topVoteScore,
+  voteRunoffStart,
+  voteRunoffEnd,
+  isCreating,
+  onStartChange,
+  onEndChange,
+  onCreate,
+}: WinningVoteTiePanelProps) {
+  return (
+    <div className="flex flex-col gap-2 border border-yellow-500/20 bg-yellow-500/5 p-3">
+      <div className="flex items-start gap-2">
+        <FontAwesomeIcon
+          icon={faTrophy}
+          className="mt-0.5 text-xs text-yellow-400/80"
+        />
+        <p className="flex-1 text-xs text-yellow-100/70">
+          Há {tiedWinningIndexes.length} opções empatadas em 1.º lugar com{" "}
+          {topVoteScore} voto{topVoteScore === 1 ? "" : "s"}.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {tiedWinningIndexes.map(({ index }) => (
+          <span
+            key={`${vote._id}-vote-tie-${vote.options[index]}`}
+            className="rounded-full bg-black/20 px-2.5 py-1 text-xs text-white/60"
+          >
+            {vote.options[index]}
+          </span>
+        ))}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+            Início do desempate
+          </span>
+          <input
+            type="datetime-local"
+            value={voteRunoffStart}
+            onChange={(e) => onStartChange(e.target.value)}
+            className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
+            Fim do desempate
+          </span>
+          <input
+            type="datetime-local"
+            value={voteRunoffEnd}
+            onChange={(e) => onEndChange(e.target.value)}
+            className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
+          />
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={onCreate}
+        disabled={isCreating}
+        className="w-fit rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-50"
+      >
+        {isCreating
+          ? "A criar..."
+          : `Criar desempate entre ${tiedWinningIndexes.length}`}
+      </button>
+    </div>
+  );
+}
+
+function CategoryViewMeta({ vote }: Readonly<{ vote: AdminVoteCategory }>) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      {vote.description ? (
+        <p className="text-sm italic text-white/40">{vote.description}</p>
+      ) : (
+        <div />
+      )}
+      <div className="flex items-center gap-3">
+        {vote.is_hidden && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Ocultada
+            Manualmente
+          </span>
+        )}
+        {vote.results_visible && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> Resultados
+            Visíveis
+          </span>
+        )}
+        {vote.reveal_at && !vote.is_hidden && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                getRevealStatus(vote.reveal_at).dotClassName
+              }`}
+            />{" "}
+            {getRevealStatus(vote.reveal_at).label}
+          </span>
+        )}
+        <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
+          {getNomineeCountLabel(vote.min_nominees, vote.max_nominees)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NominationsPanel({
   categoryId,
@@ -327,12 +558,6 @@ export default function CategoryRow({
   refresh,
 }: Readonly<{ vote: AdminVoteCategory; refresh: () => void }>) {
   const toast = useAppToast();
-  const toLocalDatetimeString = (dateStr: string | undefined) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
-  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(vote.category);
@@ -363,6 +588,9 @@ export default function CategoryRow({
   const [cropperImageSrc, setCropperImageSrc] = useState("");
   const [cropperFile, setCropperFile] = useState<File | null>(null);
   const [cropperOptionIndex, setCropperOptionIndex] = useState<number>(0);
+
+  const [isTogglingHidden, setIsTogglingHidden] = useState(false);
+  const [isTogglingResults, setIsTogglingResults] = useState(false);
 
   const voteScores = vote.options.map(
     (_, optionIndex) =>
@@ -400,16 +628,15 @@ export default function CategoryRow({
   const triggerCropper = (optionIndex: number, file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
-      setCropperImageSrc(String(reader.result ?? ""));
+      setCropperImageSrc(
+        typeof reader.result === "string" ? reader.result : "",
+      );
       setCropperFile(file);
       setCropperOptionIndex(optionIndex);
       setCropperOpen(true);
     };
     reader.readAsDataURL(file);
   };
-
-  const [isTogglingHidden, setIsTogglingHidden] = useState(false);
-  const [isTogglingResults, setIsTogglingResults] = useState(false);
 
   const handleToggleVisibility = async () => {
     setIsTogglingHidden(true);
@@ -767,126 +994,27 @@ export default function CategoryRow({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-4">
-            {vote.description ? (
-              <p className="text-sm italic text-white/40">{vote.description}</p>
-            ) : (
-              <div />
-            )}
-            <div className="flex items-center gap-3">
-              {vote.is_hidden && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-red-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-400" />{" "}
-                  Ocultada Manualmente
-                </span>
-              )}
-              {vote.results_visible && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />{" "}
-                  Resultados Visíveis
-                </span>
-              )}
-              {vote.reveal_at && !vote.is_hidden && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-blue-400">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      getRevealStatus(vote.reveal_at).dotClassName
-                    }`}
-                  />{" "}
-                  {getRevealStatus(vote.reveal_at).label}
-                </span>
-              )}
-              <div className="shrink-0 text-[0.65rem] font-semibold uppercase tracking-widest text-white/30">
-                {getNomineeCountLabel(vote.min_nominees, vote.max_nominees)}
-              </div>
-            </div>
-          </div>
+          <CategoryViewMeta vote={vote} />
         )}
       </div>
 
       <div className="flex flex-col gap-3">
         {(isEditing ? editOptions : vote.options).map((option, i) => (
-          <div
+          <OptionItem
             key={`${vote._id}-option-${isEditing ? i : option}`}
-            className="flex items-center gap-3 bg-black/10 p-2 text-sm text-white/80"
-          >
-            <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-dark-gold/30">
-              {vote.photo_paths[i] ? (
-                <>
-                  <img
-                    src={vote.photo_paths[i]}
-                    alt={option}
-                    className="h-full w-full object-cover"
-                  />
-                  {!isEditing && (
-                    <button
-                      type="button"
-                      className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100"
-                      onClick={() => handlePhotoRemove(i)}
-                      title="Remover foto"
-                    >
-                      <FontAwesomeIcon
-                        icon={faTrash}
-                        className="text-red-400"
-                      />
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-white/5 text-white/20">
-                  <FontAwesomeIcon icon={faCloudUploadAlt} size="xs" />
-                </div>
-              )}
-            </div>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editOptions[i]}
-                onChange={(e) => {
-                  const newOpts = [...editOptions];
-                  newOpts[i] = e.target.value;
-                  setEditOptions(newOpts);
-                }}
-                className="flex-1 rounded border border-dark-gold/30 bg-black/40 px-3 py-2 text-white outline-none"
-              />
-            ) : (
-              <span className="flex-1 font-medium">{option}</span>
-            )}
-            {!isEditing && (
-              <label
-                htmlFor={`photo-upload-${vote._id}-${i}`}
-                title="Substituir foto"
-                className="flex-shrink-0 cursor-pointer rounded-full border border-dark-gold/40 px-3 py-1 text-xs text-dark-gold/70 shadow-sm transition hover:border-dark-gold hover:text-dark-gold"
-              >
-                <FontAwesomeIcon icon={faCloudUploadAlt} className="mr-1" />
-                Foto
-                <input
-                  id={`photo-upload-${vote._id}-${i}`}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      triggerCropper(i, file);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-              </label>
-            )}
-            {isEditing && (
-              <button
-                type="button"
-                onClick={() =>
-                  setEditOptions(editOptions.filter((_, idx) => idx !== i))
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/50 hover:bg-white/10 hover:text-red-400"
-              >
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            )}
-          </div>
+            option={option}
+            index={i}
+            isEditing={isEditing}
+            voteId={vote._id}
+            photoPath={vote.photo_paths[i]}
+            editOptions={editOptions}
+            onEditOptions={setEditOptions}
+            onRemove={() =>
+              setEditOptions(editOptions.filter((_, idx) => idx !== i))
+            }
+            onPhotoRemove={() => handlePhotoRemove(i)}
+            onTriggerCropper={(file) => triggerCropper(i, file)}
+          />
         ))}
         {isEditing && (
           <>
@@ -909,62 +1037,17 @@ export default function CategoryRow({
       </div>
 
       {!isEditing && hasWinningVoteTie && (
-        <div className="flex flex-col gap-2 border border-yellow-500/20 bg-yellow-500/5 p-3">
-          <div className="flex items-start gap-2">
-            <FontAwesomeIcon
-              icon={faTrophy}
-              className="mt-0.5 text-xs text-yellow-400/80"
-            />
-            <p className="flex-1 text-xs text-yellow-100/70">
-              Há {tiedWinningIndexes.length} opções empatadas em 1.º lugar com{" "}
-              {topVoteScore} voto{topVoteScore === 1 ? "" : "s"}.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {tiedWinningIndexes.map(({ index }) => (
-              <span
-                key={`${vote._id}-vote-tie-${vote.options[index]}`}
-                className="rounded-full bg-black/20 px-2.5 py-1 text-xs text-white/60"
-              >
-                {vote.options[index]}
-              </span>
-            ))}
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <label className="flex flex-col gap-1">
-              <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
-                Início do desempate
-              </span>
-              <input
-                type="datetime-local"
-                value={voteRunoffStart}
-                onChange={(e) => setVoteRunoffStart(e.target.value)}
-                className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-white/40">
-                Fim do desempate
-              </span>
-              <input
-                type="datetime-local"
-                value={voteRunoffEnd}
-                onChange={(e) => setVoteRunoffEnd(e.target.value)}
-                className="rounded border border-yellow-500/20 bg-black/30 px-2 py-1 text-xs text-white outline-none [color-scheme:dark] focus:border-yellow-500/50"
-              />
-            </label>
-          </div>
-          <button
-            type="button"
-            onClick={handleCreateVoteRunoff}
-            disabled={isCreatingVoteRunoff}
-            className="w-fit rounded-full border border-yellow-500/30 px-4 py-1.5 text-xs font-semibold text-yellow-400/80 transition hover:border-yellow-500/60 hover:text-yellow-400 disabled:opacity-50"
-          >
-            {isCreatingVoteRunoff
-              ? "A criar..."
-              : `Criar desempate entre ${tiedWinningIndexes.length}`}
-          </button>
-        </div>
+        <WinningVoteTiePanel
+          vote={vote}
+          tiedWinningIndexes={tiedWinningIndexes}
+          topVoteScore={topVoteScore}
+          voteRunoffStart={voteRunoffStart}
+          voteRunoffEnd={voteRunoffEnd}
+          isCreating={isCreatingVoteRunoff}
+          onStartChange={setVoteRunoffStart}
+          onEndChange={setVoteRunoffEnd}
+          onCreate={handleCreateVoteRunoff}
+        />
       )}
 
       {!isEditing && (

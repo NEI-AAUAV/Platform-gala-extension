@@ -53,8 +53,7 @@ function VoteResults() {
   const filteredData = data.filter(
     (item) =>
       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description &&
-        item.description.toLowerCase().includes(searchTerm.toLowerCase())),
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Global calculations

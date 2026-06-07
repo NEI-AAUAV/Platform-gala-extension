@@ -49,7 +49,9 @@ function OptionInput({
 
     const reader = new FileReader();
     reader.onload = () => {
-      setCropperImageSrc(String(reader.result ?? ""));
+      setCropperImageSrc(
+        typeof reader.result === "string" ? reader.result : "",
+      );
       setCropperFile(file);
       setCropperOpen(true);
       e.target.value = "";

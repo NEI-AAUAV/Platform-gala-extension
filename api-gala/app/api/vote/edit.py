@@ -22,6 +22,7 @@ class VoteCategoryEditForm(VoteCategoryCreateForm):
     "/{category_id}/edit",
     responses={
         **auth_responses,
+        400: {"description": "Cannot change options after votes have been cast"},
         404: {"description": "Vote not found"},
         409: {
             "description": "A vote category with the same (or similar) name already exists"
