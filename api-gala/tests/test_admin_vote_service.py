@@ -273,6 +273,19 @@ async def test_finalize_nominations_returns_false_when_category_missing():
     coll.update_one.assert_not_called()
 
 
+@pytest.mark.asyncio
+async def test_finalize_nominations_returns_false_when_no_nominations():
+    from app.services.admin_vote import AdminVoteService
+
+    doc = _category_doc(nominations=[])
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.finalize_nominations(db, 1)
+
+    assert result is False
+    coll.update_one.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # create_runoff_category
 # ---------------------------------------------------------------------------

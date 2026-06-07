@@ -29,4 +29,6 @@ fileignoreconfig:
   checksum: 12c668a7d38e4d66f78a15ce38db1218fdd991b175369b696255c4cf78b2e6f2
 - filename: web-gala/src/pages/Admin/VoteCategories/components/CategoryRow.tsx
   checksum: 5676e14a31b4315d50274d523e5bb9dcf63dd5673d472ff242e417385767141a
+- filename: api-gala/tests/test_vote.py
+  checksum: 0aab041d08391c8e795be92b381c81db905c0e5e1a3e905bd28f213c78c6d0fc
 version: "1.0"

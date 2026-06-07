@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock
 
 
 def active_time_slot_payload():
@@ -124,12 +125,29 @@ async def test_list_public_vote_categories_does_not_require_auth(
 
 
 @pytest.mark.asyncio
-async def test_cast_vote(async_client: AsyncClient, test_db, mock_vote_category):
+async def test_cast_vote_succeeds(async_client: AsyncClient, test_db, mock_vote_category):
+    update_result = MagicMock()
+    update_result.modified_count = 1
+    test_db.user.find_one.return_value = _REGISTERED_USER
     test_db.vote_category.find_one.return_value = mock_vote_category
+    test_db.vote_category.update_one.return_value = update_result
     test_db.time_slots.find_one.return_value = active_time_slot_payload()
 
     resp = await async_client.post("/api/gala/v1/voting/categories/1/vote", json={"option": 0})
-    assert resp.status_code in [200, 400, 403, 409]
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_cast_vote_closed_voting_window_returns_403(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    test_db.user.find_one.return_value = _REGISTERED_USER
+    test_db.vote_category.find_one.return_value = mock_vote_category
+    closed_ts = {**active_time_slot_payload(), "votesEnd": "2020-01-02T00:00:00Z"}
+    test_db.time_slots.find_one.return_value = closed_ts
+
+    resp = await async_client.post("/api/gala/v1/voting/categories/1/vote", json={"option": 0})
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -382,5 +400,40 @@ async def test_bulk_nominate_all_fail_returns_400(
     body = resp.json()
     assert "errors" in body["detail"]
     assert len(body["detail"]["errors"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_admin_finalize_non_admin_returns_403(async_client: AsyncClient, test_db):
+    resp = await async_client.post(
+        "/api/gala/v1/admin/voting/categories/1/finalize"
+    )
+    assert resp.status_code == 403
+
+
+def test_reveal_at_boundary_is_revealed(monkeypatch):
+    from app.api.vote import _utils
+    from app.models.vote import VoteCategory
+
+    now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(_utils, "_now", lambda: now)
+
+    category = VoteCategory(_id=1, category="Test", reveal_at=now)
+    assert _utils._is_category_revealed(category) is True
+
+
+@pytest.mark.asyncio
+async def test_nominate_closed_window_returns_403(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    test_db.user.find_one.return_value = _REGISTERED_USER
+    test_db.vote_category.find_one.return_value = mock_vote_category
+    closed_ts = {**active_time_slot_payload(), "nominationsEnd": "2020-01-02T00:00:00Z"}
+    test_db.time_slots.find_one.return_value = closed_ts
+
+    resp = await async_client.post(
+        "/api/gala/v1/voting/categories/1/nominate",
+        json={"names": ["Alice"]},
+    )
+    assert resp.status_code == 403
 
 

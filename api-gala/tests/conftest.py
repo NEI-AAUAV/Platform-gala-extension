@@ -39,6 +39,25 @@ def test_db():
     return db
 
 
+_ASYNC_METHODS = (
+    "find_one", "insert_one", "update_one", "delete_one",
+    "find_one_and_update", "insert_many", "delete_many", "count_documents",
+)
+
+
+@pytest.fixture(autouse=True)
+def _reset_db_mocks(test_db):
+    """Reset all collection mocks before each test to prevent state bleed."""
+    for name in COLLECTIONS:
+        coll = getattr(test_db, name)
+        for method in _ASYNC_METHODS:
+            attr = getattr(coll, method)
+            attr.return_value = None
+            attr.side_effect = None
+            attr.reset_mock()
+        coll.find.reset_mock()
+
+
 def _make_client_overrides(auth_data: AuthData, test_db: MagicMock) -> None:
     mock_client = MagicMock()
     mock_client.close = MagicMock()
