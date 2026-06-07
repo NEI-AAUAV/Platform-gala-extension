@@ -38,7 +38,7 @@ export default function VoteCard({
           {vote.category}
         </h1>
         {vote.description && (
-          <p className="mt-2 font-gala text-sm italic text-white/50">
+          <p className="mt-2 font-gala text-sm italic text-white/50 whitespace-pre-line">
             {vote.description}
           </p>
         )}
