@@ -17,21 +17,28 @@ def active_time_slot_payload():
     }
 
 
-def make_time_slots(now):
+def make_time_slots(now, nominations_start=None, nominations_end=None, votes_start=None, votes_end=None):
     from app.models.time_slots import TimeSlots
 
     return TimeSlots(
         _id="TIME_SLOTS",
         registrationStart=now - timedelta(days=1),
         registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=1),
-        nominationsEnd=now + timedelta(days=1),
-        votesStart=now - timedelta(days=1),
-        votesEnd=now + timedelta(days=1),
+        nominationsStart=nominations_start if nominations_start is not None else now - timedelta(days=1),
+        nominationsEnd=nominations_end if nominations_end is not None else now + timedelta(days=1),
+        votesStart=votes_start if votes_start is not None else now - timedelta(days=1),
+        votesEnd=votes_end if votes_end is not None else now + timedelta(days=1),
         tablesStart=now - timedelta(days=1),
         tablesEnd=now + timedelta(days=1),
         galaStart=now + timedelta(days=30),
     )
+
+
+def mock_db_find_result(test_db, results):
+    from unittest.mock import MagicMock, AsyncMock
+    cursor_mock = MagicMock()
+    cursor_mock.to_list = AsyncMock(return_value=results)
+    test_db.vote_category.find = MagicMock(return_value=cursor_mock)
 
 
 def make_auth():
@@ -64,10 +71,7 @@ def mock_vote_category():
 
 @pytest.mark.asyncio
 async def test_get_vote_categories(async_client: AsyncClient, test_db, mock_vote_category):
-    from unittest.mock import MagicMock, AsyncMock
-    cursor_mock = MagicMock()
-    cursor_mock.to_list = AsyncMock(return_value=[mock_vote_category])
-    test_db.vote_category.find = MagicMock(return_value=cursor_mock)
+    mock_db_find_result(test_db, [mock_vote_category])
 
     resp = await async_client.get("/api/gala/v1/voting/categories")
     assert resp.status_code == 200
@@ -81,11 +85,9 @@ async def test_get_vote_categories(async_client: AsyncClient, test_db, mock_vote
 async def test_list_vote_categories_excludes_hidden_and_unrevealed(
     async_client: AsyncClient, test_db, mock_vote_category
 ):
-    from unittest.mock import MagicMock, AsyncMock
-
-    cursor_mock = MagicMock()
-    cursor_mock.to_list = AsyncMock(
-        return_value=[
+    mock_db_find_result(
+        test_db,
+        [
             mock_vote_category,
             {**mock_vote_category, "_id": 2, "category": "Hidden", "is_hidden": True},
             {
@@ -94,9 +96,8 @@ async def test_list_vote_categories_excludes_hidden_and_unrevealed(
                 "category": "Future",
                 "reveal_at": "2030-01-01T00:00:00Z",
             },
-        ]
+        ],
     )
-    test_db.vote_category.find = MagicMock(return_value=cursor_mock)
 
     resp = await async_client.get("/api/gala/v1/voting/categories")
 
@@ -108,16 +109,13 @@ async def test_list_vote_categories_excludes_hidden_and_unrevealed(
 async def test_list_public_vote_categories_does_not_require_auth(
     async_client: AsyncClient, test_db, mock_vote_category
 ):
-    from unittest.mock import MagicMock, AsyncMock
-
-    cursor_mock = MagicMock()
-    cursor_mock.to_list = AsyncMock(
-        return_value=[
+    mock_db_find_result(
+        test_db,
+        [
             mock_vote_category,
             {**mock_vote_category, "_id": 2, "category": "Hidden", "is_hidden": True},
-        ]
+        ],
     )
-    test_db.vote_category.find = MagicMock(return_value=cursor_mock)
 
     resp = await async_client.get("/api/gala/v1/voting/categories/public")
 
@@ -151,23 +149,15 @@ async def test_get_hidden_vote_category_returns_404(
 
 def test_is_voting_open_uses_category_specific_window(monkeypatch):
     from app.api.vote import _utils
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(_utils, "_now", lambda: now)
 
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=1),
-        nominationsEnd=now + timedelta(days=1),
-        votesStart=now + timedelta(days=1),
-        votesEnd=now + timedelta(days=2),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
+    ts = make_time_slots(
+        now,
+        votes_start=now + timedelta(days=1),
+        votes_end=now + timedelta(days=2),
     )
     category = VoteCategory(
         _id=1,
@@ -183,23 +173,17 @@ def test_is_voting_open_uses_category_specific_window(monkeypatch):
 
 def test_cast_vote_window_allows_category_specific_window_when_global_closed(monkeypatch):
     from app.api.vote import vote as vote_api
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr("app.api.vote._utils._now", lambda: now)
 
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=2),
-        nominationsEnd=now - timedelta(days=1),
-        votesStart=now - timedelta(days=2),
-        votesEnd=now - timedelta(days=1),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
+    ts = make_time_slots(
+        now,
+        nominations_start=now - timedelta(days=2),
+        nominations_end=now - timedelta(days=1),
+        votes_start=now - timedelta(days=2),
+        votes_end=now - timedelta(days=1),
     )
     category = VoteCategory(
         _id=1,
@@ -214,23 +198,17 @@ def test_cast_vote_window_allows_category_specific_window_when_global_closed(mon
 
 def test_cast_vote_window_falls_back_to_global_window(monkeypatch):
     from app.api.vote import vote as vote_api
-    from app.models.time_slots import TimeSlots
     from app.models.vote import VoteCategory
 
     now = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr("app.api.vote._utils._now", lambda: now)
 
-    ts = TimeSlots(
-        _id="TIME_SLOTS",
-        registrationStart=now - timedelta(days=1),
-        registrationEnd=now + timedelta(days=1),
-        nominationsStart=now - timedelta(days=2),
-        nominationsEnd=now - timedelta(days=1),
-        votesStart=now - timedelta(hours=1),
-        votesEnd=now + timedelta(hours=1),
-        tablesStart=now - timedelta(days=1),
-        tablesEnd=now + timedelta(days=1),
-        galaStart=now + timedelta(days=30),
+    ts = make_time_slots(
+        now,
+        nominations_start=now - timedelta(days=2),
+        nominations_end=now - timedelta(days=1),
+        votes_start=now - timedelta(hours=1),
+        votes_end=now + timedelta(hours=1),
     )
     category = VoteCategory(_id=1, category="Regular", options=["A", "B"])
 
