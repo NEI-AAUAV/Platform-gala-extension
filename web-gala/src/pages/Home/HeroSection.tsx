@@ -154,7 +154,7 @@ function RegisteredHeroContent({
         >
           Ver Perfil
         </Link>
-        {hasRevealedCategories && !isVotingOpen && (
+        {hasRevealedCategories && !isVotingOpen && !isNominationsOpen && (
           <Link
             to="/vote"
             className="border border-light-gold/60 px-10 py-4 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black active:scale-95"
