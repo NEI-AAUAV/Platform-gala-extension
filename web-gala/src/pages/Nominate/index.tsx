@@ -7,6 +7,9 @@ import useSessionUser, { State } from "@/hooks/userHooks/useSessionUser";
 import GalaService from "@/services/GalaService";
 import { useAppToast } from "@/components/ui/Toast";
 import NominationGuideModal from "@/components/Modals/NominationGuideModal";
+import useLoginLink from "@/hooks/useLoginLink";
+import { useUserStore } from "@/stores/useUserStore";
+import Button from "@/components/Button";
 
 const storageKey = (categoryId: number) => `gala_nomination_${categoryId}`;
 const guideSeenKey = "gala_nomination_guide_seen";
@@ -25,6 +28,7 @@ const getSubmissionErrorMessage = (error: unknown) => {
 function NominateContent({
   categories,
   isRegistered,
+  registrationActive,
   nominations,
   setNames,
   errors,
@@ -34,6 +38,7 @@ function NominateContent({
 }: Readonly<{
   categories: Vote[];
   isRegistered: boolean;
+  registrationActive: boolean;
   nominations: Record<number, string[]>;
   setNames: (catId: number, names: string[]) => void;
   errors: Record<number, string | null>;
@@ -45,6 +50,13 @@ function NominateContent({
     return (
       <p className="col-span-full border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm text-white/50">
         Tens de estar inscrito na Gala para participar nas nomeações.
+      </p>
+    );
+  }
+  if (!registrationActive) {
+    return (
+      <p className="col-span-full border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm text-white/50">
+        A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não podes participar nas nomeações.
       </p>
     );
   }
@@ -75,7 +87,9 @@ function NominateContent({
 
 export default function Nominate() {
   const toast = useAppToast();
-  const { state } = useSessionUser();
+  const { state, sessionUser } = useSessionUser();
+  const { token } = useUserStore();
+  const loginLink = useLoginLink();
   const { votes, mutate } = useVotes();
   const nominationCategories = votes.filter((v) => v.nomination_open);
 
@@ -89,11 +103,13 @@ export default function Nominate() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenGuide = localStorage.getItem(guideSeenKey);
-    if (!hasSeenGuide) {
-      setIsGuideOpen(true);
+    if (state === State.REGISTERED && sessionUser?.registration_active !== false) {
+      const hasSeenGuide = localStorage.getItem(guideSeenKey);
+      if (!hasSeenGuide) {
+        setIsGuideOpen(true);
+      }
     }
-  }, []);
+  }, [state, sessionUser?.registration_active]);
 
   const closeGuide = () => {
     setIsGuideOpen(false);
@@ -213,6 +229,27 @@ export default function Nominate() {
     }
   };
 
+  if (!token) {
+    return (
+      <div className="px-4 pb-24 pt-16 sm:px-8 sm:pt-20 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div className="max-w-md border border-light-gold/20 bg-black/25 p-8 backdrop-blur-lg flex flex-col items-center">
+          <p className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.35em] text-light-gold/60">
+            Gala Awards
+          </p>
+          <h2 className="mt-3 font-gala text-2xl font-bold leading-tight text-white">
+            Sessão Não Iniciada
+          </h2>
+          <p className="text-white/55 mt-4 mb-6 font-gala text-sm">
+            Precisas de ter sessão iniciada na tua conta do NEI e uma inscrição válida na Gala para aceder a esta página.
+          </p>
+          <Button onClick={() => { window.location.href = loginLink; }} className="h-12 w-full flex items-center justify-center">
+            Iniciar Sessão com conta NEI
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const hasChanges = nominationCategories.some(
     (cat) =>
       (!cat.already_nominated || forceEdit[cat._id]) &&
@@ -238,6 +275,7 @@ export default function Nominate() {
         <NominateContent
           categories={nominationCategories}
           isRegistered={state === State.REGISTERED}
+          registrationActive={sessionUser?.registration_active !== false}
           nominations={nominations}
           setNames={setNames}
           errors={errors}
@@ -247,7 +285,7 @@ export default function Nominate() {
         />
       </div>
 
-      {state === State.REGISTERED && nominationCategories.length > 0 && (
+      {state === State.REGISTERED && sessionUser?.registration_active !== false && nominationCategories.length > 0 && (
         <div className="fixed bottom-0 left-0 z-30 w-full border-t border-white/10 bg-black/80 px-4 py-4 backdrop-blur-lg">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
             <div className="hidden sm:block">

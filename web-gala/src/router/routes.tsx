@@ -74,11 +74,7 @@ const routes = [
         async lazy() {
           const { default: Nominate } = await import("@/pages/Nominate");
           return {
-            Component: () => (
-              <ProtectedRoute>
-                <Nominate />
-              </ProtectedRoute>
-            ),
+            Component: Nominate,
           };
         },
       },
@@ -87,11 +83,7 @@ const routes = [
         async lazy() {
           const { default: Vote } = await import("@/pages/Vote");
           return {
-            Component: () => (
-              <ProtectedRoute>
-                <Vote />
-              </ProtectedRoute>
-            ),
+            Component: Vote,
           };
         },
       },
