@@ -5,7 +5,7 @@ from pydantic import BaseModel, NonNegativeInt
 
 from app.api.auth import AuthData, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
-from app.api.vote._utils import fetch_category, anonymize_category, is_voting_open
+from app.api.vote._utils import fetch_category, anonymize_category, is_voting_open, _is_category_revealed
 from app.core.db import DatabaseDep
 from app.models.user import User
 from app.models.vote import VoteCategory, VoteListing
@@ -35,6 +35,7 @@ def _is_category_vote_open(ts, category: VoteCategory) -> bool:
         **auth_responses,
         400: {"description": "Invalid user or option"},
         403: {"description": "Voting is closed"},
+        404: {"description": "Category not found"},
         409: {"description": "Already cast a vote"},
         500: {"description": "Internal server error"},
     },
@@ -54,6 +55,8 @@ async def cast_vote(
 
     ts = await fetch_time_slots(db)
     category = await fetch_category(category_id, db)
+    if not _is_category_revealed(category):
+        raise HTTPException(status_code=404, detail="Category not found")
     if not _is_category_vote_open(ts, category):
         raise HTTPException(status_code=403, detail="Voting is closed for this category")
 

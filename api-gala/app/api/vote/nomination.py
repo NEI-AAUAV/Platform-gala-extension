@@ -120,8 +120,10 @@ async def bulk_nominate(
             errors.append({"category_id": item.category_id, "error": INTERNAL_SERVER_ERROR})
 
     if errors:
+        if len(errors) == len(form_data.items):
+            raise HTTPException(status_code=400, detail={"errors": errors})
         return {"status": "partial_success", "errors": errors}
-    
+
     return {"status": "success"}
 
 

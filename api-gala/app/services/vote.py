@@ -202,6 +202,11 @@ class VoteService:
             None,
         )
 
+        # The `no_double_vote` filter is evaluated atomically by MongoDB inside
+        # update_one. Even if two concurrent requests both remove the old
+        # nomination and re-fetch before either inserts the new one, only one
+        # update_one can win: the second sees user_id already in the array and
+        # gets modified_count=0, which raises AlreadyNominatedError.
         no_double_vote = {"$not": {"$elemMatch": {"votes": user_id}}}
         if existing_name:
             result = await collection.update_one(

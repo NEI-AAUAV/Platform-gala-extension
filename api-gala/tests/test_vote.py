@@ -320,3 +320,67 @@ def test_anonymize_category_closes_nominations_when_options_exist():
     listing = anonymize_category(category, make_auth(), make_time_slots(now))
 
     assert listing.nomination_open is False
+
+
+_REGISTERED_USER = {
+    "_id": 1,
+    "nmec": 12345,
+    "email": "test@example.com",
+    "name": "Test User",
+    "is_registered": True,
+    "registration_active": True,
+}
+
+
+@pytest.mark.asyncio
+async def test_cast_vote_on_hidden_category_returns_404(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    test_db.user.find_one.return_value = _REGISTERED_USER
+    test_db.vote_category.find_one.return_value = {**mock_vote_category, "is_hidden": True}
+    test_db.time_slots.find_one.return_value = active_time_slot_payload()
+
+    resp = await async_client.post(
+        "/api/gala/v1/voting/categories/1/vote", json={"option": 0}
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_cast_vote_on_unrevealed_category_returns_404(
+    async_client: AsyncClient, test_db, mock_vote_category
+):
+    test_db.user.find_one.return_value = _REGISTERED_USER
+    future_reveal = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    test_db.vote_category.find_one.return_value = {
+        **mock_vote_category, "reveal_at": future_reveal
+    }
+    test_db.time_slots.find_one.return_value = active_time_slot_payload()
+
+    resp = await async_client.post(
+        "/api/gala/v1/voting/categories/1/vote", json={"option": 0}
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_bulk_nominate_all_fail_returns_400(
+    async_client: AsyncClient, test_db
+):
+    test_db.user.find_one.return_value = _REGISTERED_USER
+    test_db.vote_category.find_one.return_value = None  # both categories missing → ValueError
+    test_db.time_slots.find_one.return_value = active_time_slot_payload()
+
+    resp = await async_client.post(
+        "/api/gala/v1/voting/bulk_nominate",
+        json={"items": [
+            {"category_id": 99, "names": ["Alice"]},
+            {"category_id": 100, "names": ["Bob"]},
+        ]},
+    )
+    assert resp.status_code == 400
+    body = resp.json()
+    assert "errors" in body["detail"]
+    assert len(body["detail"]["errors"]) == 2
+
+
