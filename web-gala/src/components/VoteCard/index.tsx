@@ -43,7 +43,7 @@ export default function VoteCard({
           </p>
         )}
         {vote.already_voted !== null && (
-          <div className="mt-2.5 flex justify-center">
+          <div className="mt-4 flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 font-gala text-[0.65rem] font-bold uppercase tracking-wider text-emerald-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />{" "}
               Votado
@@ -51,7 +51,7 @@ export default function VoteCard({
           </div>
         )}
         {showNomination && !(vote.already_nominated && !isEditing) && (
-          <p className="text-white/45 mt-1 font-gala text-xs uppercase tracking-[0.2em]">
+          <p className="text-white/45 mt-4 font-gala text-xs uppercase tracking-[0.2em]">
             Sugere quem merece
           </p>
         )}
