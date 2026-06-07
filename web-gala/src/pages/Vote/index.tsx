@@ -45,7 +45,45 @@ function resolveVoteError(reason: unknown): string {
   }
   return "Erro desconhecido. Tenta novamente.";
 }
-
+function VoteContent({
+  state,
+  registrationActive,
+  votes,
+}: Readonly<{
+  state: number;
+  registrationActive: boolean;
+  votes: Vote[];
+}>) {
+  if (state !== State.REGISTERED) {
+    return (
+      <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
+        Tens de estar inscrito na Gala para participar nas votações.
+      </p>
+    );
+  }
+  if (!registrationActive) {
+    return (
+      <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
+        A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não
+        podes participar nas votações.
+      </p>
+    );
+  }
+  if (votes.length === 0) {
+    return (
+      <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
+        Não há categorias de votação abertas de momento.
+      </p>
+    );
+  }
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {votes.map((vote: Vote) => (
+        <VoteCard key={vote._id} vote={vote} />
+      ))}
+    </div>
+  );
+}
 export default function Vote() {
   const { state, sessionUser } = useSessionUser();
   const { token } = useUserStore();
@@ -74,7 +112,10 @@ export default function Vote() {
   const guideSeenKey = "gala_voting_guide_seen";
 
   useEffect(() => {
-    if (state === State.REGISTERED && sessionUser?.registration_active !== false) {
+    if (
+      state === State.REGISTERED &&
+      sessionUser?.registration_active !== false
+    ) {
       const hasSeenGuide = localStorage.getItem(guideSeenKey);
       if (!hasSeenGuide) {
         setIsGuideOpen(true);
@@ -185,18 +226,24 @@ export default function Vote() {
 
   if (!token) {
     return (
-      <div className="px-4 pb-24 pt-16 sm:px-8 sm:pt-20 flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="max-w-md border border-light-gold/20 bg-black/25 p-8 backdrop-blur-lg flex flex-col items-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 pb-24 pt-16 text-center sm:px-8 sm:pt-20">
+        <div className="flex max-w-md flex-col items-center border border-light-gold/20 bg-black/25 p-8 backdrop-blur-lg">
           <p className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.35em] text-light-gold/60">
             Gala Awards
           </p>
           <h2 className="mt-3 font-gala text-2xl font-bold leading-tight text-white">
             Sessão Não Iniciada
           </h2>
-          <p className="text-white/55 mt-4 mb-6 font-gala text-sm">
-            Precisas de ter sessão iniciada na tua conta do NEI e uma inscrição válida na Gala para aceder a esta página.
+          <p className="text-white/55 mb-6 mt-4 font-gala text-sm">
+            Precisas de ter sessão iniciada na tua conta do NEI e uma inscrição
+            válida na Gala para aceder a esta página.
           </p>
-          <Button onClick={() => { window.location.href = loginLink; }} className="h-12 w-full flex items-center justify-center">
+          <Button
+            onClick={() => {
+              window.location.href = loginLink;
+            }}
+            className="flex h-12 w-full items-center justify-center"
+          >
             Iniciar Sessão com conta NEI
           </Button>
         </div>
@@ -223,54 +270,42 @@ export default function Vote() {
             </div>
 
             <div className="mx-auto mt-10 max-w-5xl">
-              {state !== State.REGISTERED ? (
-                <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
-                  Tens de estar inscrito na Gala para participar nas votações.
-                </p>
-              ) : sessionUser?.registration_active === false ? (
-                <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
-                  A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não podes participar nas votações.
-                </p>
-              ) : votes.length === 0 ? (
-                <p className="text-white/45 border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm">
-                  Não há categorias de votação abertas de momento.
-                </p>
-              ) : (
-                <div className="grid gap-6 lg:grid-cols-2">
-                  {votes.map((vote: Vote) => (
-                    <VoteCard key={vote._id} vote={vote} />
-                  ))}
-                </div>
-              )}
+              <VoteContent
+                state={state}
+                registrationActive={sessionUser?.registration_active !== false}
+                votes={votes}
+              />
             </div>
           </section>
 
-          {state === State.REGISTERED && sessionUser?.registration_active !== false && hasVotingCategories && (
-            <div className="fixed bottom-0 left-0 z-30 w-full border-t border-light-gold/20 bg-black/80 px-4 py-4 backdrop-blur-lg sm:px-8">
-              <div className="mx-auto flex max-w-5xl items-center gap-4">
-                <p className="hidden flex-1 font-gala text-xs text-white/50 md:block">
-                  {allVoted
-                    ? "Já participaste em todas as categorias. Obrigado pela tua votação!"
-                    : "Revê as tuas escolhas e confirma as votações."}
-                </p>
-                <Button
-                  className={classNames(
-                    "h-14 w-full text-lg md:w-auto md:min-w-[320px]",
-                    allVoted
-                      ? "cursor-not-allowed border border-neutral-700 !from-neutral-800 !to-neutral-700 !text-neutral-400 shadow-none hover:!saturate-100"
-                      : "shadow-[0_0_20px_rgba(255,193,7,0.3)]",
-                  )}
-                  submit
-                  disabled={isSubmitting || allVoted}
-                >
-                  {!isSubmitting && (
-                    <FontAwesomeIcon icon={buttonIcon} className="mr-2" />
-                  )}
-                  {buttonText}
-                </Button>
+          {state === State.REGISTERED &&
+            sessionUser?.registration_active !== false &&
+            hasVotingCategories && (
+              <div className="fixed bottom-0 left-0 z-30 w-full border-t border-light-gold/20 bg-black/80 px-4 py-4 backdrop-blur-lg sm:px-8">
+                <div className="mx-auto flex max-w-5xl items-center gap-4">
+                  <p className="hidden flex-1 font-gala text-xs text-white/50 md:block">
+                    {allVoted
+                      ? "Já participaste em todas as categorias. Obrigado pela tua votação!"
+                      : "Revê as tuas escolhas e confirma as votações."}
+                  </p>
+                  <Button
+                    className={classNames(
+                      "h-14 w-full text-lg md:w-auto md:min-w-[320px]",
+                      allVoted
+                        ? "cursor-not-allowed border border-neutral-700 !from-neutral-800 !to-neutral-700 !text-neutral-400 shadow-none hover:!saturate-100"
+                        : "shadow-[0_0_20px_rgba(255,193,7,0.3)]",
+                    )}
+                    submit
+                    disabled={isSubmitting || allVoted}
+                  >
+                    {!isSubmitting && (
+                      <FontAwesomeIcon icon={buttonIcon} className="mr-2" />
+                    )}
+                    {buttonText}
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </form>
       </FormProvider>
 

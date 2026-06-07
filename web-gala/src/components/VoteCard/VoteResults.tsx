@@ -182,7 +182,7 @@ function VoteResults() {
                       {item.category}
                     </h3>
                     {item.description && (
-                      <p className="mt-1 text-[0.7rem] leading-snug text-white/40 whitespace-pre-line">
+                      <p className="mt-1 whitespace-pre-line text-[0.7rem] leading-snug text-white/40">
                         {item.description}
                       </p>
                     )}

@@ -56,7 +56,8 @@ function NominateContent({
   if (!registrationActive) {
     return (
       <p className="col-span-full border border-light-gold/20 bg-black/25 px-6 py-10 text-center font-gala text-sm text-white/50">
-        A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não podes participar nas nomeações.
+        A tua inscrição na Gala encontra-se cancelada ou inativa, pelo que não
+        podes participar nas nomeações.
       </p>
     );
   }
@@ -103,7 +104,10 @@ export default function Nominate() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   useEffect(() => {
-    if (state === State.REGISTERED && sessionUser?.registration_active !== false) {
+    if (
+      state === State.REGISTERED &&
+      sessionUser?.registration_active !== false
+    ) {
       const hasSeenGuide = localStorage.getItem(guideSeenKey);
       if (!hasSeenGuide) {
         setIsGuideOpen(true);
@@ -231,18 +235,24 @@ export default function Nominate() {
 
   if (!token) {
     return (
-      <div className="px-4 pb-24 pt-16 sm:px-8 sm:pt-20 flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div className="max-w-md border border-light-gold/20 bg-black/25 p-8 backdrop-blur-lg flex flex-col items-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 pb-24 pt-16 text-center sm:px-8 sm:pt-20">
+        <div className="flex max-w-md flex-col items-center border border-light-gold/20 bg-black/25 p-8 backdrop-blur-lg">
           <p className="font-gala text-[0.68rem] font-bold uppercase tracking-[0.35em] text-light-gold/60">
             Gala Awards
           </p>
           <h2 className="mt-3 font-gala text-2xl font-bold leading-tight text-white">
             Sessão Não Iniciada
           </h2>
-          <p className="text-white/55 mt-4 mb-6 font-gala text-sm">
-            Precisas de ter sessão iniciada na tua conta do NEI e uma inscrição válida na Gala para aceder a esta página.
+          <p className="text-white/55 mb-6 mt-4 font-gala text-sm">
+            Precisas de ter sessão iniciada na tua conta do NEI e uma inscrição
+            válida na Gala para aceder a esta página.
           </p>
-          <Button onClick={() => { window.location.href = loginLink; }} className="h-12 w-full flex items-center justify-center">
+          <Button
+            onClick={() => {
+              window.location.href = loginLink;
+            }}
+            className="flex h-12 w-full items-center justify-center"
+          >
             Iniciar Sessão com conta NEI
           </Button>
         </div>
@@ -285,40 +295,42 @@ export default function Nominate() {
         />
       </div>
 
-      {state === State.REGISTERED && sessionUser?.registration_active !== false && nominationCategories.length > 0 && (
-        <div className="fixed bottom-0 left-0 z-30 w-full border-t border-white/10 bg-black/80 px-4 py-4 backdrop-blur-lg">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-            <div className="hidden sm:block">
-              <p className="font-gala text-xs text-white/40">
-                {hasChanges
-                  ? "Tens nomeações pendentes para submeter."
-                  : "Preenche as categorias acima."}
-              </p>
+      {state === State.REGISTERED &&
+        sessionUser?.registration_active !== false &&
+        nominationCategories.length > 0 && (
+          <div className="fixed bottom-0 left-0 z-30 w-full border-t border-white/10 bg-black/80 px-4 py-4 backdrop-blur-lg">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
+              <div className="hidden sm:block">
+                <p className="font-gala text-xs text-white/40">
+                  {hasChanges
+                    ? "Tens nomeações pendentes para submeter."
+                    : "Preenche as categorias acima."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSubmitAll}
+                disabled={submitting || !hasChanges}
+                className="to-dark-gold/15 flex w-full items-center justify-center gap-3 border border-light-gold/50 bg-gradient-to-r from-light-gold/20 py-3.5 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:from-light-gold/30 hover:to-dark-gold/25 disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-12"
+              >
+                {submitting ? (
+                  <>
+                    <FontAwesomeIcon
+                      icon={faCircleNotch}
+                      className="animate-spin"
+                    />
+                    A submeter...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faPaperPlane} />
+                    Submeter Todas as Nomeações
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleSubmitAll}
-              disabled={submitting || !hasChanges}
-              className="to-dark-gold/15 flex w-full items-center justify-center gap-3 border border-light-gold/50 bg-gradient-to-r from-light-gold/20 py-3.5 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:from-light-gold/30 hover:to-dark-gold/25 disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-12"
-            >
-              {submitting ? (
-                <>
-                  <FontAwesomeIcon
-                    icon={faCircleNotch}
-                    className="animate-spin"
-                  />
-                  A submeter...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faPaperPlane} />
-                  Submeter Todas as Nomeações
-                </>
-              )}
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
       <NominationGuideModal isOpen={isGuideOpen} onClose={closeGuide} />
     </div>
