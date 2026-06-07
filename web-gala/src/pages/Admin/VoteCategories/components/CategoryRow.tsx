@@ -553,6 +553,267 @@ function NominationsPanel({
   );
 }
 
+type DeleteConfirmActionsProps = Readonly<{
+  isDeleting: boolean;
+  onDelete: () => void;
+  onCancel: () => void;
+}>;
+
+function DeleteConfirmActions({
+  isDeleting,
+  onDelete,
+  onCancel,
+}: DeleteConfirmActionsProps) {
+  return (
+    <>
+      <span className="mr-2 text-xs font-semibold text-red-400">
+        Tem a certeza?
+      </span>
+      <button
+        type="button"
+        onClick={onDelete}
+        disabled={isDeleting}
+        className="rounded-full bg-red-500/20 px-3 py-1 text-xs text-red-500 hover:bg-red-500/40"
+      >
+        {isDeleting ? "A apagar..." : "Sim, apagar"}
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={isDeleting}
+        className="rounded-full bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
+      >
+        Cancelar
+      </button>
+    </>
+  );
+}
+
+type HeaderActionsProps = Readonly<{
+  vote: AdminVoteCategory;
+  isEditing: boolean;
+  isTogglingResults: boolean;
+  isTogglingHidden: boolean;
+  isSaving: boolean;
+  onToggleResults: () => void;
+  onToggleVisibility: () => void;
+  onSave: () => void;
+  onStartEdit: () => void;
+  onDeleteClick: () => void;
+}>;
+
+function HeaderActions({
+  vote,
+  isEditing,
+  isTogglingResults,
+  isTogglingHidden,
+  isSaving,
+  onToggleResults,
+  onToggleVisibility,
+  onSave,
+  onStartEdit,
+  onDeleteClick,
+}: HeaderActionsProps) {
+  return (
+    <>
+      {!isEditing && (
+        <>
+          <button
+            type="button"
+            onClick={onToggleResults}
+            disabled={isTogglingResults}
+            title={
+              vote.results_visible
+                ? "Ocultar resultados desta categoria aos utilizadores"
+                : "Mostrar resultados desta categoria aos utilizadores"
+            }
+            className={[
+              "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
+              vote.results_visible
+                ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                : "border-white/15 text-white/45 bg-white/5 hover:bg-white/10 hover:text-white/70",
+            ].join(" ")}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                vote.results_visible ? "bg-blue-400" : "bg-white/35"
+              }`}
+            />
+            <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
+              Resultados
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={onToggleVisibility}
+            disabled={isTogglingHidden}
+            title={
+              vote.is_hidden
+                ? "Ativar categoria (mostrar de acordo com agendamento)"
+                : "Ocultar categoria manualmente"
+            }
+            className={[
+              "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
+              vote.is_hidden
+                ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
+            ].join(" ")}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                vote.is_hidden ? "bg-red-400" : "bg-green-400"
+              }`}
+            />
+            <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
+              {vote.is_hidden ? "Oculta" : "Visível"}
+            </span>
+          </button>
+        </>
+      )}
+      {isEditing ? (
+        <button
+          type="button"
+          title="Guardar"
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-green-400/10 text-green-400 transition hover:bg-green-400/20 disabled:opacity-50"
+        >
+          <FontAwesomeIcon
+            icon={isSaving ? faSpinner : faSave}
+            className={isSaving ? "animate-spin" : ""}
+          />
+        </button>
+      ) : (
+        <button
+          type="button"
+          title="Editar Categoria"
+          onClick={onStartEdit}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
+        >
+          <FontAwesomeIcon icon={faEdit} />
+        </button>
+      )}
+      <button
+        type="button"
+        title="Apagar Categoria"
+        onClick={onDeleteClick}
+        className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/60 transition hover:bg-red-500/20 hover:text-red-400"
+      >
+        <FontAwesomeIcon icon={faTrash} />
+      </button>
+    </>
+  );
+}
+
+type CategoryEditFormProps = Readonly<{
+  description: string;
+  setDescription: (v: string) => void;
+  minNominees: number;
+  setMinNominees: (v: number) => void;
+  maxNominees: number;
+  setMaxNominees: (v: number) => void;
+  revealAt: string;
+  setRevealAt: (v: string) => void;
+  votesStart: string;
+  setVotesStart: (v: string) => void;
+  votesEnd: string;
+  setVotesEnd: (v: string) => void;
+}>;
+
+function CategoryEditForm({
+  description,
+  setDescription,
+  minNominees,
+  setMinNominees,
+  maxNominees,
+  setMaxNominees,
+  revealAt,
+  setRevealAt,
+  votesStart,
+  setVotesStart,
+  votesEnd,
+  setVotesEnd,
+}: CategoryEditFormProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Descrição da categoria..."
+        rows={2}
+        className="resize-none border border-dark-gold/30 bg-black/40 px-3 py-2 text-sm text-white/80 outline-none focus:border-dark-gold/60"
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+            Mín. Nomeados
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={minNominees}
+            onChange={(e) =>
+              setMinNominees(Number.parseInt(e.target.value, 10) || 1)
+            }
+            className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+            Máx. Nomeados
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={maxNominees}
+            onChange={(e) =>
+              setMaxNominees(Number.parseInt(e.target.value, 10) || 1)
+            }
+            className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
+          />
+        </label>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+            Agendar Revelação de Nomeados (Opcional)
+          </span>
+          <input
+            type="datetime-local"
+            value={revealAt}
+            onChange={(e) => setRevealAt(e.target.value)}
+            className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
+          />
+        </label>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+            Início Votação
+          </span>
+          <input
+            type="datetime-local"
+            value={votesStart}
+            onChange={(e) => setVotesStart(e.target.value)}
+            className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
+            Fim Votação
+          </span>
+          <input
+            type="datetime-local"
+            value={votesEnd}
+            onChange={(e) => setVotesEnd(e.target.value)}
+            className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export default function CategoryRow({
   vote,
   refresh,
@@ -788,211 +1049,58 @@ export default function CategoryRow({
         )}
         <div className="flex items-center gap-2">
           {isConfirmingDelete ? (
-            <>
-              <span className="mr-2 text-xs font-semibold text-red-400">
-                Tem a certeza?
-              </span>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="rounded-full bg-red-500/20 px-3 py-1 text-xs text-red-500 hover:bg-red-500/40"
-              >
-                {isDeleting ? "A apagar..." : "Sim, apagar"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsConfirmingDelete(false)}
-                disabled={isDeleting}
-                className="rounded-full bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
-              >
-                Cancelar
-              </button>
-            </>
+            <DeleteConfirmActions
+              isDeleting={isDeleting}
+              onDelete={handleDelete}
+              onCancel={() => setIsConfirmingDelete(false)}
+            />
           ) : (
-            <>
-              {!isEditing && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleToggleResultsVisibility}
-                    disabled={isTogglingResults}
-                    title={
-                      vote.results_visible
-                        ? "Ocultar resultados desta categoria aos utilizadores"
-                        : "Mostrar resultados desta categoria aos utilizadores"
-                    }
-                    className={[
-                      "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
-                      vote.results_visible
-                        ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                        : "border-white/15 text-white/45 bg-white/5 hover:bg-white/10 hover:text-white/70",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        vote.results_visible ? "bg-blue-400" : "bg-white/35"
-                      }`}
-                    />
-                    <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
-                      Resultados
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleToggleVisibility}
-                    disabled={isTogglingHidden}
-                    title={
-                      vote.is_hidden
-                        ? "Ativar categoria (mostrar de acordo com agendamento)"
-                        : "Ocultar categoria manualmente"
-                    }
-                    className={[
-                      "flex h-8 items-center gap-1.5 rounded-full border px-3 transition-all duration-300 disabled:opacity-50",
-                      vote.is_hidden
-                        ? "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                        : "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20",
-                    ].join(" ")}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        vote.is_hidden ? "bg-red-400" : "bg-green-400"
-                      }`}
-                    />
-                    <span className="font-gala text-[0.68rem] font-bold uppercase tracking-wider">
-                      {vote.is_hidden ? "Oculta" : "Visível"}
-                    </span>
-                  </button>
-                </>
-              )}
-              {isEditing ? (
-                <button
-                  type="button"
-                  title="Guardar"
-                  onClick={handleSaveEdit}
-                  disabled={isSaving}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-green-400/10 text-green-400 transition hover:bg-green-400/20 disabled:opacity-50"
-                >
-                  <FontAwesomeIcon
-                    icon={isSaving ? faSpinner : faSave}
-                    className={isSaving ? "animate-spin" : ""}
-                  />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  title="Editar Categoria"
-                  onClick={() => {
-                    setEditName(vote.category);
-                    setEditDescription(vote.description || "");
-                    setEditMinNominees(vote.min_nominees);
-                    setEditMaxNominees(vote.max_nominees);
-                    setEditOptions([...vote.options]);
-                    setEditRevealAt(toLocalDatetimeString(vote.reveal_at));
-                    setEditVotesStart(
-                      toLocalDatetimeString(vote.votes_start || undefined),
-                    );
-                    setEditVotesEnd(
-                      toLocalDatetimeString(vote.votes_end || undefined),
-                    );
-                    setIsEditing(true);
-                  }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition hover:bg-white/10 hover:text-white"
-                >
-                  <FontAwesomeIcon icon={faEdit} />
-                </button>
-              )}
-              <button
-                type="button"
-                title="Apagar Categoria"
-                onClick={() => setIsConfirmingDelete(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-red-400/60 transition hover:bg-red-500/20 hover:text-red-400"
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
-            </>
+            <HeaderActions
+              vote={vote}
+              isEditing={isEditing}
+              isTogglingResults={isTogglingResults}
+              isTogglingHidden={isTogglingHidden}
+              isSaving={isSaving}
+              onToggleResults={handleToggleResultsVisibility}
+              onToggleVisibility={handleToggleVisibility}
+              onSave={handleSaveEdit}
+              onStartEdit={() => {
+                setEditName(vote.category);
+                setEditDescription(vote.description || "");
+                setEditMinNominees(vote.min_nominees);
+                setEditMaxNominees(vote.max_nominees);
+                setEditOptions([...vote.options]);
+                setEditRevealAt(toLocalDatetimeString(vote.reveal_at));
+                setEditVotesStart(
+                  toLocalDatetimeString(vote.votes_start || undefined),
+                );
+                setEditVotesEnd(
+                  toLocalDatetimeString(vote.votes_end || undefined),
+                );
+                setIsEditing(true);
+              }}
+              onDeleteClick={() => setIsConfirmingDelete(true)}
+            />
           )}
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
         {isEditing ? (
-          <div className="flex flex-col gap-3">
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Descrição da categoria..."
-              rows={2}
-              className="resize-none border border-dark-gold/30 bg-black/40 px-3 py-2 text-sm text-white/80 outline-none focus:border-dark-gold/60"
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
-                  Mín. Nomeados
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  value={editMinNominees}
-                  onChange={(e) =>
-                    setEditMinNominees(Number.parseInt(e.target.value, 10) || 1)
-                  }
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
-                  Máx. Nomeados
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  value={editMaxNominees}
-                  onChange={(e) =>
-                    setEditMaxNominees(Number.parseInt(e.target.value, 10) || 1)
-                  }
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none focus:border-dark-gold/60"
-                />
-              </label>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="flex flex-col gap-1">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
-                  Agendar Revelação de Nomeados (Opcional)
-                </span>
-                <input
-                  type="datetime-local"
-                  value={editRevealAt}
-                  onChange={(e) => setEditRevealAt(e.target.value)}
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
-                />
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
-                  Início Votação
-                </span>
-                <input
-                  type="datetime-local"
-                  value={editVotesStart}
-                  onChange={(e) => setEditVotesStart(e.target.value)}
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
-                />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/40">
-                  Fim Votação
-                </span>
-                <input
-                  type="datetime-local"
-                  value={editVotesEnd}
-                  onChange={(e) => setEditVotesEnd(e.target.value)}
-                  className="rounded border border-dark-gold/30 bg-black/40 px-3 py-1 text-sm text-white outline-none [color-scheme:dark] focus:border-dark-gold/60"
-                />
-              </label>
-            </div>
-          </div>
+          <CategoryEditForm
+            description={editDescription}
+            setDescription={setEditDescription}
+            minNominees={editMinNominees}
+            setMinNominees={setEditMinNominees}
+            maxNominees={editMaxNominees}
+            setMaxNominees={setEditMaxNominees}
+            revealAt={editRevealAt}
+            setRevealAt={setEditRevealAt}
+            votesStart={editVotesStart}
+            setVotesStart={setEditVotesStart}
+            votesEnd={editVotesEnd}
+            setVotesEnd={setEditVotesEnd}
+          />
         ) : (
           <CategoryViewMeta vote={vote} />
         )}
