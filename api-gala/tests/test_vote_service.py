@@ -316,7 +316,9 @@ async def test_get_suggestions_filters_in_db_and_deduplicates_results():
         ]
     }
     category_filter = category_coll.find.call_args[0][0]
-    assert category_filter == {"nominations.name": {"$regex": "Joa", "$options": "i"}}
+    assert category_filter["nominations.name"] == {"$regex": "Joa", "$options": "i"}
+    assert category_filter["is_hidden"] == {"$ne": True}
+    assert {"reveal_at": None} in category_filter["$or"]
 
 
 def test_collect_user_suggestion_names_only_adds_matching_user_names():
