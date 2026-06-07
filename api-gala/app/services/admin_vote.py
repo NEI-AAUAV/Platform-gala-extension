@@ -70,13 +70,13 @@ class AdminVoteService:
                     return False
                 cleaned_names.append(name)
 
-            if not (1 <= len(cleaned_names) <= 4):
+            if not (1 <= len(cleaned_names) <= category.max_nominees):
                 return False
 
             options = cleaned_names
         else:
             sorted_nominations = sorted(category.nominations, key=lambda x: len(x.votes), reverse=True)
-            options = [n.name for n in sorted_nominations[:4]]
+            options = [n.name for n in sorted_nominations[:category.max_nominees]]
 
         existing_photo_paths = {
             option: category.photo_paths[index] if index < len(category.photo_paths) else ""

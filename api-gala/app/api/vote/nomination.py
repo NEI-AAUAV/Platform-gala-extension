@@ -15,6 +15,9 @@ GALA_REGISTRANTS_CAN_NOMINATE_ERROR = "Only gala registrants can nominate"
 INTERNAL_SERVER_ERROR = "Internal server error"
 
 
+_MAX_NAME_LENGTH = 200
+
+
 class NominationForm(BaseModel):
     names: List[str]
 
@@ -29,6 +32,8 @@ class NominationForm(BaseModel):
         stripped = v.strip()
         if not stripped:
             raise ValueError("Names cannot be empty.")
+        if len(stripped) > _MAX_NAME_LENGTH:
+            raise ValueError(f"Name must be at most {_MAX_NAME_LENGTH} characters.")
         return stripped
 
 
@@ -41,6 +46,8 @@ class BulkNominationItem(BaseModel):
         stripped = v.strip()
         if not stripped:
             raise ValueError("Names cannot be empty.")
+        if len(stripped) > _MAX_NAME_LENGTH:
+            raise ValueError(f"Name must be at most {_MAX_NAME_LENGTH} characters.")
         return stripped
 
 

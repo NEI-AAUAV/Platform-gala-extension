@@ -437,3 +437,54 @@ async def test_nominate_closed_window_returns_403(
     assert resp.status_code == 403
 
 
+@pytest.mark.asyncio
+async def test_nominate_name_too_long_returns_422(
+    async_client: AsyncClient, test_db
+):
+    resp = await async_client.post(
+        "/api/gala/v1/voting/categories/1/nominate",
+        json={"names": ["A" * 201]},
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_get_suggestions_cross_category_query_excludes_hidden(monkeypatch):
+    from app.services.vote import VoteService
+    from unittest.mock import AsyncMock, MagicMock
+
+    now_val = datetime(2026, 6, 10, 12, 0, tzinfo=timezone.utc)
+
+    category_mock = MagicMock()
+    category_mock.id = 1
+
+    captured_filters = []
+
+    def make_cursor(results):
+        cursor = MagicMock()
+        cursor.to_list = AsyncMock(return_value=results)
+        return cursor
+
+    db = MagicMock()
+    user_coll = MagicMock()
+    vote_coll = MagicMock()
+
+    user_coll.find = MagicMock(return_value=make_cursor([]))
+    vote_coll.find_one = AsyncMock(return_value={"_id": 1, "category": "Test", "is_hidden": False})
+
+    def vote_find(filter_, **_):
+        captured_filters.append(filter_)
+        return make_cursor([])
+
+    vote_coll.find = MagicMock(side_effect=vote_find)
+    db.__getitem__ = MagicMock(side_effect=lambda key: vote_coll if key == "vote_category" else user_coll)
+
+    monkeypatch.setattr("app.services.vote.datetime", MagicMock(now=MagicMock(return_value=now_val)))
+
+    await VoteService.get_suggestions(db, 1, "Alice")
+
+    categories_filter = next(f for f in captured_filters if "nominations.name" in str(f))
+    assert categories_filter.get("is_hidden") == {"$ne": True}
+    assert "$or" in categories_filter
+
+

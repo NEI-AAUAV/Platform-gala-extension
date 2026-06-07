@@ -134,7 +134,7 @@ async def test_finalize_nominations_selects_top_4_by_vote_count():
         _nominee("Dave", [10]),
         _nominee("Eve", [11, 12]),
     ]
-    doc = _category_doc(nominations=nominations)
+    doc = _category_doc(nominations=nominations, max_nominees=4)
     db, coll = _make_db(finds=(doc,))
 
     result = await AdminVoteService.finalize_nominations(db, 1)
@@ -149,11 +149,11 @@ async def test_finalize_nominations_selects_top_4_by_vote_count():
 
 
 @pytest.mark.asyncio
-async def test_finalize_nominations_takes_all_when_fewer_than_4():
+async def test_finalize_nominations_takes_all_when_fewer_than_max():
     from app.services.admin_vote import AdminVoteService
 
     nominations = [_nominee("Alice", [1]), _nominee("Bob", [2, 3])]
-    doc = _category_doc(nominations=nominations)
+    doc = _category_doc(nominations=nominations, max_nominees=4)
     db, coll = _make_db(finds=(doc,))
 
     result = await AdminVoteService.finalize_nominations(db, 1)
@@ -162,6 +162,28 @@ async def test_finalize_nominations_takes_all_when_fewer_than_4():
     update = coll.update_one.call_args[0][1]["$set"]
     assert set(update["options"]) == {"Alice", "Bob"}
     assert update["photo_paths"] == ["", ""]
+
+
+@pytest.mark.asyncio
+async def test_finalize_nominations_respects_max_nominees():
+    from app.services.admin_vote import AdminVoteService
+
+    nominations = [
+        _nominee("Alice", [1, 2, 3]),
+        _nominee("Bob", [4, 5]),
+        _nominee("Carol", [6, 7, 8]),
+    ]
+    doc = _category_doc(nominations=nominations, max_nominees=2)
+    db, coll = _make_db(finds=(doc,))
+
+    result = await AdminVoteService.finalize_nominations(db, 1)
+
+    assert result is True
+    update = coll.update_one.call_args[0][1]["$set"]
+    assert len(update["options"]) == 2
+    assert "Alice" in update["options"]
+    assert "Carol" in update["options"]
+    assert "Bob" not in update["options"]
 
 
 @pytest.mark.asyncio
@@ -175,7 +197,7 @@ async def test_finalize_nominations_accepts_admin_selected_names():
         _nominee("Dave", [8, 9]),
         _nominee("Eve", [10, 11]),
     ]
-    doc = _category_doc(nominations=nominations)
+    doc = _category_doc(nominations=nominations, max_nominees=4)
     db, coll = _make_db(finds=(doc,))
 
     result = await AdminVoteService.finalize_nominations(
@@ -203,6 +225,7 @@ async def test_finalize_nominations_preserves_existing_photos_by_option_name():
         nominations=nominations,
         options=["Carol", "Alice", "Mallory"],
         photo_paths=["carol.jpg", "alice.jpg", "mallory.jpg"],
+        max_nominees=4,
     )
     db, coll = _make_db(finds=(doc,))
 
@@ -231,6 +254,7 @@ async def test_finalize_nominations_rejects_option_changes_after_votes():
         nominations=nominations,
         options=["Alice", "Bob"],
         votes=[_vote(1, 0)],
+        max_nominees=4,
     )
     db, coll = _make_db(finds=(doc,))
 

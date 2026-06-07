@@ -212,6 +212,7 @@ class VoteService:
             result = await collection.update_one(
                 {
                     "_id": category_id,
+                    "options": [],
                     NOMINATIONS_NAME_FIELD: existing_name,
                     "nominations": no_double_vote,
                 },
@@ -221,6 +222,7 @@ class VoteService:
             result = await collection.update_one(
                 {
                     "_id": category_id,
+                    "options": [],
                     "nominations": no_double_vote,
                 },
                 {"$push": {"nominations": {"name": nominee_name, "votes": [user_id]}}},
@@ -257,8 +259,13 @@ class VoteService:
             users_cursor = await users_cursor
         users = await users_cursor.to_list(None)
 
+        now = datetime.now(timezone.utc)
         categories_cursor = collection.find(
-            {NOMINATIONS_NAME_FIELD: query_regex},
+            {
+                NOMINATIONS_NAME_FIELD: query_regex,
+                "is_hidden": {"$ne": True},
+                "$or": [{"reveal_at": None}, {"reveal_at": {"$lte": now}}],
+            },
             projection={"nominations": {"$elemMatch": {"name": query_regex}}},
         )
         if inspect.isawaitable(categories_cursor):
