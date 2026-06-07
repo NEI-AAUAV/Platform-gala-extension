@@ -623,7 +623,7 @@ async def test_cast_vote_time_slot_closed(
         f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
-    assert response.status_code == 409
+    assert response.status_code == 403
 
     db_res = await VoteCategory.get_collection(db).find_one({"_id": test_category.id})
     assert db_res is not None
@@ -690,7 +690,7 @@ async def test_cast_vote_inactive_registration(
 async def test_cast_vote_no_timeslot_configured(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
-    """No TimeSlots document in DB → check_votes_open raises 409."""
+    """No TimeSlots document in DB → voting window is closed → 403."""
     await create_registered_test_user(id=0, db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
@@ -699,7 +699,7 @@ async def test_cast_vote_no_timeslot_configured(
         f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
-    assert response.status_code == 409
+    assert response.status_code == 403
 
 
 # ====================
@@ -820,20 +820,21 @@ async def test_submit_nomination_window_closed(
 async def test_submit_nomination_success(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
-    """Registered user + open nominations window → 200."""
+    """Registered user + open nominations window + category without options → 200."""
+    open_cat = VoteCategory(_id=99, category="OPEN", options=[], photo_paths=[])
     await mark_open_nominations_timeslot(db=db)
     await create_registered_test_user(id=0, db=db)
-    await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
+    await VoteCategory.get_collection(db).insert_one(open_cat.dict(by_alias=True))
 
     form = NominationForm(name="Test Person")
     response = await client.post(
-        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/nominate",
+        f"{settings.API_V1_STR}/voting/categories/{open_cat.id}/nominate",
         json=form.dict(),
     )
     assert response.status_code == 200
     assert response.json() == {"status": "success"}
 
-    db_res = await VoteCategory.get_collection(db).find_one({"_id": test_category.id})
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": open_cat.id})
     assert db_res is not None
     category = VoteCategory(**db_res)
     assert any(n.name == "Test Person" and 0 in n.votes for n in category.nominations)
