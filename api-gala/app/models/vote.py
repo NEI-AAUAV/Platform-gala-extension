@@ -23,7 +23,7 @@ class VoteCategory(BaseDocument):
     category: str
     description: Optional[str] = None
     min_nominees: int = 1
-    max_nominees: int = 1
+    max_nominees: int = 4
     reveal_at: Optional[datetime] = None
     votes_start: Optional[datetime] = None
     votes_end: Optional[datetime] = None

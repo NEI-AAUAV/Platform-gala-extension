@@ -17,7 +17,7 @@ class VoteCategoryCreateForm(BaseModel):
     category: str = Field(..., min_length=3)
     description: Optional[str] = None
     min_nominees: int = 1
-    max_nominees: int = 1
+    max_nominees: int = 4
     options: List[str] = Field(default_factory=list)
     photo_paths: List[str] = Field(default_factory=list)
     reveal_at: Optional[datetime] = None
