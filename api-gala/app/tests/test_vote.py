@@ -15,6 +15,7 @@ from ._utils import (
     auth_data,
     create_test_user,
     create_registered_test_user,
+    grant_manager_permission,
     mark_open_timeslot,
     mark_closed_timeslot,
     mark_open_nominations_timeslot,
@@ -265,6 +266,7 @@ async def test_new_category_unauthorized(
 async def test_new_category(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     form = VoteCategoryCreateForm(
         category="GOOD", options=["Option 1", "Option 2"], photo_paths=["", ""]
     )
@@ -292,6 +294,7 @@ async def test_new_category(
 async def test_new_category_same_name(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     form = VoteCategoryCreateForm(
@@ -312,6 +315,7 @@ async def test_new_category_same_name(
 async def test_new_category_icu_equality(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     new_category = test_category.category.lower()
@@ -363,7 +367,8 @@ async def test_edit_category_unauthorized(
     [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
-async def test_edit_category_not_found(settings: Settings, client: AsyncClient) -> None:
+async def test_edit_category_not_found(settings: Settings, client: AsyncClient, db: DBType) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     form = VoteCategoryEditForm(category=test_category.category + "2")
     response = await client.put(
         f"{settings.API_V1_STR}/voting/1/edit", json=form.dict(exclude_unset=True)
@@ -380,6 +385,7 @@ async def test_edit_category_not_found(settings: Settings, client: AsyncClient) 
 async def test_edit_category(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
     new_name = test_category.category + "2"
@@ -416,6 +422,7 @@ async def test_edit_category(
 async def test_edit_category_rejects_option_changes_after_votes(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     category = test_category.copy()
     category.votes = [Vote(uid=1, option=0)]
     await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
@@ -440,6 +447,7 @@ async def test_edit_category_rejects_option_changes_after_votes(
 async def test_edit_category_allows_non_option_changes_after_votes(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     category = test_category.copy()
     category.votes = [Vote(uid=1, option=0)]
     await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
@@ -464,6 +472,7 @@ async def test_edit_category_allows_non_option_changes_after_votes(
 async def test_edit_category_same_name(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
+    await grant_manager_permission(permission="categories", db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
     test_category2 = test_category.copy()
     test_category2.id += 1
