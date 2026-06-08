@@ -82,7 +82,7 @@ def api_nei_auth(
 
     # Verify that the token has all the necessary scopes
     for scope in security_scopes.scopes:
-        if str(scope) not in auth_data.scopes:
+        if scope.value not in auth_data.scopes:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions",

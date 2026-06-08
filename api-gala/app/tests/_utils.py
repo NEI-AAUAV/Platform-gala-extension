@@ -16,6 +16,14 @@ def auth_data(*, sub: int = 0, scopes: List[ScopeEnum] = []) -> AuthData:
     )
 
 
+async def grant_manager_permission(*, sub: int = 0, permission: str, db: DBType) -> None:
+    from app.models.manager_permissions import ManagerPermissions
+    doc = {"_id": sub, "name": "J", "email": _TEST_EMAIL, "permissions": [permission]}
+    await ManagerPermissions.get_collection(db).update_one(
+        {"_id": sub}, {"$addToSet": {"permissions": permission}, "$set": {"name": "J", "email": _TEST_EMAIL}}, upsert=True
+    )
+
+
 async def create_test_user(*, id: int, db: DBType) -> None:
     test_user = User(_id=id, matriculation=None, nmec=1, email=_TEST_EMAIL, name="J")
     await User.get_collection(db).insert_one(test_user.dict(by_alias=True))

@@ -8,7 +8,9 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
 from app.core.db import DatabaseDep
 from app.core.db.counters import get_next_vote_category_id
+from app.models.manager_permissions import ManagerPermission
 from app.models.vote import VoteCategory
+from app.services.manager_permissions import ManagerPermissionsService
 
 router = APIRouter()
 
@@ -48,9 +50,10 @@ async def create_category(
     form_data: VoteCategoryCreateForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
+    auth: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Creates a new vote category"""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     category_id = await get_next_vote_category_id(db)
     category = VoteCategory(
         _id=category_id,

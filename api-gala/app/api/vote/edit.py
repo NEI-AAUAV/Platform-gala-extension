@@ -5,7 +5,9 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from app.api.auth import AuthData, api_nei_auth, ScopeEnum, auth_responses
 from app.core.db import DatabaseDep
+from app.models.manager_permissions import ManagerPermission
 from app.models.vote import VoteCategory
+from app.services.manager_permissions import ManagerPermissionsService
 from app.utils import optional
 
 from .create import VoteCategoryCreateForm
@@ -35,9 +37,10 @@ async def edit_category(
     form_data: VoteCategoryEditForm,
     *,
     db: DatabaseDep,
-    _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
+    auth: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Edits an existing vote category"""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
     updates = form_data.dict(exclude_unset=True)
     existing = await VoteCategory.get_collection(db).find_one({"_id": category_id})
     if existing is None:
