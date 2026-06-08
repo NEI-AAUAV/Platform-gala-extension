@@ -8,6 +8,7 @@ from app.api.vote.vote import VoteForm
 
 from app.core.config import Settings
 from app.core.db.types import DBType
+from app.models.user import User
 from app.models.vote import Vote, VoteCategory, VoteListing
 
 from ._utils import (
@@ -412,6 +413,54 @@ async def test_edit_category(
     [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
     indirect=["client"],
 )
+async def test_edit_category_rejects_option_changes_after_votes(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    category = test_category.copy()
+    category.votes = [Vote(uid=1, option=0)]
+    await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
+
+    form = VoteCategoryEditForm(options=["Option 2", "Option 1"])
+    response = await client.put(
+        f"{settings.API_V1_STR}/voting/{category.id}/edit",
+        json=form.dict(exclude_unset=True),
+    )
+
+    assert response.status_code == 400
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": category.id})
+    assert VoteCategory(**db_res).options == category.options
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
+    indirect=["client"],
+)
+async def test_edit_category_allows_non_option_changes_after_votes(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    category = test_category.copy()
+    category.votes = [Vote(uid=1, option=0)]
+    await VoteCategory.get_collection(db).insert_one(category.dict(by_alias=True))
+
+    form = VoteCategoryEditForm(description="Updated")
+    response = await client.put(
+        f"{settings.API_V1_STR}/voting/{category.id}/edit",
+        json=form.dict(exclude_unset=True),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["description"] == "Updated"
+    assert response.json()["options"] == category.options
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(scopes=[ScopeEnum.MANAGER_GALA])],
+    indirect=["client"],
+)
 async def test_edit_category_same_name(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
@@ -574,7 +623,7 @@ async def test_cast_vote_time_slot_closed(
         f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
-    assert response.status_code == 409
+    assert response.status_code == 403
 
     db_res = await VoteCategory.get_collection(db).find_one({"_id": test_category.id})
     assert db_res is not None
@@ -641,7 +690,7 @@ async def test_cast_vote_inactive_registration(
 async def test_cast_vote_no_timeslot_configured(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
-    """No TimeSlots document in DB → check_votes_open raises 409."""
+    """No TimeSlots document in DB → voting window is closed → 403."""
     await create_registered_test_user(id=0, db=db)
     await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
 
@@ -650,7 +699,7 @@ async def test_cast_vote_no_timeslot_configured(
         f"{settings.API_V1_STR}/voting/categories/{test_category.id}/vote",
         json=form.dict(),
     )
-    assert response.status_code == 409
+    assert response.status_code == 403
 
 
 # ====================
@@ -771,20 +820,202 @@ async def test_submit_nomination_window_closed(
 async def test_submit_nomination_success(
     settings: Settings, client: AsyncClient, db: DBType
 ) -> None:
-    """Registered user + open nominations window → 200."""
+    """Registered user + open nominations window + category without options → 200."""
+    open_cat = VoteCategory(_id=99, category="OPEN", options=[], photo_paths=[])
     await mark_open_nominations_timeslot(db=db)
     await create_registered_test_user(id=0, db=db)
-    await VoteCategory.get_collection(db).insert_one(test_category.dict(by_alias=True))
+    await VoteCategory.get_collection(db).insert_one(open_cat.dict(by_alias=True))
 
     form = NominationForm(name="Test Person")
     response = await client.post(
-        f"{settings.API_V1_STR}/voting/categories/{test_category.id}/nominate",
+        f"{settings.API_V1_STR}/voting/categories/{open_cat.id}/nominate",
         json=form.dict(),
     )
     assert response.status_code == 200
     assert response.json() == {"status": "success"}
 
-    db_res = await VoteCategory.get_collection(db).find_one({"_id": test_category.id})
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": open_cat.id})
     assert db_res is not None
     category = VoteCategory(**db_res)
     assert any(n.name == "Test Person" and 0 in n.votes for n in category.nominations)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_get_nomination_suggestions_global_pool(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    await mark_open_nominations_timeslot(db=db)
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(_id=10, category="CAT A", options=[], photo_paths=[]).dict(by_alias=True)
+    )
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(
+            _id=11,
+            category="CAT B",
+            options=[],
+            photo_paths=[],
+            nominations=[{"name": "Joana Prime", "votes": [1]}],
+        ).dict(by_alias=True)
+    )
+
+    user = User(
+        _id=0,
+        matriculation=None,
+        nmec=1,
+        email="user0@test.com",
+        name="Joao Silva",
+        is_registered=True,
+        registration_active=True,
+        companions=[{"name": "Joana Companion", "email": "comp@test.com"}],
+    )
+    await User.get_collection(db).insert_one(user.dict(by_alias=True))
+
+    # Duplicate candidate from another source should only appear once.
+    another_user = User(
+        _id=1,
+        matriculation=None,
+        nmec=2,
+        email="user1@test.com",
+        name="joao silva",
+        is_registered=True,
+        registration_active=True,
+    )
+    await User.get_collection(db).insert_one(another_user.dict(by_alias=True))
+
+    response = await client.get(
+        f"{settings.API_V1_STR}/voting/nominees/suggest",
+        params={"q": "Joa", "category_id": 10},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert "Joao Silva" in body
+    assert "Joana Companion" in body
+    assert "Joana Prime" in body
+    assert len([name for name in body if name.lower() == "joao silva"]) == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_get_nomination_suggestions_rejects_closed_window(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    await create_registered_test_user(id=0, db=db)
+    await mark_closed_timeslot(db=db)
+    await VoteCategory.get_collection(db).insert_one(
+        VoteCategory(_id=10, category="CAT A", options=[], photo_paths=[]).dict(by_alias=True)
+    )
+
+    response = await client.get(
+        f"{settings.API_V1_STR}/voting/nominees/suggest",
+        params={"q": "Joa", "category_id": 10},
+    )
+
+    assert response.status_code == 403
+
+
+# ====================
+# == NOMINATION LOGIC ==
+# ====================
+
+nomination_category = VoteCategory(
+    _id=20,
+    category="NOMINATION CAT",
+    options=[],
+    photo_paths=[],
+    nominations=[],
+)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_nomination_change_replaces_previous(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    """User who already nominated someone can change their nomination."""
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    # First nomination
+    await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["Alice Costa"]},
+    )
+
+    # Change nomination
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["Bob Ferreira"]},
+    )
+    assert response.status_code == 200
+
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": nomination_category.id})
+    assert db_res is not None
+    category = VoteCategory(**db_res)
+    names_with_user = [n.name for n in category.nominations if 0 in n.votes]
+    assert names_with_user == ["Bob Ferreira"]
+    assert not any(n.name == "Alice Costa" and 0 in n.votes for n in category.nominations)
+
+
+@pytest.mark.asyncio
+async def test_nomination_case_insensitive_dedup(db: DBType) -> None:
+    """Two users nominating the same name in different case end up on the same nominee."""
+    from app.services.vote import VoteService
+
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await create_registered_test_user(id=1, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    await VoteService.nominate(db, 0, nomination_category.id, ["Alice Costa"])
+    await VoteService.nominate(db, 1, nomination_category.id, ["alice costa"])
+
+    db_res = await VoteCategory.get_collection(db).find_one({"_id": nomination_category.id})
+    assert db_res is not None
+    category = VoteCategory(**db_res)
+    # Both users should be on the same nominee (case-insensitive match)
+    alice_nominees = [n for n in category.nominations if n.name.lower() == "alice costa"]
+    assert len(alice_nominees) == 1
+    assert 0 in alice_nominees[0].votes
+    assert 1 in alice_nominees[0].votes
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "client",
+    [auth_data(sub=0)],
+    indirect=["client"],
+)
+async def test_nomination_empty_names_rejected(
+    settings: Settings, client: AsyncClient, db: DBType
+) -> None:
+    """Empty or whitespace-only names are rejected with 422."""
+    await mark_open_nominations_timeslot(db=db)
+    await create_registered_test_user(id=0, db=db)
+    await VoteCategory.get_collection(db).insert_one(nomination_category.dict(by_alias=True))
+
+    response = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": ["   "]},
+    )
+    assert response.status_code == 422
+
+    response2 = await client.post(
+        f"{settings.API_V1_STR}/voting/categories/{nomination_category.id}/nominate",
+        json={"names": []},
+    )
+    assert response2.status_code == 400

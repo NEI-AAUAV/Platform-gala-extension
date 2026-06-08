@@ -8,7 +8,6 @@ import {
   faClipboardList,
   faChair,
   faTrophy,
-  faChartBar,
   faHouse,
   faShieldHalved,
   faBars,
@@ -16,7 +15,6 @@ import {
   faUsers,
   faBus,
 } from "@fortawesome/free-solid-svg-icons";
-import VoteResults from "@/components/VoteCard/VoteResults";
 import VoteCategories from "./VoteCategories";
 import TablesAdmin from "./TablesAdmin";
 import RegistrationAdmin from "./RegistrationAdmin";
@@ -33,7 +31,6 @@ type Tab =
   | "inscritos"
   | "tables"
   | "categories"
-  | "results"
   | "homepage"
   | "transportes"
   | "permissoes";
@@ -71,16 +68,9 @@ const ALL_TABS: TabDefinition[] = [
   },
   {
     id: "categories",
-    label: "Categorias",
+    label: "Votação",
     icon: faTrophy,
-    description: "Gerir categorias de votação",
-    permission: "categories",
-  },
-  {
-    id: "results",
-    label: "Resultados",
-    icon: faChartBar,
-    description: "Resultados e contagens de votos",
+    description: "Gerir categorias e ver resultados",
     permission: "categories",
   },
   {
@@ -110,7 +100,6 @@ const PREVIEW_ROUTES: Partial<Record<Tab, string>> = {
   registration: "/register",
   homepage: "/",
   categories: "/vote",
-  results: "/vote",
   tables: "/reserve",
 };
 
@@ -128,12 +117,8 @@ const SECTION_TITLES: Record<Tab, { title: string; sub: string }> = {
     sub: "Período de escolha, limites e visão geral das mesas criadas.",
   },
   categories: {
-    title: "Categorias de Votação",
-    sub: "Gerir as categorias disponíveis para votação.",
-  },
-  results: {
-    title: "Resultados de Votação",
-    sub: "Ver contagens e aprovar a publicação de resultados.",
+    title: "Votação da Gala",
+    sub: "Gerir categorias de votação, nomeados e ver resultados em tempo real.",
   },
   homepage: {
     title: "Conteúdo da Homepage",
@@ -401,13 +386,8 @@ export default function Admin() {
                     {activeTab === "inscritos" && <RegistrantsAdmin />}
                     {activeTab === "tables" && <TablesAdmin />}
                     {activeTab === "categories" && (
-                      <div className="mx-auto max-w-3xl">
+                      <div className="mx-auto max-w-5xl">
                         <VoteCategories />
-                      </div>
-                    )}
-                    {activeTab === "results" && (
-                      <div className="mx-auto max-w-3xl">
-                        <VoteResults />
                       </div>
                     )}
                     {activeTab === "homepage" && (

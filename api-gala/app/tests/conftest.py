@@ -38,7 +38,7 @@ def pytest_runtest_makereport(item):
 def settings(request: pytest.FixtureRequest) -> Settings:
     name = request.node.name
     hash_val = hashlib.sha256(name.encode("utf-8")).hexdigest()
-    truncated_name = request.node.name[:56] + hash_val[:8]
+    truncated_name = request.node.name[:55] + hash_val[:8]
     return Settings(MONGO_DB=f"{truncated_name}")
 
 

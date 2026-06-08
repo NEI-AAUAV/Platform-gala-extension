@@ -236,3 +236,105 @@ async def test_nominate_service_does_not_enforce_time_window():
     result = await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
     assert result is True
     coll.update_one.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_nominate_rejects_finalized_category():
+    from app.services.vote import VoteService
+
+    category = {
+        "_id": 2,
+        "category": "Funniest",
+        "options": ["Ana", "Carlos"],
+        "nominations": [{"name": "Ana", "votes": [1]}],
+        "votes": [],
+        "results_visible": False,
+        "photo_paths": [],
+    }
+    db, coll = _make_db(category)
+
+    with pytest.raises(ValueError, match="Nominations are closed"):
+        await VoteService.nominate(db, user_id=7, category_id=2, nominee_name="Ana")
+
+    coll.update_one.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_get_suggestions_filters_in_db_and_deduplicates_results():
+    from app.services.vote import VoteService
+
+    category_coll = AsyncMock()
+    category_coll.find_one.return_value = {
+        "_id": 10,
+        "category": "Best",
+        "options": [],
+        "nominations": [],
+        "votes": [],
+        "results_visible": False,
+        "photo_paths": [],
+    }
+    category_cursor = AsyncMock()
+    category_cursor.to_list.return_value = [
+        {"nominations": [{"name": "Joana Prime"}]},
+    ]
+    category_coll.find.return_value = category_cursor
+
+    user_coll = AsyncMock()
+    user_cursor = AsyncMock()
+    user_cursor.to_list.return_value = [
+        {
+            "name": "Joao Silva",
+            "companions": [
+                {"name": "Joana Companion"},
+                {"name": "Maria"},
+            ],
+        },
+        {"name": "joao silva", "companions": []},
+    ]
+    user_coll.find.return_value = user_cursor
+
+    db = MagicMock()
+    db.__getitem__ = MagicMock(side_effect=lambda name: {
+        "vote_category": category_coll,
+        "user": user_coll,
+    }[name])
+
+    result = await VoteService.get_suggestions(db, category_id=10, query="Joa")
+
+    assert "Joao Silva" in result
+    assert "Joana Companion" in result
+    assert "Joana Prime" in result
+    assert len([name for name in result if name.lower() == "joao silva"]) == 1
+
+    user_filter = user_coll.find.call_args[0][0]
+    assert user_filter == {
+        "is_registered": True,
+        "registration_active": {"$ne": False},
+        "$or": [
+            {"name": {"$regex": "Joa", "$options": "i"}},
+            {"companions.name": {"$regex": "Joa", "$options": "i"}},
+        ]
+    }
+    category_filter = category_coll.find.call_args[0][0]
+    assert category_filter["nominations.name"] == {"$regex": "Joa", "$options": "i"}
+    assert category_filter["is_hidden"] == {"$ne": True}
+    assert {"reveal_at": None} in category_filter["$or"]
+
+
+def test_collect_user_suggestion_names_only_adds_matching_user_names():
+    from app.services.vote import VoteService
+
+    users = [
+        {
+            "name": "Host Person",
+            "companions": [{"name": "Maria Companion"}],
+        },
+        {
+            "name": "Maria Host",
+            "companions": [{"name": "Other Companion"}],
+        },
+    ]
+
+    result = VoteService._collect_user_suggestion_names(users, "Maria")
+
+    assert result == ["Maria Companion", "Maria Host"]

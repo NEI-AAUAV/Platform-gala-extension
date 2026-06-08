@@ -31,6 +31,15 @@ def _validate_period(start_val, end_val, order_msg):
         raise HTTPException(status_code=400, detail=order_msg)
 
 
+def _time_slots_update_doc(form_data: TimeSlotsEditForm) -> dict:
+    update_doc = form_data.dict(exclude_unset=True)
+    for field_name, model_field in TimeSlots.__fields__.items():
+        if field_name not in update_doc:
+            continue
+        update_doc[model_field.alias] = update_doc[field_name]
+    return update_doc
+
+
 @router.put(
     "/",
     responses={
@@ -84,7 +93,7 @@ async def edit_time_slots(
 
     res = await TimeSlots.get_collection(db).find_one_and_update(
         {"_id": TIME_SLOTS_ID},
-        {"$set": form_data.dict(exclude_unset=True)},
+        {"$set": _time_slots_update_doc(form_data)},
         return_document=ReturnDocument.AFTER,
     )
 

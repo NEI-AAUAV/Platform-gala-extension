@@ -28,7 +28,7 @@ async def check_tables_open(
         return time_slots
 
     if time_slots.tables_start is None or time_slots.tables_end is None:
-        raise HTTPException(status_code=409, detail="Tables aren't open")
+        return time_slots
     now = datetime.now(timezone.utc)
     if now < _ensure_utc(time_slots.tables_start) or now > _ensure_utc(time_slots.tables_end):
         raise HTTPException(status_code=409, detail="Tables aren't open")

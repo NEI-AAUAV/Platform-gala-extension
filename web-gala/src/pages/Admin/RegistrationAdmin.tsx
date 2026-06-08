@@ -649,6 +649,8 @@ const SYSTEM_DATE_FIELDS: [keyof TimeSlots, string][] = [
   ["nominationsEnd", "Fim das Nomeações"],
   ["votesStart", "Início das Votações"],
   ["votesEnd", "Fim das Votações"],
+  ["tablesStart", "Início das Mesas"],
+  ["tablesEnd", "Fim das Mesas"],
   ["galaStart", "Início do Jantar de Gala"],
 ];
 
@@ -680,13 +682,26 @@ function SystemDatesEditor() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const utcEdits = Object.fromEntries(
-        Object.entries(edits).map(([k, v]) => [
-          k,
-          v ? localInputToUtcIso(v) : v,
-        ]),
-      );
-      await GalaService.time.editTimeSlots(utcEdits);
+      const changedEdits: Record<string, string | null> = {};
+      for (const [field] of SYSTEM_DATE_FIELDS) {
+        const newValue = edits[field];
+        const oldValueIso = (time as unknown as Record<string, string>)[field];
+        const oldValueLocal = oldValueIso
+          ? utcIsoToLocalInput(oldValueIso)
+          : "";
+
+        if (newValue !== oldValueLocal) {
+          changedEdits[field] = newValue ? localInputToUtcIso(newValue) : null;
+        }
+      }
+
+      if (Object.keys(changedEdits).length === 0) {
+        toast.info("Nenhuma alteração detetada.");
+        setSaving(false);
+        return;
+      }
+
+      await GalaService.time.editTimeSlots(changedEdits);
       setDirty(false);
       toast.success("Datas guardadas.");
     } catch {

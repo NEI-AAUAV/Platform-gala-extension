@@ -22,6 +22,7 @@ class VoteCategoryEditForm(VoteCategoryCreateForm):
     "/{category_id}/edit",
     responses={
         **auth_responses,
+        400: {"description": "Cannot change options after votes have been cast"},
         404: {"description": "Vote not found"},
         409: {
             "description": "A vote category with the same (or similar) name already exists"
@@ -37,10 +38,26 @@ async def edit_category(
     _: AuthData = Security(api_nei_auth, scopes=[ScopeEnum.MANAGER_GALA]),
 ) -> VoteCategory:
     """Edits an existing vote category"""
+    updates = form_data.dict(exclude_unset=True)
+    existing = await VoteCategory.get_collection(db).find_one({"_id": category_id})
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Vote not found")
+
+    existing_category = VoteCategory(**existing)
+    if (
+        "options" in updates
+        and existing_category.votes
+        and updates["options"] != existing_category.options
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot change options after votes have been cast",
+        )
+
     try:
         res = await VoteCategory.get_collection(db).find_one_and_update(
             {"_id": category_id},
-            {"$set": form_data.dict(exclude_unset=True)},
+            {"$set": updates},
             return_document=ReturnDocument.AFTER,
         )
     except DuplicateKeyError:
@@ -51,8 +68,5 @@ async def edit_category(
     except OperationFailure as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail="Something went wrong")
-
-    if res is None:
-        raise HTTPException(status_code=404, detail="Vote not found")
 
     return VoteCategory(**res)

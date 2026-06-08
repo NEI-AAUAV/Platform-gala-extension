@@ -1,8 +1,10 @@
 import uuid
+from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, Response, HTTPException, UploadFile, File, status, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, EmailStr
 from typing import List, Annotated, Optional, Dict, Any, Union
+from pymongo import ReturnDocument
 from app.api.auth import api_nei_auth, ScopeEnum, AuthData, auth_responses
 from app.services.storage import storage_client
 from app.services.authentik_service import fetch_all_users, AuthentikUser
@@ -798,6 +800,22 @@ class MergeNomineesBody(BaseModel):
     source_names: List[str]
 
 
+class FinalizeNominationsBody(BaseModel):
+    selected_names: Optional[List[str]] = None
+
+
+class CreateRunoffBody(BaseModel):
+    nominee_names: List[str]
+    slots: int
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+
+
+class CreateVoteRunoffBody(BaseModel):
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+
+
 @router.post(
     "/voting/categories/{category_id}/merge",
     responses={
@@ -831,14 +849,75 @@ async def admin_merge_nominees(
 async def admin_finalize_nominations(
     category_id: int,
     db: Annotated[DBType, Depends(get_db)],
-    auth: Annotated[AuthData, Depends(api_nei_auth)]
+    auth: Annotated[AuthData, Depends(api_nei_auth)],
+    body: Optional[FinalizeNominationsBody] = None,
 ):
     """Finalizes nominations for a category, selecting the top 4."""
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
-    success = await AdminVoteService.finalize_nominations(db, category_id)
+    success = await AdminVoteService.finalize_nominations(
+        db,
+        category_id,
+        body.selected_names if body else None,
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Category not found or has no nominations to finalize")
     return {"status": "success"}
+
+
+@router.post(
+    "/voting/categories/{category_id}/runoff",
+    responses={
+        **auth_responses,
+        400: {"description": "Runoff creation failed"},
+        403: {"description": ERROR_FORBIDDEN}
+    }
+)
+async def admin_create_runoff_category(
+    category_id: int,
+    body: CreateRunoffBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+) -> VoteCategory:
+    """Creates a 2nd-round vote category for tied nominees."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    category = await AdminVoteService.create_runoff_category(
+        db,
+        category_id,
+        body.nominee_names,
+        body.slots,
+        body.votes_start,
+        body.votes_end,
+    )
+    if category is None:
+        raise HTTPException(status_code=400, detail="Runoff creation failed")
+    return category
+
+
+@router.post(
+    "/voting/categories/{category_id}/vote-runoff",
+    responses={
+        **auth_responses,
+        400: {"description": "Vote runoff creation failed"},
+        403: {"description": ERROR_FORBIDDEN}
+    }
+)
+async def admin_create_vote_runoff_category(
+    category_id: int,
+    body: CreateVoteRunoffBody,
+    db: Annotated[DBType, Depends(get_db)],
+    auth: Annotated[AuthData, Depends(api_nei_auth)]
+) -> VoteCategory:
+    """Creates a 2nd-round vote category for options tied in 1st place."""
+    await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.CATEGORIES)
+    category = await AdminVoteService.create_vote_runoff_category(
+        db,
+        category_id,
+        body.votes_start,
+        body.votes_end,
+    )
+    if category is None:
+        raise HTTPException(status_code=400, detail="Vote runoff creation failed")
+    return category
 
 
 @router.patch(
@@ -893,9 +972,16 @@ async def update_time_slots(
     await ManagerPermissionsService.require_feature(db, auth, ManagerPermission.REGISTRATION)
     collection = TimeSlots.get_collection(db)
     updates = body.dict(by_alias=True, exclude_unset=True)
-    await collection.update_one({"_id": TIME_SLOTS_ID}, {"$set": updates})
-    result = await collection.find_one({"_id": TIME_SLOTS_ID})
-    return TimeSlots.parse_obj(result)
+    res = await collection.find_one_and_update(
+        {"_id": TIME_SLOTS_ID},
+        {"$set": updates},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    if not res:
+        # If ReturnDocument.AFTER is not available or failed, fetch manually
+        res = await collection.find_one({"_id": TIME_SLOTS_ID})
+    return TimeSlots.parse_obj(res)
 
 
 class BusAssignBody(BaseModel):

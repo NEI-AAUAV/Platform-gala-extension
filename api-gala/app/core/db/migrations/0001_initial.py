@@ -78,7 +78,7 @@ async def run(db: DBType) -> None:
         galaStart=datetime(1970, 1, 1),
     )
     await TimeSlots.get_collection(db).update_one(
-        {"_id": TIME_SLOTS_ID}, {"$setOnInsert": time_slot.dict()}, upsert=True
+        {"_id": TIME_SLOTS_ID}, {"$setOnInsert": time_slot.dict(by_alias=True)}, upsert=True
     )
 
     limits = Limits(maxRegistrations=200)

@@ -36,8 +36,16 @@ export type EditLimits = Partial<Limits>;
 
 type VoteCategoryCreate = {
   category: string;
+  description?: string;
+  min_nominees?: number;
+  max_nominees?: number;
   options: string[];
   photo_paths: string[];
+  reveal_at?: string | null;
+  votes_start?: string | null;
+  votes_end?: string | null;
+  is_hidden?: boolean;
+  results_visible?: boolean;
 };
 
 export type VoteCategoryEdit = Partial<Omit<VoteCategoryCreate, "photo_paths">>;
@@ -50,14 +58,36 @@ export type AdminNominee = {
 export type AdminVoteCategory = {
   _id: number;
   category: string;
+  description?: string;
+  min_nominees: number;
+  max_nominees: number;
   nominations: AdminNominee[];
   options: string[];
   photo_paths: string[];
+  votes: { uid: number; option: number }[];
+  reveal_at?: string;
+  votes_start?: string | null;
+  votes_end?: string | null;
+  revealed?: boolean;
+  is_hidden: boolean;
+  results_visible: boolean;
 };
 
 export type MergeNomineesBody = {
   target_name: string;
   source_names: string[];
+};
+
+export type CreateRunoffBody = {
+  nominee_names: string[];
+  slots: number;
+  votes_start?: string | null;
+  votes_end?: string | null;
+};
+
+export type CreateVoteRunoffBody = {
+  votes_start?: string | null;
+  votes_end?: string | null;
 };
 
 export type ManagerPermissionKey =
@@ -343,14 +373,34 @@ const GalaService = {
     listVotingCategories: async (): Promise<AdminVoteCategory[]> => {
       return client.get("/admin/voting/categories");
     },
-    finalizeNominations: async (categoryId: number): Promise<void> => {
-      return client.post(`/admin/voting/categories/${categoryId}/finalize`, {});
+    finalizeNominations: async (
+      categoryId: number,
+      selectedNames?: string[],
+    ): Promise<void> => {
+      return client.post(`/admin/voting/categories/${categoryId}/finalize`, {
+        selected_names: selectedNames,
+      });
     },
     mergeNominees: async (
       categoryId: number,
       body: MergeNomineesBody,
     ): Promise<void> => {
       return client.post(`/admin/voting/categories/${categoryId}/merge`, body);
+    },
+    createRunoff: async (
+      categoryId: number,
+      body: CreateRunoffBody,
+    ): Promise<AdminVoteCategory> => {
+      return client.post(`/admin/voting/categories/${categoryId}/runoff`, body);
+    },
+    createVoteRunoff: async (
+      categoryId: number,
+      body: CreateVoteRunoffBody = {},
+    ): Promise<AdminVoteCategory> => {
+      return client.post(
+        `/admin/voting/categories/${categoryId}/vote-runoff`,
+        body,
+      );
     },
     setResultsVisibility: async (visible: boolean): Promise<void> => {
       return client.patch(
@@ -403,6 +453,10 @@ const GalaService = {
       const response: Vote[] = await client.get("/voting/categories");
       return response;
     },
+    listPublicCategories: async () => {
+      const response: Vote[] = await client.get("/voting/categories/public");
+      return response;
+    },
     getCategory: async (id: string | number) => {
       const response: Vote = await client.get(`/voting/${id}`);
       return response;
@@ -422,8 +476,16 @@ const GalaService = {
       );
       return response;
     },
-    nominate: async (id: string | number, name: string): Promise<void> => {
-      await client.post(`/voting/categories/${id}/nominate`, { name });
+    nominate: async (id: string | number, names: string[]): Promise<void> => {
+      await client.post(`/voting/categories/${id}/nominate`, { names });
+    },
+    bulkNominate: async (
+      items: { category_id: number; names: string[] }[],
+    ): Promise<{
+      status: string;
+      errors?: { category_id: number; error: string }[];
+    }> => {
+      return client.post("/voting/bulk_nominate", { items });
     },
     getSuggestions: async (
       id: string | number,

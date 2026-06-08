@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from app.models import BaseDocument
@@ -20,6 +21,14 @@ class Vote(BaseModel):
 class VoteCategory(BaseDocument):
     id: int = Field(alias="_id")
     category: str
+    description: Optional[str] = None
+    min_nominees: int = 1
+    max_nominees: int = 4
+    reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+    is_hidden: bool = False
+    results_visible: bool = False
 
     # Nominations (free text)
     nominations: List[Nominee] = []
@@ -33,13 +42,21 @@ class VoteCategory(BaseDocument):
 class VoteListing(BaseModel):
     id: int = Field(alias="_id")
     category: str
+    description: Optional[str] = None
     options: List[str]
     photo_paths: List[str] = Field(default_factory=list)
     scores: List[int]
     already_voted: Optional[int] = None
+    reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+    revealed: bool = True
+    is_hidden: bool = False
     
     # Phase state for frontend
     nomination_open: bool
     voting_open: bool
     results_visible: bool = False
     already_nominated: bool = False
+    min_nominees: int = 1
+    max_nominees: int = 1

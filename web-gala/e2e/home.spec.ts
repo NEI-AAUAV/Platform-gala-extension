@@ -5,7 +5,7 @@ test.describe('Gala Home Page', () => {
   test.beforeEach(async ({ page }) => {
     await mockGlobalConfig(page);
     await mockTimeSlots(page);
-    await page.route('**/api/gala/v1/voting/categories', async route => {
+    await page.route('**/api/gala/v1/voting/categories/public', async route => {
       await route.fulfill({ json: [] });
     });
     await page.route('**/api/nei/v1/auth/refresh/', async route => {

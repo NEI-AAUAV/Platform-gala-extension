@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,6 +14,7 @@ import useCapacity from "@/hooks/useCapacity";
 import Countdown from "@/components/Countdown";
 import { useRegistrationConfig } from "@/hooks/useRegistrationConfig";
 import { formatDatePT, formatTimePT } from "@/utils/formatDate";
+import useVotes from "@/hooks/voteHooks/useVotes";
 
 function EventPill({
   icon,
@@ -126,6 +127,12 @@ function RegisteredHeroContent({
   readonly time: ReturnType<typeof useTime>["time"];
   readonly remainingSeats: number | undefined;
 }) {
+  const { votes } = useVotes();
+  const hasRevealedCategories = useMemo(
+    () => votes.some((v) => v.revealed),
+    [votes],
+  );
+
   const isRegistrationOpen = time?.registrationStatus === TimeStatus.OPEN;
   const isNominationsOpen = time?.nominationsStatus === TimeStatus.OPEN;
   const isVotingOpen = time?.votesStatus === TimeStatus.OPEN;
@@ -147,6 +154,14 @@ function RegisteredHeroContent({
         >
           Ver Perfil
         </Link>
+        {hasRevealedCategories && !isVotingOpen && !isNominationsOpen && (
+          <Link
+            to="/vote"
+            className="border border-light-gold/60 px-10 py-4 font-gala text-sm font-bold text-light-gold transition-all hover:border-light-gold hover:bg-light-gold hover:text-black active:scale-95"
+          >
+            Ver Nomeados
+          </Link>
+        )}
         {isTablesOpen && (
           <Link
             to="/reserve"

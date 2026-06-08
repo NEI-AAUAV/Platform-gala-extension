@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Security
 from loguru import logger
 from pydantic import BaseModel, Field, validator
@@ -14,8 +15,16 @@ router = APIRouter()
 
 class VoteCategoryCreateForm(BaseModel):
     category: str = Field(..., min_length=3)
-    options: List[str] = Field(..., min_items=2)
-    photo_paths: List[str] = Field(..., min_items=2)
+    description: Optional[str] = None
+    min_nominees: int = 1
+    max_nominees: int = 4
+    options: List[str] = Field(default_factory=list)
+    photo_paths: List[str] = Field(default_factory=list)
+    reveal_at: Optional[datetime] = None
+    votes_start: Optional[datetime] = None
+    votes_end: Optional[datetime] = None
+    is_hidden: bool = False
+    results_visible: bool = False
 
     @validator("photo_paths")
     def validate_lengths(cls, photo_paths, values):
@@ -46,6 +55,14 @@ async def create_category(
     category = VoteCategory(
         _id=category_id,
         category=form_data.category,
+        description=form_data.description,
+        min_nominees=form_data.min_nominees,
+        max_nominees=form_data.max_nominees,
+        reveal_at=form_data.reveal_at,
+        votes_start=form_data.votes_start,
+        votes_end=form_data.votes_end,
+        is_hidden=form_data.is_hidden,
+        results_visible=form_data.results_visible,
         options=form_data.options,
         photo_paths=form_data.photo_paths,
         votes=[],

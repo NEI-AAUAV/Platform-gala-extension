@@ -1,5 +1,5 @@
-from typing import Any, List
-from fastapi import APIRouter, Security
+from typing import List
+from fastapi import APIRouter, Security, HTTPException
 
 from app.api.auth import AuthData, ScopeEnum, api_nei_auth, auth_responses
 from app.api.time_slots.util import fetch_time_slots
@@ -7,9 +7,36 @@ from app.core.db import DatabaseDep
 from app.models.vote import Vote, VoteCategory, VoteListing
 from app.services.config import ConfigService
 
-from ._utils import fetch_category, anonymize_category
+from ._utils import (
+    fetch_category,
+    anonymize_category,
+    _now,
+    _ensure_utc,
+    _is_category_revealed,
+)
 
 router = APIRouter()
+
+
+PUBLIC_AUTH = AuthData(
+    sub=-1,
+    nmec=None,
+    name="Public",
+    email="",
+    surname="",
+    scopes=[],
+)
+
+
+async def _list_visible_categories(db: DatabaseDep, auth: AuthData) -> List[VoteListing]:
+    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
+
+    def mapper(category: VoteCategory) -> VoteListing:
+        return anonymize_category(category, auth, ts, config.results_visible)
+
+    res = await VoteCategory.get_collection(db).find().to_list(None)
+    categories = [VoteCategory(**category_res) for category_res in res]
+    return [mapper(category) for category in categories if _is_category_revealed(category)]
 
 
 @router.get(
@@ -24,14 +51,13 @@ async def list_categories(
     auth: AuthData = Security(api_nei_auth),
 ) -> List[VoteListing]:
     """Lists all vote categories"""
-    ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
+    return await _list_visible_categories(db, auth)
 
-    def mapper(category_res: Any) -> VoteListing:
-        category = VoteCategory(**category_res)
-        return anonymize_category(category, auth, ts, config.results_visible)
 
-    res = await VoteCategory.get_collection(db).find().to_list(None)
-    return list(map(mapper, res))
+@router.get("/categories/public")
+async def list_public_categories(*, db: DatabaseDep) -> List[VoteListing]:
+    """Lists revealed vote categories for public homepage displays."""
+    return await _list_visible_categories(db, PUBLIC_AUTH)
 
 
 @router.get(
@@ -47,6 +73,15 @@ async def get_category(
     """Get a single vote category"""
     ts, config = await fetch_time_slots(db), await ConfigService.get_config(db)
     category = await fetch_category(category_id, db)
+
+    # Hidden and not-yet-revealed categories should not disclose their existence.
+    if getattr(category, "is_hidden", False):
+        raise HTTPException(status_code=404, detail="Category not found")
+    if category.reveal_at:
+        reveal_at_utc = _ensure_utc(category.reveal_at)
+        if _now() < reveal_at_utc:
+            raise HTTPException(status_code=404, detail="Category not found")
+
     return anonymize_category(category, auth, ts, config.results_visible)
 
 
