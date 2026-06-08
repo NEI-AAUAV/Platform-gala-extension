@@ -441,6 +441,7 @@ async def test_nominate_closed_window_returns_403(
 async def test_nominate_name_too_long_returns_422(
     async_client: AsyncClient, test_db
 ):
+    test_db.user.find_one.return_value = _REGISTERED_USER
     resp = await async_client.post(
         "/api/gala/v1/voting/categories/1/nominate",
         json={"names": ["A" * 201]},
