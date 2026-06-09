@@ -29,11 +29,13 @@ export default function VoteCard({
   const votingOptions = useMemo(() => getRandomizedVoteOptions(vote), [vote]);
 
   return (
-    <article className="relative overflow-hidden border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/90 via-black/70 to-[#131313]/95 p-5 backdrop-blur-md sm:p-6">
-      <div className="bg-light-gold/15 pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-light-gold/10 blur-2xl" />
+    <article className="relative flex flex-col border border-light-gold/25 bg-gradient-to-br from-[#1a1713]/90 via-black/70 to-[#131313]/95 p-5 backdrop-blur-md focus-within:z-10 sm:p-6">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="bg-light-gold/15 absolute -right-14 -top-14 h-32 w-32 rounded-full blur-2xl" />
+        <div className="absolute -bottom-10 -left-8 h-28 w-28 rounded-full bg-light-gold/10 blur-2xl" />
+      </div>
 
-      <div className="relative text-center">
+      <div className="relative flex-1 text-center">
         <h1 className="font-gala text-2xl font-semibold text-white sm:text-[1.9rem]">
           {vote.category}
         </h1>
@@ -57,7 +59,7 @@ export default function VoteCard({
         )}
       </div>
 
-      <div className="relative mt-4">
+      <div className="relative mt-auto pt-4">
         {showNomination && (
           <NominationInput
             categoryId={vote._id}
