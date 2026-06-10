@@ -63,7 +63,9 @@ export default function ProfilePaymentSection({
 
   const phase1Passed = isPaymentDeadlinePassed(phase1Deadline);
   const phase2Passed = isPaymentDeadlinePassed(phase2Deadline);
-  const finalDeadlinePassed = isPaymentDeadlinePassed(config.paymentDeadlineDate);
+  const finalDeadlinePassed = isPaymentDeadlinePassed(
+    config.paymentDeadlineDate,
+  );
   const paymentLocked =
     sessionUser?.payment_expired || sessionUser?.registration_active === false;
   const showMBWay =
@@ -114,7 +116,7 @@ export default function ProfilePaymentSection({
         !finalDeadlinePassed &&
         !paymentLocked &&
         !sessionUser?.has_payed && (
-          <div className="flex gap-4 border border-amber-500/30 bg-amber-500/8 px-5 py-4">
+          <div className="bg-amber-500/8 flex gap-4 border border-amber-500/30 px-5 py-4">
             <FontAwesomeIcon
               icon={faTriangleExclamation}
               className="mt-0.5 shrink-0 text-amber-400/70"
@@ -123,7 +125,7 @@ export default function ProfilePaymentSection({
               <p className="text-sm font-semibold text-amber-300/90">
                 O prazo da 1.ª fase terminou
               </p>
-              <p className="text-xs leading-relaxed text-white/55">
+              <p className="text-white/55 text-xs leading-relaxed">
                 A inscrição foi automaticamente convertida para{" "}
                 <span className="font-semibold text-white/75">
                   pagamento integral
