@@ -175,6 +175,8 @@ class RegistrationService:
 
         phase1_deadline = config.prices.phase1_deadline
         if phase1_deadline and is_deadline_passed(phase1_deadline):
+            # Phase 1 missed: downgrade to full (integral) payment instead of cancelling.
+            # The general payment_deadline_date policy will cancel them if they still don't pay.
             await user_coll.update_many(
                 {
                     "is_registered": True,
@@ -186,7 +188,7 @@ class RegistrationService:
                         {"payment_proof_url": {EXISTS: False}},
                     ],
                 },
-                {"$set": common_set},
+                {"$set": {"phased_payment": False}},
             )
 
         phase2_deadline = config.prices.phase2_deadline

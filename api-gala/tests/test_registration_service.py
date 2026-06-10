@@ -413,10 +413,10 @@ async def test_apply_payment_deadline_policy_expired_deadline():
         phase1_filter, phase1_update = user_coll.update_many.call_args_list[1].args
         phase2_filter, phase2_update = user_coll.update_many.call_args_list[2].args
 
-        expected_update = {"$set": {"registration_active": False, "payment_expired": True}}
-        assert full_payment_update == expected_update
-        assert phase1_update == expected_update
-        assert phase2_update == expected_update
+        cancel_update = {"$set": {"registration_active": False, "payment_expired": True}}
+        assert full_payment_update == cancel_update
+        assert phase1_update == {"$set": {"phased_payment": False}}
+        assert phase2_update == cancel_update
 
         assert full_payment_filter == {
             "is_registered": True,
@@ -549,7 +549,7 @@ async def test_apply_payment_deadline_policy_only_expires_phase1_when_only_phase
                 {"payment_proof_url": {"$exists": False}},
             ],
         }
-        assert update_doc == {"$set": {"registration_active": False, "payment_expired": True}}
+        assert update_doc == {"$set": {"phased_payment": False}}
 
 
 @pytest.mark.asyncio

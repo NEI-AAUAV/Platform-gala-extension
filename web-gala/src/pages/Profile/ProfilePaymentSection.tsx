@@ -7,6 +7,7 @@ import {
   faBuilding,
   faLock,
   faCopy,
+  faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { RegistrationConfig } from "@/config/registrationConfig";
 import useSessionUser from "@/hooks/userHooks/useSessionUser";
@@ -62,6 +63,7 @@ export default function ProfilePaymentSection({
 
   const phase1Passed = isPaymentDeadlinePassed(phase1Deadline);
   const phase2Passed = isPaymentDeadlinePassed(phase2Deadline);
+  const finalDeadlinePassed = isPaymentDeadlinePassed(config.paymentDeadlineDate);
   const paymentLocked =
     sessionUser?.payment_expired || sessionUser?.registration_active === false;
   const showMBWay =
@@ -105,6 +107,37 @@ export default function ProfilePaymentSection({
           />
         )}
       </div>
+
+      {/* Phase 1 missed — downgraded to full payment notice */}
+      {config.phasedPaymentEnabled &&
+        phase1Passed &&
+        !finalDeadlinePassed &&
+        !paymentLocked &&
+        !sessionUser?.has_payed && (
+          <div className="flex gap-4 border border-amber-500/30 bg-amber-500/8 px-5 py-4">
+            <FontAwesomeIcon
+              icon={faTriangleExclamation}
+              className="mt-0.5 shrink-0 text-amber-400/70"
+            />
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-amber-300/90">
+                O prazo da 1.ª fase terminou
+              </p>
+              <p className="text-xs leading-relaxed text-white/55">
+                A inscrição foi automaticamente convertida para{" "}
+                <span className="font-semibold text-white/75">
+                  pagamento integral
+                </span>
+                . Efetua o pagamento total até{" "}
+                <span className="font-semibold text-white/75">
+                  {formatPaymentDeadline(config.paymentDeadlineDate)}
+                </span>{" "}
+                para garantires o teu lugar. Caso o pagamento não seja
+                confirmado dentro desse prazo, a inscrição será cancelada.
+              </p>
+            </div>
+          </div>
+        )}
 
       <div
         className={[
