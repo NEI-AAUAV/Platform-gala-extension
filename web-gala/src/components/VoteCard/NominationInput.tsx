@@ -4,6 +4,7 @@ import {
   faCheckCircle,
   faCircleNotch,
   faPencil,
+  faPlus,
   faSearch,
   faUserCheck,
   faXmark,
@@ -179,6 +180,17 @@ export default function NominationInput({
                   className="animate-spin text-xs"
                 />
               </span>
+            )}
+            {!isLoadingSuggestions && value.trim().length > 0 && (
+              <button
+                type="button"
+                onClick={() => addName(value)}
+                title="Adicionar nome"
+                aria-label="Adicionar nome"
+                className="absolute inset-y-0 right-2 my-auto flex h-8 w-8 items-center justify-center rounded-full text-light-gold/70 transition hover:bg-light-gold/15 hover:text-light-gold"
+              >
+                <FontAwesomeIcon icon={faPlus} className="text-xs" />
+              </button>
             )}
             <input
               id={`nomination-input-${categoryId}`}
