@@ -187,7 +187,7 @@ export default function NominationInput({
                 onClick={() => addName(value)}
                 title="Adicionar nome"
                 aria-label="Adicionar nome"
-                className="absolute inset-y-0 right-2 my-auto flex h-8 w-8 items-center justify-center rounded-full text-light-gold/70 transition hover:bg-light-gold/15 hover:text-light-gold"
+                className="hover:bg-light-gold/15 absolute inset-y-0 right-2 my-auto flex h-8 w-8 items-center justify-center rounded-full text-light-gold/70 transition hover:text-light-gold"
               >
                 <FontAwesomeIcon icon={faPlus} className="text-xs" />
               </button>
