@@ -244,7 +244,7 @@ function RegistrationTab({
           <InfoRow
             icon={faBus}
             label="Autocarro atribuído"
-            value={busName ?? "Ainda não atribuído"}
+            value={busName ?? "Transporte assegurado, aguarda distribuição"}
           />
         )}
       </div>
