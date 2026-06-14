@@ -17,7 +17,7 @@ export default function BusAssignmentAdmin() {
 
   const { buses } = config.bus_schedule;
   const registeredWithBus = users.filter(
-    (u) => u.is_registered && u.bus_option !== "NONE",
+    (u) => u.is_registered && u.bus_option !== "NONE" && !u.is_companion_of,
   );
 
   const flash = () => {
