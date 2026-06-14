@@ -19,12 +19,13 @@ export function computeStats(
   users: User[],
   mealOptions: MealOption[] = [],
 ): RegistrantsStats {
+  const mainUsers = users.filter((u) => !u.is_companion_of);
   const byYear: Record<string, number> = {};
   const byMeal: Record<string, number> = {};
   const byBusOption: Record<string, number> = {};
   let totalCompanions = 0;
 
-  for (const u of users) {
+  for (const u of mainUsers) {
     const yr = u.matriculation ? `${u.matriculation}º ano` : "Alumni";
     const companionCount = u.companions?.length ?? 0;
     byYear[yr] = (byYear[yr] ?? 0) + 1 + companionCount;
@@ -47,11 +48,11 @@ export function computeStats(
   }
 
   return {
-    total: users.length,
+    total: mainUsers.length,
     totalCompanions,
-    totalPersons: users.length + totalCompanions,
-    paid: users.filter((u) => u.has_payed).length,
-    proofSent: users.filter(
+    totalPersons: mainUsers.length + totalCompanions,
+    paid: mainUsers.filter((u) => u.has_payed).length,
+    proofSent: mainUsers.filter(
       (u) =>
         !u.has_payed &&
         ((!u.payment_phase1_confirmed && u.payment_proof_url) ||
@@ -59,19 +60,19 @@ export function computeStats(
             !u.payment_phase2_confirmed &&
             u.payment_proof_url_phase2)),
     ).length,
-    pending: users.filter(
+    pending: mainUsers.filter(
       (u) =>
         !u.has_payed &&
         !u.payment_expired &&
         !u.payment_proof_url &&
         !u.payment_proof_url_phase2,
     ).length,
-    withTable: users.reduce(
+    withTable: mainUsers.reduce(
       (acc, u) =>
         acc + (u.table_id === null ? 0 : 1 + (u.companions?.length ?? 0)),
       0,
     ),
-    withBus: users.reduce(
+    withBus: mainUsers.reduce(
       (acc, u) =>
         acc + (u.bus_option === "NONE" ? 0 : 1 + (u.companions?.length ?? 0)),
       0,

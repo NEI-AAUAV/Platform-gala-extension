@@ -177,6 +177,11 @@ export default function RegistrantsTable({
                       )}
                     </div>
                     <p className="text-white/35 text-[0.6rem]">{user.email}</p>
+                    {user.is_companion_of && (
+                      <p className="text-[0.6rem] font-semibold text-purple-400/70">
+                        Acompanhante de #{user.is_companion_of}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-white/50">
                     {user.matriculation ? `${user.matriculation}º` : "Outro"}

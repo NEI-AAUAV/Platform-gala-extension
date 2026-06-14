@@ -33,7 +33,8 @@ export default function Reserve() {
 
   const canCreateTable =
     state === State.REGISTERED &&
-    !sessionUser.table_id &&
+    !sessionUser?.is_companion_of &&
+    !sessionUser?.table_id &&
     time?.tablesStatus === TimeStatus.OPEN;
 
   const handleCreateTable = async () => {

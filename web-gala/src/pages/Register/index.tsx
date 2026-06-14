@@ -63,7 +63,7 @@ export default function Register() {
   const { config } = useRegistrationConfig();
   const { time } = useTime();
   const { capacity } = useCapacity();
-  const { mutate: mutateSession } = useSessionUser();
+  const { mutate: mutateSession, sessionUser } = useSessionUser();
   const { data, update, reset } = useWizardState(sub ? String(sub) : undefined);
   const [syncing, setSyncing] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -109,6 +109,10 @@ export default function Register() {
 
   if (!sessionLoading && sub === undefined) {
     return <Navigate to={loginLink} />;
+  }
+
+  if (sessionUser?.is_companion_of) {
+    return <Navigate to="/profile" />;
   }
 
   const registrationStatus = time?.registrationStatus;
