@@ -88,7 +88,8 @@ class RegistrationService:
         Each user takes 1 seat plus 1 per companion.
         Pass exclude_user_id to exclude a specific user (e.g. before re-saving their own entry).
         """
-        match: Dict[str, Any] = {"bus_option": {"$ne": "NONE"}}
+        bus_values = [o.value for o in BusOption if o != BusOption.NONE]
+        match: Dict[str, Any] = {"bus_option": {"$in": bus_values}, "is_companion_of": None}
         if exclude_user_id is not None:
             match["_id"] = {"$ne": exclude_user_id}
         result = await User.get_collection(db).aggregate([
