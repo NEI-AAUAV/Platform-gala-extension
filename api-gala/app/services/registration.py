@@ -163,6 +163,7 @@ class RegistrationService:
             await user_coll.update_many(
                 {
                     "is_registered": True,
+                    "is_companion_of": None,
                     "registration_active": {"$ne": False},
                     "has_payed": {"$ne": True},
                     "phased_payment": {"$ne": True},
@@ -181,6 +182,7 @@ class RegistrationService:
             await user_coll.update_many(
                 {
                     "is_registered": True,
+                    "is_companion_of": None,
                     "registration_active": {"$ne": False},
                     "has_payed": {"$ne": True},
                     "phased_payment": True,
@@ -197,6 +199,7 @@ class RegistrationService:
             await user_coll.update_many(
                 {
                     "is_registered": True,
+                    "is_companion_of": None,
                     "registration_active": {"$ne": False},
                     "has_payed": {"$ne": True},
                     "phased_payment": True,

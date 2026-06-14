@@ -420,6 +420,7 @@ async def test_apply_payment_deadline_policy_expired_deadline():
 
         assert full_payment_filter == {
             "is_registered": True,
+            "is_companion_of": None,
             "registration_active": {"$ne": False},
             "has_payed": {"$ne": True},
             "phased_payment": {"$ne": True},
@@ -430,6 +431,7 @@ async def test_apply_payment_deadline_policy_expired_deadline():
         }
         assert phase1_filter == {
             "is_registered": True,
+            "is_companion_of": None,
             "registration_active": {"$ne": False},
             "has_payed": {"$ne": True},
             "phased_payment": True,
@@ -440,6 +442,7 @@ async def test_apply_payment_deadline_policy_expired_deadline():
         }
         assert phase2_filter == {
             "is_registered": True,
+            "is_companion_of": None,
             "registration_active": {"$ne": False},
             "has_payed": {"$ne": True},
             "phased_payment": True,
@@ -541,6 +544,7 @@ async def test_apply_payment_deadline_policy_only_expires_phase1_when_only_phase
         filter_doc, update_doc = user_coll.update_many.call_args.args
         assert filter_doc == {
             "is_registered": True,
+            "is_companion_of": None,
             "registration_active": {"$ne": False},
             "has_payed": {"$ne": True},
             "phased_payment": True,
