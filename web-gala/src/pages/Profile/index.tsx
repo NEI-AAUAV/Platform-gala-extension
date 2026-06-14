@@ -65,7 +65,9 @@ export default function Profile() {
   const { config } = useRegistrationConfig();
   const { config: homepage } = useHomepageConfig();
   const [activeTab, setActiveTab] = useState<Tab>("registration");
-  const { neiUser: hostUser } = useNEIUser(sessionUser?.is_companion_of ?? null);
+  const { neiUser: hostUser } = useNEIUser(
+    sessionUser?.is_companion_of ?? null,
+  );
 
   if (!sessionLoading && !token) return <Navigate to={loginLink} />;
 
@@ -119,7 +121,7 @@ export default function Profile() {
             O Meu Perfil
           </h1>
           {sessionUser?.is_companion_of ? (
-            <span className="rounded-full border border-purple-400/30 bg-purple-400/8 px-4 py-1 text-xs font-semibold text-purple-300/80">
+            <span className="bg-purple-400/8 rounded-full border border-purple-400/30 px-4 py-1 text-xs font-semibold text-purple-300/80">
               <FontAwesomeIcon
                 icon={faCircleDot}
                 className="mr-1.5 text-[0.6rem]"
@@ -260,7 +262,8 @@ function RegistrationTab({
             value="Transporte gerido pelo anfitrião"
           />
         ) : (
-          sessionUser?.bus_option && sessionUser.bus_option !== "NONE" && (
+          sessionUser?.bus_option &&
+          sessionUser.bus_option !== "NONE" && (
             <InfoRow
               icon={faBus}
               label="Autocarro atribuído"
