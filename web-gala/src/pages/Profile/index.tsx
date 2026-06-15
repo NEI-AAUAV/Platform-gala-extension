@@ -58,6 +58,10 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "table", label: "Mesa" },
 ];
 
+// TODO: replace with the Google Drive seat-distribution doc link
+const SEAT_DISTRIBUTION_URL =
+  "https://docs.google.com/document/d/REPLACE_ME/edit";
+
 export default function Profile() {
   const { sessionLoading, token } = useUserStore();
   const { state, sessionUser, isLoading } = useSessionUser();
@@ -264,11 +268,28 @@ function RegistrationTab({
         ) : (
           sessionUser?.bus_option &&
           sessionUser.bus_option !== "NONE" && (
-            <InfoRow
-              icon={faBus}
-              label="Autocarro atribuído"
-              value={busName ?? "Transporte assegurado, aguarda distribuição"}
-            />
+            <div className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-3 sm:col-span-2">
+              <FontAwesomeIcon
+                icon={faBus}
+                className="w-3 flex-shrink-0 text-light-gold/40"
+              />
+              <div>
+                <p className="text-white/35 text-[0.6rem] uppercase tracking-widest">
+                  Transporte
+                </p>
+                <p className="text-sm font-semibold text-white/75">
+                  {busName ?? "Transporte assegurado"}
+                </p>
+                <a
+                  href={SEAT_DISTRIBUTION_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-xs font-semibold text-light-gold/80 underline-offset-2 hover:text-light-gold hover:underline"
+                >
+                  Ver distribuição de lugares →
+                </a>
+              </div>
+            </div>
           )
         )}
       </div>
