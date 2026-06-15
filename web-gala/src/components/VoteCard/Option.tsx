@@ -78,7 +78,7 @@ export default function Option({
   const { setValue } = useFormContext();
   const currentSelected = useWatch({ name: `votes.${catId}.option` });
   const isSelected = currentSelected === optionIdx;
-  const hasCategoryPhoto = catId !== 0;
+  const hasCategoryPhoto = catId !== 0 && Boolean(photo_path);
   const percentage =
     totalVotes > 0 ? Math.round((score / totalVotes) * 100) : 0;
 
