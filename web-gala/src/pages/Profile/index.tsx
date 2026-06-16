@@ -60,7 +60,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 // TODO: replace with the Google Drive seat-distribution doc link
 const SEAT_DISTRIBUTION_URL =
-  "https://docs.google.com/document/d/REPLACE_ME/edit";
+  "https://docs.google.com/spreadsheets/d/1B-nVM4cfNaQjBL9zqsbQUZs4m_CncUDYDzpv2NKhtYQ/edit?usp=sharing";
 
 export default function Profile() {
   const { sessionLoading, token } = useUserStore();
@@ -231,6 +231,10 @@ function RegistrationTab({
 }>) {
   const { name, surname, email } = useUserStore();
 
+  const hasBus = Boolean(
+    sessionUser?.bus_option && sessionUser.bus_option !== "NONE",
+  );
+
   const busName = sessionUser?.bus_assignment
     ? buses.find((b) => b.id === sessionUser.bus_assignment)?.name ??
       sessionUser.bus_assignment
@@ -266,31 +270,36 @@ function RegistrationTab({
             value="Transporte gerido pelo anfitrião"
           />
         ) : (
-          sessionUser?.bus_option &&
-          sessionUser.bus_option !== "NONE" && (
-            <div className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-3 sm:col-span-2">
-              <FontAwesomeIcon
-                icon={faBus}
-                className="w-3 flex-shrink-0 text-light-gold/40"
-              />
-              <div>
-                <p className="text-white/35 text-[0.6rem] uppercase tracking-widest">
-                  Transporte
-                </p>
-                <p className="text-sm font-semibold text-white/75">
-                  {busName ?? "Transporte assegurado"}
-                </p>
-                <a
-                  href={SEAT_DISTRIBUTION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs font-semibold text-light-gold/80 underline-offset-2 hover:text-light-gold hover:underline"
-                >
-                  Ver distribuição de lugares →
-                </a>
-              </div>
+          <div className="border-light-gold/15 bg-white/3 flex items-center gap-3 border px-4 py-3 sm:col-span-2">
+            <FontAwesomeIcon
+              icon={faBus}
+              className={`w-3 flex-shrink-0 ${
+                hasBus ? "text-light-gold/40" : "text-white/25"
+              }`}
+            />
+            <div>
+              <p className="text-white/35 text-[0.6rem] uppercase tracking-widest">
+                Transporte
+              </p>
+              <p
+                className={`text-sm font-semibold ${
+                  hasBus ? "text-white/75" : "text-white/40"
+                }`}
+              >
+                {hasBus
+                  ? busName ?? "Transporte assegurado"
+                  : "Sem transporte — deslocação por conta própria"}
+              </p>
+              <a
+                href={SEAT_DISTRIBUTION_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-xs font-semibold text-light-gold/80 underline-offset-2 hover:text-light-gold hover:underline"
+              >
+                Ver distribuição de lugares →
+              </a>
             </div>
-          )
+          </div>
         )}
       </div>
       <div className="border-light-gold/15 bg-white/3 border px-5 py-4">
