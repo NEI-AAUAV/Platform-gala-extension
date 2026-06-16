@@ -1,4 +1,5 @@
 from typing import Optional
+from aiocache import cached
 from app.core.db.types import DBType
 from app.models.config import GlobalConfig, CONFIG_ID
 
@@ -14,6 +15,7 @@ _MEAL_ID_TO_DISH_TYPE: dict = {
 
 class ConfigService:
     @staticmethod
+    @cached(ttl=300)
     async def get_config(db: DBType) -> GlobalConfig:
         collection = GlobalConfig.get_collection(db)
         config_dict = await collection.find_one({"_id": CONFIG_ID})

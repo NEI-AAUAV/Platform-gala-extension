@@ -18,6 +18,10 @@ class DatabaseClient:
             27017,
             username=settings.MONGO_USER,
             password=settings.MONGO_PASSWORD,
+            maxPoolSize=50,
+            minPoolSize=5,
+            serverSelectionTimeoutMS=5000,
+            waitQueueTimeoutMS=10000,
         )
 
     def client(self) -> AsyncIOMotorClient:
