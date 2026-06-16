@@ -58,7 +58,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "table", label: "Mesa" },
 ];
 
-// TODO: replace with the Google Drive seat-distribution doc link
 const SEAT_DISTRIBUTION_URL =
   "https://docs.google.com/spreadsheets/d/1B-nVM4cfNaQjBL9zqsbQUZs4m_CncUDYDzpv2NKhtYQ/edit?usp=sharing";
 
