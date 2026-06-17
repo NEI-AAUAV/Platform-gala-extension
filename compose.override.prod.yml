@@ -39,7 +39,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 768m
     restart: always
 
   web_gala:
