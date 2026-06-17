@@ -60,9 +60,9 @@ def db(settings: Settings, db_client: DatabaseClient) -> DBType:
 @pytest.fixture(autouse=True)
 def _reset_config_cache() -> typing.Generator[None, None, None]:
     import app.services.config as _cfg_mod
-    _cfg_mod._config_cache = None
+    _cfg_mod._config_cache = {}
     yield
-    _cfg_mod._config_cache = None
+    _cfg_mod._config_cache = {}
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)

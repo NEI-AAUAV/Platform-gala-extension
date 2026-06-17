@@ -48,9 +48,9 @@ _ASYNC_METHODS = (
 @pytest.fixture(autouse=True)
 def _reset_config_cache() -> None:
     import app.services.config as _cfg_mod
-    _cfg_mod._config_cache = None
+    _cfg_mod._config_cache = {}
     yield
-    _cfg_mod._config_cache = None
+    _cfg_mod._config_cache = {}
 
 
 @pytest.fixture(autouse=True)

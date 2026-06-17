@@ -937,6 +937,7 @@ async def set_results_visibility(
         {"$set": {"results_visible": visible}},
         upsert=True,
     )
+    ConfigService.invalidate_cache(db)
     return {"results_visible": visible}
 
 
@@ -1097,6 +1098,7 @@ async def upload_dj_photo(
 
     config_coll = GlobalConfig.get_collection(db)
     await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.dj.photo_url": url}})
+    ConfigService.invalidate_cache(db)
     return {"url": url}
 
 
@@ -1117,6 +1119,7 @@ async def delete_dj_photo(
 
     config_coll = GlobalConfig.get_collection(db)
     await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.dj.photo_url": None}})
+    ConfigService.invalidate_cache(db)
     return {"status": "success"}
 
 
@@ -1152,4 +1155,5 @@ async def upload_gallery_preview(
 
     config_coll = GlobalConfig.get_collection(db)
     await config_coll.update_one({"_id": "GLOBAL_CONFIG"}, {"$set": {"homepage.gallery.preview_photo_url": url}})
+    ConfigService.invalidate_cache(db)
     return {"url": url}
