@@ -46,6 +46,14 @@ _ASYNC_METHODS = (
 
 
 @pytest.fixture(autouse=True)
+def _reset_config_cache() -> None:
+    import app.services.config as _cfg_mod
+    _cfg_mod._config_cache = {}
+    yield
+    _cfg_mod._config_cache = {}
+
+
+@pytest.fixture(autouse=True)
 def _reset_db_mocks(test_db):
     """Reset all collection mocks before each test to prevent state bleed."""
     for name in COLLECTIONS:

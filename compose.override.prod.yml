@@ -4,6 +4,7 @@ services:
       ENABLE_GALA: 'True'
 
   api_gala:
+    command: gunicorn app.main:app --bind 0.0.0.0:8004 -k uvicorn.workers.UvicornWorker --forwarded-allow-ips=* --workers 4 --max-requests 1000 --max-requests-jitter 50
     image: ghcr.io/nei-aauav/api-gala:${TAG:-latest}
     build:
       context: extensions/gala/api-gala
@@ -35,6 +36,10 @@ services:
         condition: service_healthy
     networks:
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 768m
     restart: always
 
   web_gala:
